@@ -23,7 +23,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      
       # Python für deterministische CMake-Skripte pinnen (nur Host-Interpreter, keine Py-Bindings)
       - name: Set up Python 3.11.2
         uses: actions/setup-python@v5
@@ -124,14 +123,14 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
 
-      # Build (unsigned) – PRs/branches
+      # Build (unsigned) – PRs/branches (nur :app Tasks)
       - name: Build (unsigned) – PRs/branches
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: |
-          ./gradlew --no-daemon clean bundleRelease -PenableAbiSplits=false
-          ./gradlew --no-daemon assembleRelease -PenableAbiSplits=true
+          ./gradlew --no-daemon :app:clean :app:bundleRelease -PenableAbiSplits=false
+          ./gradlew --no-daemon :app:assembleRelease -PenableAbiSplits=true
 
-      # Build (signed) – tags
+      # Build (signed) – tags (nur :app Tasks)
       - name: Build (signed) – tags
         if: startsWith(github.ref, 'refs/tags/')
         env:
@@ -145,8 +144,8 @@ jobs:
           else
             echo "Signing secrets missing → building unsigned even for tag."
           fi
-          ./gradlew --no-daemon clean bundleRelease -PenableAbiSplits=false $EXTRA_PROPS
-          ./gradlew --no-daemon assembleRelease -PenableAbiSplits=true $EXTRA_PROPS
+          ./gradlew --no-daemon :app:clean :app:bundleRelease -PenableAbiSplits=false $EXTRA_PROPS
+          ./gradlew --no-daemon :app:assembleRelease -PenableAbiSplits=true $EXTRA_PROPS
 
       - name: Rename artifacts
         run: |
