@@ -14,11 +14,26 @@ android {
         versionName "1.0.0"
     }
 
+    signingConfigs {
+        release {
+            def myStorePassword = project.findProperty("SIGNING_STORE_PASSWORD") ?: System.getenv("SIGNING_STORE_PASSWORD")
+            def myKeyAlias = project.findProperty("SIGNING_KEY_ALIAS") ?: System.getenv("SIGNING_KEY_ALIAS")
+            def myKeyPassword = project.findProperty("SIGNING_KEY_PASSWORD") ?: System.getenv("SIGNING_KEY_PASSWORD")
+            if (myStorePassword && myKeyAlias && myKeyPassword) {
+                storeFile file('keystore.jks')
+                storePassword myStorePassword
+                keyAlias myKeyAlias
+                keyPassword myKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled = false
             shrinkResources = false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
         debug { }
     }

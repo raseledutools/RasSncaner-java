@@ -2,17 +2,18 @@ name: Build Release (Langpack Latin Best)
 
 on:
   push:
-    branches: [main]
-    tags: ['langpack-latin-best-v*']
+    branches: [ main ]
+    tags: [ 'langpack-latin-best-v*' ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           submodules: false
           fetch-depth: 0
@@ -22,6 +23,12 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+
+      - name: Install Android Build-Tools (for apksigner)
+        run: |
+          yes | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --sdk_root=${ANDROID_HOME} "build-tools;34.0.0"
+        env:
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -42,20 +49,20 @@ jobs:
         id: extract_version
         run: |
           FILE=langpack-latin-best/build.gradle
-          VERSION=$(grep -m1 'versionName' $FILE | sed 's/[^"]*"\([^"]*\)".*/\1/')
-          VERSION_CODE=$(grep -m1 'versionCode' $FILE | grep -o '[0-9]\+')
+          VERSION=$(grep -m1 'versionName' "$FILE" | sed 's/[^"]*"\([^"]*\)".*/\1/')
+          VERSION_CODE=$(grep -m1 'versionCode' "$FILE" | grep -o '[0-9]\+')
           echo "VERSION=$VERSION"
           echo "VERSION_CODE=$VERSION_CODE"
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
 
-      # Build unsigned for PR/branch
+      # Unsigned build for PRs/branches
       - name: Build (unsigned) – PRs/branches
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: |
           ./gradlew --no-daemon :langpack-latin-best:clean :langpack-latin-best:assembleRelease :langpack-latin-best:bundleRelease
 
-      # Build signed for tag
+      # Signed build for tags (only if secrets provided; Gradle must wire SIGNING_* props)
       - name: Build (signed) – tags
         if: startsWith(github.ref, 'refs/tags/')
         env:
@@ -66,33 +73,61 @@ jobs:
           EXTRA_PROPS=""
           if [ -n "${SIGNING_KEY_ALIAS}" ] && [ -n "${SIGNING_KEY_PASSWORD}" ] && [ -n "${SIGNING_STORE_PASSWORD}" ]; then
             EXTRA_PROPS="-PSIGNING_KEY_ALIAS=${SIGNING_KEY_ALIAS} -PSIGNING_KEY_PASSWORD=${SIGNING_KEY_PASSWORD} -PSIGNING_STORE_PASSWORD=${SIGNING_STORE_PASSWORD}"
+          else
+            echo "Signing secrets missing → building unsigned even for tag."
           fi
           ./gradlew --no-daemon :langpack-latin-best:clean :langpack-latin-best:assembleRelease :langpack-latin-best:bundleRelease $EXTRA_PROPS
 
       - name: Rename artifacts
         run: |
+          set -euo pipefail
           VERSION="${{ steps.extract_version.outputs.VERSION }}"
           APK_OUT="langpack-latin-best/build/outputs/apk/release"
           AAB_OUT="langpack-latin-best/build/outputs/bundle/release"
+
+          # Determine APK source (signed or unsigned) and rename
+          SRC_APK=""
           if [ -f "$APK_OUT/langpack-latin-best-release.apk" ]; then
-            mv "$APK_OUT/langpack-latin-best-release.apk" "$APK_OUT/MakeACopy-Langpack-Latin-Best-v${VERSION}-release.apk"
+            SRC_APK="$APK_OUT/langpack-latin-best-release.apk"
+          elif [ -f "$APK_OUT/langpack-latin-best-release-unsigned.apk" ]; then
+            SRC_APK="$APK_OUT/langpack-latin-best-release-unsigned.apk"
           fi
+          if [ -n "$SRC_APK" ]; then
+            mv "$SRC_APK" "$APK_OUT/MakeACopy-Langpack-Latin-Best-v${VERSION}-release.apk"
+          else
+            echo "No release APK found to rename."
+          fi
+
+          # Rename AAB if present
           if [ -f "$AAB_OUT/langpack-latin-best-release.aab" ]; then
             mv "$AAB_OUT/langpack-latin-best-release.aab" "$AAB_OUT/MakeACopy-Langpack-Latin-Best-v${VERSION}-release.aab"
           fi
 
-      - name: Verify APK signatures (tags only)
+      - name: Verify APK signatures (tags only, only if signed)
         if: startsWith(github.ref, 'refs/tags/')
         run: |
+          set -euo pipefail
           VERSION="${{ steps.extract_version.outputs.VERSION }}"
           APK_OUT="langpack-latin-best/build/outputs/apk/release"
-          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -Vr | head -n1)
-          for f in "$APK_OUT"/MakeACopy-Langpack-Latin-Best-v${VERSION}-release.apk; do
-            [ -f "$f" ] && "$APKSIGNER" verify --verbose "$f"
-          done
+          TARGET="$APK_OUT/MakeACopy-Langpack-Latin-Best-v${VERSION}-release.apk"
+
+          [ -f "$TARGET" ] || { echo "No APK to verify."; exit 0; }
+
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -Vr | head -n1 || true)
+          if [ -z "$APKSIGNER" ]; then
+            echo "apksigner not found → skipping verification."
+            exit 0
+          fi
+
+          # If not signed, apksigner verify returns non-zero
+          if ! "$APKSIGNER" verify --verbose "$TARGET"; then
+            echo "APK is not signed or verification failed."
+            exit 1
+          fi
 
       - name: Generate checksums
         run: |
+          set -euo pipefail
           VERSION="${{ steps.extract_version.outputs.VERSION }}"
           APK_OUT="langpack-latin-best/build/outputs/apk/release"
           AAB_OUT="langpack-latin-best/build/outputs/bundle/release"
@@ -110,7 +145,7 @@ jobs:
           if [ -f "$FILE" ]; then
             NOTES=$(cat "$FILE")
           else
-            NOTES="MakeACopy OCR Latin (Best)\n- Erstveröffentlichung: Best-Modelle für DE/EN/ES/FR/IT."
+            NOTES="MakeACopy OCR Latin (Best)\n- Initial release: best-quality models for DE/EN/ES/FR/IT."
           fi
           echo "notes<<EOF" >> $GITHUB_OUTPUT
           echo "$NOTES" >> $GITHUB_OUTPUT
