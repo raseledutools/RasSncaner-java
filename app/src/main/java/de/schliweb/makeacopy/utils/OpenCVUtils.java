@@ -555,12 +555,11 @@ public class OpenCVUtils {
                 return null;
             }
         } finally {
-            release(rgba, gray, work, bw);
+            release(rgba, bw);
+            if (work != gray) release(work);
+            release(gray);
             if (clahe != null) {
-                try {
-                    clahe.collectGarbage();
-                } catch (Throwable ignore) {
-                }
+                try { clahe.collectGarbage(); } catch (Throwable ignore) {}
             }
         }
     }
@@ -575,14 +574,16 @@ public class OpenCVUtils {
      */
     private static void despeckleFast(Mat bw /* CV_8UC1, 0/255 */) {
         Mat inv = new Mat();
+        Mat k3 = null;
         try {
             // Make text and speckles white so the opening operation removes them
             Core.bitwise_not(bw, inv);
-            Mat k3 = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
+            k3 = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
             Imgproc.morphologyEx(inv, inv, Imgproc.MORPH_OPEN, k3);
             Core.bitwise_not(inv, bw);
         } finally {
             inv.release();
+            if (k3 != null) k3.release();
         }
     }
 
