@@ -160,16 +160,16 @@ How it works:
 - MakeACopy discovers installed packs locally and lets you import the models.
 - Once imported, the best models appear in the OCR language selection.
 
-Alternatively: You can also use the original Tesseract "best" models from the official tessdata repository.  
-- Source: https://github.com/tesseract-ocr/tessdata_best  
-- Tesseract project: https://github.com/tesseract-ocr/tesseract  
-Install or download the desired `.traineddata` files and add them via the same import dialog in MakeACopy.
-
 📦 [GitHub Release Page](https://github.com/egdels/makeacopy/releases/tag/langpack-latin-best-v1.0.0)
 
 Notes:
 - Packs are signed with the same key as the main app, so you can verify them with `apksigner`.
 - They rarely change (only when new Tesseract models are published).
+
+Alternatively: You can also use the original Tesseract "best" models from the official tessdata repository.  
+- Source: https://github.com/tesseract-ocr/tessdata_best  
+- Tesseract project: https://github.com/tesseract-ocr/tesseract  
+Install or download the desired `.traineddata` files and add them via the same import dialog in MakeACopy.
 
 ## Privacy
 
