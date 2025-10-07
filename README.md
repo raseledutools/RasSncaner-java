@@ -208,6 +208,8 @@ A big thank you to the people who make *MakeACopy* better:
 - Our very first supporter — created an issue, helped with a fix, and even made a donation 🎉  
   This is the spirit of open source: collaboration, improvement, and appreciation. ❤️
 - **KalleMerkt** (from the [android-hilfe.de](https://www.android-hilfe.de/) community) – provided valuable suggestions to make the user experience smoother and more intuitive
+- **tofg** – stayed persistent and helped track down a tricky SD card issue affecting some devices. Thanks to their patience and testing, the fix is now in and benefits all users. 💪
+
 - **Special Mention 🐴** – A 1★ review claiming *MakeACopy* installs other apps and drains the battery.  
   Technically impossible (the app only uses the `CAMERA` permission).  
   The profile picture was *Eeyore* – perfectly fitting for such overly pessimistic feedback. 😅  
