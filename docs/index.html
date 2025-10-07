@@ -74,7 +74,9 @@
     <div class="nav-links">
         <a href="https://github.com/egdels/makeacopy/releases">Download APK</a> | 
         <a href="https://github.com/egdels/makeacopy">View on GitHub</a> | 
-        <a href="index_de.html">Deutsch</a>
+        <a href="index_de.html">Deutsch</a> | 
+        <a href="index_fr.html">Français</a> | 
+        <a href="#faq">FAQ</a>
     </div>
     
     <div class="store-badges" style="margin: 10px 0;">
@@ -114,6 +116,9 @@
     </ul>
     <p>Besides the optional Language-Pack APKs, you can also add the original Tesseract <em>best</em> models from the official repository: <a href="https://github.com/tesseract-ocr/tessdata_best">tessdata_best</a>. See the Tesseract project at <a href="https://github.com/tesseract-ocr/tesseract">github.com/tesseract-ocr/tesseract</a>.</p>
     <p><strong>Language-Pack APK:</strong> MakeACopy OCR Latin (Best) – includes high-accuracy models for English (eng), German (deu), French (fra), Italian (ita), and Spanish (spa). Download from the <a href="https://github.com/egdels/makeacopy/releases/tag/langpack-latin-best-v1.0.0">Language-Pack release page</a>.</p>
+    <div class="store-badges" style="margin: 6px 0 16px 0;">
+        <a href="https://play.google.com/store/apps/details?id=de.schliweb.makeacopy.lang.latin.best"><img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png" alt="Get the Latin Best Language Pack on Google Play" height="60"></a>
+    </div>
     <p><em>Note:</em> For Chinese, the app includes suitable CJK fonts to improve PDF text rendering.</p>
 
     <h2>Screenshots</h2>
@@ -197,6 +202,77 @@ appverifier verify MakeACopy-vX.Y.Z.apk
         <a href="https://paypal.me/egdels"><img alt="PayPal" src="https://img.shields.io/badge/Donate-PayPal-blue"></a>
     </p>
     
+    <h2 id="faq">FAQ</h2>
+
+    <h3>Scanning (Camera)</h3>
+    <ul>
+        <li><strong>The image is blurry / text is hard to read</strong><br>
+            - Ensure sufficient lighting; avoid dim, warm ambient light. <br>
+            - Hold the device steady or brace it. <br>
+            - Trigger autofocus by tapping the relevant area in the viewfinder (if available). <br>
+            - Increase the distance slightly and crop later — being too close can make focusing harder.
+        </li>
+        <li><strong>Strong shadows or reflections</strong><br>
+            - Light the document evenly from multiple sides. <br>
+            - Avoid direct light sources that cause glare (e.g., on glossy paper). <br>
+            - Place the document on a matte, high-contrast background.
+        </li>
+        <li><strong>The image is too dark/bright</strong><br>
+            - Improve the lighting. <br>
+            - Use the flash only if needed — it can cause reflections.
+        </li>
+        <li><strong>Distorted perspective</strong><br>
+            - Shoot as straight-on and parallel to the document surface as possible.
+        </li>
+    </ul>
+
+    <h3>Edge Detection</h3>
+    <ul>
+        <li><strong>Document borders are detected incorrectly</strong><br>
+            - Ensure good contrast between the document and the background (e.g., light paper on a dark table). <br>
+            - Flatten the paper (no waves/creases) and align it straight. <br>
+            - Avoid shadows that could be interpreted as edges.
+        </li>
+        <li><strong>No automatic detection</strong><br>
+            - Retake the shot with better lighting. <br>
+            - Use <em>manual corner adjustment</em> after the scan to move points.
+        </li>
+        <li><strong>Result is skewed or cropped</strong><br>
+            - After automatic detection, check all four points and adjust them manually if needed. <br>
+        </li>
+    </ul>
+
+    <h3>OCR (Text Recognition)</h3>
+    <ul>
+        <li><strong>OCR barely recognizes any text</strong><br>
+            - Make sure the correct <em>language</em> is selected. <br>
+            - Scan in good quality: sharp, sufficient light, low noise. <br>
+            - Avoid very small text — fill more of the page or scan closer (without blur).
+        </li>
+        <li><strong>Wrong language / accents are not recognized</strong><br>
+            - Choose the appropriate OCR language in the app. <br>
+            - For higher accuracy in Latin languages, install the <em>Language Pack: MakeACopy OCR Latin (Best)</em> (Play Store link above on this page).
+        </li>
+        <li><strong>Mixed languages in the document</strong><br>
+            - If possible, scan sections separately per language. <br>
+            - Alternatively, choose the primary language; mixed text can reduce recognition accuracy.
+        </li>
+        <li><strong>Handwriting is not recognized</strong><br>
+            - Tesseract is primarily designed for printed text; handwriting is only recognized to a limited extent. <br>
+            - Better results with clear, print-like handwriting; otherwise consider manual transcription.
+        </li>
+        <li><strong>OCR rotation/orientation is wrong</strong><br>
+            - Rotate the image to the correct orientation before OCR (0°, 90°, 180°, 270°). <br>
+            - Ensure clear horizontal text lines without strong perspective distortion.
+        </li>
+        <li><strong>Search in the PDF does not work</strong><br>
+            - Check whether the selected language was correct; the wrong language produces mismatched recognized text. <br>
+            - Alternatively, you can export the OCR text separately as a TXT file.
+        </li>
+    </ul>
+
+    <p>More questions? Please open an issue: <a href="https://github.com/egdels/makeacopy/issues">github.com/egdels/makeacopy/issues</a>.</p>
+
     <h2>License</h2>
     
     <p>MakeACopy is licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a>.</p>
