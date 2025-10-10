@@ -1,0 +1,159 @@
+<resources>
+    <string name="app_name">MakeACopy</string>
+
+    <!-- Nowe pozycje menu skanera dokumentów -->
+    <string name="title_camera">Aparat</string>
+    <string name="title_crop">Kadrowanie</string>
+    <string name="title_ocr">OCR</string>
+    <string name="title_export">Eksport</string>
+
+    <!-- Etykiety przycisków -->
+    <string name="btn_scan">Skanuj</string>
+    <string name="btn_crop">Przytnij</string>
+    <string name="btn_process">Przetwórz</string>
+    <string name="btn_export">Eksportuj</string>
+    <string name="btn_share">Udostępnij</string>
+    <string name="next">Dalej</string>
+    <string name="back">Wstecz</string>
+
+    <!-- Komunikaty -->
+    <string name="msg_camera_permission_required">Uprawnienie do aparatu jest wymagane, aby skanować dokumenty</string>
+    <string name="confirm">Potwierdź</string>
+    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">Sprawdź skan. Naciśnij Dalej, aby kontynuować, lub Wstecz, aby spróbować ponownie.</string>
+    <string name="camera_ready_tap_the_button_to_scan_a_document">Aparat gotowy. Naciśnij przycisk, aby zeskanować dokument.</string>
+    <string name="captured_image">Zarejestrowany obraz</string>
+    <string name="retake">Ponów zdjęcie</string>
+    <string name="image_to_crop">Obraz do przycięcia</string>
+    <string name="cropped_image">Przycięty obraz</string>
+    <string name="recrop">Przytnij ponownie</string>
+    <string name="document_preview">Podgląd dokumentu</string>
+    <string name="include_ocr_text">Dołącz tekst OCR</string>
+    <string name="language">Język:</string>
+    <string name="ocr_results_will_appear_here">Wyniki OCR pojawią się tutaj</string>
+    <string name="no_image_loaded_capture_an_image_first">Nie załadowano obrazu. Najpierw wykonaj zdjęcie.</string>
+    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Dostosuj narożniki trapezu, aby wybrać obszar przycięcia, a następnie naciśnij przycisk Przytnij.</string>
+    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">Sprawdź przycięty obraz. Naciśnij Dalej, aby kontynuować, lub Wstecz, aby spróbować ponownie.</string>
+    <string name="no_document_ready_process_ocr_first">Brak gotowego dokumentu. Najpierw wykonaj OCR.</string>
+    <string name="document_ready_for_export">Dokument gotowy do eksportu</string>
+    <string name="processing_image">Przetwarzanie obrazu…</string>
+    <string name="no_image_processed_crop_an_image_first">Nie przetworzono obrazu. Najpierw przytnij obraz.</string>
+    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">Przetwarzanie OCR zakończone. Naciśnij przycisk, aby przejść do eksportu.</string>
+
+    <string name="initializing_camera">Inicjalizacja aparatu…</string>
+    <string name="resetting_camera">Resetowanie aparatu…</string>
+    <string name="error_initializing_camera">Błąd inicjalizacji aparatu: %1$s</string>
+    <string name="error_camera_provider_null">Nie udało się zainicjalizować aparatu – dostawca jest pusty</string>
+    <string name="error_camera_not_initialized">Aparat nie został zainicjalizowany. Spróbuj ponownie.</string>
+    <string name="error_image_capture_failed">Błąd przechwytywania obrazu: %1$s</string>
+    <string name="error_displaying_image">Błąd wyświetlania obrazu: %1$s</string>
+    <string name="error_resetting_camera">Błąd resetowania aparatu: %1$s</string>
+    <string name="error_toggling_flashlight">Błąd włączania latarki: %1$s</string>
+    <string name="error_camera_preview_failed">Nie udało się uruchomić podglądu aparatu. Spróbuj ponownie.</string>
+
+    <!-- Opcje eksportu -->
+    <string name="convert_to_grayscale">Konwertuj do skali szarości</string>
+    <string name="convert_to_blackwhite_pdf">Konwertuj do czarno-białego</string>
+    <string name="export_as_jpeg">Eksportuj jako JPEG</string>
+    <string name="export_as_pdf">Eksportuj jako PDF (domyślnie)</string>
+
+    <!-- Latarka -->
+    <string name="toggle_flashlight">Włącz/Wyłącz latarkę</string>
+    <string name="flashlight_on">Latarka włączona</string>
+    <string name="flashlight_off">Latarka wyłączona</string>
+    <string name="flashlight_not_available">Latarka niedostępna na tym urządzeniu</string>
+    <string name="low_light_detected">Wykryto słabe oświetlenie. Włączyć latarkę?</string>
+
+    <!-- Tryby JPEG -->
+    <string name="jpeg_mode_none">Bez ulepszeń (JPEG)</string>
+    <string name="jpeg_mode_auto">Auto-ulepszenie (JPEG)</string>
+    <string name="jpeg_mode_bw_text">Czarno-biały (klasyczny) (JPEG)</string>
+    <string name="jpeg_mode_bw_robust">Czarno-biały (zaawansowany) (JPEG)</string>
+    <string name="pdf_bw_mode_robust">Cz.-b. (zaaw.)</string>
+    <string name="pdf_bw_mode_classic">Cz.-b. (klas.)</string>
+    <string name="skip_ocr_export_only">Pomiń OCR (tylko eksport)</string>
+    <string name="btn_pick_image">Wczytaj</string>
+    <string name="pick_image_cd">Wczytaj istniejący obraz</string>
+    <string name="error_selected_file_is_not_an_image">Wybrany plik nie jest obrazem</string>
+
+    <!-- Eksport wielostronicowy -->
+    <string name="pages_header">Strony (%1$d)</string>
+    <string name="add_another_page">Dodaj</string>
+    <string name="clear_all_pages">Wyczyść wszystko</string>
+    <string name="remove_this_page">Usuń tę stronę</string>
+    <string name="multipage_not_implemented">Eksport wielostronicowy nie jest jeszcze dostępny</string>
+
+    <!-- Reorder A11y -->
+    <string name="move_page_left">Przesuń stronę w lewo</string>
+    <string name="move_page_right">Przesuń stronę w prawo</string>
+
+    <!-- Potwierdzenie wyczyszczenia sesji -->
+    <string name="confirm_clear_multipage_title">Usunąć strony?</string>
+    <string name="confirm_clear_multipage_message">Dodano wiele stron. Czy chcesz usunąć wszystkie i wrócić?</string>
+    <string name="cancel">Anuluj</string>
+
+    <!-- Potwierdzenie wyczyszczenia -->
+    <string name="confirm_clear_pages_title">Wyczyścić wszystkie strony?</string>
+    <string name="confirm_clear_pages_message">Czy chcesz usunąć wszystkie strony z paska miniatur?</string>
+
+    <!-- Rejestr zeskanowanych -->
+    <string name="picker_title_completed_scans">Wybierz z ukończonych skanów</string>
+    <string name="picker_empty">Brak ukończonych skanów</string>
+    <string name="done">Dalej</string>
+    <string name="thumbnail">Miniatura</string>
+    <string name="delete">Usuń</string>
+
+    <!-- Akcje zbiorcze -->
+    <string name="select_all">Zaznacz wszystko</string>
+    <string name="deselect_all">Odznacz wszystko</string>
+
+    <string name="added_pages_from_registry">Dodano %1$d stron(y) z rejestru</string>
+
+    <!-- Dodaj stronę -->
+    <string name="add_page_option_choose_completed">Wybierz z ukończonych skanów</string>
+    <string name="add_page_option_capture_new">Zrób nowe zdjęcie</string>
+
+    <!-- Stany -->
+    <string name="missing_file">Brak pliku</string>
+
+    <!-- OCR w tle -->
+    <string name="ocr_processing_started">Uruchamianie OCR…</string>
+    <string name="ocr_processing_finished">OCR dodany do tej strony</string>
+    <string name="ocr_processing_failed">Błąd OCR</string>
+
+    <!-- Rejestr: akcje kontekstowe -->
+    <string name="remove_from_registry_title">Usuń z rejestru</string>
+    <string name="remove_from_registry_message">Usunąć ten wpis i powiązane pliki?</string>
+    <string name="remove">Usuń</string>
+    <string name="removed_from_registry_toast">Wpis usunięty</string>
+
+    <!-- Jakość PDF -->
+    <string name="pdf_quality_title">Jakość / rozmiar PDF</string>
+    <string name="pdf_preset_high">Wysoka (300 dpi, q85)</string>
+    <string name="pdf_preset_standard">Standardowa (200 dpi, q72)</string>
+    <string name="pdf_preset_small">Mała (150 dpi, q62)</string>
+    <string name="pdf_preset_very_small">Bardzo mała (110 dpi, q52)</string>
+    <string name="export_options_title">Opcje eksportu</string>
+    <string name="jpeg_enhancement_title">Ulepszenie JPEG</string>
+    <string name="btn_options">Opcje</string>
+    <string name="btn_save">Zapisz</string>
+    <string name="btn_new">Nowy</string>
+
+    <!-- Obrót -->
+    <string name="rotate_left_cd">Obróć stronę o 90° w lewo</string>
+    <string name="rotate_right_cd">Obróć stronę o 90° w prawo</string>
+
+    <!-- Zarządzanie modelami OCR -->
+    <string name="ocr_models_manage">Modele OCR</string>
+    <string name="ocr_import_manual">Importuj .traineddata…</string>
+    <string name="ocr_discover_packs">Odkryj pakiety językowe</string>
+    <string name="ocr_no_packs_found">Nie znaleziono pakietów językowych</string>
+    <string name="ocr_choose_pack">Wybierz pakiet językowy</string>
+    <string name="ocr_no_models_in_pack">Brak modeli w tym pakiecie</string>
+    <string name="ocr_choose_model">Wybierz model do importu</string>
+    <string name="ocr_import_success">Model zaimportowany</string>
+    <string name="ocr_import_failed">Import nieudany</string>
+
+    <!-- Wskazówka OCR -->
+    <string name="ocr_models_hint">Dla szybszego rozpoznawania dołączono kompaktowe modele. Dla większej dokładności możesz zainstalować większe modele „Best”. Połączenie z internetem nie jest wymagane.</string>
+
+</resources>
