@@ -1,0 +1,158 @@
+<resources>
+    <string name="app_name">MakeACopy</string>
+    
+    <!-- New menu items for document scanner -->
+    <string name="title_camera">Câmera</string>
+    <string name="title_crop">Cortar</string>
+    <string name="title_ocr">OCR</string>
+    <string name="title_export">Exportar</string>
+    
+    <!-- Button labels -->
+    <string name="btn_scan">Digitalizar</string>
+    <string name="btn_crop">Cortar</string>
+    <string name="btn_process">Processar</string>
+    <string name="btn_export">Exportar</string>
+    <string name="btn_share">Compartilhar</string>
+    <string name="next">Avançar</string>
+    <string name="back">Voltar</string>
+    
+    <!-- Messages -->
+    <string name="msg_camera_permission_required">A permissão da câmera é necessária para digitalizar documentos</string>
+    <string name="confirm">Confirmar</string>
+    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">Revise sua digitalização. Toque em Avançar para continuar ou em Voltar para tentar novamente.</string>
+    <string name="camera_ready_tap_the_button_to_scan_a_document">Câmera pronta. Toque no botão para digitalizar um documento.</string>
+    <string name="captured_image">Imagem capturada</string>
+    <string name="retake">Refazer</string>
+    <string name="image_to_crop">Imagem a cortar</string>
+    <string name="cropped_image">Imagem cortada</string>
+    <string name="recrop">Recortar novamente</string>
+    <string name="document_preview">Pré-visualização do documento</string>
+    <string name="include_ocr_text">Incluir texto OCR</string>
+    <string name="language">Idioma:</string>
+    <string name="ocr_results_will_appear_here">Os resultados do OCR aparecerão aqui</string>
+    <string name="no_image_loaded_capture_an_image_first">Nenhuma imagem carregada. Capture uma imagem primeiro.</string>
+    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Ajuste os cantos do trapézio para selecionar a área a cortar e toque no botão Cortar.</string>
+    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">Revise sua imagem recortada. Toque em Avançar para continuar ou em Voltar para tentar novamente.</string>
+    <string name="no_document_ready_process_ocr_first">Nenhum documento pronto. Execute o OCR primeiro.</string>
+    <string name="document_ready_for_export">Documento pronto para exportação</string>
+    <string name="processing_image">Processando imagem...</string>
+    <string name="no_image_processed_crop_an_image_first">Nenhuma imagem processada. Recorte uma imagem primeiro.</string>
+    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">Processamento de OCR concluído. Toque no botão para prosseguir para a exportação.</string>
+
+    <string name="initializing_camera">Inicializando a câmera…</string>
+    <string name="resetting_camera">Reiniciando a câmera…</string>
+    <string name="error_initializing_camera">Erro ao inicializar a câmera: %1$s</string>
+    <string name="error_camera_provider_null">Falha ao inicializar a câmera – o provedor é nulo</string>
+    <string name="error_camera_not_initialized">Câmera não inicializada. Tente novamente.</string>
+    <string name="error_image_capture_failed">Falha ao capturar imagem: %1$s</string>
+    <string name="error_displaying_image">Erro ao exibir imagem: %1$s</string>
+    <string name="error_resetting_camera">Erro ao reiniciar a câmera: %1$s</string>
+    <string name="error_toggling_flashlight">Erro ao alternar a lanterna: %1$s</string>
+    <string name="error_camera_preview_failed">Falha ao iniciar a visualização da câmera. Tente novamente.</string>
+
+    <!-- Export options -->
+    <string name="convert_to_grayscale">Converter para tons de cinza</string>
+    <string name="convert_to_blackwhite_pdf">Converter para P/B</string>
+    <string name="export_as_jpeg">Exportar como JPEG</string>
+    <string name="export_as_pdf">Exportar como PDF (padrão)</string>
+    
+    <!-- Flashlight options -->
+    <string name="toggle_flashlight">Alternar lanterna</string>
+    <string name="flashlight_on">Lanterna ligada</string>
+    <string name="flashlight_off">Lanterna desligada</string>
+    <string name="flashlight_not_available">Lanterna não disponível neste dispositivo</string>
+    <string name="low_light_detected">Baixa luminosidade detectada. Ligar a lanterna?</string>
+
+    <!-- JPEG mode labels -->
+    <string name="jpeg_mode_none">Sem melhoria (JPEG)</string>
+    <string name="jpeg_mode_auto">Melhorar automaticamente (JPEG)</string>
+    <string name="jpeg_mode_bw_text">Preto e Branco (clássico) (JPEG)</string>
+    <string name="jpeg_mode_bw_robust">Preto e Branco (robusto) (JPEG)</string>
+    <string name="pdf_bw_mode_robust">P/B (robusto)</string>
+    <string name="pdf_bw_mode_classic">P/B (clássico)</string>
+    <string name="skip_ocr_export_only">Pular OCR (apenas exportar)</string>
+    <string name="btn_pick_image">Carregar</string>
+    <string name="pick_image_cd">Carregar imagem existente</string>
+    <string name="error_selected_file_is_not_an_image">O arquivo selecionado não é uma imagem</string>
+    
+    <!-- Multipage Export (v1 increment) -->
+    <string name="pages_header">Páginas (%1$d)</string>
+    <string name="add_another_page">Adicionar</string>
+    <string name="clear_all_pages">Limpar tudo</string>
+    <string name="remove_this_page">Remover esta página</string>
+    <string name="multipage_not_implemented">Exportação multipágina ainda não implementada</string>
+    
+    <!-- Reorder A11y controls -->
+    <string name="move_page_left">Mover página para a esquerda</string>
+    <string name="move_page_right">Mover página para a direita</string>
+    
+    <!-- Back confirmation for clearing multipage session -->
+    <string name="confirm_clear_multipage_title">Excluir páginas?</string>
+    <string name="confirm_clear_multipage_message">Várias páginas foram adicionadas. Deseja excluir todas e voltar?</string>
+    <string name="cancel">Cancelar</string>
+    
+    <!-- Clear-all confirmation for trash icon in multipage -->
+    <string name="confirm_clear_pages_title">Limpar todas as páginas?</string>
+    <string name="confirm_clear_pages_message">Deseja remover todas as páginas da tira de filme?</string>
+    
+    <!-- Registry Picker -->
+    <string name="picker_title_completed_scans">Escolha entre digitalizações concluídas</string>
+    <string name="picker_empty">Nenhuma digitalização concluída encontrada</string>
+    <string name="done">Avançar</string>
+    <string name="thumbnail">Miniatura</string>
+    <string name="delete">Excluir</string>
+    
+    <!-- Picker bulk actions -->
+    <string name="select_all">Selecionar tudo</string>
+    <string name="deselect_all">Desmarcar tudo</string>
+
+    <string name="added_pages_from_registry">Adicionadas %1$d página(s) do registro</string>
+    
+    <!-- Add page options dialog -->
+    <string name="add_page_option_choose_completed">Escolher de digitalizações concluídas</string>
+    <string name="add_page_option_capture_new">Capturar nova página</string>
+
+    <!-- Picker states -->
+    <string name="missing_file">Arquivo ausente</string>
+
+    <!-- Inline OCR cues -->
+    <string name="ocr_processing_started">Executando OCR…</string>
+    <string name="ocr_processing_finished">OCR adicionado para esta página</string>
+    <string name="ocr_processing_failed">Falha no OCR em linha</string>
+
+    <!-- Registry Picker: context action -->
+    <string name="remove_from_registry_title">Remover do registro</string>
+    <string name="remove_from_registry_message">Excluir esta entrada e seus arquivos associados?</string>
+    <string name="remove">Remover</string>
+    <string name="removed_from_registry_toast">Entrada removida</string>
+
+    <!-- PDF quality presets (Phase 1) -->
+    <string name="pdf_quality_title">Qualidade / tamanho do PDF</string>
+    <string name="pdf_preset_high">Alto (300 dpi, q85)</string>
+    <string name="pdf_preset_standard">Padrão (200 dpi, q72)</string>
+    <string name="pdf_preset_small">Pequeno (150 dpi, q62)</string>
+    <string name="pdf_preset_very_small">Muito pequeno (110 dpi, q52)</string>
+    <string name="export_options_title">Opções de exportação</string>
+    <string name="jpeg_enhancement_title">Aprimoramento de JPEG</string>
+    <string name="btn_options">Opções</string>
+    <string name="btn_save">Salvar</string>
+    <string name="btn_new">Novo</string>
+
+    <!-- Rotation (post-crop) -->
+    <string name="rotate_left_cd">Girar a página 90 graus no sentido anti-horário</string>
+    <string name="rotate_right_cd">Girar a página 90 graus no sentido horário</string>
+
+    <!-- OCR models management (prototype) -->
+    <string name="ocr_models_manage">Modelos de OCR</string>
+    <string name="ocr_import_manual">Importar .traineddata…</string>
+    <string name="ocr_discover_packs">Descobrir pacotes de idiomas</string>
+    <string name="ocr_no_packs_found">Nenhum pacote de idiomas encontrado</string>
+    <string name="ocr_choose_pack">Escolher pacote de idiomas</string>
+    <string name="ocr_no_models_in_pack">Nenhum modelo encontrado neste pacote</string>
+    <string name="ocr_choose_model">Escolher modelo para importar</string>
+    <string name="ocr_import_success">Modelo importado</string>
+    <string name="ocr_import_failed">Falha na importação</string>
+
+    <!-- OCR models hint -->
+    <string name="ocr_models_hint">Para reconhecimento mais rápido, modelos compactos estão incluídos. Para maior precisão, você pode instalar modelos "Best" maiores. Nenhuma conexão com a internet é necessária.</string>
+</resources>
