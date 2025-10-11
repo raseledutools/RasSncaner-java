@@ -406,6 +406,20 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         }
     }
 
+    private boolean isXperia1VI() {
+        String manufacturer = android.os.Build.MANUFACTURER;
+        String model = android.os.Build.MODEL;
+        if (manufacturer == null || model == null) return false;
+
+        String m = model.toUpperCase(Locale.ROOT);
+        return manufacturer.equalsIgnoreCase("SONY")
+                && (m.startsWith("XQ-EC") || m.startsWith("XQ-ES"));
+    }
+
+    private boolean shouldForceCompatiblePreview() {
+        return isPreviewBlackScreenQuirkDevice() || isXperia1VI();
+    }
+
     /**
      * Extracts and returns the major version number from the EMUI version string.
      * The EMUI version string is retrieved from the system property "ro.build.version.emui".
@@ -619,13 +633,12 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         } else {
             // high resolution (if available) to improve sharpness
             android.util.Size preferredHigh = new android.util.Size(4032, 3024);
-            rsBuilderCapture.setResolutionStrategy(
-                    new androidx.camera.core.resolutionselector.ResolutionStrategy(
-                            preferredHigh,
-                            androidx.camera.core.resolutionselector.ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER
-                    )
-            );
+            rsBuilderCapture.setResolutionStrategy(new androidx.camera.core.resolutionselector.ResolutionStrategy(
+                    preferredHigh,
+                    androidx.camera.core.resolutionselector.ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER
+            ));
         }
+
 
         androidx.camera.core.resolutionselector.ResolutionSelector previewSelector = rsBuilderPreview.build();
         androidx.camera.core.resolutionselector.ResolutionSelector captureSelector = rsBuilderCapture.build();
@@ -773,7 +786,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
                 ProcessCameraProvider.getInstance(requireContext());
 
-        final boolean forceCompatible = isPreviewBlackScreenQuirkDevice();
+        final boolean forceCompatible = shouldForceCompatiblePreview();
 
         cameraProviderFuture.addListener(() -> {
             try {
