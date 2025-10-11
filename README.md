@@ -48,7 +48,7 @@ apksigner verify --print-certs MakeACopy-vX.Y.Z.apk
 MakeACopy supports OCR via Tesseract. You can choose the OCR language during the OCR step.
 
 Supported out of the box:
-- English (eng), German (deu), French (fra), Italian (ita), Spanish (spa), Russian (rus), Thai (tha)
+- English (eng), German (deu), French (fra), Italian (ita), Spanish (spa), Portuguese (por), Dutch (nld), Polish (pol), Czech (ces), Slovak (slk), Hungarian (hun), Romanian (ron), Danish (dan), Norwegian (nor), Swedish (swe), Russian (rus), Thai (tha)
 - Chinese (Simplified) — chi_sim, Chinese (Traditional) — chi_tra
 
 Notes:
@@ -152,7 +152,7 @@ MakeACopy includes fast, compact Tesseract models by default.
 If you want **higher accuracy OCR**, you can install optional *Language-Pack APKs*:
 
 - **MakeACopy OCR Latin (Best)** → Includes best-quality models for  
-  German (deu), English (eng), French (fra), Italian (ita), Spanish (spa).
+  English (eng), German (deu), French (fra), Italian (ita), Spanish (spa), Portuguese (por), Dutch (nld), Polish (pol), Czech (ces), Slovak (slk), Hungarian (hun), Romanian (ron), Danish (dan), Norwegian (nor), Swedish (swe).
 
 How it works:
 - Language-Packs are separate, permissionless APKs.
@@ -160,7 +160,7 @@ How it works:
 - MakeACopy discovers installed packs locally and lets you import the models.
 - Once imported, the best models appear in the OCR language selection.
 
-📦 [GitHub Release Page](https://github.com/egdels/makeacopy/releases/tag/langpack-latin-best-v1.0.0)
+📦 [GitHub Release Page](https://github.com/egdels/makeacopy/releases/tag/langpack-latin-best-v1.1.0)
 
 [<img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png"
 alt="Get it on Google Play"
