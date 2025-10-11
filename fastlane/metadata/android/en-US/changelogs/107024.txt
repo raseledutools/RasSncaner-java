@@ -1,4 +1,4 @@
-MakeACopy 1.7.2 (Release Candidate)
+MakeACopy 1.7.2 (Release)
 
 - New: Low-light document detection pipeline (denoise, gamma, CLAHE, gentle sharpening).
 - New: Automatic ONNX output handling (supports heatmap or 8-coordinate formats via parsePrediction).
