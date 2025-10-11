@@ -51,10 +51,30 @@ public class OCRUtils {
                 return "ita";
             } else if ("es".equalsIgnoreCase(sys)) {
                 return "spa";
+            } else if ("pt".equalsIgnoreCase(sys)) {
+                return "por";
+            } else if ("nl".equalsIgnoreCase(sys)) {
+                return "nld";
+            } else if ("pl".equalsIgnoreCase(sys)) {
+                return "pol";
+            } else if ("cs".equalsIgnoreCase(sys)) {
+                return "ces";
             } else if ("ru".equalsIgnoreCase(sys)) {
                 return "rus";
             } else if ("th".equalsIgnoreCase(sys)) {
                 return "tha";
+            } else if ("sk".equalsIgnoreCase(sys)) {
+                return "slk";
+            } else if ("hu".equalsIgnoreCase(sys)) {
+                return "hun";
+            } else if ("ro".equalsIgnoreCase(sys)) {
+                return "ron";
+            } else if ("da".equalsIgnoreCase(sys)) {
+                return "dan";
+            } else if ("sv".equalsIgnoreCase(sys)) {
+                return "swe";
+            } else if ("no".equalsIgnoreCase(sys) || "nb".equalsIgnoreCase(sys) || "nn".equalsIgnoreCase(sys)) {
+                return "nor";
             } else {
                 return "eng";
             }
@@ -80,8 +100,18 @@ public class OCRUtils {
             case "fr" -> "fra";
             case "it" -> "ita";
             case "es" -> "spa";
+            case "pt" -> "por";
+            case "nl" -> "nld";
+            case "pl" -> "pol";
+            case "cs" -> "ces";
             case "ru" -> "rus";
             case "th" -> "tha";
+            case "sk" -> "slk";
+            case "hu" -> "hun";
+            case "ro" -> "ron";
+            case "da" -> "dan";
+            case "sv" -> "swe";
+            case "no", "nb", "nn" -> "nor";
             case "zh" -> {
                 // Map Chinese to Simplified or Traditional based on region, default to Simplified
                 try {
@@ -103,10 +133,10 @@ public class OCRUtils {
      *
      * @return An array of strings representing the language codes supported for OCR.
      * The codes include "eng" (English), "deu" (German), "fra" (French),
-     * "ita" (Italian), "spa" (Spanish), "rus" (Russian), "chi_sim" (Simplified Chinese),
-     * and "chi_tra" (Traditional Chinese).
+     * "ita" (Italian), "spa" (Spanish), "por" (Portuguese), "nld" (Dutch), "rus" (Russian), "tha" (Thai),
+     * "chi_sim" (Simplified Chinese), and "chi_tra" (Traditional Chinese).
      */
     public static String[] getLanguages() {
-        return new String[]{"eng", "deu", "fra", "ita", "spa", "rus", "tha", "chi_sim", "chi_tra"};
+        return new String[]{"eng", "deu", "fra", "ita", "spa", "por", "nld", "pol", "ces", "slk", "hun", "ron", "dan", "nor", "swe", "rus", "tha", "chi_sim", "chi_tra"};
     }
 }

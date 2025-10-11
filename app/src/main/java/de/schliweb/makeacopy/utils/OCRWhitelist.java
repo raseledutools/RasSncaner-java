@@ -24,11 +24,41 @@ public class OCRWhitelist {
     // Italian
     public static final String IT = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzàèéìíîòóùúÀÈÉÌÍÎÒÓÙÚ0123456789.,:;-?!()[]/\"' ";
 
+    // Portuguese
+    public static final String PT = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzáàâãçéêíóôõúüÁÀÂÃÇÉÊÍÓÔÕÚÜ0123456789.,:;-?!()[]/\"' ";
+
+    // Dutch
+    public static final String NL = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜáàâäéèêëíìîïóòôöúùûüÿŸ0123456789.,:;-?!()[]/\"' ";
+
+    // Polish
+    public static final String PL = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzĄĆĘŁŃÓŚŹŻąćęłńóśźż0123456789.,:;-?!()[]/\"' ";
+
+    // Czech
+    public static final String CS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÁČĎÉĚÍŇÓŘŠŤÚŮÝŽáčďéěíňóřšťúůýž0123456789.,:;-?!()[]/\"' ";
+
+    // Slovak
+    public static final String SK = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÁÄČĎÉÍĹĽŇÓÔŔŠŤÚÝŽáäčďéíĺľňóôŕšťúýž0123456789.,:;-?!()[]/\"' ";
+
+    // Hungarian
+    public static final String HU = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÁÉÍÓÖŐÚÜŰáéíóöőúüű0123456789.,:;-?!()[]/\"' ";
+
+    // Romanian
+    public static final String RO = "ABCDEFGHIJKLMNOPQRSTUVWXYZĂÂÎȘȚŞŢabcdefghijklmnopqrstuvwxyzăâîșțşţ0123456789.,:;-?!()[]/\"' ";
+
+    // Danish
+    public static final String DA = "ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅabcdefghijklmnopqrstuvwxyzæøå0123456789.,:;-?!()[]/\"' ";
+
+    // Norwegian
+    public static final String NO = "ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅabcdefghijklmnopqrstuvwxyzæøå0123456789.,:;-?!()[]/\"' ";
+
+    // Swedish
+    public static final String SV = "ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖabcdefghijklmnopqrstuvwxyzåäö0123456789.,:;-?!()[]/\"' ";
+
     // Russian (Cyrillic incl. Ё/ё)
     public static final String RU = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя0123456789.,:;-?!()[]/\"' ";
 
     // Default: Superset
-    public static final String DEFAULT = (DE + EN + ES + FR + IT + RU);
+    public static final String DEFAULT = (DE + EN + ES + FR + IT + PT + NL + PL + CS + SK + HU + RO + DA + NO + SV + RU);
 
     /**
      * Returns a predefined whitelist of allowed characters for a given language code.
@@ -52,6 +82,26 @@ public class OCRWhitelist {
                 return FR;
             case "ita":
                 return IT;
+            case "por":
+                return PT;
+            case "nld":
+                return NL;
+            case "pol":
+                return PL;
+            case "ces":
+                return CS;
+            case "slk":
+                return SK;
+            case "hun":
+                return HU;
+            case "ron":
+                return RO;
+            case "dan":
+                return DA;
+            case "nor":
+                return NO;
+            case "swe":
+                return SV;
             case "rus":
                 return RU;
             default:
