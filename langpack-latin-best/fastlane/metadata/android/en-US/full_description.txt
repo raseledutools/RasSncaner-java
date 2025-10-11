@@ -1,4 +1,4 @@
-This add-on provides the higher-accuracy Tesseract “Best” models for German, English, Spanish, French and Italian.
+This add-on provides the higher-accuracy Tesseract “Best” models for English, German, French, Italian, Spanish, Portuguese, Dutch, Polish, Czech, Slovak, Hungarian, Romanian, Danish, Norwegian, and Swedish.
 
 • No permissions, no internet – data only
 • Works only with MakeACopy
