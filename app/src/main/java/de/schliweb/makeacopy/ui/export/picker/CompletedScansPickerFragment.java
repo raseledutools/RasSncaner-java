@@ -66,6 +66,41 @@ public class CompletedScansPickerFragment extends Fragment implements CompletedS
         buttonSelectAll = root.findViewById(R.id.button_select_all);
         buttonSelectNone = root.findViewById(R.id.button_select_none);
 
+        // Edge-to-edge insets: pad title with status bar, pad bottom button container with nav bar
+        final View titleView = root.findViewById(R.id.title);
+        final View bottomContainer = root.findViewById(R.id.button_container);
+        final int titleOrigLeft = titleView != null ? titleView.getPaddingLeft() : 0;
+        final int titleOrigTop = titleView != null ? titleView.getPaddingTop() : 0;
+        final int titleOrigRight = titleView != null ? titleView.getPaddingRight() : 0;
+        final int titleOrigBottom = titleView != null ? titleView.getPaddingBottom() : 0;
+        final int bottomOrigLeft = bottomContainer != null ? bottomContainer.getPaddingLeft() : 0;
+        final int bottomOrigTop = bottomContainer != null ? bottomContainer.getPaddingTop() : 0;
+        final int bottomOrigRight = bottomContainer != null ? bottomContainer.getPaddingRight() : 0;
+        final int bottomOrigBottom = bottomContainer != null ? bottomContainer.getPaddingBottom() : 0;
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            androidx.core.graphics.Insets sb = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());
+            if (titleView != null) {
+                titleView.setPadding(titleOrigLeft, titleOrigTop + sb.top, titleOrigRight, titleOrigBottom);
+            }
+            if (bottomContainer != null) {
+                // Apply system bar inset as additional bottom MARGIN instead of padding to avoid
+                // inflating the container's interior height. This keeps buttons visually centered.
+                android.view.ViewGroup.LayoutParams lp = bottomContainer.getLayoutParams();
+                if (lp instanceof androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) {
+                    androidx.constraintlayout.widget.ConstraintLayout.LayoutParams clp = (androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) lp;
+                    clp.bottomMargin = bottomOrigBottom + sb.bottom;
+                    bottomContainer.setLayoutParams(clp);
+                } else if (lp instanceof ViewGroup.MarginLayoutParams) {
+                    ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) lp;
+                    mlp.bottomMargin = bottomOrigBottom + sb.bottom;
+                    bottomContainer.setLayoutParams(mlp);
+                }
+                // Keep original padding
+                bottomContainer.setPadding(bottomOrigLeft, bottomOrigTop, bottomOrigRight, bottomOrigBottom);
+            }
+            return insets;
+        });
+
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerView.setHasFixedSize(true);
         recyclerView.setItemViewCacheSize(20);

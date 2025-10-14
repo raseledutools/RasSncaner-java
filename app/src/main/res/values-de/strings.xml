@@ -154,4 +154,24 @@
     <!-- Hinweis zu OCR-Modellen -->
     <string name="ocr_models_hint">Für schnellere Erkennung sind kompakte Modelle enthalten. Für höhere Genauigkeit kannst du größere \"Best\"-Modelle installieren. Es ist keine Internetverbindung erforderlich.</string>
 
+    <string name="btn_review">Review</string>
+    <string name="edit_word_title">Wort bearbeiten</string>
+    <string name="review_summary_format">Wörter: %1$d  •  Niedrige Konfidenz: %2$d</string>
+    <string name="cm_edit">Bearbeiten…</string>
+    <string name="cm_merge_next">Mit nächstem zusammenführen</string>
+    <string name="cm_split">Teilen</string>
+    <string name="cm_delete">Löschen</string>
+    <string name="cm_case">Groß-/Kleinschreibung</string>
+    <string name="cm_lang">Sprache…</string>
+    <string name="case_upper">GROẞSCHRIFT</string>
+    <string name="case_lower">kleinschrift</string>
+    <string name="case_title">Titel-Schreibung</string>
+    <string name="dialog_language_title">Sprachcode setzen</string>
+    <string name="dialog_language_hint">z. B. eng, deu, fra, ita, spa…</string>
+
+    <!-- Labels -->
+    <string name="label_language">Sprache</string>
+    
+    <!-- OCR Review: Text mode editor tooltip documenting current behavior -->
+    <string name="tip_text_mode_editing">Textmodus: Zeilenumbrüche/Interpunktion werden derzeit zu Leerzeichen normalisiert. Wenn weniger Wörter eingegeben werden als erkannt wurden, bleiben die restlichen OCR‑Wörter unverändert. Änderungen werden nach kurzer Pause übernommen.</string>
 </resources>

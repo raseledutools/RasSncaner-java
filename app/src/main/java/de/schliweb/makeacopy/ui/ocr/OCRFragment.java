@@ -12,7 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Spinner;
+import android.widget.AutoCompleteTextView;
 import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -100,6 +100,15 @@ public class OCRFragment extends Fragment {
                     ? getString(R.string.ocr_results_will_appear_here)
                     : state.ocrText());
 
+            // Enable review button only when OCR finished and we have words
+            /*
+            if (binding.buttonOcrReview != null) {
+                boolean hasWords = state.words() != null && !state.words().isEmpty();
+                boolean enableReview = state.imageProcessed() && !state.processing() && hasWords;
+                binding.buttonOcrReview.setEnabled(enableReview);
+                binding.buttonOcrReview.setAlpha(enableReview ? 1f : 0.4f);
+            }*/
+
             // Proceed to Export
             binding.buttonProcess.setOnClickListener(v ->
                     Navigation.findNavController(requireView()).navigate(R.id.navigation_export));
@@ -115,7 +124,13 @@ public class OCRFragment extends Fragment {
         // When image changes in Crop VM, reset OCR state (no write-back during OCR)
         cropViewModel.getImageBitmap().observe(getViewLifecycleOwner(), bitmap -> {
             if (bitmap != null) {
-                ocrViewModel.resetForNewImage();
+                // Do not reset if we already have processed results; this avoids auto re-run when returning from Preview/Export.
+                de.schliweb.makeacopy.ui.ocr.OCRViewModel.OcrUiState st = null;
+                try { st = ocrViewModel.getState().getValue(); } catch (Throwable ignore) {}
+                boolean alreadyProcessed = st != null && st.imageProcessed();
+                if (!alreadyProcessed) {
+                    ocrViewModel.resetForNewImage();
+                }
             }
         });
 
@@ -146,6 +161,39 @@ public class OCRFragment extends Fragment {
         if (binding.buttonOcrOptions != null) {
             binding.buttonOcrOptions.setOnClickListener(v -> showOcrOptionsDialog());
         }
+        // OCR Review icon (optional)
+        /*
+        if (binding.buttonOcrReview != null) {
+            binding.buttonOcrReview.setOnClickListener(v -> {
+                // Prefer loading last edits from autosave if present; otherwise fall back to current OCR state
+                de.schliweb.makeacopy.ui.ocr.review.OcrReviewViewModel rv = new androidx.lifecycle.ViewModelProvider(requireActivity()).get(de.schliweb.makeacopy.ui.ocr.review.OcrReviewViewModel.class);
+                java.io.File autosave = null;
+                try {
+                    String id = de.schliweb.makeacopy.utils.SessionIds.getOrCreateCurrentScanId(requireContext().getApplicationContext());
+                    rv.setTargetScanId(id);
+                    java.io.File dir = new java.io.File(requireContext().getFilesDir(), "scans/" + id);
+                    autosave = new java.io.File(dir, "page.ocr.json");
+                } catch (Throwable ignore) {
+                    try {
+                        autosave = new java.io.File(requireContext().getFilesDir(), "review_autosave.json");
+                    } catch (Throwable ignore2) {}
+                }
+                boolean loaded = false;
+                if (autosave != null && autosave.exists()) {
+                    try {
+                        rv.load(autosave);
+                        loaded = true;
+                    } catch (Throwable ignore) {}
+                }
+                if (!loaded) {
+                    // Build OcrDoc from current OCR state and pass to Review VM as fallback
+                    de.schliweb.makeacopy.ui.ocr.OCRViewModel.OcrUiState s = ocrViewModel.getState().getValue();
+                    de.schliweb.makeacopy.ui.ocr.review.model.OcrDoc doc = de.schliweb.makeacopy.ui.ocr.review.model.OcrDocMapper.fromState(s);
+                    rv.setDoc(doc);
+                }
+                Navigation.findNavController(requireView()).navigate(R.id.navigation_review);
+            });
+        }*/
 
         // Language selection
         setupLanguageSpinner();
@@ -158,47 +206,61 @@ public class OCRFragment extends Fragment {
      * We do NOT touch any long-lived TessBaseAPI here.
      */
     private void setupLanguageSpinner() {
-        Spinner spinner = binding.languageSpinner;
-        String[] availableLanguages = getAvailableLanguages();
+        AutoCompleteTextView dropdown = binding.languageSpinner;
+        String[] codes = getAvailableLanguages();
+        String[] displayNames = mapCodesToDisplayNames(codes);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
-                android.R.layout.simple_spinner_item, availableLanguages);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(adapter);
+                android.R.layout.simple_list_item_1, displayNames);
+        dropdown.setAdapter(adapter);
 
         String systemLang = OCRUtils.mapSystemLanguageToTesseract(java.util.Locale.getDefault().getLanguage());
-        int defaultPos = IntStream.range(0, availableLanguages.length)
-                .filter(i -> availableLanguages[i].equals(systemLang)).findFirst().orElse(0);
-        spinner.setSelection(defaultPos);
+        int defaultPos = IntStream.range(0, codes.length)
+                .filter(i -> codes[i].equals(systemLang)).findFirst().orElse(0);
+        String defaultCode = codes[defaultPos];
 
-        final boolean[] firstSelection = {true};
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
-                String lang = (String) parent.getItemAtPosition(pos);
+        // Set default selection without triggering listeners and update VM
+        dropdown.setText(displayNames[defaultPos], false);
+        ocrViewModel.setLanguage(defaultCode);
 
-                if (!isLanguageAvailableSafe(lang)) {
-                    UIUtils.showToast(requireContext(), "Language " + lang + " not available.", Toast.LENGTH_LONG);
-                    spinner.setSelection(defaultPos, false);
-                    return;
-                }
+        // Initial auto-run logic (only if not already processed)
+        Bitmap bitmap = cropViewModel.getImageBitmap().getValue();
+        de.schliweb.makeacopy.ui.ocr.OCRViewModel.OcrUiState st0 = ocrViewModel.getState().getValue();
+        boolean alreadyProcessed0 = (st0 != null && st0.imageProcessed());
+        if (bitmap != null && !alreadyProcessed0) {
+            // Do not auto-run if there is no image; otherwise run once
+            // Note: performOCR() checks executor state and image again
+            // Keeping behavior consistent with previous firstSelection logic
+            performOCR();
+        }
 
-                // Only update ViewModel; real OCR init happens inside the OCR job per run
-                ocrViewModel.setLanguage(lang);
+        final int defaultIndex = defaultPos;
+        dropdown.setOnItemClickListener((parent, view, pos, id) -> {
+            String selectedCode = codes[pos];
 
-                if (firstSelection[0]) {
-                    firstSelection[0] = false;
-                    Bitmap bitmap = cropViewModel.getImageBitmap().getValue();
-                    if (bitmap != null) performOCR();
-                } else if (ocrViewModel.getState().getValue() != null
-                        && ocrViewModel.getState().getValue().imageProcessed()) {
-                    // Allow re-run with new language
-                    binding.buttonProcess.setText(R.string.btn_process);
-                    binding.buttonProcess.setOnClickListener(v -> performOCR());
-                }
+            if (!isLanguageAvailableSafe(selectedCode)) {
+                UIUtils.showToast(requireContext(), "Language " + displayNames[pos] + " not available.", Toast.LENGTH_LONG);
+                // Revert to default without firing listener
+                dropdown.setText(displayNames[defaultIndex], false);
+                return;
             }
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) { /* no-op */ }
+            String prevLang = null;
+            try { prevLang = ocrViewModel.getLanguage().getValue(); } catch (Throwable ignore) {}
+            ocrViewModel.setLanguage(selectedCode);
+
+            de.schliweb.makeacopy.ui.ocr.OCRViewModel.OcrUiState st = ocrViewModel.getState().getValue();
+            boolean processed = (st != null && st.imageProcessed());
+            boolean changed = (prevLang == null) ? (selectedCode != null) : !prevLang.equals(selectedCode);
+            if (processed && changed) {
+                // Allow re-run with new language
+                binding.buttonProcess.setText(R.string.btn_process);
+                binding.buttonProcess.setOnClickListener(v -> performOCR());
+            } else if (processed) {
+                // Keep "Next" leading to Export
+                binding.buttonProcess.setText(R.string.next);
+                binding.buttonProcess.setOnClickListener(v ->
+                        Navigation.findNavController(requireView()).navigate(R.id.navigation_export));
+            }
         });
     }
 
@@ -223,6 +285,55 @@ public class OCRFragment extends Fragment {
         }
         // Fallback includes Chinese (Simplified and Traditional) so users on zh locales can select them when asset listing fails
         return OCRUtils.getLanguages();
+    }
+
+    private String[] mapCodesToDisplayNames(String[] codes) {
+        String[] out = new String[codes.length];
+        for (int i = 0; i < codes.length; i++) {
+            out[i] = codeToDisplayName(codes[i]);
+        }
+        return out;
+    }
+
+    private String codeToDisplayName(String code) {
+        // Map common Tesseract 3-letter codes to 2-letter BCP-47 where possible, for localization
+        String two;
+        switch (code) {
+            case "eng": two = "en"; break;
+            case "deu": two = "de"; break;
+            case "fra": two = "fr"; break;
+            case "ita": two = "it"; break;
+            case "spa": two = "es"; break;
+            case "por": two = "pt"; break;
+            case "nld": two = "nl"; break;
+            case "pol": two = "pl"; break;
+            case "ces": two = "cs"; break;
+            case "slk": two = "sk"; break;
+            case "hun": two = "hu"; break;
+            case "ron": two = "ro"; break;
+            case "dan": two = "da"; break;
+            case "nor": two = "no"; break;
+            case "swe": two = "sv"; break;
+            case "rus": two = "ru"; break;
+            case "tha": two = "th"; break;
+            case "chi_sim":
+                return "Chinese (Simplified)";
+            case "chi_tra":
+                return "Chinese (Traditional)";
+            default:
+                // Fallback: try first two letters
+                if (code != null && code.length() >= 2) {
+                    two = code.substring(0, 2);
+                } else {
+                    two = "en";
+                }
+        }
+        try {
+            java.util.Locale loc = java.util.Locale.forLanguageTag(two);
+            return loc.getDisplayLanguage(java.util.Locale.getDefault());
+        } catch (Throwable ignore) {
+            return code;
+        }
     }
 
     /**

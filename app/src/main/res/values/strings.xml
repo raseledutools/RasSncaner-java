@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">MakeACopy</string>
     
+    <!-- OCR Review: Text mode editor tooltip documenting current behavior -->
+    <string name="tip_text_mode_editing">Text mode: Line breaks and punctuation are currently normalized to spaces. If fewer words are entered than were recognized, the remaining OCR words stay unchanged. Changes are applied after a short pause.</string>
+    
     <!-- New menu items for document scanner -->
     <string name="title_camera">Camera</string>
     <string name="title_crop">Crop</string>
@@ -135,6 +138,20 @@
     <string name="btn_options">Options</string>
     <string name="btn_save">Save</string>
     <string name="btn_new">New</string>
+    <string name="btn_review">Review</string>
+    <string name="edit_word_title">Edit word</string>
+    <string name="review_summary_format">Words: %1$d  •  Low confidence: %2$d</string>
+    <string name="cm_edit">Edit…</string>
+    <string name="cm_merge_next">Merge with next</string>
+    <string name="cm_split">Split</string>
+    <string name="cm_delete">Delete</string>
+    <string name="cm_case">Case</string>
+    <string name="cm_lang">Language…</string>
+    <string name="case_upper">UPPERCASE</string>
+    <string name="case_lower">lowercase</string>
+    <string name="case_title">Title Case</string>
+    <string name="dialog_language_title">Set language code</string>
+    <string name="dialog_language_hint">e.g., eng, deu, fra, ita, spa…</string>
 
     <!-- Rotation (post-crop) -->
     <string name="rotate_left_cd">Rotate page 90 degrees counter-clockwise</string>
@@ -155,4 +172,43 @@
     <!-- OCR models hint -->
     <string name="ocr_models_hint">For faster recognition, compact models are included. For higher accuracy, you can install larger \"Best\" models. No internet connection is required.</string>
 
+    <!-- Labels -->
+    <string name="label_language">Language</string>
+
+    
+    <!-- Segmented control labels -->
+    <string name="label_layout">Layout</string>
+    <string name="label_text">Text</string>
+    
+    <!-- OCR Review: Status chips formatting -->
+    <string name="words_count_suffix_format">%1$d W</string>
+    <string name="low_percent_format">Low %1$d%%</string>
+    <string name="low_placeholder">Low —</string>
+    <!-- Initial placeholders for status chips -->
+    <string name="words_count_initial">0 W</string>
+    <string name="lang_placeholder">—</string>
+    
+    <!-- Accessibility content descriptions -->
+    <string name="cd_close">Close</string>
+    <string name="cd_fab_edit">Edit text</string>
+    <string name="cd_zoom_chip_format">Zoom %1$d%%. Tap to reset to 100%%.</string>
+    <string name="cd_zoom_chip_tap_reset">Zoom control. Tap to reset to 100%.</string>
+    <string name="cd_zoom_chip_open_menu">Open zoom menu</string>
+    <string name="cd_minimap">Dokument-Übersicht, tippen zum Springen</string>
+    <string name="cd_undo">Undo last change</string>
+    <string name="cd_redo">Redo last change</string>
+    <string name="cd_export">Export</string>
+
+    <!-- Zoom popover -->
+    <string name="zoom_in">Zoom in</string>
+    <string name="zoom_out">Zoom out</string>
+    <string name="zoom_100">100%</string>
+    <string name="zoom_fit">Fit</string>
+    
+    <!-- A11y content descriptions for menu items -->
+    <string name="cd_action_search">Search</string>
+    <string name="cd_action_export">Export document</string>
+    
+    <!-- Inline edit bottom sheet validation -->
+    <string name="error_empty_input">Please enter a value</string>
 </resources>

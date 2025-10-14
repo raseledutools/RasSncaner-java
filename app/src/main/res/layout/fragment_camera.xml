@@ -7,7 +7,7 @@
         android:layout_height="match_parent"
         android:background="?android:colorBackground">
 
-    <!-- Überschrift / Info -->
+    <!-- Header / Info -->
     <TextView
             android:id="@+id/text_camera"
             android:layout_width="match_parent"
@@ -22,7 +22,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Barrier für Buttons -->
+    <!-- Barrier for buttons -->
     <androidx.constraintlayout.widget.Barrier
             android:id="@+id/buttons_top_barrier"
             android:layout_width="wrap_content"
@@ -41,7 +41,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Kamera-Vorschau -->
+    <!-- Camera preview -->
     <androidx.camera.view.PreviewView
             android:id="@+id/view_finder"
             android:layout_width="0dp"
@@ -52,7 +52,20 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Bild-Vorschau -->
+    <!-- Corner preview overlay -->
+    <de.schliweb.makeacopy.ui.camera.CameraCornersOverlay
+            android:id="@+id/corner_overlay"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_margin="16dp"
+            android:clickable="false"
+            android:focusable="false"
+            app:layout_constraintTop_toBottomOf="@id/text_camera"
+            app:layout_constraintBottom_toTopOf="@id/checkbox_skip_ocr_camera"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Image preview -->
     <ImageView
             android:id="@+id/captured_image"
             android:layout_width="0dp"
@@ -66,7 +79,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Scan-Buttons -->
+    <!-- Scan buttons -->
     <LinearLayout
             android:id="@+id/scan_button_container"
             android:layout_width="match_parent"
@@ -99,6 +112,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:background="@drawable/rounded_bg_light"
                 android:text="@string/btn_pick_image"
                 android:contentDescription="@string/pick_image_cd"
                 android:maxLines="1"
@@ -118,6 +132,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:background="@drawable/rounded_bg_light"
                 android:text="@string/btn_scan"
                 android:maxLines="1"
                 android:ellipsize="end"
@@ -127,7 +142,7 @@
                 app:autoSizeStepGranularity="1sp"/>
     </LinearLayout>
 
-    <!-- Review-Buttons -->
+    <!-- Review buttons -->
     <LinearLayout
             android:id="@+id/button_container"
             android:layout_width="match_parent"
@@ -151,6 +166,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginEnd="12dp"
+                android:background="@drawable/rounded_bg_light"
                 android:text="@string/back"
                 android:maxLines="1"
                 android:ellipsize="end"
@@ -164,6 +180,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:background="@drawable/rounded_bg_light"
                 android:text="@string/next"
                 android:maxLines="1"
                 android:ellipsize="end"

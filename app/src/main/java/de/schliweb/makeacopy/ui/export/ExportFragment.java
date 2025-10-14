@@ -175,11 +175,6 @@ public class ExportFragment extends Fragment {
         // Include OCR option is now managed solely via ExportOptionsDialogFragment.
         // Keep the inline checkbox hidden and do not alter its visibility here.
 
-        // Insets
-        ViewCompat.setOnApplyWindowInsetsListener(binding.exportOptionsGroup, (v, insets) -> {
-            UIUtils.adjustMarginForSystemInsets(binding.exportOptionsGroup, 8); // 8dp extra Abstand
-            return insets;
-        });
 
         // Observe exporting state and progress to update progress bar (delegated)
         de.schliweb.makeacopy.utils.ExportUiBindings.bindExportProgress(binding, getViewLifecycleOwner(), exportViewModel);
@@ -327,6 +322,9 @@ public class ExportFragment extends Fragment {
                         initBmp.getHeight(),
                         initBmp
                 );
+                // Align the session id used by Review autosave to this export session id
+                // TODO
+				// try { de.schliweb.makeacopy.utils.SessionIds.setCurrentScanId(requireContext().getApplicationContext(), initial.id()); } catch (Throwable ignore) {}
                 exportSessionViewModel.setInitial(initial);
                 // Persist initial page so it appears in the registry as well
                 try {
@@ -367,6 +365,9 @@ public class ExportFragment extends Fragment {
                             initBmp.getHeight(),
                             initBmp
                     );
+                    // Keep SessionIds aligned to the last added page (so Review autosave per-page stays consistent)
+                    // TODO
+					//try { de.schliweb.makeacopy.utils.SessionIds.setCurrentScanId(requireContext().getApplicationContext(), added.id()); } catch (Throwable ignore) {}
                     exportSessionViewModel.add(added);
                     // Persist this newly added page into the CompletedScans registry (Insert-Hook)
                     try {
@@ -632,7 +633,7 @@ public class ExportFragment extends Fragment {
 
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
             UIUtils.adjustTextViewTopMarginForStatusBar(binding.textExport, 8);
-            UIUtils.adjustMarginForSystemInsets(binding.exportOptionsGroup, 80);
+            UIUtils.adjustMarginForSystemInsets(binding.exportOptionsGroup, 8);
             return insets;
         });
 
@@ -752,7 +753,38 @@ public class ExportFragment extends Fragment {
         final Uri selectedLocation = exportViewModel.getSelectedFileLocation().getValue();
 
         // PDF-Textlayer: IMMER versuchen, Wörter zu holen (unabhängig vom Flag)
-        List<RecognizedWord> wordsTmp = getOcrWordsFromState();
+		List<RecognizedWord> wordsTmp = getOcrWordsFromState();
+		// TODO
+        /*List<RecognizedWord> wordsTmp = null;
+        // First preference: edited OCR JSON if available
+        try {
+            // Try to find a scan id to resolve autosave path
+            String candidateId = null;
+            List<de.schliweb.makeacopy.ui.export.session.CompletedScan> pgs =
+                    exportSessionViewModel != null ? exportSessionViewModel.getPages().getValue() : null;
+            if (pgs != null && !pgs.isEmpty() && pgs.get(0) != null) {
+                candidateId = pgs.get(0).id();
+            }
+            if (candidateId == null || candidateId.trim().isEmpty()) {
+                // Fall back to session id used by Review autosave
+                candidateId = de.schliweb.makeacopy.utils.SessionIds.getOrCreateCurrentScanId(requireContext().getApplicationContext());
+            }
+            if (candidateId != null && !candidateId.trim().isEmpty()) {
+                File dir = new File(requireContext().getFilesDir(), "scans/" + candidateId);
+                File ocrFile = new File(dir, "page.ocr.json");
+                List<RecognizedWord> fromJson = de.schliweb.makeacopy.utils.OcrJsonWords.parseFile(ocrFile);
+                if (fromJson != null && !fromJson.isEmpty()) {
+                    wordsTmp = fromJson;
+                }
+            }
+            if (wordsTmp == null) {
+                // legacy fallback: current in-memory OCR words
+                wordsTmp = getOcrWordsFromState();
+            }
+        } catch (Throwable ignore) {
+            // On any error, fall back to in-memory words
+            wordsTmp = getOcrWordsFromState();
+        }*/
         if (wordsTmp != null && wordsTmp.isEmpty()) {
             wordsTmp = null;
         }
@@ -880,9 +912,9 @@ public class ExportFragment extends Fragment {
                         }
                         bitmaps.add(pageBmp);
 
-                        // Prefer registry-backed per-page words if available (ocrFormat=="words_json");
-                        // otherwise, fallback to current page's in-memory words (legacy behavior).
-                        List<RecognizedWord> pageWords = null;
+                        // Prefer edited per-page words from ocr.json if available, then registry words_json,
+                        // otherwise fallback to current page's in-memory words (legacy behavior).
+						List<RecognizedWord> pageWords = null;
                         try {
                             String fmt = s.ocrFormat();
                             String path = s.ocrTextPath();
@@ -895,6 +927,32 @@ public class ExportFragment extends Fragment {
                             }
                         } catch (Throwable ignore) {
                         }
+						
+						// TODO
+						/*
+                        List<RecognizedWord> pageWords = null;
+                        try {
+                            // 1) Try our editable OCR JSON sidecar under filesDir/scans/<id>/page.ocr.json
+                            if (s.id() != null) {
+                                File dir = new File(requireContext().getFilesDir(), "scans/" + s.id());
+                                File ocrFile = new File(dir, "page.ocr.json");
+                                List<RecognizedWord> fromJson = de.schliweb.makeacopy.utils.OcrJsonWords.parseFile(ocrFile);
+                                if (fromJson != null && !fromJson.isEmpty()) pageWords = fromJson;
+                            }
+                            // 2) If not found, try registry-backed words_json
+                            if (pageWords == null) {
+                                String fmt = s.ocrFormat();
+                                String path = s.ocrTextPath();
+                                if ("words_json".equalsIgnoreCase(fmt) && path != null) {
+                                    File f = new File(path);
+                                    if (f.exists() && f.isFile()) {
+                                        pageWords = de.schliweb.makeacopy.utils.WordsJson.parseFile(f);
+                                        if (pageWords != null && pageWords.isEmpty()) pageWords = null;
+                                    }
+                                }
+                            }
+                        } catch (Throwable ignore) {
+                        }*/
                         if (pageWords == null && s.inMemoryBitmap() == current && recognizedWords != null && !recognizedWords.isEmpty()) {
                             pageWords = recognizedWords;
                         }

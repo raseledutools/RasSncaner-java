@@ -156,4 +156,18 @@
     <!-- Подсказка по моделям OCR -->
     <string name="ocr_models_hint">Для более быстрой распознаваемости включены компактные модели. Для большей точности вы можете установить более крупные модели «Best». Подключение к интернету не требуется.</string>
 
+    <string name="btn_review">Проверка</string>
+    <string name="edit_word_title">Редактировать слово</string>
+    <string name="review_summary_format">Слова: %1$d  •  Низкая уверенность: %2$d</string>
+    <string name="cm_edit">Изменить…</string>
+    <string name="cm_merge_next">Объединить со следующим</string>
+    <string name="cm_split">Разделить</string>
+    <string name="cm_delete">Удалить</string>
+    <string name="cm_case">Регистр</string>
+    <string name="cm_lang">Язык…</string>
+    <string name="case_upper">ПРОПИСНЫЕ</string>
+    <string name="case_lower">строчные</string>
+    <string name="case_title">Как в заголовке</string>
+    <string name="dialog_language_title">Установить код языка</string>
+    <string name="dialog_language_hint">например, eng, deu, fra, ita, spa…</string>
 </resources>

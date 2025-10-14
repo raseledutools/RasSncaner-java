@@ -1,39 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Theme.MakeACopy" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Primary brand color. -->
+
+    <!-- App theme: Material 3, DayNight -->
+    <style name="Theme.MakeACopy" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Primary colors -->
         <item name="colorPrimary">@color/purple_500</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
         <item name="colorOnPrimary">@color/white</item>
-        <!-- Secondary brand color. -->
+
+        <!-- M3 container tokens -->
+        <item name="colorPrimaryContainer">@color/purple_700</item>
+        <item name="colorOnPrimaryContainer">@color/white</item>
+
+        <!-- Secondary -->
         <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_200</item>
-        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorOnSecondary">@color/black</item>
+
+        <!-- Surface -->
         <item name="colorOnSurface">@color/white</item>
-        <!-- Status bar color. -->
+
+        <!-- System bars -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">false</item>
-        <!-- Customize your theme here. -->
-        <!-- Custom shadow colors for better visibility in dark mode -->
-        <item name="android:outlineSpotShadowColor">#4A7AAC</item> <!-- Lighter blue for spot shadows -->
-        <item name="android:outlineAmbientShadowColor">#2A5A8E</item> <!-- Medium blue for ambient shadows -->
-        <item name="android:elevation">10dp</item> <!-- Slightly increased elevation for more pronounced shadows -->
-        
-        <!-- Set button text color to white in dark mode -->
-        <item name="android:textColorPrimary">@color/white</item>
-        
-        <!-- Override buttonBarButtonStyle to use white text color -->
-        <item name="android:buttonBarButtonStyle">@style/WhiteTextButtonBarButtonStyle</item>
+
+        <!-- (Optional) Shadow colors -->
+        <item name="android:outlineSpotShadowColor">#4A7AAC</item>
+        <item name="android:outlineAmbientShadowColor">#2A5A8E</item>
+
+        <!-- Material dialogs in M3 style -->
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Material3.MaterialAlertDialog</item>
+
+        <!-- Default overlay for BottomSheetDialog -->
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.MakeACopy.BottomSheet</item>
+
+        <!-- Global MaterialButton style -->
+        <item name="materialButtonStyle">@style/Widget.MakeACopy.Button</item>
     </style>
-    
-    <!-- 
-    Custom style for buttonBarButtonStyle with white text in dark mode.
-    This style ensures that all buttons using buttonBarButtonStyle have white text,
-    addressing the issue "Die Schriftfarbe der Buttons im Darkmode ist noch nicht weiß"
-    -->
-    <style name="WhiteTextButtonBarButtonStyle" parent="@android:style/Widget.Material.ButtonBar.AlertDialog">
-        <item name="android:textColor">@color/white</item>
+
+    <!-- Bottom-sheet overlay (no dependency on com.google.android.material.R in code) -->
+    <style name="ThemeOverlay.MakeACopy.BottomSheet" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="android:windowIsTranslucent">false</item>
+        <!-- Optional:
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.M3.Corner.Medium</item>
+        -->
+    </style>
+
+    <!-- Unified MaterialButton style -->
+    <style name="Widget.MakeACopy.Button" parent="Widget.Material3.Button">
         <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="iconTint">@color/white</item>
     </style>
+
+    <!-- Optional: classic ButtonBar style -->
+    <style name="WhiteTextButtonBarButtonStyle" parent="@android:style/Widget.Material.ButtonBar.AlertDialog">
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <!-- Optional: special outlined button style -->
+    <style name="Widget.MakeACopy.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="iconTint">@color/white</item>
+    </style>
+
 </resources>

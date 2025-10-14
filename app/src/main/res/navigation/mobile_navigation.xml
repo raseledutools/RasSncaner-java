@@ -34,4 +34,10 @@
         android:name="de.schliweb.makeacopy.ui.export.picker.CompletedScansPickerFragment"
         android:label="@string/picker_title_completed_scans"
         tools:layout="@layout/fragment_completed_scans_picker" />
+
+    <fragment
+        android:id="@+id/navigation_review"
+        android:name="de.schliweb.makeacopy.ui.ocr.review.OcrReviewFragment"
+        android:label="@string/btn_review"
+        tools:layout="@layout/fragment_ocr_review" />
 </navigation>

@@ -1,17 +1,13 @@
 package de.schliweb.makeacopy;
 
 import android.os.Bundle;
-import android.content.ActivityNotFoundException;
-import android.content.Intent;
-import android.net.Uri;
-import android.util.TypedValue;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Toast;
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import com.google.android.material.appbar.MaterialToolbar;
 import de.schliweb.makeacopy.databinding.ActivityMainBinding;
 import de.schliweb.makeacopy.services.CacheCleanupService;
 
@@ -33,17 +29,45 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Enable edge-to-edge display using modern API (Android 15+ compatible)
-        EdgeToEdge.enable(this);
+        // Enable true edge-to-edge: app draws behind system bars
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        // Apply insets to top app bar and bottom bar container if present
+        final View root = findViewById(android.R.id.content);
+        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            Insets sb = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+            // Toolbar oben auffüttern
+            MaterialToolbar topBar = findViewById(R.id.top_app_bar);
+            if (topBar != null) {
+                topBar.setPadding(
+                        topBar.getPaddingLeft(),
+                        sb.top,
+                        topBar.getPaddingRight(),
+                        topBar.getPaddingBottom()
+                );
+            }
+
+            // BottomAppBar/FAB-Container unten auffüttern
+            /*
+            View bottom = findViewById(R.id.bottom_bar_container);
+            if (bottom != null) {
+                bottom.setPadding(
+                        bottom.getPaddingLeft(),
+                        bottom.getPaddingTop(),
+                        bottom.getPaddingRight(),
+                        sb.bottom
+                );
+            }*/
+
+            // Optional: der Mittelbereich soll NICHT extra Padding bekommen.
+            return insets;
+        });
     }
 
-    /**
-     * Called when the system is running low on memory, and actively running processes
-     * should tighten their belts.
-     */
     @Override
     public void onLowMemory() {
         super.onLowMemory();

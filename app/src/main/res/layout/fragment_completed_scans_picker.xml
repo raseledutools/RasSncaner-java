@@ -4,7 +4,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     android:background="?android:colorBackground">
 
     <TextView
@@ -106,7 +105,7 @@
         android:elevation="8dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -117,6 +116,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginEnd="12dp"
+            android:background="@drawable/rounded_bg_light"
             android:text="@string/back"/>
 
         <Button
@@ -125,6 +125,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginEnd="12dp"
+            android:background="@drawable/rounded_bg_light"
             android:text="@string/delete"
             android:enabled="false"/>
 
@@ -133,6 +134,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:background="@drawable/rounded_bg_light"
             android:text="@string/done"
             android:enabled="false"/>
     </LinearLayout>

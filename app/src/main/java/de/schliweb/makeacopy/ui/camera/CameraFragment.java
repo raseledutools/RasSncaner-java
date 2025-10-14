@@ -105,6 +105,12 @@ import java.util.concurrent.TimeUnit;
  */
 public class CameraFragment extends Fragment implements SensorEventListener {
 
+    // Live corner preview (document trapezoid)
+    private ImageAnalysis imageAnalysis;
+    private java.util.concurrent.ExecutorService analysisExecutor;
+    private volatile boolean analysisEnabled = true;
+    private long lastAnalysisTs = 0L;
+
     private static final String TAG = "CameraFragment";
 
     // Light sensor constants
@@ -126,7 +132,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     private boolean hasLightSensor = false;
     private boolean lowLightPromptShown = false;
     private long lastPromptTime = 0;
-    private boolean isLowLightDialogVisible = false; // (9) Entprellung
+    private boolean isLowLightDialogVisible = false; // (9) Debounce
 
     private ActivityResultLauncher<String> requestPermissionLauncher;
     private ActivityResultLauncher<Intent> pickImageLauncher;
@@ -557,7 +563,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         if (!(isP30Fam || isP40Fam)) return false;
 
         int emui = getEmuiMajorLoose();
-        // konservativ: wenn wir die Version nicht sicher kennen (-1), lieber fallbacken
+        // Conservative: if we cannot determine the version (-1), prefer to fall back
         return (emui == -1) || (emui >= 10);
     }
 
@@ -583,7 +589,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
         if (!forceCompatiblePreview) alreadyReboundCompatibleOnce = false;
 
-        // 1) ImplementationMode vor SurfaceProvider setzen
+        // 1) Set ImplementationMode before SurfaceProvider
         if (forceCompatiblePreview) {
             binding.viewFinder.setImplementationMode(PreviewView.ImplementationMode.COMPATIBLE);
         } else {
@@ -689,11 +695,19 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
         preview = previewBuilder.build();
 
+        // Image analysis for live corner preview
+        ImageAnalysis.Builder iaBuilder = new ImageAnalysis.Builder()
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .setTargetRotation(rotation);
+        imageAnalysis = iaBuilder.build();
+        ensureAnalysisExecutor();
+        imageAnalysis.setAnalyzer(analysisExecutor, this::analyzeFrameForCorners);
+
         CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
 
         try {
             cameraProvider.unbindAll();
-            camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview, imageCapture);
+            camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview, imageCapture, imageAnalysis);
             preview.setSurfaceProvider(binding.viewFinder.getSurfaceProvider());
         } catch (IllegalArgumentException e) {
             Log.e(TAG, "bindToLifecycle failed: " + e.getMessage(), e);
@@ -722,7 +736,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             orientationListener.enable();
         }
 
-        // 4) StreamState-Watchdog: wenn nach 1500ms nicht STREAMING -> COMPATIBLE Rebind
+        // 4) StreamState watchdog: if not STREAMING after 1500ms → rebind in COMPATIBLE mode
         if (!streamObserverAttached) {
             binding.viewFinder.getPreviewStreamState()
                     .observe(getViewLifecycleOwner(), state -> Log.d(TAG, "Preview stream state: " + state));
@@ -838,6 +852,28 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                     }
                 });
 
+                // Forward taps on the overlay to focus too (overlay sits above PreviewView)
+                if (binding.cornerOverlay != null) {
+                    binding.cornerOverlay.setOnTouchListener((ov, ev) -> {
+                        if (ev.getAction() == MotionEvent.ACTION_UP && camera != null) {
+                            try {
+                                MeteringPointFactory mpf = binding.viewFinder.getMeteringPointFactory();
+                                // Overlay shares the same bounds and FIT_CENTER as the PreviewView
+                                MeteringPoint pt = mpf.createPoint(ev.getX(), ev.getY());
+                                FocusMeteringAction action = new FocusMeteringAction.Builder(
+                                        pt,
+                                        FocusMeteringAction.FLAG_AF | FocusMeteringAction.FLAG_AE | FocusMeteringAction.FLAG_AWB
+                                ).setAutoCancelDuration(3, TimeUnit.SECONDS).build();
+                                camera.getCameraControl().startFocusAndMetering(action);
+                                ov.performClick();
+                                return true;
+                            } catch (Throwable ignored) {
+                            }
+                        }
+                        return false;
+                    });
+                }
+
             } catch (Exception e) {
                 handleCameraInitializationError(e);
             }
@@ -858,7 +894,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         UIUtils.showToast(requireContext(), getString(R.string.error_initializing_camera, e.getMessage()), Toast.LENGTH_SHORT);
         binding.textCamera.setText(R.string.camera_ready_tap_the_button_to_scan_a_document);
 
-        if (!reinitScheduled) { // (5) kein multiples Queuen
+        if (!reinitScheduled) { // (5) avoid multiple queueing
             reinitScheduled = true;
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 reinitScheduled = false;
@@ -890,14 +926,14 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             setProcessing(true);
             binding.textCamera.setText(R.string.processing_image);
 
-            // PATCH A: robustes Zielverzeichnis (externalFilesDir kann null sein; SD-Karte / Hersteller-Geräte)
+            // PATCH A: robust target directory (externalFilesDir can be null; SD card / vendor-specific devices)
             File baseExt = requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
             File outputDir;
             if (baseExt != null) {
-                // /storage/.../Android/data/<pkg>/files/Pictures/MakeACopy (auch auf SD, falls gemountet)
+                // /storage/.../Android/data/<pkg>/files/Pictures/MakeACopy (also on SD if mounted)
                 outputDir = new File(baseExt, "MakeACopy");
             } else {
-                // Fallback intern: /data/data/<pkg>/files/Pictures/MakeACopy
+                // Internal fallback: /data/data/<pkg>/files/Pictures/MakeACopy
                 File picturesInInternal = new File(requireContext().getFilesDir(), "Pictures");
                 //noinspection ResultOfMethodCallIgnored
                 picturesInInternal.mkdirs();
@@ -908,7 +944,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 outputDir.mkdirs();
             }
 
-            // Datei mit Zeitstempel erstellen
+            // Create file with timestamp
             String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US).format(System.currentTimeMillis());
             File photoFile = new File(outputDir, "MakeACopy_" + timestamp + ".jpg");
 
@@ -1110,6 +1146,12 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         if (binding.checkboxSkipOcrCamera != null) {
             binding.checkboxSkipOcrCamera.setVisibility(View.VISIBLE);
         }
+        // Enable live corner preview
+        analysisEnabled = true;
+        if (binding.cornerOverlay != null) {
+            binding.cornerOverlay.setVisibility(View.VISIBLE);
+            binding.cornerOverlay.setCorners(null); // clear previous
+        }
         binding.textCamera.setText(R.string.camera_ready_tap_the_button_to_scan_a_document);
 
         // Reset rotations for a new scan/page
@@ -1151,6 +1193,12 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         // Hide Skip OCR toggle in review/confirm mode
         if (binding.checkboxSkipOcrCamera != null) {
             binding.checkboxSkipOcrCamera.setVisibility(View.GONE);
+        }
+        // Disable live corner preview
+        analysisEnabled = false;
+        if (binding.cornerOverlay != null) {
+            binding.cornerOverlay.setCorners(null);
+            binding.cornerOverlay.setVisibility(View.GONE);
         }
         binding.textCamera.setText(R.string.review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again);
     }
@@ -1321,11 +1369,24 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         super.onDestroyView();
         turnOffFlashlight();
         if (sensorManager != null && lightSensor != null) {
-            sensorManager.unregisterListener(this); // (3) defensiv
+            sensorManager.unregisterListener(this); // (3) defensive
         }
         if (cameraProvider != null) cameraProvider.unbindAll();
         if (orientationListener != null) {
             orientationListener.disable();
+        }
+        // Stop analysis and release executor
+        analysisEnabled = false;
+        if (imageAnalysis != null) {
+            try {
+                imageAnalysis.clearAnalyzer();
+            } catch (Throwable ignored) {
+            }
+            imageAnalysis = null;
+        }
+        if (analysisExecutor != null) {
+            analysisExecutor.shutdownNow();
+            analysisExecutor = null;
         }
         streamObserverAttached = false;
         binding = null;
@@ -1489,4 +1550,166 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     ImageCapture getImageCaptureForTest() {
         return imageCapture;
     }
+
+    // ===== Live document trapezoid preview support =====
+    private void ensureAnalysisExecutor() {
+        if (analysisExecutor == null || analysisExecutor.isShutdown()) {
+            analysisExecutor = java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
+                Thread t = new Thread(r, "CornerAnalysis");
+                t.setDaemon(true);
+                return t;
+            });
+        }
+    }
+
+    private void analyzeFrameForCorners(@NonNull ImageProxy image) {
+        try {
+            if (!analysisEnabled || binding == null || !isAdded()) return;
+            long now = System.currentTimeMillis();
+            // Throttle to ~5 FPS
+            if (now - lastAnalysisTs < 180) return;
+            lastAnalysisTs = now;
+
+            // Convert to small upright bitmap (to reduce CPU)
+            Bitmap bmp = yuvToBitmapUprightSmall(image, 720); // cap longest side ~720px
+            if (bmp == null) return;
+
+            // Init CV once
+            try {
+                if (!de.schliweb.makeacopy.utils.OpenCVUtils.isInitialized()) {
+                    de.schliweb.makeacopy.utils.OpenCVUtils.init(requireContext().getApplicationContext());
+                }
+            } catch (Throwable ignored) {
+            }
+
+            org.opencv.core.Point[] pts = de.schliweb.makeacopy.utils.OpenCVUtils.detectDocumentCorners(requireContext(), bmp);
+            if (pts == null || pts.length != 4) {
+                // hide overlay if not found
+                runOnUiThreadSafe(() -> {
+                    if (binding != null && binding.cornerOverlay != null) binding.cornerOverlay.setCorners(null);
+                });
+                return;
+            }
+
+            // Map bitmap coords to overlay coords (PreviewView with FIT_CENTER)
+            android.graphics.PointF[] viewPts = mapToOverlayPoints(pts, bmp.getWidth(), bmp.getHeight());
+            runOnUiThreadSafe(() -> {
+                if (binding != null && binding.cornerOverlay != null) binding.cornerOverlay.setCorners(viewPts);
+            });
+        } catch (Throwable t) {
+            Log.w(TAG, "analyzeFrameForCorners failed: " + t.getMessage());
+        } finally {
+            try {
+                image.close();
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
+    private void runOnUiThreadSafe(Runnable r) {
+        if (!isAdded()) return;
+        try {
+            requireActivity().runOnUiThread(r);
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private android.graphics.PointF[] mapToOverlayPoints(org.opencv.core.Point[] src, int bmpW, int bmpH) {
+        if (binding == null) return null;
+        int vw = binding.viewFinder.getWidth();
+        int vh = binding.viewFinder.getHeight();
+        if (vw <= 0 || vh <= 0 || bmpW <= 0 || bmpH <= 0) return null;
+        float sx = vw / (float) bmpW;
+        float sy = vh / (float) bmpH;
+        float scale = Math.min(sx, sy);
+        float contentW = bmpW * scale;
+        float contentH = bmpH * scale;
+        float offX = (vw - contentW) * 0.5f;
+        float offY = (vh - contentH) * 0.5f;
+        android.graphics.PointF[] out = new android.graphics.PointF[4];
+        for (int i = 0; i < 4; i++) {
+            float x = (float) src[i].x;
+            float y = (float) src[i].y;
+            out[i] = new android.graphics.PointF(offX + x * scale, offY + y * scale);
+        }
+        return out;
+    }
+
+    private Bitmap yuvToBitmapUprightSmall(@NonNull ImageProxy image, int maxSize) {
+        try {
+            byte[] nv21 = toNv21(image);
+            if (nv21 == null) return null;
+            int w = image.getWidth();
+            int h = image.getHeight();
+            android.graphics.YuvImage yuv = new android.graphics.YuvImage(nv21, android.graphics.ImageFormat.NV21, w, h, null);
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            yuv.compressToJpeg(new android.graphics.Rect(0, 0, w, h), 60, out);
+            byte[] jpeg = out.toByteArray();
+            out.close();
+            // Decode with inSampleSize
+            android.graphics.BitmapFactory.Options opts = new android.graphics.BitmapFactory.Options();
+            opts.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            opts.inSampleSize = computeSampleSize(w, h, maxSize);
+            Bitmap raw = android.graphics.BitmapFactory.decodeByteArray(jpeg, 0, jpeg.length, opts);
+            if (raw == null) return null;
+            int rot = image.getImageInfo().getRotationDegrees();
+            if (rot == 0) return raw;
+            android.graphics.Matrix m = new android.graphics.Matrix();
+            m.postRotate(rot);
+            Bitmap rotated = Bitmap.createBitmap(raw, 0, 0, raw.getWidth(), raw.getHeight(), m, true);
+            if (rotated != raw) raw.recycle();
+            return rotated;
+        } catch (Throwable t) {
+            Log.w(TAG, "yuvToBitmapUprightSmall failed: " + t.getMessage());
+            return null;
+        }
+    }
+
+    private int computeSampleSize(int w, int h, int maxSize) {
+        int longSide = Math.max(w, h);
+        int sample = 1;
+        while (longSide / sample > maxSize) sample <<= 1; // power-of-two downsampling
+        return Math.max(1, sample);
+    }
+
+    private byte[] toNv21(@NonNull ImageProxy image) {
+        ImageProxy.PlaneProxy[] planes = image.getPlanes();
+        int width = image.getWidth();
+        int height = image.getHeight();
+        byte[] out = new byte[width * height * 3 / 2];
+        int offset = 0;
+
+        // Y plane
+        java.nio.ByteBuffer yBuf = planes[0].getBuffer();
+        int yRowStride = planes[0].getRowStride();
+        int yPixStride = planes[0].getPixelStride();
+        for (int row = 0; row < height; row++) {
+            int yPos = row * yRowStride;
+            for (int col = 0; col < width; col++) {
+                out[offset++] = yBuf.get(yPos + col * yPixStride);
+            }
+        }
+
+        // UV planes: NV21 expects VU interleaved
+        java.nio.ByteBuffer uBuf = planes[1].getBuffer();
+        java.nio.ByteBuffer vBuf = planes[2].getBuffer();
+        int uvRowStride = planes[1].getRowStride();
+        int uvPixStride = planes[1].getPixelStride();
+        int chromaHeight = height / 2;
+        int chromaWidth = width / 2;
+        for (int row = 0; row < chromaHeight; row++) {
+            int uvRowStart = row * uvRowStride;
+            for (int col = 0; col < chromaWidth; col++) {
+                int uIndex = uvRowStart + col * uvPixStride;
+                int vIndex = uvRowStart + col * uvPixStride;
+                byte u = uBuf.get(uIndex);
+                byte v = vBuf.get(vIndex);
+                // V then U
+                out[offset++] = v;
+                out[offset++] = u;
+            }
+        }
+        return out;
+    }
+
 }

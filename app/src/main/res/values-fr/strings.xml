@@ -154,4 +154,18 @@
     <!-- Astuce sur les modèles OCR -->
     <string name="ocr_models_hint">Pour une reconnaissance plus rapide, des modèles compacts sont inclus. Pour une meilleure précision, vous pouvez installer des modèles « Best » plus volumineux. Aucune connexion Internet n’est requise.</string>
 
+    <string name="btn_review">Relecture</string>
+    <string name="edit_word_title">Modifier le mot</string>
+    <string name="review_summary_format">Mots: %1$d  •  Faible confiance: %2$d</string>
+    <string name="cm_edit">Modifier…</string>
+    <string name="cm_merge_next">Fusionner avec le suivant</string>
+    <string name="cm_split">Scinder</string>
+    <string name="cm_delete">Supprimer</string>
+    <string name="cm_case">Casse</string>
+    <string name="cm_lang">Langue…</string>
+    <string name="case_upper">MAJUSCULES</string>
+    <string name="case_lower">minuscules</string>
+    <string name="case_title">Casse de titre</string>
+    <string name="dialog_language_title">Définir le code langue</string>
+    <string name="dialog_language_hint">p. ex. eng, deu, fra, ita, spa…</string>
 </resources>

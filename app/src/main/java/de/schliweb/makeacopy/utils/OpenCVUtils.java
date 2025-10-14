@@ -46,9 +46,9 @@ public class OpenCVUtils {
     private static volatile OrtSession ortSession;
 
     // ---- thresholds (tuned) ----
-    private static final double AREA_FRAC_MIN_ONNX = 0.008; // 0.8% der Bildfläche statt 5%
-    private static final double SIDE_FRAC_MIN = 0.010; // 1% der kurzen Bildkante statt 2%
-    private static final double CONF_MIN_AREA_FRAC = 0.008; // gleiche Untergrenze für die Confidence
+    private static final double AREA_FRAC_MIN_ONNX = 0.008; // 0.8% of the image area instead of 5%
+    private static final double SIDE_FRAC_MIN = 0.010; // 1% of the short image side instead of 2%
+    private static final double CONF_MIN_AREA_FRAC = 0.008; // same lower bound for the confidence
 
 
     private OpenCVUtils() {
@@ -1234,12 +1234,12 @@ public class OpenCVUtils {
         cx /= 4.0;
         cy /= 4.0;
 
-        final double fx = cx, fy = cy; // <- final Kopien für Lambda
+        final double fx = cx, fy = cy; // <- final copies for lambda
 
-        // sortiere nach Winkel um den Schwerpunkt
+        // sort by angle around the centroid
         pts.sort(Comparator.comparingDouble(p -> Math.atan2(p.y - fy, p.x - fx)));
 
-        // rotiere, damit Index 0 = top-left (min x+y)
+        // rotate so that index 0 = top-left (min x+y)
         int start = 0;
         double best = Double.MAX_VALUE;
         for (int i = 0; i < 4; i++) {

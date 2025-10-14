@@ -155,4 +155,18 @@
     <!-- Sugerencia sobre los modelos OCR -->
     <string name="ocr_models_hint">Para un reconocimiento más rápido se incluyen modelos compactos. Para una mayor precisión, puedes instalar modelos “Best” más grandes. No se requiere conexión a Internet.</string>
 
+    <string name="btn_review">Revisión</string>
+    <string name="edit_word_title">Editar palabra</string>
+    <string name="review_summary_format">Palabras: %1$d  •  Baja confianza: %2$d</string>
+    <string name="cm_edit">Editar…</string>
+    <string name="cm_merge_next">Unir con la siguiente</string>
+    <string name="cm_split">Dividir</string>
+    <string name="cm_delete">Eliminar</string>
+    <string name="cm_case">Mayúsc./minúsc.</string>
+    <string name="cm_lang">Idioma…</string>
+    <string name="case_upper">MAYÚSCULAS</string>
+    <string name="case_lower">minúsculas</string>
+    <string name="case_title">Mayúsculas tipo título</string>
+    <string name="dialog_language_title">Establecer código de idioma</string>
+    <string name="dialog_language_hint">p. ej., eng, deu, fra, ita, spa…</string>
 </resources>
