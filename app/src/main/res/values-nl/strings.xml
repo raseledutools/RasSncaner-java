@@ -71,6 +71,7 @@
     <string name="pdf_bw_mode_robust">Z/W (robuust)</string>
     <string name="pdf_bw_mode_classic">Z/W (klassiek)</string>
     <string name="skip_ocr_export_only">OCR overslaan (alleen exporteren)</string>
+    <string name="preview_corner_detection">Voorbeeld van hoekdetectie</string>
     <string name="btn_pick_image">Laden</string>
     <string name="pick_image_cd">Bestaande afbeelding laden</string>
     <string name="error_selected_file_is_not_an_image">Het geselecteerde bestand is geen afbeelding</string>

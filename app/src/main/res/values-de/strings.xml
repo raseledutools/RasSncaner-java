@@ -70,6 +70,7 @@
     <string name="pdf_bw_mode_robust">S/W (robust)</string>
     <string name="pdf_bw_mode_classic">S/W (klassisch)</string>
     <string name="skip_ocr_export_only">OCR überspringen (nur Export)</string>
+    <string name="preview_corner_detection">Vorschau Eckenerkennung</string>
     <string name="btn_pick_image">Laden</string>
     <string name="pick_image_cd">Vorhandenes Bild laden</string>
     <string name="error_selected_file_is_not_an_image">Ausgewählte Datei ist kein Bild</string>

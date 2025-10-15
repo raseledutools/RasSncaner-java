@@ -71,6 +71,7 @@
     <string name="pdf_bw_mode_robust">B/N (robusto)</string>
     <string name="pdf_bw_mode_classic">B/N (classico)</string>
     <string name="skip_ocr_export_only">Salta OCR (solo esportazione)</string>
+    <string name="preview_corner_detection">Anteprima del rilevamento degli angoli</string>
     <string name="btn_pick_image">Carica</string>
     <string name="pick_image_cd">Carica immagine esistente</string>
     <string name="error_selected_file_is_not_an_image">Il file selezionato non è un\'immagine</string>

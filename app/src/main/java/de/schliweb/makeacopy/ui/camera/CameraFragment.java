@@ -108,7 +108,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     // Live corner preview (document trapezoid)
     private ImageAnalysis imageAnalysis;
     private java.util.concurrent.ExecutorService analysisExecutor;
-    private volatile boolean analysisEnabled = true;
+    private volatile boolean analysisEnabled = false;
     private long lastAnalysisTs = 0L;
 
     private static final String TAG = "CameraFragment";
@@ -219,17 +219,6 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         // Init UI visibility
         showCameraMode();
 
-        // Wire Skip OCR (export only) checkbox: persist in SharedPreferences
-        try {
-            android.content.SharedPreferences prefs = requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE);
-            boolean skipOcr = prefs.getBoolean("skip_ocr", false);
-            if (binding.checkboxSkipOcrCamera != null) {
-                binding.checkboxSkipOcrCamera.setChecked(skipOcr);
-                binding.checkboxSkipOcrCamera.setOnCheckedChangeListener((btn, checked) ->
-                        prefs.edit().putBoolean("skip_ocr", checked).apply());
-            }
-        } catch (Exception ignored) {
-        }
 
         final TextView textView = binding.textCamera;
         cameraViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
@@ -262,6 +251,34 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
                 pickImageLauncher.launch(intent);
+            });
+        }
+
+        // Settings/options button: open a simple dialog with only "Skip OCR"
+        if (binding.buttonCameraOptions != null) {
+            binding.buttonCameraOptions.setOnClickListener(v -> {
+                getParentFragmentManager().setFragmentResultListener(CameraOptionsDialogFragment.REQUEST_KEY, getViewLifecycleOwner(), (requestKey, bundle) -> {
+                    boolean skip = bundle.getBoolean(CameraOptionsDialogFragment.BUNDLE_SKIP_OCR, false);
+                    boolean analysisPref = bundle.getBoolean(CameraOptionsDialogFragment.BUNDLE_ANALYSIS_ENABLED, true);
+                    try {
+                        android.content.SharedPreferences prefs = requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE);
+                        prefs.edit()
+                                .putBoolean("skip_ocr", skip)
+                                .putBoolean("include_ocr", !skip)
+                                .putBoolean("analysis_enabled", analysisPref)
+                                .apply();
+                    } catch (Throwable ignore) {
+                    }
+                    // Apply analysis toggle immediately if we are in camera mode
+                    try {
+                        if (binding != null && binding.viewFinder.getVisibility() == View.VISIBLE) {
+                            setLiveAnalysisEnabled(analysisPref);
+                        }
+                    } catch (Throwable ignore) {
+                    }
+                    getParentFragmentManager().clearFragmentResultListener(CameraOptionsDialogFragment.REQUEST_KEY);
+                });
+                CameraOptionsDialogFragment.show(getParentFragmentManager());
             });
         }
 
@@ -422,8 +439,73 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 && (m.startsWith("XQ-EC") || m.startsWith("XQ-ES"));
     }
 
+    private static boolean isSonyModel(String... prefixes) {
+        String manufacturer = android.os.Build.MANUFACTURER;
+        String model = android.os.Build.MODEL;
+        if (manufacturer == null || model == null) return false;
+        if (!"SONY".equalsIgnoreCase(manufacturer)) return false;
+        String m = model.toUpperCase(Locale.ROOT).trim();
+        for (String p : prefixes) {
+            if (m.startsWith(p.toUpperCase(Locale.ROOT))) return true;
+        }
+        return false;
+    }
+
+    private boolean isXperia5IV() {
+        // International variants start with XQ-CQ; Japanese carrier models: SO-54C / SOG09
+        return isSonyModel("XQ-CQ", "SO-54C", "SOG09");
+    }
+
     private boolean shouldForceCompatiblePreview() {
-        return isPreviewBlackScreenQuirkDevice() || isXperia1VI();
+        return isPreviewBlackScreenQuirkDevice()
+                || isXperia1VI()
+                || isXperia5IV();
+    }
+
+    private void logStartupInfo(boolean implCompatible,
+                                boolean quirkActive,
+                                boolean conservativeRes,
+                                android.util.Range<Integer> fpsRange) {
+        try {
+            String manufacturer = android.os.Build.MANUFACTURER;
+            String brand = android.os.Build.BRAND;
+            String model = android.os.Build.MODEL;
+            int sdk = android.os.Build.VERSION.SDK_INT;
+
+            String previewRes = "n/a";
+            try {
+                if (preview != null && preview.getResolutionInfo() != null) {
+                    android.util.Size s = preview.getResolutionInfo().getResolution();
+                    previewRes = s.getWidth() + "x" + s.getHeight();
+                }
+            } catch (Throwable ignored) {
+            }
+
+            String captureRes = "n/a";
+            try {
+                if (imageCapture != null && imageCapture.getResolutionInfo() != null) {
+                    android.util.Size s = imageCapture.getResolutionInfo().getResolution();
+                    captureRes = s.getWidth() + "x" + s.getHeight();
+                }
+            } catch (Throwable ignored) {
+            }
+
+            String captureMode = (imageCapture != null
+                    && imageCapture.getCaptureMode() == ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                    ? "MINIMIZE_LATENCY" : "MAXIMIZE_QUALITY";
+
+            Log.i(TAG, "=== Camera startup info ===");
+            Log.i(TAG, "Device: " + manufacturer + " / " + brand + " / " + model + " (SDK " + sdk + ")");
+            Log.i(TAG, "ImplMode: " + (implCompatible ? "COMPATIBLE" : "PERFORMANCE"));
+            Log.i(TAG, "Quirk active: " + quirkActive + ", conservativeRes: " + conservativeRes);
+            Log.i(TAG, "Preview res: " + previewRes + ", Capture res: " + captureRes);
+            Log.i(TAG, "Capture mode: " + captureMode + ", AE_TARGET_FPS_RANGE: " + fpsRange);
+            Log.i(TAG, "isXperia1VI=" + isXperia1VI() + ", isXperia5IV=" + isXperia5IV()
+                    + ", isHuaweiQuirk=" + isHuaweiQuirkDevice() + ", isHonorQuirk=" + isPreviewBlackScreenQuirkDevice());
+            Log.i(TAG, "============================");
+        } catch (Throwable t) {
+            Log.w(TAG, "logStartupInfo failed: " + t.getMessage());
+        }
     }
 
     /**
@@ -573,6 +655,48 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
     private boolean alreadyReboundCompatibleOnce = false;
 
+    private void setLiveAnalysisEnabled(boolean enabled) {
+        if (!isAdded()) {
+            analysisEnabled = enabled;
+            return;
+        }
+
+        analysisEnabled = enabled;
+
+        try {
+            android.content.SharedPreferences prefs =
+                    requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE);
+            prefs.edit().putBoolean("analysis_enabled", enabled).apply();
+        } catch (Throwable ignore) {
+        }
+
+        if (binding != null && binding.cornerOverlay != null) {
+            if (enabled && binding.viewFinder.getVisibility() == View.VISIBLE) {
+                binding.cornerOverlay.setVisibility(View.VISIBLE);
+            } else {
+                binding.cornerOverlay.setCorners(null);
+                binding.cornerOverlay.setVisibility(View.GONE);
+            }
+        }
+
+        try {
+            if (imageAnalysis != null) {
+                if (enabled) {
+                    ensureAnalysisExecutor();
+                    imageAnalysis.setAnalyzer(analysisExecutor, this::analyzeFrameForCorners);
+                } else {
+                    imageAnalysis.clearAnalyzer();
+                    if (analysisExecutor != null) {
+                        analysisExecutor.shutdownNow();
+                        analysisExecutor = null;
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "setLiveAnalysisEnabled failed: " + t.getMessage());
+        }
+    }
+
     /**
      * Binds the camera use cases to the lifecycle and configures the preview and image capture
      * settings. Includes setup for target aspect ratio, rotation and FPS range adjustments using
@@ -599,11 +723,10 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
         int rotation = getViewFinderRotation();
 
-        boolean useConservativeRes = forceCompatiblePreview || isPreviewBlackScreenQuirkDevice();
+        // Only run the PREVIEW conservatively; capture stays high-res
+        boolean useConservativePreview = forceCompatiblePreview || isPreviewBlackScreenQuirkDevice() || isXperia1VI() || isXperia5IV();
 
-        // 2) Conservative FPS via Camera2Interop
-
-        // Use ResolutionSelector to avoid deprecated setTargetAspectRatio()/setTargetResolution()
+        // 2) Set up the ResolutionSelector
         androidx.camera.core.resolutionselector.ResolutionSelector.Builder rsBuilderPreview =
                 new androidx.camera.core.resolutionselector.ResolutionSelector.Builder()
                         .setAspectRatioStrategy(
@@ -612,6 +735,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                                         androidx.camera.core.resolutionselector.AspectRatioStrategy.FALLBACK_RULE_AUTO
                                 )
                         );
+
         androidx.camera.core.resolutionselector.ResolutionSelector.Builder rsBuilderCapture =
                 new androidx.camera.core.resolutionselector.ResolutionSelector.Builder()
                         .setAspectRatioStrategy(
@@ -621,30 +745,24 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                                 )
                         );
 
-        if (useConservativeRes) {
-            // Prefer 1440x1080 in conservative mode; fall back to the closest lower, then higher
-            android.util.Size preferred = new android.util.Size(1440, 1080);
+        // Preview in conservative mode (e.g. 1440x1080), capture prefers high-res
+        if (useConservativePreview) {
+            android.util.Size preferredPreview = new android.util.Size(1440, 1080);
             rsBuilderPreview.setResolutionStrategy(
                     new androidx.camera.core.resolutionselector.ResolutionStrategy(
-                            preferred,
+                            preferredPreview,
                             androidx.camera.core.resolutionselector.ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER
                     )
             );
-            rsBuilderCapture.setResolutionStrategy(
-                    new androidx.camera.core.resolutionselector.ResolutionStrategy(
-                            preferred,
-                            androidx.camera.core.resolutionselector.ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER
-                    )
-            );
-        } else {
-            // high resolution (if available) to improve sharpness
-            android.util.Size preferredHigh = new android.util.Size(4032, 3024);
-            rsBuilderCapture.setResolutionStrategy(new androidx.camera.core.resolutionselector.ResolutionStrategy(
-                    preferredHigh,
-                    androidx.camera.core.resolutionselector.ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER
-            ));
         }
-
+        // Prefer high-res capture (e.g. 4032x3024)
+        android.util.Size preferredHigh = new android.util.Size(4032, 3024);
+        rsBuilderCapture.setResolutionStrategy(
+                new androidx.camera.core.resolutionselector.ResolutionStrategy(
+                        preferredHigh,
+                        androidx.camera.core.resolutionselector.ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER
+                )
+        );
 
         androidx.camera.core.resolutionselector.ResolutionSelector previewSelector = rsBuilderPreview.build();
         androidx.camera.core.resolutionselector.ResolutionSelector captureSelector = rsBuilderCapture.build();
@@ -659,17 +777,16 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 .setTargetRotation(rotation)
                 .setJpegQuality(98);
 
+        // 3) Camera2 interop: conservative FPS + high-quality pipelines
         androidx.camera.camera2.interop.Camera2Interop.Extender<Preview> pExt =
                 new androidx.camera.camera2.interop.Camera2Interop.Extender<>(previewBuilder);
         androidx.camera.camera2.interop.Camera2Interop.Extender<ImageCapture> cExt =
                 new androidx.camera.camera2.interop.Camera2Interop.Extender<>(captureBuilder);
 
-        // AE_TARGET_FPS_RANGE = 15–30 (adjust if needed)
         android.util.Range<Integer> fps = new android.util.Range<>(15, 30);
         pExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, fps);
         cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, fps);
 
-        // Pro quality: continuous AF + high-quality pipelines
         pExt.setCaptureRequestOption(
                 android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE,
                 android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
@@ -689,29 +806,57 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 android.hardware.camera2.CaptureRequest.SHADING_MODE,
                 android.hardware.camera2.CaptureRequest.SHADING_MODE_HIGH_QUALITY);
 
-        imageCapture = captureBuilder
-                //.setJpegQuality(90) // optional
-                .build();
-
+        imageCapture = captureBuilder.build();
         preview = previewBuilder.build();
 
-        // Image analysis for live corner preview
+        // 4) ImageAnalysis for live document overlay
         ImageAnalysis.Builder iaBuilder = new ImageAnalysis.Builder()
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .setTargetRotation(rotation);
         imageAnalysis = iaBuilder.build();
-        ensureAnalysisExecutor();
-        imageAnalysis.setAnalyzer(analysisExecutor, this::analyzeFrameForCorners);
+        // Only enable if turned on
+        if (analysisEnabled) {
+            ensureAnalysisExecutor();
+            imageAnalysis.setAnalyzer(analysisExecutor, this::analyzeFrameForCorners);
+            if (binding.cornerOverlay != null) {
+                binding.cornerOverlay.setVisibility(View.VISIBLE);
+                binding.cornerOverlay.setCorners(null);
+            }
+        } else {
+            try {
+                imageAnalysis.clearAnalyzer();
+            } catch (Throwable ignore) {
+            }
+            if (binding.cornerOverlay != null) {
+                binding.cornerOverlay.setCorners(null);
+                binding.cornerOverlay.setVisibility(View.GONE);
+            }
+        }
 
         CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
 
         try {
             cameraProvider.unbindAll();
             camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview, imageCapture, imageAnalysis);
-            preview.setSurfaceProvider(binding.viewFinder.getSurfaceProvider());
+
+            final boolean implCompatible = forceCompatiblePreview;
+            final boolean quirkActive = shouldForceCompatiblePreview();
+            final boolean conservativeRes = useConservativePreview;
+            logStartupInfo(implCompatible, quirkActive, conservativeRes, fps);
+
+            // Log SurfaceRequest and then forward it to the PreviewView
+            Preview.SurfaceProvider vfProvider = binding.viewFinder.getSurfaceProvider();
+            preview.setSurfaceProvider(
+                    ContextCompat.getMainExecutor(requireContext()),
+                    request -> {
+                        android.util.Size s = request.getResolution();
+                        Log.i(TAG, "Preview SurfaceRequest resolution: " + s.getWidth() + "x" + s.getHeight());
+                        vfProvider.onSurfaceRequested(request);
+                    }
+            );
         } catch (IllegalArgumentException e) {
             Log.e(TAG, "bindToLifecycle failed: " + e.getMessage(), e);
-            // Last resort: try compatible once
+            // Fallback: rebind once in COMPATIBLE mode
             if (!forceCompatiblePreview) {
                 bindUseCases(true);
                 return;
@@ -719,7 +864,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             throw e;
         }
 
-        // 3) Orientation listener updates BOTH capture + preview
+        // 5) Orientation listener keeps preview and capture in sync
         if (orientationListener == null) {
             orientationListener = new OrientationEventListener(requireContext()) {
                 @Override
@@ -736,7 +881,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             orientationListener.enable();
         }
 
-        // 4) StreamState watchdog: if not STREAMING after 1500ms → rebind in COMPATIBLE mode
+
+        // 6) Watchdog: after 1.5s without STREAMING → rebind in COMPATIBLE mode
         if (!streamObserverAttached) {
             binding.viewFinder.getPreviewStreamState()
                     .observe(getViewLifecycleOwner(), state -> Log.d(TAG, "Preview stream state: " + state));
@@ -745,8 +891,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
         binding.viewFinder.postDelayed(() -> {
             if (!isAdded() || binding == null) return;
-            PreviewView.StreamState s = binding.viewFinder.getPreviewStreamState().getValue();
-            boolean streaming = (s == PreviewView.StreamState.STREAMING);
+            PreviewView.StreamState st = binding.viewFinder.getPreviewStreamState().getValue();
+            boolean streaming = (st == PreviewView.StreamState.STREAMING);
             if (!streaming) {
                 if (!alreadyReboundCompatibleOnce) {
                     Log.w(TAG, "Preview watchdog: not STREAMING → rebinding in COMPATIBLE mode");
@@ -759,6 +905,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             }
         }, 1500);
     }
+
 
     /**
      * Initializes the camera for the fragment with proper configuration and bindings.
@@ -1078,41 +1225,6 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     }
 
     /**
-     * Displays the image captured by the camera in the interface and transitions the UI to review mode.
-     * Loads via ImageLoader with path-first strategy; falls back to URI if needed.
-     */
-    private void displayCapturedImage(String imagePath, Uri imageUri) {
-        if (binding == null || !isAdded()) return;
-
-        setProcessing(true);
-        binding.textCamera.setText(R.string.processing_image);
-        // Clear previous image to avoid showing stale bitmap while loading new one
-        binding.capturedImage.setImageDrawable(null);
-
-        de.schliweb.makeacopy.utils.ImageLoader.decodeAsync(requireContext(), imagePath, imageUri,
-                new de.schliweb.makeacopy.utils.ImageLoader.Callback() {
-                    @Override
-                    public void onLoaded(Bitmap bitmap) {
-                        if (binding == null || !isAdded()) return;
-                        Bitmap safe = de.schliweb.makeacopy.utils.BitmapUtils.ensureDisplaySafe(bitmap);
-                        binding.capturedImage.setImageBitmap(safe);
-                        setProcessing(false);
-                        showReviewMode();
-                    }
-
-                    @Override
-                    public void onError(Throwable error) {
-                        if (!isAdded()) return;
-                        String msg = error != null ? error.getMessage() : "unknown";
-                        UIUtils.showToast(requireContext(), getString(R.string.error_displaying_image, msg), Toast.LENGTH_SHORT);
-                        setProcessing(false);
-                        // On preview load failure, reset to camera mode instead of navigating forward
-                        resetCamera();
-                    }
-                });
-    }
-
-    /**
      * Configures the UI to display the camera mode and ensures the interface is
      * ready for capturing an image. This method toggles visibility for specific
      * UI elements and updates the displayed text to guide the user for scanning
@@ -1142,16 +1254,17 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         if (binding.scanButtonContainer != null) {
             binding.scanButtonContainer.setVisibility(View.VISIBLE);
         }
-        // Show Skip OCR toggle only in camera mode
-        if (binding.checkboxSkipOcrCamera != null) {
-            binding.checkboxSkipOcrCamera.setVisibility(View.VISIBLE);
+        // Live corner preview: respect user preference
+        boolean analysisPref = false;
+        try {
+            android.content.SharedPreferences prefs =
+                    requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE);
+            analysisPref = prefs.getBoolean("analysis_enabled", false); // Default AUS
+        } catch (Throwable ignore) {
         }
-        // Enable live corner preview
-        analysisEnabled = true;
-        if (binding.cornerOverlay != null) {
-            binding.cornerOverlay.setVisibility(View.VISIBLE);
-            binding.cornerOverlay.setCorners(null); // clear previous
-        }
+
+        // Important: always use the helper (overlay + analyzer + pref sync)
+        setLiveAnalysisEnabled(analysisPref);
         binding.textCamera.setText(R.string.camera_ready_tap_the_button_to_scan_a_document);
 
         // Reset rotations for a new scan/page
@@ -1164,43 +1277,6 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         }
 
         lowLightPromptShown = false;
-    }
-
-    /**
-     * Configures the UI to transition to the review mode after an image is captured.
-     * This method updates the visibility of various UI components and provides the
-     * user with instructions for confirming or retaking the captured image.
-     * <p>
-     * Preconditions:
-     * - The `binding` property must not be null.
-     * <p>
-     * Behavior:
-     * - Hides the camera view (`viewFinder`) and displays the captured image preview (`capturedImage`).
-     * - Reveals the button container (`buttonContainer`) while hiding the scan button (`buttonScan`).
-     * - Adjusts visibility of the optional `scanButtonContainer` if it exists in the binding.
-     * - Updates the displayed text to guide the user for either confirming or retaking the captured image.
-     */
-    private void showReviewMode() {
-        if (binding == null) return;
-
-        binding.viewFinder.setVisibility(View.GONE);
-        binding.capturedImage.setVisibility(View.VISIBLE);
-        binding.buttonContainer.setVisibility(View.VISIBLE);
-        binding.buttonScan.setVisibility(View.GONE);
-        if (binding.scanButtonContainer != null) {
-            binding.scanButtonContainer.setVisibility(View.GONE);
-        }
-        // Hide Skip OCR toggle in review/confirm mode
-        if (binding.checkboxSkipOcrCamera != null) {
-            binding.checkboxSkipOcrCamera.setVisibility(View.GONE);
-        }
-        // Disable live corner preview
-        analysisEnabled = false;
-        if (binding.cornerOverlay != null) {
-            binding.cornerOverlay.setCorners(null);
-            binding.cornerOverlay.setVisibility(View.GONE);
-        }
-        binding.textCamera.setText(R.string.review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again);
     }
 
     /**
@@ -1679,7 +1755,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         byte[] out = new byte[width * height * 3 / 2];
         int offset = 0;
 
-        // Y plane
+        // Y
         java.nio.ByteBuffer yBuf = planes[0].getBuffer();
         int yRowStride = planes[0].getRowStride();
         int yPixStride = planes[0].getPixelStride();
@@ -1690,26 +1766,31 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             }
         }
 
-        // UV planes: NV21 expects VU interleaved
+        // U / V may have different strides!
         java.nio.ByteBuffer uBuf = planes[1].getBuffer();
         java.nio.ByteBuffer vBuf = planes[2].getBuffer();
-        int uvRowStride = planes[1].getRowStride();
-        int uvPixStride = planes[1].getPixelStride();
+        int uRowStride = planes[1].getRowStride();
+        int uPixStride = planes[1].getPixelStride();
+        int vRowStride = planes[2].getRowStride();
+        int vPixStride = planes[2].getPixelStride();
+
         int chromaHeight = height / 2;
         int chromaWidth = width / 2;
         for (int row = 0; row < chromaHeight; row++) {
-            int uvRowStart = row * uvRowStride;
+            int uRowStart = row * uRowStride;
+            int vRowStart = row * vRowStride;
             for (int col = 0; col < chromaWidth; col++) {
-                int uIndex = uvRowStart + col * uvPixStride;
-                int vIndex = uvRowStart + col * uvPixStride;
+                int uIndex = uRowStart + col * uPixStride;
+                int vIndex = vRowStart + col * vPixStride;
                 byte u = uBuf.get(uIndex);
                 byte v = vBuf.get(vIndex);
-                // V then U
+                // NV21: V then U
                 out[offset++] = v;
                 out[offset++] = u;
             }
         }
         return out;
     }
+
 
 }

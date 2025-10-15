@@ -70,6 +70,7 @@
     <string name="pdf_bw_mode_robust">N&amp;B (robuste)</string>
     <string name="pdf_bw_mode_classic">N&amp;B (classique)</string>
     <string name="skip_ocr_export_only">Ignorer l’OCR (export seulement)</string>
+    <string name="preview_corner_detection">Aperçu de la détection des coins</string>
     <string name="btn_pick_image">Charger</string>
     <string name="pick_image_cd">Charger une image existante</string>
     <string name="error_selected_file_is_not_an_image">Le fichier sélectionné n’est pas une image</string>

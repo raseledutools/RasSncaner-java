@@ -71,6 +71,7 @@
     <string name="pdf_bw_mode_robust">A/N (robust)</string>
     <string name="pdf_bw_mode_classic">A/N (clasic)</string>
     <string name="skip_ocr_export_only">Omite OCR (doar export)</string>
+    <string name="preview_corner_detection">Previzualizare detecție colțuri</string>
     <string name="btn_pick_image">Încarcă</string>
     <string name="pick_image_cd">Încarcă o imagine existentă</string>
     <string name="error_selected_file_is_not_an_image">Fișierul selectat nu este o imagine</string>

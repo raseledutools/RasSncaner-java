@@ -71,6 +71,7 @@
     <string name="pdf_bw_mode_robust">ขาวดำ (ทนทาน)</string>
     <string name="pdf_bw_mode_classic">ขาวดำ (คลาสสิก)</string>
     <string name="skip_ocr_export_only">ข้าม OCR (ส่งออกเท่านั้น)</string>
+    <string name="preview_corner_detection">แสดงตัวอย่างการตรวจจับมุม</string>
     <string name="btn_pick_image">โหลด</string>
     <string name="pick_image_cd">โหลดรูปที่มีอยู่</string>
     <string name="error_selected_file_is_not_an_image">ไฟล์ที่เลือกไม่ใช่รูปภาพ</string>
