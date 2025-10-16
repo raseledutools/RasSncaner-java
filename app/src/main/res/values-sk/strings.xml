@@ -71,6 +71,7 @@
     <string name="pdf_bw_mode_robust">Č/B (robustný)</string>
     <string name="pdf_bw_mode_classic">Č/B (klasický)</string>
     <string name="skip_ocr_export_only">Preskočiť OCR (iba export)</string>
+    <string name="skip_cropping">Preskočiť orezanie</string>
     <string name="preview_corner_detection">Náhľad detekcie rohov</string>
     <string name="btn_pick_image">Načítať</string>
     <string name="pick_image_cd">Načítať existujúci obrázok</string>

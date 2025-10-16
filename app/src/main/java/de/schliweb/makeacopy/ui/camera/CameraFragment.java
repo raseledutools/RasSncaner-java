@@ -105,6 +105,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class CameraFragment extends Fragment implements SensorEventListener {
 
+    // Xiaomi/Redmi torch exposure quirk mitigation
+    private boolean isXiaomiTorchQuirk = false;
+    private int previousExposureCompIndex = 0;
+    private boolean exposureCompApplied = false;
+
     // Live corner preview (document trapezoid)
     private ImageAnalysis imageAnalysis;
     private java.util.concurrent.ExecutorService analysisExecutor;
@@ -197,15 +202,40 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                         cameraViewModel.setImagePath(null);
                         cameraViewModel.setImageUri(uri);
 
-                        // Navigate directly to CropFragment (skip confirm step)
+                        // Navigate to next step depending on preference
                         if (isAdded()) {
-                            Navigation.findNavController(requireView()).navigate(R.id.navigation_crop);
+                            boolean skipOcr = false;
+                            boolean skipPerspective = false;
+                            try {
+                                android.content.SharedPreferences prefs = requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE);
+                                skipOcr = prefs.getBoolean("skip_ocr", false);
+                                skipPerspective = prefs.getBoolean("skip_perspective_correction", false);
+                            } catch (Throwable ignoreSp) {
+                            }
+                            int dest;
+                            if (skipPerspective) {
+                                dest = skipOcr ? R.id.navigation_export : R.id.navigation_ocr;
+                            } else {
+                                dest = R.id.navigation_crop;
+                            }
+                            // Reset OCR state if going directly to OCR
+                            if (skipPerspective && !skipOcr) {
+                                try {
+                                    OCRViewModel ocrVm = new ViewModelProvider(requireActivity()).get(OCRViewModel.class);
+                                    ocrVm.resetForNewImage();
+                                } catch (Throwable ignore) {
+                                }
+                            }
+                            Navigation.findNavController(requireView()).navigate(dest);
                         }
                     }
                 });
 
         binding = FragmentCameraBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
+
+        // Detect Xiaomi/Redmi torch exposure quirk once
+        isXiaomiTorchQuirk = isXiaomiTorchQuirkDevice();
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.buttonContainer, (v, insets) -> {
             de.schliweb.makeacopy.utils.UIUtils.adjustMarginForSystemInsets(binding.buttonContainer, 8);
@@ -312,7 +342,30 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             if (isAdded() && getView() != null) {
                 cropViewModel.setImageCropped(false);
 
-                Navigation.findNavController(requireView()).navigate(R.id.navigation_crop);
+                boolean skipOcr = false;
+                boolean skipPerspective = false;
+                try {
+                    android.content.SharedPreferences prefs = requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE);
+                    skipOcr = prefs.getBoolean("skip_ocr", false);
+                    skipPerspective = prefs.getBoolean("skip_perspective_correction", false);
+                } catch (Throwable ignoreSp) {
+                }
+
+                int dest;
+                if (skipPerspective) {
+                    dest = skipOcr ? R.id.navigation_export : R.id.navigation_ocr;
+                } else {
+                    dest = R.id.navigation_crop;
+                }
+                // Reset OCR state if going directly to OCR
+                if (skipPerspective && !skipOcr) {
+                    try {
+                        OCRViewModel ocrVm = new ViewModelProvider(requireActivity()).get(OCRViewModel.class);
+                        ocrVm.resetForNewImage();
+                    } catch (Throwable ignore) {
+                    }
+                }
+                Navigation.findNavController(requireView()).navigate(dest);
             }
         });
 
@@ -456,10 +509,21 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         return isSonyModel("XQ-CQ", "SO-54C", "SOG09");
     }
 
+    // Broad Sony fallback: enforce TextureView (COMPATIBLE) on Android 15+
+    private boolean isSonyAndroid15Plus() {
+        try {
+            return "SONY".equalsIgnoreCase(android.os.Build.MANUFACTURER)
+                    && android.os.Build.VERSION.SDK_INT >= 35; // Android 15
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
     private boolean shouldForceCompatiblePreview() {
         return isPreviewBlackScreenQuirkDevice()
                 || isXperia1VI()
-                || isXperia5IV();
+                || isXperia5IV()
+                || isSonyAndroid15Plus();
     }
 
     private void logStartupInfo(boolean implCompatible,
@@ -649,6 +713,58 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         return (emui == -1) || (emui >= 10);
     }
 
+    // Redmi/Xiaomi torch darkening quirk detection (Android 15 / HyperOS variants too)
+    private boolean isXiaomiTorchQuirkDevice() {
+        try {
+            String manufacturer = android.os.Build.MANUFACTURER;
+            String model = android.os.Build.MODEL;
+            if (manufacturer == null && model == null) return false;
+            String man = manufacturer != null ? manufacturer.trim().toUpperCase(Locale.ROOT) : "";
+            String mod = model != null ? model.trim().toUpperCase(Locale.ROOT) : "";
+            boolean isXiaomi = man.contains("XIAOMI") || man.contains("REDMI") || man.contains("POCO");
+            boolean mentionsRedmi = mod.contains("REDMI") || mod.contains("POCO");
+            return isXiaomi || mentionsRedmi;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    private void applyTorchExposureWorkaround(boolean torchOn) {
+        if (!isXiaomiTorchQuirk) return;
+        if (camera == null) return;
+        try {
+            ExposureState es = camera.getCameraInfo().getExposureState();
+            if (es == null) return;
+            android.util.Range<Integer> range = es.getExposureCompensationRange();
+            if (range == null) return;
+
+            if (torchOn) {
+                // Save current value once
+                try {
+                    previousExposureCompIndex = es.getExposureCompensationIndex();
+                } catch (Throwable ignore) {
+                    // default 0
+                }
+                int desired = 4; // +4 tends to be ~1.0-1.3 EV on many devices
+                int maxAllowed = range.getUpper() != null ? range.getUpper() : desired;
+                int minAllowed = range.getLower() != null ? range.getLower() : -desired;
+                int target = Math.max(minAllowed, Math.min(maxAllowed, desired));
+                camera.getCameraControl().setExposureCompensationIndex(target);
+                exposureCompApplied = true;
+                Log.i(TAG, "Applied Xiaomi torch exposure workaround: EC=" + target + " (range=" + range + ")");
+            } else {
+                if (exposureCompApplied) {
+                    int restore = previousExposureCompIndex;
+                    camera.getCameraControl().setExposureCompensationIndex(restore);
+                    exposureCompApplied = false;
+                    Log.i(TAG, "Restored exposure compensation index to " + restore);
+                }
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "applyTorchExposureWorkaround failed: " + t.getMessage());
+        }
+    }
+
     private Preview preview; // make field to update rotation later
 
     private boolean streamObserverAttached = false;
@@ -724,7 +840,11 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         int rotation = getViewFinderRotation();
 
         // Only run the PREVIEW conservatively; capture stays high-res
-        boolean useConservativePreview = forceCompatiblePreview || isPreviewBlackScreenQuirkDevice() || isXperia1VI() || isXperia5IV();
+        boolean useConservativePreview = forceCompatiblePreview
+                || isPreviewBlackScreenQuirkDevice()
+                || isXperia1VI()
+                || isXperia5IV()
+                || isSonyAndroid15Plus();
 
         // 2) Set up the ResolutionSelector
         androidx.camera.core.resolutionselector.ResolutionSelector.Builder rsBuilderPreview =
@@ -854,6 +974,11 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                         vfProvider.onSurfaceRequested(request);
                     }
             );
+
+            // Re-apply torch exposure workaround after (re)bind if torch is currently on
+            if (isFlashlightOn) {
+                applyTorchExposureWorkaround(true);
+            }
         } catch (IllegalArgumentException e) {
             Log.e(TAG, "bindToLifecycle failed: " + e.getMessage(), e);
             // Fallback: rebind once in COMPATIBLE mode
@@ -900,10 +1025,10 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                     bindUseCases(true);
                 } else {
                     Log.e(TAG, "Still not STREAMING after COMPATIBLE rebind – please collect logs");
-                    UIUtils.showToast(requireContext(), R.string.error_camera_preview_failed, Toast.LENGTH_SHORT);
+                    UIUtils.showToast(requireContext(), R.string.error_camera_preview_failed, Toast.LENGTH_LONG);
                 }
             }
-        }, 1500);
+        }, 3000);
     }
 
 
@@ -1038,7 +1163,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         if (!isAdded() || binding == null) return;
 
         Log.e(TAG, "Camera initialization error: " + e.getMessage());
-        UIUtils.showToast(requireContext(), getString(R.string.error_initializing_camera, e.getMessage()), Toast.LENGTH_SHORT);
+        UIUtils.showToast(requireContext(), getString(R.string.error_initializing_camera, e.getMessage()), Toast.LENGTH_LONG);
         binding.textCamera.setText(R.string.camera_ready_tap_the_button_to_scan_a_document);
 
         if (!reinitScheduled) { // (5) avoid multiple queueing
@@ -1168,7 +1293,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                             cameraViewModel.setImagePath(photoFile.getAbsolutePath());
                             cameraViewModel.setImageUri(imageUri);
 
-                            // Navigate directly to CropFragment (skip confirm step)
+                            // Navigate to next step: Crop or OCR depending on user preference
                             try {
                                 if (isAdded()) {
                                     // Reset OCR state for a fresh scan before navigating further
@@ -1180,7 +1305,23 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                                     }
 
                                     cropViewModel.setImageCropped(false);
-                                    Navigation.findNavController(requireView()).navigate(R.id.navigation_crop);
+
+                                    boolean skipOcr = false;
+                                    boolean skipCroppig = false;
+                                    try {
+                                        android.content.SharedPreferences prefs = requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE);
+                                        skipOcr = prefs.getBoolean("skip_ocr", false);
+                                        skipCroppig = prefs.getBoolean("skip_cropping", false);
+                                    } catch (Throwable ignoreSp) {
+                                    }
+
+                                    int dest;
+                                    if (skipCroppig) {
+                                        dest = skipOcr ? R.id.navigation_export : R.id.navigation_ocr;
+                                    } else {
+                                        dest = R.id.navigation_crop;
+                                    }
+                                    Navigation.findNavController(requireView()).navigate(dest);
                                 }
                             } catch (Throwable ignored) {
                             }
@@ -1322,6 +1463,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         try {
             isFlashlightOn = !isFlashlightOn;
             camera.getCameraControl().enableTorch(isFlashlightOn);
+            // Apply device-specific exposure workaround if needed
+            applyTorchExposureWorkaround(isFlashlightOn);
             if (binding != null && binding.buttonFlash != null) {
                 binding.buttonFlash.setImageResource(isFlashlightOn ? R.drawable.ic_flash_on : R.drawable.ic_flash_off);
                 UIUtils.showToast(requireContext(), isFlashlightOn ? R.string.flashlight_on : R.string.flashlight_off, Toast.LENGTH_SHORT);
@@ -1361,6 +1504,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             try {
                 camera.getCameraControl().enableTorch(false);
                 isFlashlightOn = false;
+                // Restore exposure if changed
+                applyTorchExposureWorkaround(false);
                 if (binding != null && binding.buttonFlash != null) {
                     binding.buttonFlash.setImageResource(R.drawable.ic_flash_off);
                 }

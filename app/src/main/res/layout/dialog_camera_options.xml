@@ -15,6 +15,12 @@
         android:text="@string/skip_ocr_export_only" />
 
     <CheckBox
+        android:id="@+id/dialog_checkbox_skip_cropping"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/skip_cropping" />
+
+    <CheckBox
         android:id="@+id/dialog_checkbox_analysis_enabled"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

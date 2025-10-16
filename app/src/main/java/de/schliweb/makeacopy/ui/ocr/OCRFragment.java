@@ -10,7 +10,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Toast;
@@ -30,6 +29,7 @@ import de.schliweb.makeacopy.utils.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -50,6 +50,9 @@ public class OCRFragment extends Fragment {
     private OCRViewModel ocrViewModel;
     private CropViewModel cropViewModel;
 
+    // Track last observed image to decide when to reset OCR state
+    private Bitmap lastObservedBitmap;
+
     // Language helper for listing/availability checks (no long-lived TessBaseAPI instance)
     private OCRHelper langHelper;
 
@@ -67,6 +70,30 @@ public class OCRFragment extends Fragment {
         cropViewModel = new ViewModelProvider(requireActivity()).get(CropViewModel.class);
         binding = FragmentOcrBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
+
+        // If OCR was opened directly (skipping Crop), ensure we have a bitmap in CropViewModel
+        try {
+            if (cropViewModel.getImageBitmap().getValue() == null) {
+                de.schliweb.makeacopy.ui.camera.CameraViewModel camVm = new ViewModelProvider(requireActivity()).get(de.schliweb.makeacopy.ui.camera.CameraViewModel.class);
+                String path = camVm.getImagePath() != null ? camVm.getImagePath().getValue() : null;
+                android.net.Uri uri = camVm.getImageUri() != null ? camVm.getImageUri().getValue() : null;
+                android.graphics.Bitmap bmp = de.schliweb.makeacopy.utils.ImageLoader.decode(requireContext(), path, uri);
+                if (bmp != null) {
+                    cropViewModel.setImageBitmap(bmp);
+                }
+            }
+        } catch (Throwable ignore) {
+        }
+
+        // On first entry, if we have an image, clear any stale OCR results and remember this image
+        try {
+            Bitmap cur = cropViewModel.getImageBitmap().getValue();
+            if (cur != null) {
+                lastObservedBitmap = cur;
+                ocrViewModel.resetForNewImage();
+            }
+        } catch (Throwable ignore) {
+        }
 
         // Language helper (no initTesseract() here!)
         langHelper = new OCRHelper(requireContext().getApplicationContext());
@@ -121,14 +148,11 @@ public class OCRFragment extends Fragment {
             if (msg != null) UIUtils.showToast(requireContext(), "OCR failed: " + msg, Toast.LENGTH_LONG);
         });
 
-        // When image changes in Crop VM, reset OCR state (no write-back during OCR)
+        // When image changes in Crop VM, reset OCR state if it's a different image than last time
         cropViewModel.getImageBitmap().observe(getViewLifecycleOwner(), bitmap -> {
             if (bitmap != null) {
-                // Do not reset if we already have processed results; this avoids auto re-run when returning from Preview/Export.
-                de.schliweb.makeacopy.ui.ocr.OCRViewModel.OcrUiState st = null;
-                try { st = ocrViewModel.getState().getValue(); } catch (Throwable ignore) {}
-                boolean alreadyProcessed = st != null && st.imageProcessed();
-                if (!alreadyProcessed) {
+                if (bitmap != lastObservedBitmap) {
+                    lastObservedBitmap = bitmap;
                     ocrViewModel.resetForNewImage();
                 }
             }
@@ -245,12 +269,15 @@ public class OCRFragment extends Fragment {
             }
 
             String prevLang = null;
-            try { prevLang = ocrViewModel.getLanguage().getValue(); } catch (Throwable ignore) {}
+            try {
+                prevLang = ocrViewModel.getLanguage().getValue();
+            } catch (Throwable ignore) {
+            }
             ocrViewModel.setLanguage(selectedCode);
 
             de.schliweb.makeacopy.ui.ocr.OCRViewModel.OcrUiState st = ocrViewModel.getState().getValue();
             boolean processed = (st != null && st.imageProcessed());
-            boolean changed = (prevLang == null) ? (selectedCode != null) : !prevLang.equals(selectedCode);
+            boolean changed = !Objects.equals(prevLang, selectedCode);
             if (processed && changed) {
                 // Allow re-run with new language
                 binding.buttonProcess.setText(R.string.btn_process);
@@ -299,23 +326,57 @@ public class OCRFragment extends Fragment {
         // Map common Tesseract 3-letter codes to 2-letter BCP-47 where possible, for localization
         String two;
         switch (code) {
-            case "eng": two = "en"; break;
-            case "deu": two = "de"; break;
-            case "fra": two = "fr"; break;
-            case "ita": two = "it"; break;
-            case "spa": two = "es"; break;
-            case "por": two = "pt"; break;
-            case "nld": two = "nl"; break;
-            case "pol": two = "pl"; break;
-            case "ces": two = "cs"; break;
-            case "slk": two = "sk"; break;
-            case "hun": two = "hu"; break;
-            case "ron": two = "ro"; break;
-            case "dan": two = "da"; break;
-            case "nor": two = "no"; break;
-            case "swe": two = "sv"; break;
-            case "rus": two = "ru"; break;
-            case "tha": two = "th"; break;
+            case "eng":
+                two = "en";
+                break;
+            case "deu":
+                two = "de";
+                break;
+            case "fra":
+                two = "fr";
+                break;
+            case "ita":
+                two = "it";
+                break;
+            case "spa":
+                two = "es";
+                break;
+            case "por":
+                two = "pt";
+                break;
+            case "nld":
+                two = "nl";
+                break;
+            case "pol":
+                two = "pl";
+                break;
+            case "ces":
+                two = "cs";
+                break;
+            case "slk":
+                two = "sk";
+                break;
+            case "hun":
+                two = "hu";
+                break;
+            case "ron":
+                two = "ro";
+                break;
+            case "dan":
+                two = "da";
+                break;
+            case "nor":
+                two = "no";
+                break;
+            case "swe":
+                two = "sv";
+                break;
+            case "rus":
+                two = "ru";
+                break;
+            case "tha":
+                two = "th";
+                break;
             case "chi_sim":
                 return "Chinese (Simplified)";
             case "chi_tra":

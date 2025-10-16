@@ -74,6 +74,7 @@
     <string name="pdf_bw_mode_classic">B&amp;W (classic)</string>
     <string name="skip_ocr_export_only">Skip OCR (export only)</string>
     <string name="preview_corner_detection">Preview corner detection</string>
+    <string name="skip_cropping">Skip cropping</string>
     <string name="btn_pick_image">Load</string>
     <string name="pick_image_cd">Load existing image</string>
     <string name="error_selected_file_is_not_an_image">Selected file is not an image</string>

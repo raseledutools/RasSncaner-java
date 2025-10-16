@@ -192,6 +192,19 @@ public class ExportFragment extends Fragment {
         ocrViewModel = new ViewModelProvider(requireActivity()).get(OCRViewModel.class);
         cameraViewModel = new ViewModelProvider(requireActivity()).get(CameraViewModel.class);
 
+        // Ensure we have a bitmap if arriving here directly (skipping Crop/OCR)
+        try {
+            if (cropViewModel.getImageBitmap().getValue() == null) {
+                String path = cameraViewModel.getImagePath() != null ? cameraViewModel.getImagePath().getValue() : null;
+                Uri u = cameraViewModel.getImageUri() != null ? cameraViewModel.getImageUri().getValue() : null;
+                Bitmap bmp = de.schliweb.makeacopy.utils.ImageLoader.decode(requireContext(), path, u);
+                if (bmp != null) {
+                    cropViewModel.setImageBitmap(bmp);
+                }
+            }
+        } catch (Throwable ignore) {
+        }
+
         // Multipage session setup (v1 increment) - use Activity scope so it survives navigation
         exportSessionViewModel = new ViewModelProvider(requireActivity()).get(de.schliweb.makeacopy.ui.export.session.ExportSessionViewModel.class);
         pagesAdapter = new de.schliweb.makeacopy.ui.export.session.ExportPagesAdapter(new de.schliweb.makeacopy.ui.export.session.ExportPagesAdapter.Callbacks() {
@@ -324,7 +337,7 @@ public class ExportFragment extends Fragment {
                 );
                 // Align the session id used by Review autosave to this export session id
                 // TODO
-				// try { de.schliweb.makeacopy.utils.SessionIds.setCurrentScanId(requireContext().getApplicationContext(), initial.id()); } catch (Throwable ignore) {}
+                // try { de.schliweb.makeacopy.utils.SessionIds.setCurrentScanId(requireContext().getApplicationContext(), initial.id()); } catch (Throwable ignore) {}
                 exportSessionViewModel.setInitial(initial);
                 // Persist initial page so it appears in the registry as well
                 try {
@@ -367,7 +380,7 @@ public class ExportFragment extends Fragment {
                     );
                     // Keep SessionIds aligned to the last added page (so Review autosave per-page stays consistent)
                     // TODO
-					//try { de.schliweb.makeacopy.utils.SessionIds.setCurrentScanId(requireContext().getApplicationContext(), added.id()); } catch (Throwable ignore) {}
+                    //try { de.schliweb.makeacopy.utils.SessionIds.setCurrentScanId(requireContext().getApplicationContext(), added.id()); } catch (Throwable ignore) {}
                     exportSessionViewModel.add(added);
                     // Persist this newly added page into the CompletedScans registry (Insert-Hook)
                     try {
@@ -753,8 +766,8 @@ public class ExportFragment extends Fragment {
         final Uri selectedLocation = exportViewModel.getSelectedFileLocation().getValue();
 
         // PDF-Textlayer: IMMER versuchen, Wörter zu holen (unabhängig vom Flag)
-		List<RecognizedWord> wordsTmp = getOcrWordsFromState();
-		// TODO
+        List<RecognizedWord> wordsTmp = getOcrWordsFromState();
+        // TODO
         /*List<RecognizedWord> wordsTmp = null;
         // First preference: edited OCR JSON if available
         try {
@@ -914,7 +927,7 @@ public class ExportFragment extends Fragment {
 
                         // Prefer edited per-page words from ocr.json if available, then registry words_json,
                         // otherwise fallback to current page's in-memory words (legacy behavior).
-						List<RecognizedWord> pageWords = null;
+                        List<RecognizedWord> pageWords = null;
                         try {
                             String fmt = s.ocrFormat();
                             String path = s.ocrTextPath();
@@ -927,8 +940,8 @@ public class ExportFragment extends Fragment {
                             }
                         } catch (Throwable ignore) {
                         }
-						
-						// TODO
+
+                        // TODO
 						/*
                         List<RecognizedWord> pageWords = null;
                         try {

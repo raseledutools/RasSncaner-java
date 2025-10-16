@@ -71,6 +71,7 @@
     <string name="pdf_bw_mode_robust">Ч/Б (устойчивый)</string>
     <string name="pdf_bw_mode_classic">Ч/Б (классический)</string>
     <string name="skip_ocr_export_only">Пропустить OCR (только экспорт)</string>
+    <string name="skip_cropping">Пропустить обрезку</string>
     <string name="preview_corner_detection">Предпросмотр обнаружения углов</string>
     <string name="btn_pick_image">Загрузить</string>
     <string name="pick_image_cd">Загрузить существующее изображение</string>

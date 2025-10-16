@@ -71,6 +71,7 @@
     <string name="pdf_bw_mode_robust">B/N (robusto)</string>
     <string name="pdf_bw_mode_classic">B/N (clásico)</string>
     <string name="skip_ocr_export_only">Omitir OCR (solo exportar)</string>
+    <string name="skip_cropping">Omitir recorte</string>
     <string name="preview_corner_detection">Vista previa de detección de esquinas</string>
     <string name="btn_pick_image">Cargar</string>
     <string name="pick_image_cd">Cargar imagen existente</string>
