@@ -205,28 +205,32 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                         // Navigate to next step depending on preference
                         if (isAdded()) {
                             boolean skipOcr = false;
-                            boolean skipPerspective = false;
+                            boolean skipCropping = false;
                             try {
                                 android.content.SharedPreferences prefs = requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE);
                                 skipOcr = prefs.getBoolean("skip_ocr", false);
-                                skipPerspective = prefs.getBoolean("skip_perspective_correction", false);
+                                skipCropping = prefs.getBoolean("skip_cropping", false);
                             } catch (Throwable ignoreSp) {
                             }
                             int dest;
-                            if (skipPerspective) {
+                            if (skipCropping) {
                                 dest = skipOcr ? R.id.navigation_export : R.id.navigation_ocr;
                             } else {
                                 dest = R.id.navigation_crop;
                             }
                             // Reset OCR state if going directly to OCR
-                            if (skipPerspective && !skipOcr) {
+                            if (skipCropping && !skipOcr) {
                                 try {
                                     OCRViewModel ocrVm = new ViewModelProvider(requireActivity()).get(OCRViewModel.class);
                                     ocrVm.resetForNewImage();
                                 } catch (Throwable ignore) {
                                 }
                             }
-                            Navigation.findNavController(requireView()).navigate(dest);
+                            try {
+                                Navigation.findNavController(requireView()).navigate(dest);
+                            } catch (IllegalArgumentException | IllegalStateException ignored) {
+                                // Fragment not in a state to navigate anymore; safe to ignore
+                            }
                         }
                     }
                 });
@@ -343,29 +347,32 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 cropViewModel.setImageCropped(false);
 
                 boolean skipOcr = false;
-                boolean skipPerspective = false;
+                boolean skipCropping = false;
                 try {
                     android.content.SharedPreferences prefs = requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE);
                     skipOcr = prefs.getBoolean("skip_ocr", false);
-                    skipPerspective = prefs.getBoolean("skip_perspective_correction", false);
+                    skipCropping = prefs.getBoolean("skip_cropping", false);
                 } catch (Throwable ignoreSp) {
                 }
 
                 int dest;
-                if (skipPerspective) {
+                if (skipCropping) {
                     dest = skipOcr ? R.id.navigation_export : R.id.navigation_ocr;
                 } else {
                     dest = R.id.navigation_crop;
                 }
                 // Reset OCR state if going directly to OCR
-                if (skipPerspective && !skipOcr) {
+                if (skipCropping && !skipOcr) {
                     try {
                         OCRViewModel ocrVm = new ViewModelProvider(requireActivity()).get(OCRViewModel.class);
                         ocrVm.resetForNewImage();
                     } catch (Throwable ignore) {
                     }
                 }
-                Navigation.findNavController(requireView()).navigate(dest);
+                try {
+                    Navigation.findNavController(requireView()).navigate(dest);
+                } catch (IllegalArgumentException | IllegalStateException ignored) {
+                }
             }
         });
 
@@ -482,26 +489,68 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         }
     }
 
-    private boolean isXperia1VI() {
-        String manufacturer = android.os.Build.MANUFACTURER;
-        String model = android.os.Build.MODEL;
-        if (manufacturer == null || model == null) return false;
 
+    private boolean isXperia1VI() {
+        String model = android.os.Build.MODEL;
+        if (model == null) return false;
         String m = model.toUpperCase(Locale.ROOT);
-        return manufacturer.equalsIgnoreCase("SONY")
-                && (m.startsWith("XQ-EC") || m.startsWith("XQ-ES"));
+        return (m.startsWith("XQ-EC") || m.startsWith("XQ-ES"));
     }
 
     private static boolean isSonyModel(String... prefixes) {
-        String manufacturer = android.os.Build.MANUFACTURER;
         String model = android.os.Build.MODEL;
-        if (manufacturer == null || model == null) return false;
-        if (!"SONY".equalsIgnoreCase(manufacturer)) return false;
+        if (model == null) return false;
         String m = model.toUpperCase(Locale.ROOT).trim();
         for (String p : prefixes) {
             if (m.startsWith(p.toUpperCase(Locale.ROOT))) return true;
         }
         return false;
+    }
+
+    /**
+     * Determines if the device is manufactured by Sony or has characteristics
+     * commonly associated with Sony devices.
+     * <p>
+     * The method checks the manufacturer, brand, and model of the device for
+     * indications of Sony-like characteristics. It also examines specific system
+     * properties as a fallback for devices where these values might be customized
+     * or modified.
+     *
+     * @return true if the device is determined to be Sony-like based on the
+     * manufacturer, brand, model, or certain system properties;
+     * false otherwise or in case of any errors.
+     */
+    private static boolean isSonyLike() {
+        try {
+            String man = android.os.Build.MANUFACTURER;
+            String brand = android.os.Build.BRAND;
+            String model = android.os.Build.MODEL;
+
+            String sMan = man == null ? "" : man.toLowerCase(Locale.ROOT);
+            String sBrand = brand == null ? "" : brand.toLowerCase(Locale.ROOT);
+            String sModel = model == null ? "" : model.toLowerCase(Locale.ROOT);
+
+            // Check common system properties as a fallback (custom ROMs sometimes change MANUFACTURER)
+            String[] props = {
+                    "ro.product.manufacturer",
+                    "ro.product.vendor.manufacturer",
+                    "ro.product.system.manufacturer",
+                    "ro.product.odm.manufacturer"
+            };
+            boolean propsSaySony = false;
+            for (String k : props) {
+                String v = getSystemProperty(k, "");
+                if (v != null && v.toLowerCase(Locale.ROOT).contains("sony")) {
+                    propsSaySony = true;
+                    break;
+                }
+            }
+
+            return sMan.contains("sony") || sBrand.contains("sony")
+                    || sModel.contains("xperia") || propsSaySony;
+        } catch (Throwable t) {
+            return false;
+        }
     }
 
     private boolean isXperia5IV() {
@@ -512,8 +561,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     // Broad Sony fallback: enforce TextureView (COMPATIBLE) on Android 15+
     private boolean isSonyAndroid15Plus() {
         try {
-            return "SONY".equalsIgnoreCase(android.os.Build.MANUFACTURER)
-                    && android.os.Build.VERSION.SDK_INT >= 35; // Android 15
+            return android.os.Build.VERSION.SDK_INT >= 35 && isSonyLike();
         } catch (Throwable t) {
             return false;
         }
@@ -1007,7 +1055,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         }
 
 
-        // 6) Watchdog: after 1.5s without STREAMING → rebind in COMPATIBLE mode
+        // 6) Watchdog: after 3s without STREAMING → rebind in COMPATIBLE mode
         if (!streamObserverAttached) {
             binding.viewFinder.getPreviewStreamState()
                     .observe(getViewLifecycleOwner(), state -> Log.d(TAG, "Preview stream state: " + state));
@@ -1307,21 +1355,24 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                                     cropViewModel.setImageCropped(false);
 
                                     boolean skipOcr = false;
-                                    boolean skipCroppig = false;
+                                    boolean skipCropping = false;
                                     try {
                                         android.content.SharedPreferences prefs = requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE);
                                         skipOcr = prefs.getBoolean("skip_ocr", false);
-                                        skipCroppig = prefs.getBoolean("skip_cropping", false);
+                                        skipCropping = prefs.getBoolean("skip_cropping", false);
                                     } catch (Throwable ignoreSp) {
                                     }
 
                                     int dest;
-                                    if (skipCroppig) {
+                                    if (skipCropping) {
                                         dest = skipOcr ? R.id.navigation_export : R.id.navigation_ocr;
                                     } else {
                                         dest = R.id.navigation_crop;
                                     }
-                                    Navigation.findNavController(requireView()).navigate(dest);
+                                    try {
+                                        Navigation.findNavController(requireView()).navigate(dest);
+                                    } catch (IllegalArgumentException | IllegalStateException ignored) {
+                                    }
                                 }
                             } catch (Throwable ignored) {
                             }
@@ -1654,22 +1705,15 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     }
 
     /**
-     * Displays a warning prompt to the user when low light conditions are detected. The prompt
-     * encourages the user to turn on the flashlight for better visibility.
+     * Shows a prompt when low-light conditions are detected, suggesting to enable the flashlight.
      * <p>
-     * The method ensures the dialog is not repeatedly shown by checking the following conditions:
-     * - The fragment is added and active.
-     * - A binding reference exists.
-     * - A dialog is not already visible.
-     * - A minimum time interval has elapsed since the last prompt.
+     * Debounces aggressively to avoid repeated dialogs:
+     * - Only if the fragment is added and binding is available
+     * - Only if no other low-light dialog is visible
+     * - Only if MIN_TIME_BETWEEN_PROMPTS has elapsed since the last prompt
      * <p>
-     * If the conditions are met, an AlertDialog is displayed with options to/**
-     * turn * on Displays the a flashlight prompt
-     * indicating * that or low cancel light the conditions prompt have. been The detected status and of the dialog visibility is updated accordingly to prevent
-     * duplicate provides dialogs the.
-     * user *
-     * * with Any an exceptions option during to the turn dialog on display the are flashlight logged. to This aid method in ensures debugging the.
-     * prompt
+     * On positive action, toggles the flashlight if available and currently off.
+     * Any exception during dialog creation/show is caught and logged.
      */
     private void showLowLightPrompt() {
         if (!isAdded() || binding == null || isLowLightDialogVisible) return;
@@ -1900,18 +1944,27 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         byte[] out = new byte[width * height * 3 / 2];
         int offset = 0;
 
-        // Y
+        // ----- Y -----
         java.nio.ByteBuffer yBuf = planes[0].getBuffer();
         int yRowStride = planes[0].getRowStride();
         int yPixStride = planes[0].getPixelStride();
-        for (int row = 0; row < height; row++) {
-            int yPos = row * yRowStride;
-            for (int col = 0; col < width; col++) {
-                out[offset++] = yBuf.get(yPos + col * yPixStride);
+
+        if (yPixStride == 1 && yRowStride == width) {
+            // Fast path: tightly packed
+            yBuf.rewind();
+            yBuf.get(out, 0, width * height);
+            offset = width * height;
+        } else {
+            // General path
+            for (int row = 0; row < height; row++) {
+                int yPos = row * yRowStride;
+                for (int col = 0; col < width; col++) {
+                    out[offset++] = yBuf.get(yPos + col * yPixStride);
+                }
             }
         }
 
-        // U / V may have different strides!
+        // ----- UV → NV21 (VU interleaved) -----
         java.nio.ByteBuffer uBuf = planes[1].getBuffer();
         java.nio.ByteBuffer vBuf = planes[2].getBuffer();
         int uRowStride = planes[1].getRowStride();
@@ -1921,6 +1974,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
         int chromaHeight = height / 2;
         int chromaWidth = width / 2;
+
+        // There is no guaranteed tight-pack for UV, so we stay on the safe per-pixel path
         for (int row = 0; row < chromaHeight; row++) {
             int uRowStart = row * uRowStride;
             int vRowStart = row * vRowStride;
@@ -1929,8 +1984,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 int vIndex = vRowStart + col * vPixStride;
                 byte u = uBuf.get(uIndex);
                 byte v = vBuf.get(vIndex);
-                // NV21: V then U
-                out[offset++] = v;
+                out[offset++] = v; // NV21 = V then U
                 out[offset++] = u;
             }
         }
