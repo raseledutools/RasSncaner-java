@@ -567,23 +567,10 @@ public class ExportFragment extends Fragment {
                                 dialogInterface.dismiss(); // stay on Export
                             })
                             .create();
-                    // Improve dark mode contrast for dialog buttons similar to low-light dialog
                     dialog.setOnShowListener(dlg -> {
-                        int nightModeFlags = requireContext().getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
-                        if (nightModeFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES) {
-                            try {
-                                int white = androidx.core.content.ContextCompat.getColor(requireContext(), android.R.color.white);
-                                if (dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE) != null) {
-                                    dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setTextColor(white);
-                                }
-                                if (dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEGATIVE) != null) {
-                                    dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(white);
-                                }
-                                if (dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEUTRAL) != null) {
-                                    dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEUTRAL).setTextColor(white);
-                                }
-                            } catch (Exception ignored) {
-                            }
+                        try {
+                            de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext());
+                        } catch (Throwable ignore) {
                         }
                     });
                     dialog.show();
@@ -1878,14 +1865,14 @@ public class ExportFragment extends Fragment {
                     }
                     names[n] = getString(R.string.create_new_collection);
 
-                    new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    final androidx.appcompat.app.AlertDialog pickerDialog = new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                             .setTitle(getString(R.string.place_in_collection_title))
                             .setItems(names, (dialog, which) -> {
                                 if (which == n) {
                                     // Create new collection flow
                                     final android.widget.EditText input = new android.widget.EditText(requireContext());
                                     input.setHint(R.string.collection_name_hint);
-                                    new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                                    final androidx.appcompat.app.AlertDialog createDialog = new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                                             .setTitle(R.string.new_collection_title)
                                             .setView(input)
                                             .setPositiveButton(R.string.create, (d, w) -> {
@@ -1905,7 +1892,14 @@ public class ExportFragment extends Fragment {
                                                 }).start();
                                             })
                                             .setNegativeButton(android.R.string.cancel, null)
-                                            .show();
+                                            .create();
+                                    createDialog.setOnShowListener(d -> {
+                                        try {
+                                            de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(createDialog, requireContext());
+                                        } catch (Throwable ignore) {
+                                        }
+                                    });
+                                    createDialog.show();
                                 } else if (which >= 0 && which < n) {
                                     final de.schliweb.makeacopy.data.library.CollectionEntity sel = finalCols.get(which);
                                     new Thread(() -> {
@@ -1920,7 +1914,14 @@ public class ExportFragment extends Fragment {
                                 }
                             })
                             .setNegativeButton(android.R.string.cancel, null)
-                            .show();
+                            .create();
+                    pickerDialog.setOnShowListener(d -> {
+                        try {
+                            de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(pickerDialog, requireContext());
+                        } catch (Throwable ignore) {
+                        }
+                    });
+                    pickerDialog.show();
                 } catch (Throwable ignore) {
                 }
             });

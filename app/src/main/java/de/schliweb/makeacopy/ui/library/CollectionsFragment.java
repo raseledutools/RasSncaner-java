@@ -175,7 +175,7 @@ public class CollectionsFragment extends Fragment {
     private void showCreateDialog() {
         final android.widget.EditText input = new android.widget.EditText(requireContext());
         input.setHint(R.string.collection_name_hint);
-        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        final androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle(R.string.new_collection_title)
                 .setView(input)
                 .setPositiveButton(R.string.create, (d, w) -> {
@@ -191,7 +191,14 @@ public class CollectionsFragment extends Fragment {
                     }).start();
                 })
                 .setNegativeButton(android.R.string.cancel, null)
-                .show();
+                .create();
+        dialog.setOnShowListener(d -> {
+            try {
+                de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext());
+            } catch (Throwable ignore) {
+            }
+        });
+        dialog.show();
     }
 
     private void loadDataAsync() {
