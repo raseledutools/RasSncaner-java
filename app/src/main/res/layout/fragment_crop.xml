@@ -57,7 +57,7 @@
             android:scaleType="fitCenter"
             android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/text_crop"
-            app:layout_constraintBottom_toTopOf="@id/button_container"
+            app:layout_constraintBottom_toTopOf="@id/crop_button_container"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 

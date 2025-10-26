@@ -682,9 +682,24 @@ public class ExportFragment extends Fragment {
         Bitmap maybeBitmap = cropViewModel.getImageBitmap().getValue();
 
         if (Boolean.TRUE.equals(isCropped) && maybeBitmap != null) {
-            // The new workflow applies user rotation before cropping in CropFragment.
-            // Therefore the bitmap here is already oriented correctly; do NOT rotate again.
+            // Apply user rotation (from CropViewModel) to the preview so it matches what the user sees elsewhere
             Bitmap bmp = maybeBitmap;
+            try {
+                int userDeg = 0;
+                try {
+                    Integer v = cropViewModel.getUserRotationDegrees().getValue();
+                    if (v != null) userDeg = v;
+                } catch (Throwable ignore) {
+                }
+                userDeg = ((userDeg % 360) + 360) % 360;
+                if (userDeg != 0) {
+                    android.graphics.Matrix m = new android.graphics.Matrix();
+                    m.postRotate(userDeg);
+                    Bitmap rotated = android.graphics.Bitmap.createBitmap(bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), m, true);
+                    if (rotated != null) bmp = rotated;
+                }
+            } catch (Throwable ignore) {
+            }
             exportViewModel.setDocumentBitmap(bmp);
             exportViewModel.setDocumentReady(true);
         } else {
