@@ -33,8 +33,6 @@ import java.util.Locale;
  * - Malformed entries are skipped; parser never throws.
  */
 public final class WordsJson {
-    private static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
-
     private WordsJson() {
     }
 

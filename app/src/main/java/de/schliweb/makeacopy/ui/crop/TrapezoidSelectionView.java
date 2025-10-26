@@ -26,6 +26,10 @@ public class TrapezoidSelectionView extends View {
     private static final int CORNER_TOUCH_RADIUS = 70; // Increased touch area for easier interaction
     private static final long ANIMATION_DURATION = 300; // Animation duration in milliseconds
 
+    // When true, the next setImageBitmap() call will skip re-initializing corners.
+    // Used when we rotate the selection ourselves to keep it in sync with image rotation.
+    private boolean suppressInitOnce = false;
+
     private Paint trapezoidPaint; // Paint for the trapezoid lines
     private Paint cornerPaint; // Paint for the corner handles
     private Paint activePaint; // Paint for the active corner handle
@@ -892,6 +896,24 @@ public class TrapezoidSelectionView extends View {
      *
      * @param canvas Canvas to draw on
      */
+    private int bottomUiInsetPx = 0;
+
+    /**
+     * Sets the bottom UI inset in pixels to keep hints clear of overlaid controls (e.g., rotation bar).
+     */
+    public void setBottomUiInsetPx(int insetPx) {
+        if (insetPx < 0) insetPx = 0;
+        if (this.bottomUiInsetPx != insetPx) {
+            this.bottomUiInsetPx = insetPx;
+            invalidate();
+        }
+    }
+
+    private static int dp(Context ctx, int dp) {
+        float d = ctx.getResources().getDisplayMetrics().density;
+        return (int) (dp * d + 0.5f);
+    }
+
     private void drawUserGuidance(Canvas canvas) {
         int width = getWidth();
         int height = getHeight();
@@ -935,7 +957,8 @@ public class TrapezoidSelectionView extends View {
             // Position hint at the bottom of the screen for top corners
             // and at the top of the screen for bottom corners
             if (activeCornerIndex < 2) { // Top corners
-                hintY = height - 100; // Position near bottom
+                int baseBottomOffset = Math.max(100, bottomUiInsetPx + dp(getContext(), 12));
+                hintY = height - baseBottomOffset; // Position above bottom UI
             } else { // Bottom corners
                 hintY = 100; // Position near top
             }
@@ -955,8 +978,9 @@ public class TrapezoidSelectionView extends View {
                 hint = "Drag any corner to fine-tune selection";
             }
 
-            // Position the hint at the bottom of the screen
-            hintY = height - 100;
+            // Position the hint at the bottom of the screen, considering bottom UI inset
+            int baseBottomOffset = Math.max(100, bottomUiInsetPx + dp(getContext(), 12));
+            hintY = height - baseBottomOffset;
 
             // Draw the hint
             drawHintText(canvas, hint, width / 2, hintY);
@@ -1172,16 +1196,174 @@ public class TrapezoidSelectionView extends View {
         this.imageBitmap = bitmap;
         Log.d(TAG, "Image bitmap set: " + (bitmap != null ? bitmap.getWidth() + "x" + bitmap.getHeight() : "null"));
 
+        // If the bitmap is null, do not (re)start corner initialization. Just cancel pending work and redraw.
+        if (bitmap == null) {
+            // Cancel any pending or running initialization tasks
+            try {
+                removeCallbacks(initCornersRunnable);
+                if (cornerTask != null) {
+                    cornerTask.cancel(true);
+                    cornerTask = null;
+                }
+                requestedInitSeq++; // invalidate any in-flight tasks
+            } catch (Throwable ignore) {
+            }
+            invalidate();
+            return;
+        }
+
         // Initialize OpenCV if needed
-        if (bitmap != null && !OpenCVUtils.isInitialized()) {
+        if (!OpenCVUtils.isInitialized()) {
             Log.d(TAG, "Initializing OpenCV for edge detection");
             OpenCVUtils.init(getContext());
         }
 
-        // (Re)trigger async init when we have dimensions
+        // (Re)trigger async init when we have dimensions (unless suppressed once)
         if (getWidth() > 0 && getHeight() > 0) {
             removeCallbacks(initCornersRunnable);
-            post(initCornersRunnable);
+            if (!suppressInitOnce) {
+                post(initCornersRunnable);
+            } else {
+                suppressInitOnce = false;
+                invalidate();
+            }
+        }
+    }
+
+    /**
+     * Rotates the current trapezoid corners around the view center by the given clockwise degrees
+     * and sets the new image bitmap without re-running corner initialization.
+     * If the view is not yet initialized, this falls back to a normal setImageBitmap call.
+     */
+    public void setImageBitmapWithRotation(@NonNull Bitmap rotatedBitmap, int degreesCw) {
+        // Normalize degrees to [0,360)
+        int deg = ((degreesCw % 360) + 360) % 360;
+
+        // If view not ready, just set normally
+        if (!initialized || getWidth() <= 0 || getHeight() <= 0) {
+            setImageBitmap(rotatedBitmap);
+            return;
+        }
+
+        // If no actual rotation, just swap bitmap without re-detecting
+        if (deg == 0) {
+            suppressInitOnce = true;
+            setImageBitmap(rotatedBitmap);
+            invalidate();
+            return;
+        }
+
+        try {
+            // Preconditions: need current image bitmap to map between view<->image
+            Bitmap curBmp = this.imageBitmap != null ? this.imageBitmap : rotatedBitmap;
+            if (curBmp == null || curBmp.isRecycled()) {
+                // Fallback: rotate in view space
+                rotateCornersAroundViewCenter(deg);
+                suppressInitOnce = true;
+                setImageBitmap(rotatedBitmap);
+                invalidate();
+                return;
+            }
+
+            int viewW = getWidth();
+            int viewH = getHeight();
+            int imgW = curBmp.getWidth();
+            int imgH = curBmp.getHeight();
+
+            // 1) View -> Image coordinates for current corners
+            org.opencv.core.Point[] viewPts = new org.opencv.core.Point[4];
+            for (int i = 0; i < 4; i++) viewPts[i] = new org.opencv.core.Point(corners[i].x, corners[i].y);
+            org.opencv.core.Point[] imgPts = de.schliweb.makeacopy.utils.CoordinateTransformUtils
+                    .transformViewToImageCoordinates(viewPts, curBmp, viewW, viewH);
+            if (imgPts == null) throw new IllegalStateException("transformViewToImageCoordinates returned null");
+
+            // 2) Rotate image points around image center and translate to new top-left (0,0)
+            double rad = Math.toRadians(deg);
+            double cos = Math.cos(rad);
+            double sin = Math.sin(rad);
+            double cx = imgW / 2.0;
+            double cy = imgH / 2.0;
+
+            // Rotate the original image rectangle's corners to compute bounds translation
+            double[][] rect = new double[][]{{0, 0}, {imgW, 0}, {imgW, imgH}, {0, imgH}};
+            double minX = Double.POSITIVE_INFINITY, minY = Double.POSITIVE_INFINITY;
+            double maxX = Double.NEGATIVE_INFINITY, maxY = Double.NEGATIVE_INFINITY;
+            for (double[] p : rect) {
+                double dx = p[0] - cx;
+                double dy = p[1] - cy;
+                double rx = cx + dx * cos + dy * sin;      // CW
+                double ry = cy + (-dx * sin + dy * cos);
+                if (rx < minX) minX = rx;
+                if (ry < minY) minY = ry;
+                if (rx > maxX) maxX = rx;
+                if (ry > maxY) maxY = ry;
+            }
+            double transX = -minX;
+            double transY = -minY;
+            int newImgW = (int) Math.round(maxX - minX);
+            int newImgH = (int) Math.round(maxY - minY);
+
+            org.opencv.core.Point[] imgPtsRot = new org.opencv.core.Point[4];
+            for (int i = 0; i < 4; i++) {
+                double dx = imgPts[i].x - cx;
+                double dy = imgPts[i].y - cy;
+                double rx = cx + dx * cos + dy * sin;
+                double ry = cy + (-dx * sin + dy * cos);
+                // Translate into rotated-bitmap coordinate system (top-left at 0,0)
+                imgPtsRot[i] = new org.opencv.core.Point(rx + transX, ry + transY);
+            }
+
+            // 3) Image -> View coordinates using the rotated bitmap's dimensions
+            // We don't need the actual ImageView; mapping uses viewW/viewH with FIT_CENTER assumption
+            // Create a lightweight stub bitmap size using rotatedBitmap/newImgW,newImgH; prefer rotatedBitmap if valid
+            Bitmap basis = rotatedBitmap != null ? rotatedBitmap : Bitmap.createBitmap(Math.max(1, newImgW), Math.max(1, newImgH), Bitmap.Config.ARGB_8888);
+            org.opencv.core.Point[] viewPtsNew = de.schliweb.makeacopy.utils.CoordinateTransformUtils
+                    .transformImageToViewCoordinates(imgPtsRot, basis, viewW, viewH);
+            if (viewPtsNew == null) throw new IllegalStateException("transformImageToViewCoordinates returned null");
+
+            // 4) Update absolute and relative corners
+            for (int i = 0; i < 4; i++) {
+                corners[i].x = (float) viewPtsNew[i].x;
+                corners[i].y = (float) viewPtsNew[i].y;
+            }
+            for (int i = 0; i < 4; i++) {
+                relativeCorners[i] = absoluteToRelative(corners[i].x, corners[i].y, viewW, viewH);
+            }
+
+            // 5) Suppress re-init and set new bitmap
+            suppressInitOnce = true;
+            setImageBitmap(rotatedBitmap);
+            invalidate();
+        } catch (Throwable t) {
+            Log.w(TAG, "setImageBitmapWithRotation: precise mapping failed, falling back to view-space rotation: " + t.getMessage());
+            // Fallback: rotate selection around view center
+            rotateCornersAroundViewCenter(deg);
+            suppressInitOnce = true;
+            setImageBitmap(rotatedBitmap);
+            invalidate();
+        }
+    }
+
+    private void rotateCornersAroundViewCenter(int degreesCw) {
+        int deg = ((degreesCw % 360) + 360) % 360;
+        if (deg == 0) return;
+        float cx = getWidth() / 2f;
+        float cy = getHeight() / 2f;
+        double rad = Math.toRadians(deg);
+        float cos = (float) Math.cos(rad);
+        float sin = (float) Math.sin(rad);
+        for (int i = 0; i < 4; i++) {
+            float dx = corners[i].x - cx;
+            float dy = corners[i].y - cy;
+            float nx = (dx * cos + dy * sin);
+            float ny = (-dx * sin + dy * cos);
+            corners[i].x = cx + nx;
+            corners[i].y = cy + ny;
+        }
+        int w = getWidth();
+        int h = getHeight();
+        for (int i = 0; i < 4; i++) {
+            relativeCorners[i] = absoluteToRelative(corners[i].x, corners[i].y, w, h);
         }
     }
 

@@ -53,44 +53,40 @@ public final class ExportUiBindings {
      */
     public static void bindExportProgress(FragmentExportBinding binding, LifecycleOwner owner, ExportViewModel vm) {
         if (binding == null || owner == null || vm == null) return;
-        if (binding.exportProgress != null) {
-            vm.isExporting().observe(owner, exporting -> {
-                boolean isExporting = exporting != null && exporting;
-                if (isExporting) {
-                    binding.exportProgress.setVisibility(View.VISIBLE);
-                } else {
-                    binding.exportProgress.setVisibility(View.GONE);
-                }
-                // During export: disable all actionable controls. After export: restore to previous state.
-                setEnabledTemporarily(binding.buttonBack, isExporting);
-                setEnabledTemporarily(binding.buttonAddScan, isExporting);
-                setEnabledTemporarily(binding.buttonExport, isExporting);
-                setEnabledTemporarily(binding.buttonOptions, isExporting);
-                setEnabledTemporarily(binding.buttonAddPage, isExporting);
-                setEnabledTemporarily(binding.buttonClearPages, isExporting);
-                // Special handling for Share icon: only force-disable during export; do not restore here
-                if (binding.buttonShareSmall != null) {
-                    if (isExporting) {
-                        binding.buttonShareSmall.setEnabled(false);
-                    }
-                    // When export finishes, ExportFragment will decide whether to enable it
-                }
+        vm.isExporting().observe(owner, exporting -> {
+            boolean isExporting = exporting != null && exporting;
+            if (isExporting) {
+                binding.exportProgress.setVisibility(View.VISIBLE);
+            } else {
+                binding.exportProgress.setVisibility(View.GONE);
+            }
+            // During export: disable all actionable controls. After export: restore to previous state.
+            setEnabledTemporarily(binding.buttonBack, isExporting);
+            setEnabledTemporarily(binding.buttonAddScan, isExporting);
+            setEnabledTemporarily(binding.buttonExport, isExporting);
+            setEnabledTemporarily(binding.buttonOptions, isExporting);
+            setEnabledTemporarily(binding.buttonAddPage, isExporting);
+            setEnabledTemporarily(binding.buttonClearPages, isExporting);
+            // Special handling for Share icon: only force-disable during export; do not restore here
+            if (isExporting) {
+                binding.buttonShareSmall.setEnabled(false);
+            }
+            // When export finishes, ExportFragment will decide whether to enable it
 
-                if (!isExporting) {
-                    // Ensure Export button respects document readiness after restoring
-                    Boolean ready = vm.isDocumentReady().getValue();
-                    if (binding.buttonExport != null) binding.buttonExport.setEnabled(Boolean.TRUE.equals(ready));
-                    // Do not change Share here; it will be enabled explicitly on successful export
-                }
-            });
-            vm.getExportProgressMax().observe(owner, max -> {
-                Integer m = (max == null) ? 0 : max;
-                binding.exportProgress.setMax((m <= 0) ? 100 : m);
-                binding.exportProgress.setIndeterminate(m == null || m <= 0);
-            });
-            vm.getExportProgress().observe(owner, value -> {
-                if (value != null) binding.exportProgress.setProgress(value);
-            });
-        }
+            if (!isExporting) {
+                // Ensure Export button respects document readiness after restoring
+                Boolean ready = vm.isDocumentReady().getValue();
+                binding.buttonExport.setEnabled(Boolean.TRUE.equals(ready));
+                // Do not change Share here; it will be enabled explicitly on successful export
+            }
+        });
+        vm.getExportProgressMax().observe(owner, max -> {
+            Integer m = (max == null) ? 0 : max;
+            binding.exportProgress.setMax((m <= 0) ? 100 : m);
+            binding.exportProgress.setIndeterminate(m == null || m <= 0);
+        });
+        vm.getExportProgress().observe(owner, value -> {
+            if (value != null) binding.exportProgress.setProgress(value);
+        });
     }
 }

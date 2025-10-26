@@ -277,60 +277,54 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         binding.buttonFlash.setOnClickListener(v -> toggleFlashlight());
 
         // Set up pick image button
-        if (binding.buttonPickImage != null) {
-            binding.buttonPickImage.setOnClickListener(v -> {
-                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                intent.setType("image/*");
-                intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-                pickImageLauncher.launch(intent);
-            });
-        }
+        binding.buttonPickImage.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("image/*");
+            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+            pickImageLauncher.launch(intent);
+        });
 
         // Settings/options button: open a simple dialog with only "Skip OCR"
-        if (binding.buttonCameraOptions != null) {
-            binding.buttonCameraOptions.setOnClickListener(v -> {
-                getParentFragmentManager().setFragmentResultListener(CameraOptionsDialogFragment.REQUEST_KEY, getViewLifecycleOwner(), (requestKey, bundle) -> {
-                    boolean skip = bundle.getBoolean(CameraOptionsDialogFragment.BUNDLE_SKIP_OCR, false);
-                    boolean analysisPref = bundle.getBoolean(CameraOptionsDialogFragment.BUNDLE_ANALYSIS_ENABLED, true);
-                    try {
-                        android.content.SharedPreferences prefs = requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE);
-                        prefs.edit()
-                                .putBoolean("skip_ocr", skip)
-                                .putBoolean("include_ocr", !skip)
-                                .putBoolean("analysis_enabled", analysisPref)
-                                .apply();
-                    } catch (Throwable ignore) {
+        binding.buttonCameraOptions.setOnClickListener(v -> {
+            getParentFragmentManager().setFragmentResultListener(CameraOptionsDialogFragment.REQUEST_KEY, getViewLifecycleOwner(), (requestKey, bundle) -> {
+                boolean skip = bundle.getBoolean(CameraOptionsDialogFragment.BUNDLE_SKIP_OCR, false);
+                boolean analysisPref = bundle.getBoolean(CameraOptionsDialogFragment.BUNDLE_ANALYSIS_ENABLED, true);
+                try {
+                    android.content.SharedPreferences prefs = requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE);
+                    prefs.edit()
+                            .putBoolean("skip_ocr", skip)
+                            .putBoolean("include_ocr", !skip)
+                            .putBoolean("analysis_enabled", analysisPref)
+                            .apply();
+                } catch (Throwable ignore) {
+                }
+                // Apply analysis toggle immediately if we are in camera mode
+                try {
+                    if (binding != null && binding.viewFinder.getVisibility() == View.VISIBLE) {
+                        setLiveAnalysisEnabled(analysisPref);
                     }
-                    // Apply analysis toggle immediately if we are in camera mode
-                    try {
-                        if (binding != null && binding.viewFinder.getVisibility() == View.VISIBLE) {
-                            setLiveAnalysisEnabled(analysisPref);
-                        }
-                    } catch (Throwable ignore) {
-                    }
-                    getParentFragmentManager().clearFragmentResultListener(CameraOptionsDialogFragment.REQUEST_KEY);
-                });
-                CameraOptionsDialogFragment.show(getParentFragmentManager());
+                } catch (Throwable ignore) {
+                }
+                getParentFragmentManager().clearFragmentResultListener(CameraOptionsDialogFragment.REQUEST_KEY);
             });
-        }
+            CameraOptionsDialogFragment.show(getParentFragmentManager());
+        });
 
         // Library entry from Camera screen (feature-gated)
         try {
-            if (binding.buttonOpenLibraryCam != null) {
-                if (de.schliweb.makeacopy.BuildConfig.FEATURE_SCAN_LIBRARY) {
-                    binding.buttonOpenLibraryCam.setVisibility(View.VISIBLE);
-                    binding.buttonOpenLibraryCam.setOnClickListener(v -> {
-                        try {
-                            Navigation.findNavController(requireView()).navigate(R.id.navigation_scans_library);
-                        } catch (Throwable t) {
-                            Log.w(TAG, "Navigation to scans library failed", t);
-                        }
-                    });
-                } else {
-                    binding.buttonOpenLibraryCam.setVisibility(View.GONE);
-                }
+            if (BuildConfig.FEATURE_SCAN_LIBRARY) {
+                binding.buttonOpenLibraryCam.setVisibility(View.VISIBLE);
+                binding.buttonOpenLibraryCam.setOnClickListener(v -> {
+                    try {
+                        Navigation.findNavController(requireView()).navigate(R.id.navigation_scans_library);
+                    } catch (Throwable t) {
+                        Log.w(TAG, "Navigation to scans library failed", t);
+                    }
+                });
+            } else {
+                binding.buttonOpenLibraryCam.setVisibility(View.GONE);
             }
         } catch (Throwable ignore) {
         }
@@ -344,7 +338,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                     new Handler(Looper.getMainLooper()).postDelayed(() -> {
                         resetCamera();
                         new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                            if (isAdded() && binding != null && binding.buttonRetake != null) {
+                            if (isAdded() && binding != null) {
                                 binding.buttonRetake.setEnabled(true);
                             }
                         }, 1000);
@@ -853,7 +847,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         } catch (Throwable ignore) {
         }
 
-        if (binding != null && binding.cornerOverlay != null) {
+        if (binding != null) {
             if (enabled && binding.viewFinder.getVisibility() == View.VISIBLE) {
                 binding.cornerOverlay.setVisibility(View.VISIBLE);
             } else {
@@ -1005,19 +999,15 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         if (analysisEnabled) {
             ensureAnalysisExecutor();
             imageAnalysis.setAnalyzer(analysisExecutor, this::analyzeFrameForCorners);
-            if (binding.cornerOverlay != null) {
-                binding.cornerOverlay.setVisibility(View.VISIBLE);
-                binding.cornerOverlay.setCorners(null);
-            }
+            binding.cornerOverlay.setVisibility(View.VISIBLE);
+            binding.cornerOverlay.setCorners(null);
         } else {
             try {
                 imageAnalysis.clearAnalyzer();
             } catch (Throwable ignore) {
             }
-            if (binding.cornerOverlay != null) {
-                binding.cornerOverlay.setCorners(null);
-                binding.cornerOverlay.setVisibility(View.GONE);
-            }
+            binding.cornerOverlay.setCorners(null);
+            binding.cornerOverlay.setVisibility(View.GONE);
         }
 
         CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
@@ -1152,11 +1142,9 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 }
                 bindUseCases(forceCompatible);
                 hasFlash = camera.getCameraInfo().hasFlashUnit();
-                if (binding.buttonFlash != null) {
-                    binding.buttonFlash.setVisibility(hasFlash ? View.VISIBLE : View.GONE);
-                    isFlashlightOn = false;
-                    binding.buttonFlash.setImageResource(R.drawable.ic_flash_off);
-                }
+                binding.buttonFlash.setVisibility(hasFlash ? View.VISIBLE : View.GONE);
+                isFlashlightOn = false;
+                binding.buttonFlash.setImageResource(R.drawable.ic_flash_off);
                 binding.textCamera.setText(R.string.camera_ready_tap_the_button_to_scan_a_document);
 
                 binding.viewFinder.setOnTouchListener((v, event) -> {
@@ -1192,26 +1180,24 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 });
 
                 // Forward taps on the overlay to focus too (overlay sits above PreviewView)
-                if (binding.cornerOverlay != null) {
-                    binding.cornerOverlay.setOnTouchListener((ov, ev) -> {
-                        if (ev.getAction() == MotionEvent.ACTION_UP && camera != null) {
-                            try {
-                                MeteringPointFactory mpf = binding.viewFinder.getMeteringPointFactory();
-                                // Overlay shares the same bounds and FIT_CENTER as the PreviewView
-                                MeteringPoint pt = mpf.createPoint(ev.getX(), ev.getY());
-                                FocusMeteringAction action = new FocusMeteringAction.Builder(
-                                        pt,
-                                        FocusMeteringAction.FLAG_AF | FocusMeteringAction.FLAG_AE | FocusMeteringAction.FLAG_AWB
-                                ).setAutoCancelDuration(3, TimeUnit.SECONDS).build();
-                                camera.getCameraControl().startFocusAndMetering(action);
-                                ov.performClick();
-                                return true;
-                            } catch (Throwable ignored) {
-                            }
+                binding.cornerOverlay.setOnTouchListener((ov, ev) -> {
+                    if (ev.getAction() == MotionEvent.ACTION_UP && camera != null) {
+                        try {
+                            MeteringPointFactory mpf = binding.viewFinder.getMeteringPointFactory();
+                            // Overlay shares the same bounds and FIT_CENTER as the PreviewView
+                            MeteringPoint pt = mpf.createPoint(ev.getX(), ev.getY());
+                            FocusMeteringAction action = new FocusMeteringAction.Builder(
+                                    pt,
+                                    FocusMeteringAction.FLAG_AF | FocusMeteringAction.FLAG_AE | FocusMeteringAction.FLAG_AWB
+                            ).setAutoCancelDuration(3, TimeUnit.SECONDS).build();
+                            camera.getCameraControl().startFocusAndMetering(action);
+                            ov.performClick();
+                            return true;
+                        } catch (Throwable ignored) {
                         }
-                        return false;
-                    });
-                }
+                    }
+                    return false;
+                });
 
             } catch (Exception e) {
                 handleCameraInitializationError(e);
@@ -1426,11 +1412,11 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     private void setProcessing(boolean processing) {
         if (binding == null) return;
         try {
-            if (binding.buttonScan != null) binding.buttonScan.setEnabled(!processing);
+            binding.buttonScan.setEnabled(!processing);
         } catch (Throwable ignored) {
         }
         try {
-            if (binding.buttonPickImage != null) binding.buttonPickImage.setEnabled(!processing);
+            binding.buttonPickImage.setEnabled(!processing);
         } catch (Throwable ignored) {
         }
     }
@@ -1462,9 +1448,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         binding.capturedImage.setVisibility(View.GONE);
         binding.buttonContainer.setVisibility(View.GONE);
         binding.buttonScan.setVisibility(View.VISIBLE);
-        if (binding.scanButtonContainer != null) {
-            binding.scanButtonContainer.setVisibility(View.VISIBLE);
-        }
+        binding.scanButtonContainer.setVisibility(View.VISIBLE);
         // Live corner preview: respect user preference
         boolean analysisPref = false;
         try {
@@ -1576,7 +1560,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 isFlashlightOn = false;
                 // Restore exposure if changed
                 applyTorchExposureWorkaround(false);
-                if (binding != null && binding.buttonFlash != null) {
+                if (binding != null) {
                     binding.buttonFlash.setImageResource(R.drawable.ic_flash_off);
                 }
             } catch (Exception e) {
@@ -1870,7 +1854,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             if (pts == null || pts.length != 4) {
                 // hide overlay if not found
                 runOnUiThreadSafe(() -> {
-                    if (binding != null && binding.cornerOverlay != null) binding.cornerOverlay.setCorners(null);
+                    if (binding != null) binding.cornerOverlay.setCorners(null);
                 });
                 return;
             }
@@ -1878,7 +1862,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             // Map bitmap coords to overlay coords (PreviewView with FIT_CENTER)
             android.graphics.PointF[] viewPts = mapToOverlayPoints(pts, bmp.getWidth(), bmp.getHeight());
             runOnUiThreadSafe(() -> {
-                if (binding != null && binding.cornerOverlay != null) binding.cornerOverlay.setCorners(viewPts);
+                if (binding != null) binding.cornerOverlay.setCorners(viewPts);
             });
         } catch (Throwable t) {
             Log.w(TAG, "analyzeFrameForCorners failed: " + t.getMessage());

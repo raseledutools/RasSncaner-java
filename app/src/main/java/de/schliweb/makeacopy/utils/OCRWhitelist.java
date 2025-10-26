@@ -71,42 +71,25 @@ public class OCRWhitelist {
      */
     public static String getWhitelistForLanguage(String languageCode) {
         if (languageCode == null) return DEFAULT;
-        switch (languageCode) {
-            case "deu":
-                return DE;
-            case "eng":
-                return EN;
-            case "spa":
-                return ES;
-            case "fra":
-                return FR;
-            case "ita":
-                return IT;
-            case "por":
-                return PT;
-            case "nld":
-                return NL;
-            case "pol":
-                return PL;
-            case "ces":
-                return CS;
-            case "slk":
-                return SK;
-            case "hun":
-                return HU;
-            case "ron":
-                return RO;
-            case "dan":
-                return DA;
-            case "nor":
-                return NO;
-            case "swe":
-                return SV;
-            case "rus":
-                return RU;
-            default:
-                return DEFAULT;
-        }
+        return switch (languageCode) {
+            case "deu" -> DE;
+            case "eng" -> EN;
+            case "spa" -> ES;
+            case "fra" -> FR;
+            case "ita" -> IT;
+            case "por" -> PT;
+            case "nld" -> NL;
+            case "pol" -> PL;
+            case "ces" -> CS;
+            case "slk" -> SK;
+            case "hun" -> HU;
+            case "ron" -> RO;
+            case "dan" -> DA;
+            case "nor" -> NO;
+            case "swe" -> SV;
+            case "rus" -> RU;
+            default -> DEFAULT;
+        };
     }
 
     /**

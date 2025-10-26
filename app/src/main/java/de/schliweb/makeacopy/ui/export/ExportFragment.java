@@ -119,7 +119,7 @@ public class ExportFragment extends Fragment {
      * @param source The source bitmap image to be processed and displayed in the preview.
      */
     private void renderPreview(Bitmap source) {
-        if (binding == null || binding.documentPreview == null || source == null) return;
+        if (binding == null || source == null) return;
         Bitmap out = de.schliweb.makeacopy.utils.BitmapUtils.processForPreview(source, requireContext());
         try {
             binding.documentPreview.setImageBitmap(out);
@@ -245,49 +245,43 @@ public class ExportFragment extends Fragment {
                 runInlineOcrForPage(position);
             }
         });
-        if (binding.pagesRecycler != null) {
-            androidx.recyclerview.widget.LinearLayoutManager lm = new androidx.recyclerview.widget.LinearLayoutManager(requireContext(), androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL, false);
-            binding.pagesRecycler.setLayoutManager(lm);
-            binding.pagesRecycler.setAdapter(pagesAdapter);
+        androidx.recyclerview.widget.LinearLayoutManager lm = new androidx.recyclerview.widget.LinearLayoutManager(requireContext(), androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL, false);
+        binding.pagesRecycler.setLayoutManager(lm);
+        binding.pagesRecycler.setAdapter(pagesAdapter);
 
-            // Enable drag & drop reordering via ItemTouchHelper (horizontal)
-            androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback cb = new androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback(androidx.recyclerview.widget.ItemTouchHelper.LEFT | androidx.recyclerview.widget.ItemTouchHelper.RIGHT, 0) {
-                @Override
-                public boolean onMove(@NonNull androidx.recyclerview.widget.RecyclerView recyclerView,
-                                      @NonNull androidx.recyclerview.widget.RecyclerView.ViewHolder viewHolder,
-                                      @NonNull androidx.recyclerview.widget.RecyclerView.ViewHolder target) {
-                    int from = viewHolder.getBindingAdapterPosition();
-                    int to = target.getBindingAdapterPosition();
-                    return pagesAdapter.onItemMove(from, to);
-                }
+        // Enable drag & drop reordering via ItemTouchHelper (horizontal)
+        androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback cb = new androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback(androidx.recyclerview.widget.ItemTouchHelper.LEFT | androidx.recyclerview.widget.ItemTouchHelper.RIGHT, 0) {
+            @Override
+            public boolean onMove(@NonNull androidx.recyclerview.widget.RecyclerView recyclerView,
+                                  @NonNull androidx.recyclerview.widget.RecyclerView.ViewHolder viewHolder,
+                                  @NonNull androidx.recyclerview.widget.RecyclerView.ViewHolder target) {
+                int from = viewHolder.getBindingAdapterPosition();
+                int to = target.getBindingAdapterPosition();
+                return pagesAdapter.onItemMove(from, to);
+            }
 
-                @Override
-                public void onSwiped(@NonNull androidx.recyclerview.widget.RecyclerView.ViewHolder viewHolder, int direction) {
-                    // no-op (we don't support swipe to dismiss here)
-                }
+            @Override
+            public void onSwiped(@NonNull androidx.recyclerview.widget.RecyclerView.ViewHolder viewHolder, int direction) {
+                // no-op (we don't support swipe to dismiss here)
+            }
 
-                @Override
-                public boolean isLongPressDragEnabled() {
-                    // Long-press on the item starts drag
-                    return true;
-                }
-            };
-            new androidx.recyclerview.widget.ItemTouchHelper(cb).attachToRecyclerView(binding.pagesRecycler);
-        }
+            @Override
+            public boolean isLongPressDragEnabled() {
+                // Long-press on the item starts drag
+                return true;
+            }
+        };
+        new androidx.recyclerview.widget.ItemTouchHelper(cb).attachToRecyclerView(binding.pagesRecycler);
         // Observe pages to update UI
         exportSessionViewModel.getPages().observe(getViewLifecycleOwner(), pages -> {
             pagesAdapter.submitList(pages);
             int n = (pages == null) ? 0 : pages.size();
             // Show filmstrip only when there are actually more than one page
-            if (binding.pagesContainer != null) {
-                binding.pagesContainer.setVisibility(n > 1 ? View.VISIBLE : View.GONE);
-            }
+            binding.pagesContainer.setVisibility(n > 1 ? View.VISIBLE : View.GONE);
             // Show "Clear all" only when more than one page exists
-            if (binding.buttonClearPages != null) {
-                // Trash icon is always visible; only enabled when there are multiple pages
-                binding.buttonClearPages.setVisibility(View.VISIBLE);
-                binding.buttonClearPages.setEnabled(n > 1);
-            }
+            // Trash icon is always visible; only enabled when there are multiple pages
+            binding.buttonClearPages.setVisibility(View.VISIBLE);
+            binding.buttonClearPages.setEnabled(n > 1);
             // If current preview points to a removed page, auto-select a remaining one
             Bitmap curPreview = exportViewModel.getDocumentBitmap().getValue();
             boolean found = false;
@@ -407,55 +401,49 @@ public class ExportFragment extends Fragment {
             // Clear the flag regardless to prevent re-adding on future opens
             prefs.edit().putBoolean("pending_add_page", false).apply();
         }
-        if (binding.buttonAddPage != null) {
-            binding.buttonAddPage.setOnClickListener(v -> {
-                // Directly open the Completed Scans picker (no dialog)
-                try {
-                    java.util.ArrayList<String> already = new java.util.ArrayList<>();
-                    java.util.List<de.schliweb.makeacopy.ui.export.session.CompletedScan> cur = exportSessionViewModel.getPages().getValue();
-                    if (cur != null) {
-                        for (de.schliweb.makeacopy.ui.export.session.CompletedScan s : cur) {
-                            if (s != null && s.id() != null) already.add(s.id());
-                        }
+        binding.buttonAddPage.setOnClickListener(v -> {
+            // Directly open the Completed Scans picker (no dialog)
+            try {
+                ArrayList<String> already = new ArrayList<>();
+                List<de.schliweb.makeacopy.ui.export.session.CompletedScan> cur = exportSessionViewModel.getPages().getValue();
+                if (cur != null) {
+                    for (de.schliweb.makeacopy.ui.export.session.CompletedScan s : cur) {
+                        if (s != null && s.id() != null) already.add(s.id());
                     }
-                    android.os.Bundle args = new android.os.Bundle();
-                    args.putStringArrayList(de.schliweb.makeacopy.ui.export.picker.CompletedScansPickerFragment.ARG_ALREADY_SELECTED_IDS, already);
-                    Navigation.findNavController(requireView()).navigate(R.id.navigation_completed_scans_picker, args);
-                } catch (Throwable t) {
-                    // ignore
                 }
-            });
-        }
-        if (binding.buttonClearPages != null) {
-            binding.buttonClearPages.setOnClickListener(v -> {
-                androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                        .setTitle(getString(R.string.confirm_clear_pages_title))
-                        .setMessage(getString(R.string.confirm_clear_pages_message))
-                        .setPositiveButton(R.string.confirm, (dialogInterface, which) -> {
-                            // Reset to initial single page
-                            Bitmap bmp = exportViewModel.getDocumentBitmap().getValue();
-                            de.schliweb.makeacopy.ui.export.session.CompletedScan one = null;
-                            if (bmp != null) {
-                                one = new de.schliweb.makeacopy.ui.export.session.CompletedScan(
-                                        java.util.UUID.randomUUID().toString(), null, 0, null, null, null, System.currentTimeMillis(), bmp.getWidth(), bmp.getHeight(), bmp);
-                            }
-                            exportSessionViewModel.setInitial(one);
-                        })
-                        .setNegativeButton(R.string.cancel, (dialogInterface, which) -> dialogInterface.dismiss())
-                        .create();
-                dialog.setOnShowListener(dlg -> de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext()));
-                dialog.show();
-            });
-        }
-        if (binding.buttonLibraryActions != null) {
-            binding.buttonLibraryActions.setOnClickListener(v -> {
-                try {
-                    Navigation.findNavController(requireView()).navigate(R.id.navigation_scans_library);
-                } catch (Throwable t) {
-                    Log.w(TAG, "Navigation to library failed", t);
-                }
-            });
-        }
+                Bundle args = new Bundle();
+                args.putStringArrayList(de.schliweb.makeacopy.ui.export.picker.CompletedScansPickerFragment.ARG_ALREADY_SELECTED_IDS, already);
+                Navigation.findNavController(requireView()).navigate(R.id.navigation_completed_scans_picker, args);
+            } catch (Throwable t) {
+                // ignore
+            }
+        });
+        binding.buttonClearPages.setOnClickListener(v -> {
+            androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setTitle(getString(R.string.confirm_clear_pages_title))
+                    .setMessage(getString(R.string.confirm_clear_pages_message))
+                    .setPositiveButton(R.string.confirm, (dialogInterface, which) -> {
+                        // Reset to initial single page
+                        Bitmap bmp = exportViewModel.getDocumentBitmap().getValue();
+                        de.schliweb.makeacopy.ui.export.session.CompletedScan one = null;
+                        if (bmp != null) {
+                            one = new de.schliweb.makeacopy.ui.export.session.CompletedScan(
+                                    UUID.randomUUID().toString(), null, 0, null, null, null, System.currentTimeMillis(), bmp.getWidth(), bmp.getHeight(), bmp);
+                        }
+                        exportSessionViewModel.setInitial(one);
+                    })
+                    .setNegativeButton(R.string.cancel, (dialogInterface, which) -> dialogInterface.dismiss())
+                    .create();
+            dialog.setOnShowListener(dlg -> DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext()));
+            dialog.show();
+        });
+        binding.buttonLibraryActions.setOnClickListener(v -> {
+            try {
+                Navigation.findNavController(requireView()).navigate(R.id.navigation_scans_library);
+            } catch (Throwable t) {
+                Log.w(TAG, "Navigation to library failed", t);
+            }
+        });
 
         createDocumentLauncher = registerForActivityResult(new ActivityResultContracts.CreateDocument("application/pdf"), uri -> {
             Log.d(TAG, "createDocumentLauncher: Document creation result received");
@@ -615,44 +603,38 @@ public class ExportFragment extends Fragment {
         });
 
         // Options button opens the export options dialog without starting export
-        if (binding.buttonOptions != null) {
-            binding.buttonOptions.setOnClickListener(v -> {
-                getParentFragmentManager().setFragmentResultListener(ExportOptionsDialogFragment.REQUEST_KEY, getViewLifecycleOwner(), (requestKey, bundle) -> {
-                    // Update ViewModel with new choices for immediate feedback and re-render preview
-                    boolean includeOcrSel = bundle.getBoolean(ExportOptionsDialogFragment.BUNDLE_INCLUDE_OCR, false);
-                    boolean exportAsJpegSel = bundle.getBoolean(ExportOptionsDialogFragment.BUNDLE_EXPORT_AS_JPEG, false);
-                    String pdfMode = bundle.getString("pdf_bw_mode", null);
-                    exportViewModel.setIncludeOcr(includeOcrSel);
-                    // Derive grayscale flag for ViewModel from pdf_bw_mode (GRAYSCALE selected)
-                    boolean graySel = ("GRAYSCALE".equalsIgnoreCase(pdfMode));
-                    exportViewModel.setConvertToGrayscale(graySel);
-                    exportViewModel.setExportFormat(exportAsJpegSel ? "JPEG" : "PDF");
-                    // Re-render preview to reflect grayscale/BW selections immediately
-                    renderPreviewFromCurrent();
-                    // No export kickoff here
-                    getParentFragmentManager().clearFragmentResultListener(ExportOptionsDialogFragment.REQUEST_KEY);
-                });
-                ExportOptionsDialogFragment.show(getParentFragmentManager());
+        binding.buttonOptions.setOnClickListener(v -> {
+            getParentFragmentManager().setFragmentResultListener(ExportOptionsDialogFragment.REQUEST_KEY, getViewLifecycleOwner(), (requestKey, bundle) -> {
+                // Update ViewModel with new choices for immediate feedback and re-render preview
+                boolean includeOcrSel = bundle.getBoolean(ExportOptionsDialogFragment.BUNDLE_INCLUDE_OCR, false);
+                boolean exportAsJpegSel = bundle.getBoolean(ExportOptionsDialogFragment.BUNDLE_EXPORT_AS_JPEG, false);
+                String pdfMode = bundle.getString("pdf_bw_mode", null);
+                exportViewModel.setIncludeOcr(includeOcrSel);
+                // Derive grayscale flag for ViewModel from pdf_bw_mode (GRAYSCALE selected)
+                boolean graySel = ("GRAYSCALE".equalsIgnoreCase(pdfMode));
+                exportViewModel.setConvertToGrayscale(graySel);
+                exportViewModel.setExportFormat(exportAsJpegSel ? "JPEG" : "PDF");
+                // Re-render preview to reflect grayscale/BW selections immediately
+                renderPreviewFromCurrent();
+                // No export kickoff here
+                getParentFragmentManager().clearFragmentResultListener(ExportOptionsDialogFragment.REQUEST_KEY);
             });
-        }
-        if (binding.buttonAddScan != null) {
-            binding.buttonAddScan.setOnClickListener(v -> {
-                try {
-                    android.content.SharedPreferences p2 = requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE);
-                    p2.edit().putBoolean("pending_add_page", true).apply();
-                } catch (Throwable ignore) {
-                }
-                cameraViewModel.setImageUri(null);
-                cropViewModel.setImageCropped(false);
-                cropViewModel.setImageBitmap(null);
-                cropViewModel.setOriginalImageBitmap(null);
-                cropViewModel.setImageLoaded(false);
-                Navigation.findNavController(requireView()).navigate(R.id.navigation_camera);
-            });
-        }
-        if (binding.buttonShareSmall != null) {
-            binding.buttonShareSmall.setOnClickListener(v -> shareDocument());
-        }
+            ExportOptionsDialogFragment.show(getParentFragmentManager());
+        });
+        binding.buttonAddScan.setOnClickListener(v -> {
+            try {
+                android.content.SharedPreferences p2 = requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE);
+                p2.edit().putBoolean("pending_add_page", true).apply();
+            } catch (Throwable ignore) {
+            }
+            cameraViewModel.setImageUri(null);
+            cropViewModel.setImageCropped(false);
+            cropViewModel.setImageBitmap(null);
+            cropViewModel.setOriginalImageBitmap(null);
+            cropViewModel.setImageLoaded(false);
+            Navigation.findNavController(requireView()).navigate(R.id.navigation_camera);
+        });
+        binding.buttonShareSmall.setOnClickListener(v -> shareDocument());
 
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
             UIUtils.adjustTextViewTopMarginForStatusBar(binding.textExport, 8);
@@ -700,24 +682,9 @@ public class ExportFragment extends Fragment {
         Bitmap maybeBitmap = cropViewModel.getImageBitmap().getValue();
 
         if (Boolean.TRUE.equals(isCropped) && maybeBitmap != null) {
-            // Apply user rotation (from CropViewModel) to the preview so it matches what the user sees elsewhere
+            // The new workflow applies user rotation before cropping in CropFragment.
+            // Therefore the bitmap here is already oriented correctly; do NOT rotate again.
             Bitmap bmp = maybeBitmap;
-            try {
-                int userDeg = 0;
-                try {
-                    Integer v = cropViewModel.getUserRotationDegrees().getValue();
-                    if (v != null) userDeg = v;
-                } catch (Throwable ignore) {
-                }
-                userDeg = ((userDeg % 360) + 360) % 360;
-                if (userDeg != 0) {
-                    android.graphics.Matrix m = new android.graphics.Matrix();
-                    m.postRotate(userDeg);
-                    Bitmap rotated = android.graphics.Bitmap.createBitmap(bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), m, true);
-                    if (rotated != null) bmp = rotated;
-                }
-            } catch (Throwable ignore) {
-            }
             exportViewModel.setDocumentBitmap(bmp);
             exportViewModel.setDocumentReady(true);
         } else {
@@ -1829,7 +1796,7 @@ public class ExportFragment extends Fragment {
         try {
             if (!de.schliweb.makeacopy.BuildConfig.FEATURE_SCAN_LIBRARY) return;
             if (binding == null) return;
-            View anchor = (binding.exportOptionsGroup != null) ? binding.exportOptionsGroup : requireView();
+            View anchor = binding.exportOptionsGroup;
             com.google.android.material.snackbar.Snackbar
                     .make(anchor, getString(R.string.scan_saved), com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
                     .setAction(getString(R.string.action_add_to_collection), v -> {

@@ -1,6 +1,7 @@
 package de.schliweb.makeacopy.ui.crop;
 
 import android.graphics.Bitmap;
+import android.util.Log;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import de.schliweb.makeacopy.ui.BaseViewModel;
@@ -114,6 +115,7 @@ public class CropViewModel extends BaseViewModel {
      * @param deg The rotation degrees to set, can be any integer. The value will be adjusted to fall within 0 to 359 degrees.
      */
     public void setCaptureRotationDegrees(int deg) {
+        Log.d("setCaptureRotationDegrees", "deg=" + deg);
         captureRotationDegrees.setValue(((deg % 360) + 360) % 360);
     }
 
@@ -128,6 +130,7 @@ public class CropViewModel extends BaseViewModel {
      * Sets an absolute user rotation value in degrees (normalized to [0, 360)).
      */
     public void setUserRotationDegrees(int deg) {
+        Log.d("setUserRotationDegrees", "deg=" + deg);
         userRotationDegrees.setValue(((deg % 360) + 360) % 360);
     }
 
