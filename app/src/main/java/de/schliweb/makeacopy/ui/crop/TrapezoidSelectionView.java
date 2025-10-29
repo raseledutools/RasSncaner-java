@@ -247,6 +247,52 @@ public class TrapezoidSelectionView extends View {
     }
 
     /**
+     * Clamp a point to the displayed image bounds using FIT_CENTER logic.
+     * If no bitmap is set, clamps to the view bounds.
+     * Returns a float[2] array with clamped x,y in view pixels.
+     */
+    private float[] clampToImageBounds(float x, float y, int viewWidth, int viewHeight) {
+        if (viewWidth <= 0 || viewHeight <= 0) {
+            return new float[]{x, y};
+        }
+        if (imageBitmap == null || imageBitmap.isRecycled()) {
+            float cx = Math.max(0f, Math.min(x, viewWidth));
+            float cy = Math.max(0f, Math.min(y, viewHeight));
+            return new float[]{cx, cy};
+        }
+        int bw = imageBitmap.getWidth();
+        int bh = imageBitmap.getHeight();
+        if (bw <= 0 || bh <= 0) {
+            float cx = Math.max(0f, Math.min(x, viewWidth));
+            float cy = Math.max(0f, Math.min(y, viewHeight));
+            return new float[]{cx, cy};
+        }
+        float bitmapAspect = (float) bw / (float) bh;
+        float viewAspect = (float) viewWidth / (float) viewHeight;
+        float scale;
+        float offsetX = 0f;
+        float offsetY = 0f;
+        if (bitmapAspect > viewAspect) {
+            // letterboxed: horizontal fit
+            scale = (float) viewWidth / (float) bw;
+            offsetY = (viewHeight - (bh * scale)) / 2f;
+        } else {
+            // pillarboxed: vertical fit
+            scale = (float) viewHeight / (float) bh;
+            offsetX = (viewWidth - (bw * scale)) / 2f;
+        }
+        float left = offsetX;
+        float top = offsetY;
+        float right = offsetX + bw * scale;
+        float bottom = offsetY + bh * scale;
+        // Optionally keep a 1px inset to keep handle fully visible
+        // float inset = 0f;
+        float cx = Math.max(left, Math.min(x, right));
+        float cy = Math.max(top, Math.min(y, bottom));
+        return new float[]{cx, cy};
+    }
+
+    /**
      * Updates both absolute and relative coordinates for a corner
      *
      * @param index Corner index (0-3)
@@ -259,12 +305,17 @@ public class TrapezoidSelectionView extends View {
         int width = getWidth();
         int height = getHeight();
 
+        // Clamp the target position to the displayed image bounds (or view bounds if image unknown)
+        float[] clamped = clampToImageBounds(x, y, width, height);
+        float cx = clamped[0];
+        float cy = clamped[1];
+
         // Update absolute coordinates
-        corners[index].set(x, y);
+        corners[index].set(cx, cy);
 
         // Update relative coordinates if dimensions are valid
         if (width > 0 && height > 0) {
-            relativeCorners[index] = absoluteToRelative(x, y, width, height);
+            relativeCorners[index] = absoluteToRelative(cx, cy, width, height);
         }
         // Keep gesture exclusion rects in sync while corners move
         updateSystemGestureExclusion();

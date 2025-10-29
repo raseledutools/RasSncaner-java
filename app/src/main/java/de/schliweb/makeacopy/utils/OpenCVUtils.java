@@ -1601,4 +1601,205 @@ public class OpenCVUtils {
             if (gray != rgbaOrGray) gray.release();
         }
     }
+
+    /**
+     * Prepares a Bitmap for OCR: robust grayscale/binary preprocessing,
+     * low-light handling, gentle CLAHE, despeckle, and moderate upscaling.
+     *
+     * @param src          input bitmap (RGBA or RGB). Must be non-null and not recycled.
+     * @param binaryOutput if true, returns a binarized (black/white) image; if false, a contrasty grayscale.
+     * @return ARGB_8888 bitmap suitable for Tesseract input, or null on failure.
+     */
+    public static Bitmap prepareForOCR(Bitmap src, boolean binaryOutput) {
+        if (src == null || src.isRecycled()) return null;
+
+        Mat rgba = new Mat();
+        Mat gray = new Mat();
+        Mat work = new Mat();
+        Mat bw = new Mat();
+        Bitmap out = null;
+
+        try {
+            // 1) Bitmap -> RGBA -> GRAY
+            Utils.bitmapToMat(src, rgba);
+            Imgproc.cvtColor(rgba, gray, Imgproc.COLOR_RGBA2GRAY);
+
+            // 2) Low-light handling (reuse existing utility)
+            if (isLowLight(gray)) {
+                Mat tmp = rgba.clone();
+                preprocessLowLight(tmp);                    // modifies in-place
+                Imgproc.cvtColor(tmp, gray, Imgproc.COLOR_RGBA2GRAY);
+                tmp.release();
+            }
+
+            // 3) Gentle denoise + CLAHE (very mild, avoids over-bleaching)
+            Imgproc.medianBlur(gray, gray, 3);
+            try {
+                CLAHE clahe = Imgproc.createCLAHE(1.2, new Size(8, 8));
+                clahe.apply(gray, gray);
+                clahe.collectGarbage();
+            } catch (Throwable ignore) { /* optional */ }
+
+            if (binaryOutput) {
+                // 4a) Binary path (preferred for OCR on photos)
+                // Adaptive on real devices, fallback to Otsu on emulators/safe mode
+                boolean usedAdaptive = false;
+                if (!isSafeMode()) {
+                    try {
+                        int bs = Math.max(41, ((Math.min(gray.width(), gray.height()) / 40) | 1));
+                        int C = 4; // gentle offset
+                        Imgproc.adaptiveThreshold(
+                                gray, bw, 255,
+                                Imgproc.ADAPTIVE_THRESH_MEAN_C,
+                                Imgproc.THRESH_BINARY, bs, C
+                        );
+                        usedAdaptive = true;
+                    } catch (Throwable ignore) { /* fallback below */ }
+                }
+                if (!usedAdaptive) {
+                    Imgproc.threshold(gray, bw, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
+                }
+
+                // kleine Störungen entfernen + leichte Stabilisierung
+                despeckleFast(bw);
+                try {
+                    Mat k2 = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(2, 2));
+                    Imgproc.morphologyEx(bw, bw, Imgproc.MORPH_CLOSE, k2);
+                    k2.release();
+                } catch (Throwable ignore) {
+                }
+
+                // 5) Moderate upscaling if too small (helps Tesseract with tiny fonts)
+                ensureMinTextScale(bw, /*minLongSide*/ 1800, /*scaleMax*/ 2.5);
+
+                // 6) -> ARGB_8888
+                out = Bitmap.createBitmap(bw.cols(), bw.rows(), Bitmap.Config.ARGB_8888);
+                Utils.matToBitmap(bw, out);
+                return out;
+            } else {
+                // 4b) Grayscale path (no hard threshold; good for already clean scans)
+                // very light unsharp to increase edge contrast
+                try {
+                    Mat blurred = new Mat();
+                    Imgproc.GaussianBlur(gray, blurred, new Size(0, 0), 1.0);
+                    Core.addWeighted(gray, 1.5, blurred, -0.5, 0, gray);
+                    blurred.release();
+                } catch (Throwable ignore) {
+                }
+
+                ensureMinTextScale(gray, /*minLongSide*/ 1800, /*scaleMax*/ 2.5);
+
+                out = Bitmap.createBitmap(gray.cols(), gray.rows(), Bitmap.Config.ARGB_8888);
+                Utils.matToBitmap(gray, out);
+                return out;
+            }
+
+        } catch (Throwable t) {
+            Log.e(TAG, "prepareForOCR failed", t);
+            return null;
+        } finally {
+            release(rgba, gray, work, bw);
+        }
+    }
+
+    /**
+     * Ensures sufficient resolution for OCR by upscaling if the long side is below a threshold.
+     * Uses INTER_CUBIC for quality; caps the scale to avoid memory blowups.
+     */
+    private static void ensureMinTextScale(Mat singleChannel /* CV_8U */, int minLongSide, double scaleMax) {
+        int w = singleChannel.cols(), h = singleChannel.rows();
+        int longSide = Math.max(w, h);
+        if (longSide >= minLongSide) return;
+
+        double scale = Math.min(scaleMax, (double) minLongSide / longSide);
+        int nw = Math.max(1, (int) Math.round(w * scale));
+        int nh = Math.max(1, (int) Math.round(h * scale));
+        Mat tmp = new Mat();
+        Imgproc.resize(singleChannel, tmp, new Size(nw, nh), 0, 0, Imgproc.INTER_CUBIC);
+        tmp.copyTo(singleChannel);
+        tmp.release();
+    }
+
+    /**
+     * Prepares the given bitmap for OCR processing quickly and robustly using OpenCV.
+     * The method applies a series of image preprocessing steps such as grayscale conversion,
+     * light enhancement, noise reduction, binarization, and rescaling to ensure the image
+     * is optimized for OCR engines like Tesseract, while maintaining efficiency.
+     *
+     * @param src The input bitmap to be prepared for OCR. Must not be null or recycled.
+     * @return A processed bitmap in ARGB_8888 format optimized for OCR, or null if an error occurs
+     * or if the input bitmap is invalid (null or recycled).
+     */
+    public static Bitmap prepareForOCRQuick(Bitmap src) {
+        if (src == null || src.isRecycled()) return null;
+
+        Mat rgba = new Mat();
+        Mat gray = new Mat();
+        Mat bw = new Mat();
+        Bitmap out = null;
+
+        try {
+            // 1) RGBA -> GRAY
+            Utils.bitmapToMat(src, rgba);
+            Imgproc.cvtColor(rgba, gray, Imgproc.COLOR_RGBA2GRAY);
+
+            // 2) Gently support low-light (no harsh brightening)
+            if (isLowLight(gray)) {
+                try {
+                    CLAHE clahe = Imgproc.createCLAHE(1.0, new Size(8, 8)); // very mild
+                    clahe.apply(gray, gray);
+                    clahe.collectGarbage();
+                } catch (Throwable ignore) {
+                }
+            }
+
+            // 3) Light denoising
+            Imgproc.medianBlur(gray, gray, 3);
+
+            // 4) Otsu (no adaptive artifacts)
+            Imgproc.threshold(gray, bw, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
+
+            // 5) Remove small disturbances
+            despeckleFast(bw);
+
+            // 6) Light upscaling if too small (max. ~1.6x)
+            upscaleIfNeeded(bw, /*minLongSidePx*/ 1400, /*maxScale*/ 1.6);
+
+            // 7) -> ARGB_8888 for Tesseract
+            out = Bitmap.createBitmap(bw.cols(), bw.rows(), Bitmap.Config.ARGB_8888);
+            Utils.matToBitmap(bw, out);
+            return out;
+
+        } catch (Throwable t) {
+            Log.e("OpenCVUtils", "prepareForOCRQuick failed", t);
+            return null;
+        } finally {
+            release(rgba, gray, bw);
+        }
+    }
+
+    /**
+     * Upscales the given single-channel matrix if its longer side is smaller than the specified minimum length.
+     * The scaling factor is determined based on the provided maximum scale and the ratio between the desired
+     * minimum long side and the current long side.
+     *
+     * @param singleChannel the single-channel matrix (CV_8U) that may be upscaled
+     * @param minLongSide   the minimum length for the longer side of the matrix
+     * @param maxScale      the maximum allowed scaling factor
+     */
+    private static void upscaleIfNeeded(Mat singleChannel /*CV_8U*/, int minLongSide, double maxScale) {
+        int w = singleChannel.cols(), h = singleChannel.rows();
+        int longSide = Math.max(w, h);
+        if (longSide >= minLongSide) return;
+
+        double scale = Math.min(maxScale, (double) minLongSide / longSide);
+        int nw = Math.max(1, (int) Math.round(w * scale));
+        int nh = Math.max(1, (int) Math.round(h * scale));
+
+        Mat tmp = new Mat();
+        Imgproc.resize(singleChannel, tmp, new Size(nw, nh), 0, 0, Imgproc.INTER_CUBIC);
+        tmp.copyTo(singleChannel);
+        tmp.release();
+    }
+
 }

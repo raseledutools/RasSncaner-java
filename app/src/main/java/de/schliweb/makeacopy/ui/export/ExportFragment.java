@@ -513,6 +513,8 @@ public class ExportFragment extends Fragment {
                             if (s != null) picked.add(s);
                         }
                         if (!picked.isEmpty()) {
+                            // Sort by creation timestamp ascending to maintain chronological order when adding multiple pages
+                            picked.sort(java.util.Comparator.comparingLong(de.schliweb.makeacopy.ui.export.session.CompletedScan::createdAt));
                             exportSessionViewModel.addAll(picked);
                             UIUtils.showToast(requireContext(), getString(R.string.added_pages_from_registry, picked.size()), Toast.LENGTH_SHORT);
                         }
@@ -682,7 +684,9 @@ public class ExportFragment extends Fragment {
         Bitmap maybeBitmap = cropViewModel.getImageBitmap().getValue();
 
         if (Boolean.TRUE.equals(isCropped) && maybeBitmap != null) {
-            // Apply user rotation (from CropViewModel) to the preview so it matches what the user sees elsewhere
+            // Apply user rotation from CropViewModel to ensure the preview matches user's intent.
+            // In most cases, the crop result already includes this rotation; applying it again is a no-op for 0°
+            // and corrects cases where the rotation wasn't baked into the cropped bitmap on some devices/flows.
             Bitmap bmp = maybeBitmap;
             try {
                 int userDeg = 0;
@@ -693,10 +697,13 @@ public class ExportFragment extends Fragment {
                 }
                 userDeg = ((userDeg % 360) + 360) % 360;
                 if (userDeg != 0) {
+                    Log.d(TAG, "[EXPORT_LOG] checkDocumentReady: applying user rotation=" + userDeg + "° to cropped bitmap before preview");
                     android.graphics.Matrix m = new android.graphics.Matrix();
                     m.postRotate(userDeg);
                     Bitmap rotated = android.graphics.Bitmap.createBitmap(bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), m, true);
                     if (rotated != null) bmp = rotated;
+                } else {
+                    Log.d(TAG, "[EXPORT_LOG] checkDocumentReady: user rotation is 0°, using cropped bitmap as-is");
                 }
             } catch (Throwable ignore) {
             }

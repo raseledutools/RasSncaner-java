@@ -259,7 +259,11 @@ public class CropFragment extends Fragment {
         }
         if (!OpenCVUtils.isInitialized()) OpenCVUtils.init(requireContext());
 
-        // Try to use the full-resolution original rotated by the current user rotation for cropping
+        // Use the full-resolution original, rotated by the current user rotation, as crop source.
+        // Rationale: The trapezoid selection and preview are shown with the user rotation applied.
+        // To ensure that the perspective correction matches what the user sees (and to avoid
+        // quality loss by re-rotating later), we bake the user rotation into the source used
+        // for cropping. originalImageBitmap itself remains unmodified and is only used as input here.
         Bitmap fullResSource = null;
         try {
             Bitmap orig = cropViewModel.getOriginalImageBitmap().getValue();
@@ -270,8 +274,10 @@ public class CropFragment extends Fragment {
                     android.graphics.Matrix m = new android.graphics.Matrix();
                     m.postRotate(userDeg);
                     fullResSource = android.graphics.Bitmap.createBitmap(orig, 0, 0, orig.getWidth(), orig.getHeight(), m, true);
+                    android.util.Log.d(TAG, LP + "performCrop: applying user rotation " + userDeg + "° to full-res source");
                 } else {
                     fullResSource = orig;
+                    android.util.Log.d(TAG, LP + "performCrop: user rotation 0°, using original full-res source");
                 }
             }
         } catch (Throwable ignore) {

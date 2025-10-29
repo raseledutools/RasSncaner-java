@@ -48,7 +48,7 @@ public class OCRFragment extends Fragment {
     private static final String TAG = "OCRFragment";
     // Early-exit threshold: if the first rotation attempt (extra=0) reaches this mean confidence,
     // we skip trying further 90° rotations to save time. Adjust if needed.
-    private static final int OCR_EARLY_EXIT_MEAN_CONF_THRESHOLD = 85;
+    private static final int OCR_EARLY_EXIT_MEAN_CONF_THRESHOLD = 55;
 
     private FragmentOcrBinding binding;
     private OCRViewModel ocrViewModel;
@@ -660,7 +660,9 @@ public class OCRFragment extends Fragment {
                     }
 
                     // Try OCR for rotations 0, 90, 180, 270 and keep best result
+                    // TODO
                     int[] extraRots = new int[]{0, 90, 180, 270};
+                    // int[] extraRots = new int[]{0};
                     OCRHelper.OcrResultWords bestResult = null;
                     OCRViewModel.OcrTransform bestTx = null;
                     int bestRot = 0;
@@ -674,17 +676,20 @@ public class OCRFragment extends Fragment {
 
                         Bitmap rotated = (extra == 0) ? src : rotateBitmap(src, extra);
 
-                        Log.d(TAG, "performOCR: Pre-scaling image to A4 dimensions before OCR (extraRot=" + extra + ")");
-                        Bitmap scaledBitmap = ImageScaler.scaleToA4(rotated);
-                        // Optional robustness: feed immutable ARGB_8888 copy to Tesseract
-                        Bitmap inputForOcr = scaledBitmap.copy(Bitmap.Config.ARGB_8888, /*mutable*/ false);
-
-                        // Build transform for this attempt
+                        // TODO: Settings
+                        // Bitmap inputForOcr = OpenCVUtils.prepareForOCR(rotated, /*binaryOutput*/ false);
+                        // Bitmap inputForOcr = OpenCVUtils.prepareForOCRQuick(rotated);
+                        Bitmap inputForOcr = rotated;
+                        if (inputForOcr == null) {
+                            Log.w(TAG, "prepareForOCR returned null (extraRot=" + extra + "), skipping attempt");
+                            continue;
+                        }
+                        
                         OCRViewModel.OcrTransform tx = new OCRViewModel.OcrTransform(
                                 rotated.getWidth(), rotated.getHeight(),
-                                scaledBitmap.getWidth(), scaledBitmap.getHeight(),
-                                scaledBitmap.getWidth() / (float) rotated.getWidth(),
-                                scaledBitmap.getHeight() / (float) rotated.getHeight(),
+                                inputForOcr.getWidth(), inputForOcr.getHeight(),
+                                inputForOcr.getWidth() / (float) rotated.getWidth(),
+                                inputForOcr.getHeight() / (float) rotated.getHeight(),
                                 0, 0
                         );
                         Log.d(TAG, LP + "Transform: src=" + tx.srcW() + "x" + tx.srcH() + ", dst=" + tx.dstW() + "x" + tx.dstH() + ", sx=" + tx.scaleX() + ", sy=" + tx.scaleY());
