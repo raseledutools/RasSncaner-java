@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">MakeACopy</string>
 
+    <string name="tip_text_mode_editing">Textový režim: Zalomení řádků a interpunkce jsou aktuálně normalizovány na mezery. Pokud je zadáno méně slov, než kolik bylo rozpoznáno, zbývající slova OCR zůstanou beze změny. Změny se použijí po krátké prodlevě.</string>
+
+
     <!-- New menu items for document scanner -->
     <string name="title_camera">Fotoaparát</string>
     <string name="title_crop">Oříznout</string>
@@ -170,8 +173,28 @@
     <string name="ocr_import_success">Model importován</string>
     <string name="ocr_import_failed">Import selhal</string>
 
+    <string name="ocr_delete_best_model">Odstranit model Best</string>
+    <string name="ocr_nothing_to_delete">Pro aktuální jazyk není k dispozici žádný model Best k odstranění</string>
+    <string name="ocr_delete_confirm_title">Odstranit model Best?</string>
+    <string name="ocr_delete_confirm_msg">Odstranit importovaný model Best pro %1$s? Vestavěný model Fast zůstane dostupný.</string>
+    <string name="ocr_delete_success">Model byl odstraněn</string>
+    <string name="ocr_delete_failed">Odstranění se nezdařilo</string>
+
     <!-- OCR models hint -->
     <string name="ocr_models_hint">Pro rychlejší rozpoznávání jsou zahrnuty kompaktní modely. Pro vyšší přesnost můžete nainstalovat větší „Best“ modely. Není vyžadováno internetové připojení.</string>
+
+    <!-- OCR přípravné režimy – vysvětlení -->
+    <string name="ocr_explain_prep_modes">Vysvětlit režimy rozpoznávání</string>
+    <string name="ocr_prep_modes_title">Režimy rozpoznávání: jednoduché vysvětlení</string>
+    <string name="ocr_prep_modes_message">Existují tři způsoby, jak posílat obrázky do OCR enginu:\n\n• Originál (bez předzpracování) — nejrychlejší. Posílá fotografii tak, jak je. Nejvhodnější pro čisté, vysoce kontrastní skeny. Může vynechat slabý nebo zašuměný text.\n\n• OpenCV Quick — rychlé vyčištění: převod na odstíny šedi, lehké odstranění šumu, automatické převod do černobílé a případné zvětšení. Dobrá výchozí volba pro většinu fotografií. Vyvážená rychlost a kvalita.\n\n• OpenCV Robust — přepracováno pro maximální přesnost u obtížných stránek. Narovnává sklon, normalizuje stíny a osvětlení, používá odstranění šumu s uchováním hran a chytré zvětšení. Důležité: Tesseract dostává vysoce kvalitní obraz v odstínech šedi (ne tvrdě černobílý), aby zachoval jemné detaily, jako jsou smyčky v „o“ a malé číslice. Nejvyšší přesnost na obtížných stránkách; pomalejší a náročnější na paměť.</string>
+
+    <!-- Výběr OCR přípravného režimu -->
+    <string name="ocr_choose_prep_mode_menu">Režim rozpoznávání…</string>
+    <string name="ocr_choose_prep_mode_title">Vyberte režim rozpoznávání</string>
+    <string name="ocr_mode_original">Originál (bez předzpracování)</string>
+    <string name="ocr_mode_quick">OpenCV Quick (rychlý)</string>
+    <string name="ocr_mode_robust">OpenCV Robust (vysoká kvalita)</string>
+    <string name="ocr_prep_mode_set">Režim rozpoznávání nastaven na %1$s</string>
 
     <!-- Labels -->
     <string name="label_language">Jazyk</string>

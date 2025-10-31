@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">MakeACopy</string>
 
+    <string name="tip_text_mode_editing">Textmodus: Zeilenumbrüche und Satzzeichen werden derzeit zu Leerzeichen normalisiert. Wenn weniger Wörter eingegeben werden, als erkannt wurden, bleiben die übrigen OCR-Wörter unverändert. Änderungen werden nach einer kurzen Pause übernommen.</string>
+
     <!-- New menu items for document scanner -->
     <string name="title_camera">Kamera</string>
     <string name="title_crop">Zuschneiden</string>
@@ -168,14 +170,32 @@
     <string name="ocr_import_success">Modell importiert</string>
     <string name="ocr_import_failed">Import fehlgeschlagen</string>
 
+    <!-- OCR-Modelle: Lokales Best-Modell löschen -->
+    <string name="ocr_delete_best_model">Best‑Modell löschen</string>
+    <string name="ocr_nothing_to_delete">Kein Best‑Modell für die aktuelle Sprache vorhanden</string>
+    <string name="ocr_delete_confirm_title">Best‑Modell löschen?</string>
+    <string name="ocr_delete_confirm_msg">Importiertes Best‑Modell für %1$s löschen? Das integrierte Fast‑Modell bleibt verfügbar.</string>
+    <string name="ocr_delete_success">Modell gelöscht</string>
+    <string name="ocr_delete_failed">Löschen fehlgeschlagen</string>
+
     <!-- Hinweis zu OCR-Modellen -->
     <string name="ocr_models_hint">Für schnellere Erkennung sind kompakte Modelle enthalten. Für höhere Genauigkeit kannst du größere \"Best\"-Modelle installieren. Es ist keine Internetverbindung erforderlich.</string>
 
+    <!-- Erklärung der Erkennungsmodi -->
+    <string name="ocr_explain_prep_modes">Erkennungsmodi erklären</string>
+    <string name="ocr_prep_modes_title">Erkennungsmodi – einfach erklärt</string>
+    <string name="ocr_prep_modes_message">Es gibt drei Wege, das Bild an die Texterkennung zu übergeben:\n\n• Original (ohne Vorverarbeitung) — am schnellsten. Wir schicken das Foto so wie es ist. Gut für bereits saubere, kontrastreiche Scans. Kann blasse oder „schmutzige“ Texte übersehen.\n\n• OpenCV Schnell — eine flotte Aufbereitung: in Graustufen umwandeln, leichtes Entrauschen, automatisch Schwarz/Weiß und bei Bedarf etwas vergrößern. Gute Standardeinstellung für die meisten Fotos. Gutes Gleichgewicht aus Tempo und Qualität.\n\n• OpenCV Robust — für maximale Genauigkeit auf schwierigen Seiten neu aufgebaut. Begradigt (Deskew), normalisiert Schatten/Beleuchtung, nutzt kanten‑erhaltendes Entrauschen und smartes Vergrößern. Wichtig: Tesseract erhält hier ein hochwertiges Graustufenbild (kein hartes Schwarz/Weiß), damit feine Details wie Schleifen in „o“ und kleine Ziffern erhalten bleiben. Beste Genauigkeit auf harten Vorlagen; langsamer und speicherintensiver.</string>
+
+    <!-- Auswahl des Erkennungsmodus -->
+    <string name="ocr_choose_prep_mode_menu">Erkennungsmodus…</string>
+    <string name="ocr_choose_prep_mode_title">Erkennungsmodus auswählen</string>
+    <string name="ocr_mode_original">Original (ohne Vorverarbeitung)</string>
+    <string name="ocr_mode_quick">OpenCV Schnell (schnell)</string>
+    <string name="ocr_mode_robust">OpenCV Robust (hohe Qualität)</string>
+    <string name="ocr_prep_mode_set">Erkennungsmodus gesetzt: %1$s</string>
+
     <!-- Labels -->
     <string name="label_language">Sprache</string>
-    
-    <!-- OCR Review: Text mode editor tooltip documenting current behavior -->
-    <string name="tip_text_mode_editing">Textmodus: Zeilenumbrüche/Interpunktion werden derzeit zu Leerzeichen normalisiert. Wenn weniger Wörter eingegeben werden als erkannt wurden, bleiben die restlichen OCR‑Wörter unverändert. Änderungen werden nach kurzer Pause übernommen.</string>
 
     <!-- Segmented control labels -->
     <string name="label_layout">Layout</string>

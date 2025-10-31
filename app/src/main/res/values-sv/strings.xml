@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">MakeACopy</string>
 
+    <string name="tip_text_mode_editing">Textläge: Radbrytningar och skiljetecken normaliseras för närvarande till mellanslag. Om färre ord anges än vad som har identifierats förblir de återstående OCR-orden oförändrade. Ändringar tillämpas efter en kort paus.</string>
+
     <!-- New menu items for document scanner -->
     <string name="title_camera">Kamera</string>
     <string name="title_crop">Beskär</string>
@@ -169,8 +171,28 @@
     <string name="ocr_import_success">Modell importerad</string>
     <string name="ocr_import_failed">Importen misslyckades</string>
 
+    <string name="ocr_delete_best_model">Ta bort Best-modell</string>
+    <string name="ocr_nothing_to_delete">Ingen Best-modell att ta bort för det aktuella språket</string>
+    <string name="ocr_delete_confirm_title">Ta bort Best-modell?</string>
+    <string name="ocr_delete_confirm_msg">Ta bort den importerade Best-modellen för %1$s? Den inbyggda Fast-modellen kommer fortfarande att vara tillgänglig.</string>
+    <string name="ocr_delete_success">Modell borttagen</string>
+    <string name="ocr_delete_failed">Borttagning misslyckades</string>
+
     <!-- OCR models hint -->
     <string name="ocr_models_hint">För snabbare igenkänning ingår kompakta modeller. För högre noggrannhet kan du installera större "Best"-modeller. Ingen internetanslutning krävs.</string>
+
+    <!-- OCR igenkänningslägen – förklaring -->
+    <string name="ocr_explain_prep_modes">Förklara igenkänningslägen</string>
+    <string name="ocr_prep_modes_title">Igenkänningslägen: enkel förklaring</string>
+    <string name="ocr_prep_modes_message">Det finns tre sätt att skicka bilder till OCR-motorn:\n\n• Original (ingen förbehandling) — snabbast. Skickar fotot som det är. Bäst för redan rena, högkontrastskanningar. Kan missa svag eller brusig text.\n\n• OpenCV Quick — en snabb rengöring: konverterar till gråskala, tar bort lätt brus, gör automatiskt svartvitt och förstorar något vid behov. Ett bra standardval för de flesta foton. Balanserad hastighet och kvalitet.\n\n• OpenCV Robust — utformad för maximal noggrannhet på svåra sidor. Rätar upp bilden, normaliserar skuggor och ljus, använder brusreducering som bevarar kanter och smart uppskalning. Viktigt: skickar ett högkvalitativt gråskalebild till Tesseract (inte hårt svartvitt) för att bevara fina detaljer som slingor i ”o” och små siffror. Bäst noggrannhet på svåra sidor; långsammare och använder mer minne.</string>
+
+    <!-- OCR igenkänningslägen – val -->
+    <string name="ocr_choose_prep_mode_menu">Igenkänningsläge…</string>
+    <string name="ocr_choose_prep_mode_title">Välj igenkänningsläge</string>
+    <string name="ocr_mode_original">Original (ingen förbehandling)</string>
+    <string name="ocr_mode_quick">OpenCV Quick (snabbt)</string>
+    <string name="ocr_mode_robust">OpenCV Robust (hög kvalitet)</string>
+    <string name="ocr_prep_mode_set">Igenkänningsläge inställt på %1$s</string>
 
     <!-- Labels -->
     <string name="label_language">Språk</string>

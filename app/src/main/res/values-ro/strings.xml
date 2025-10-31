@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">MakeACopy</string>
 
+    <string name="tip_text_mode_editing">Mod text: În prezent, întreruperile de rând și semnele de punctuație sunt normalizate la spații. Dacă se introduc mai puține cuvinte decât au fost recunoscute, celelalte cuvinte OCR rămân neschimbate. Modificările sunt aplicate după o scurtă pauză.</string>
+
     <!-- New menu items for document scanner -->
     <string name="title_camera">Cameră</string>
     <string name="title_crop">Decupare</string>
@@ -169,8 +171,29 @@
     <string name="ocr_import_success">Model importat</string>
     <string name="ocr_import_failed">Import nereușit</string>
 
+    <string name="ocr_delete_best_model">Șterge modelul Best</string>
+    <string name="ocr_nothing_to_delete">Niciun model Best de șters pentru limba curentă</string>
+    <string name="ocr_delete_confirm_title">Șterge modelul Best?</string>
+    <string name="ocr_delete_confirm_msg">Dorești să ștergi modelul Best importat pentru %1$s? Modelul Fast integrat va rămâne disponibil.</string>
+    <string name="ocr_delete_success">Model șters</string>
+    <string name="ocr_delete_failed">Ștergerea a eșuat</string>
+
     <!-- OCR models hint -->
     <string name="ocr_models_hint">Pentru recunoaștere mai rapidă sunt incluse modele compacte. Pentru o acuratețe mai mare, poți instala modele mai mari „Best”. Nu este necesară conexiunea la internet.</string>
+
+    <!-- Moduri de recunoaștere OCR – explicație -->
+    <string name="ocr_explain_prep_modes">Explică modurile de recunoaștere</string>
+    <string name="ocr_prep_modes_title">Moduri de recunoaștere: explicație simplă</string>
+    <string name="ocr_prep_modes_message">Există trei moduri de a trimite imagini către motorul OCR:\n\n• Original (fără preprocesare) — cel mai rapid. Trimite fotografia așa cum este. Cel mai potrivit pentru scanări curate, cu contrast ridicat. Poate rata texte slabe sau zgomotoase.\n\n• OpenCV Quick — o curățare rapidă: convertește în tonuri de gri, elimină ușor zgomotul, transformă automat în alb-negru și mărește ușor dacă este necesar. O alegere bună implicită pentru majoritatea fotografiilor. Echilibru între viteză și calitate.\n\n• OpenCV Robust — conceput pentru precizie maximă pe pagini dificile. Corectează înclinarea, normalizează umbrele și iluminarea, aplică o reducere a zgomotului care păstrează marginile și o mărire inteligentă. Important: trimite către Tesseract o imagine în tonuri de gri de înaltă calitate (nu una strict alb-negru), pentru a păstra detaliile fine precum buclele din „o” și cifrele mici. Cea mai bună precizie pe pagini dificile; mai lent și consumă mai multă memorie.</string>
+
+    <!-- Selectarea modului de recunoaștere OCR -->
+    <string name="ocr_choose_prep_mode_menu">Mod de recunoaștere…</string>
+    <string name="ocr_choose_prep_mode_title">Alege modul de recunoaștere</string>
+    <string name="ocr_mode_original">Original (fără preprocesare)</string>
+    <string name="ocr_mode_quick">OpenCV Quick (rapid)</string>
+    <string name="ocr_mode_robust">OpenCV Robust (calitate ridicată)</string>
+    <string name="ocr_prep_mode_set">Modul de recunoaștere setat la %1$s</string>
+
 
     <!-- Labels -->
     <string name="label_language">Limbă</string>

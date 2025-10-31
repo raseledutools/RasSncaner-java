@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">MakeACopy</string>
 
+    <string name="tip_text_mode_editing">Teksttilstand: Linjeskift og tegnsætning normaliseres i øjeblikket til mellemrum. Hvis der indtastes færre ord, end der blev genkendt, forbliver de resterende OCR-ord uændrede. Ændringer anvendes efter en kort pause.</string>
+
     <!-- New menu items for document scanner -->
     <string name="title_camera">Kamera</string>
     <string name="title_crop">Beskær</string>
@@ -170,8 +172,28 @@
     <string name="ocr_import_success">Model importeret</string>
     <string name="ocr_import_failed">Import mislykkedes</string>
 
+    <string name="ocr_delete_best_model">Slet Best-model</string>
+    <string name="ocr_nothing_to_delete">Ingen Best-model at slette for det aktuelle sprog</string>
+    <string name="ocr_delete_confirm_title">Slet Best-model?</string>
+    <string name="ocr_delete_confirm_msg">Vil du slette den importerede Best-model for %1$s? Den indbyggede Fast-model vil stadig være tilgængelig.</string>
+    <string name="ocr_delete_success">Model slettet</string>
+    <string name="ocr_delete_failed">Sletning mislykkedes</string>
+
     <!-- OCR models hint -->
     <string name="ocr_models_hint">For hurtigere genkendelse medfølger kompakte modeller. For højere nøjagtighed kan du installere større “Best”-modeller. Ingen internetforbindelse er påkrævet.</string>
+
+    <!-- OCR forbehandlingsmetoder – forklaring -->
+    <string name="ocr_explain_prep_modes">Forklar genkendelsestilstande</string>
+    <string name="ocr_prep_modes_title">Genkendelsestilstande: enkel forklaring</string>
+    <string name="ocr_prep_modes_message">Der er tre måder at sende billeder til OCR-motoren på:\n\n• Original (ingen forbehandling) — hurtigst. Sender fotoet som det er. Bedst til allerede rene, kontrastfulde scanninger. Kan gå glip af svag eller støjende tekst.\n\n• OpenCV Quick — hurtig oprydning: konverterer til gråtoner, fjerner let støj, gør automatisk sort/hvid og opskalerer lidt om nødvendigt. God standard for de fleste fotos. Balancerer hastighed og kvalitet.\n\n• OpenCV Robust — bygget til maksimal nøjagtighed på svære sider. Retter skævhed, normaliserer skygger og lys, bruger støjreduktion med kantbevarelse og smart opskalering. Vigtigt: sender Tesseract et højkvalitetsbillede i gråtoner (ikke hårdt sort/hvidt) for at bevare fine detaljer som løkker i “o” og små tal. Bedst nøjagtighed på svære sider; langsommere og bruger mere hukommelse.</string>
+
+    <!-- OCR forbehandlingsmetoder – valg -->
+    <string name="ocr_choose_prep_mode_menu">Genkendelsestilstand…</string>
+    <string name="ocr_choose_prep_mode_title">Vælg genkendelsestilstand</string>
+    <string name="ocr_mode_original">Original (ingen forbehandling)</string>
+    <string name="ocr_mode_quick">OpenCV Quick (hurtig)</string>
+    <string name="ocr_mode_robust">OpenCV Robust (høj kvalitet)</string>
+    <string name="ocr_prep_mode_set">Genkendelsestilstand sat til %1$s</string>
 
     <!-- Labels -->
     <string name="label_language">Sprog</string>

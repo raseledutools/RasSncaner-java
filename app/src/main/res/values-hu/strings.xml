@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">MakeACopy</string>
 
+    <string name="tip_text_mode_editing">Szövegmód: A sortörések és az írásjelek jelenleg szóközökre vannak normalizálva. Ha kevesebb szót ír be, mint amennyit az OCR felismert, a fennmaradó szavak változatlanok maradnak. A módosítások egy rövid szünet után lépnek életbe.</string>
+
     <!-- New menu items for document scanner -->
     <string name="title_camera">Kamera</string>
     <string name="title_crop">Kivágás</string>
@@ -170,8 +172,28 @@
     <string name="ocr_import_success">Modell importálva</string>
     <string name="ocr_import_failed">Importálás sikertelen</string>
 
+    <string name="ocr_delete_best_model">Best modell törlése</string>
+    <string name="ocr_nothing_to_delete">Nincs törölhető Best modell az aktuális nyelvhez</string>
+    <string name="ocr_delete_confirm_title">Törlöd a Best modellt?</string>
+    <string name="ocr_delete_confirm_msg">Törlöd a(z) %1$s importált Best modellt? A beépített Fast modell elérhető marad.</string>
+    <string name="ocr_delete_success">Modell törölve</string>
+    <string name="ocr_delete_failed">A törlés nem sikerült</string>
+
     <!-- OCR models hint -->
     <string name="ocr_models_hint">A gyorsabb felismeréshez kompakt modellek tartoznak a csomaghoz. A nagyobb pontossághoz telepíthet nagyobb „Best” modelleket. Internetkapcsolat nem szükséges.</string>
+
+    <!-- OCR felismerési módok – magyarázat -->
+    <string name="ocr_explain_prep_modes">Felismerési módok magyarázata</string>
+    <string name="ocr_prep_modes_title">Felismerési módok: egyszerű magyarázat</string>
+    <string name="ocr_prep_modes_message">Három módon lehet képeket továbbítani az OCR motorhoz:\n\n• Eredeti (előfeldolgozás nélkül) — a leggyorsabb. A fényképet változtatás nélkül küldi. Tiszta, nagy kontrasztú szkennelt képekhez ideális. Előfordulhat, hogy a halvány vagy zajos szövegrészeket kihagyja.\n\n• OpenCV Quick — gyors tisztítás: szürkeárnyalatossá alakít, enyhén zajtalanít, automatikusan fekete-fehérré konvertál, és szükség esetén kissé felnagyítja a képet. Jó alapértelmezett beállítás a legtöbb fényképhez. Kiegyensúlyozott sebesség és minőség.\n\n• OpenCV Robust — maximális pontosságra tervezve nehéz oldalakhoz. Korrigálja a ferdeséget, normalizálja az árnyékokat és a megvilágítást, élmegőrző zajszűrést és intelligens felnagyítást alkalmaz. Fontos: a Tesseract egy magas minőségű szürkeárnyalatos képet kap (nem kemény fekete-fehéret), hogy megőrizze az apró részleteket, például az „o” betű hurkait és a kis számokat. A legjobb pontosság nehéz oldalaknál; lassabb és több memóriát igényel.</string>
+
+    <!-- OCR felismerési módok kiválasztása -->
+    <string name="ocr_choose_prep_mode_menu">Felismerési mód…</string>
+    <string name="ocr_choose_prep_mode_title">Felismerési mód kiválasztása</string>
+    <string name="ocr_mode_original">Eredeti (előfeldolgozás nélkül)</string>
+    <string name="ocr_mode_quick">OpenCV Quick (gyors)</string>
+    <string name="ocr_mode_robust">OpenCV Robust (magas minőség)</string>
+    <string name="ocr_prep_mode_set">Felismerési mód beállítva: %1$s</string>
 
     <!-- Labels -->
     <string name="label_language">Nyelv</string>

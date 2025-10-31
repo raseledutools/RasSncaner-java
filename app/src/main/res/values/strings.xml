@@ -170,9 +170,29 @@
     <string name="ocr_import_success">Model imported</string>
     <string name="ocr_import_failed">Import failed</string>
 
-    
+    <!-- OCR models: delete local Best -->
+    <string name="ocr_delete_best_model">Delete Best model</string>
+    <string name="ocr_nothing_to_delete">No Best model to delete for the current language</string>
+    <string name="ocr_delete_confirm_title">Delete Best model?</string>
+    <string name="ocr_delete_confirm_msg">Delete the imported Best model for %1$s? The built-in Fast model will remain available.</string>
+    <string name="ocr_delete_success">Model deleted</string>
+    <string name="ocr_delete_failed">Delete failed</string>
+
     <!-- OCR models hint -->
     <string name="ocr_models_hint">For faster recognition, compact models are included. For higher accuracy, you can install larger \"Best\" models. No internet connection is required.</string>
+
+    <!-- OCR prep modes explanation -->
+    <string name="ocr_explain_prep_modes">Explain recognition modes</string>
+    <string name="ocr_prep_modes_title">Recognition modes: simple explanation</string>
+    <string name="ocr_prep_modes_message">There are three ways to feed images into the OCR engine:\n\n• Original (no preprocessing) — fastest. We send the photo as-is. Best for already clean, high-contrast scans. May miss faint or noisy text.\n\n• OpenCV Quick — a fast cleanup: convert to grayscale, lightly denoise, make it black/white automatically, and upscale a bit if needed. Good default for most photos. Balanced speed and quality.\n\n• OpenCV Robust — rebuilt for maximum accuracy on difficult pages. It deskews, normalizes shadows/illumination, applies edge‑preserving denoise and smart upscaling. Importantly, it feeds Tesseract a high‑quality grayscale image (not hard black/white) to preserve fine details like loops in “o” and small digits. Best accuracy on tough pages; slower and uses more memory.</string>
+
+    <!-- OCR prep modes selection -->
+    <string name="ocr_choose_prep_mode_menu">Recognition mode…</string>
+    <string name="ocr_choose_prep_mode_title">Choose recognition mode</string>
+    <string name="ocr_mode_original">Original (no preprocessing)</string>
+    <string name="ocr_mode_quick">OpenCV Quick (fast)</string>
+    <string name="ocr_mode_robust">OpenCV Robust (high quality)</string>
+    <string name="ocr_prep_mode_set">Recognition mode set to %1$s</string>
 
     <!-- Labels -->
     <string name="label_language">Language</string>

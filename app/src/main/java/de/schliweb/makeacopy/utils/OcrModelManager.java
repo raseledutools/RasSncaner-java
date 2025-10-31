@@ -302,6 +302,44 @@ public final class OcrModelManager {
         }
     }
 
+    /**
+     * Deletes a locally imported ("Best") model for a given language code from the app's no-backup tessdata directory.
+     * This removes only the local file (e.g., deu.traineddata) and does not affect bundled assets.
+     * Returns true if the file existed and was deleted or did not exist anymore; false on IO errors.
+     */
+    public static boolean deleteLocalModel(Context context, String langCode) {
+        if (langCode == null || langCode.trim().isEmpty()) return false;
+        String filename = langCode + ".traineddata";
+        if (!TRAINEDDATA_NAME.matcher(filename).matches()) {
+            Log.e(TAG, "deleteLocalModel: invalid lang code/filename: " + filename);
+            return false;
+        }
+        final Object lock = LOCKS.computeIfAbsent(filename, k -> new Object());
+        synchronized (lock) {
+            try {
+                File dir = getOrCreateTessdataDir(context);
+                File target = new File(dir, filename);
+                if (!target.exists()) {
+                    // Already gone → treat as success to simplify UX
+                    return true;
+                }
+                boolean ok = target.delete();
+                if (!ok) {
+                    // Try rewrite empty then delete as a fallback
+                    try (FileOutputStream fos = new FileOutputStream(target, false)) {
+                        fos.getFD().sync();
+                    } catch (Throwable ignored) {
+                    }
+                    ok = target.delete();
+                }
+                if (!ok) Log.w(TAG, "deleteLocalModel: failed to delete " + target);
+                return ok;
+            } catch (Throwable t) {
+                Log.e(TAG, "deleteLocalModel failed for code=" + langCode, t);
+                return false;
+            }
+        }
+    }
 
     /**
      * Cleans up orphaned ".part" files in the specified directory. A file is considered an orphan

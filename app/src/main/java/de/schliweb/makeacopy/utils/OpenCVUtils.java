@@ -1632,65 +1632,193 @@ public class OpenCVUtils {
                 tmp.release();
             }
 
-            // 3) Gentle denoise + CLAHE (very mild, avoids over-bleaching)
-            Imgproc.medianBlur(gray, gray, 3);
+            // 3) Background normalization to suppress shadows/gradients (division by blurred background)
+            //    Use floating-point math to avoid banding, then convert back to 8-bit in 'work'.
+            int k = Math.max(15, (int) (Math.min(gray.width(), gray.height()) * 0.03));
+            if (k % 2 == 0) k++;
+            Mat bg = new Mat();
+            Imgproc.GaussianBlur(gray, bg, new Size(k, k), 0);
+            Mat gf = new Mat(), bgf = new Mat(), norm = new Mat();
+            try {
+                gray.convertTo(gf, CvType.CV_32F);
+                bg.convertTo(bgf, CvType.CV_32F);
+                Core.max(bgf, new Scalar(1.0), bgf);          // prevent div-by-zero
+                Core.divide(gf, bgf, norm);                   // ~0..1
+                Core.multiply(norm, new Scalar(255.0), norm); // ~0..255
+                norm.convertTo(work, CvType.CV_8U);
+            } finally {
+                bg.release();
+                gf.release();
+                bgf.release();
+                norm.release();
+            }
+
+            // 4) Gentle denoise + CLAHE (very mild, avoids over-bleaching)
+            Imgproc.medianBlur(work, work, 3);
             try {
                 CLAHE clahe = Imgproc.createCLAHE(1.2, new Size(8, 8));
-                clahe.apply(gray, gray);
+                clahe.apply(work, work);
                 clahe.collectGarbage();
             } catch (Throwable ignore) { /* optional */ }
 
             if (binaryOutput) {
-                // 4a) Binary path (preferred for OCR on photos)
-                // Adaptive on real devices, fallback to Otsu on emulators/safe mode
-                boolean usedAdaptive = false;
-                if (!isSafeMode()) {
-                    try {
-                        int bs = Math.max(41, ((Math.min(gray.width(), gray.height()) / 40) | 1));
-                        int C = 4; // gentle offset
-                        Imgproc.adaptiveThreshold(
-                                gray, bw, 255,
-                                Imgproc.ADAPTIVE_THRESH_MEAN_C,
-                                Imgproc.THRESH_BINARY, bs, C
-                        );
-                        usedAdaptive = true;
-                    } catch (Throwable ignore) { /* fallback below */ }
-                }
-                if (!usedAdaptive) {
-                    Imgproc.threshold(gray, bw, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
-                }
+                // NEW ROBUST PIPELINE (from scratch): deskew → Retinex norm → edge-preserving denoise → Sauvola → refine → smart scale
 
-                // kleine Störungen entfernen + leichte Stabilisierung
-                despeckleFast(bw);
+                // 5a) Deskew (estimate skew angle and rotate to horizontal baselines)
                 try {
-                    Mat k2 = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(2, 2));
-                    Imgproc.morphologyEx(bw, bw, Imgproc.MORPH_CLOSE, k2);
-                    k2.release();
+                    deskewInPlace(work); // rotates in-place and resizes 'work' as needed
                 } catch (Throwable ignore) {
                 }
 
-                // 5) Moderate upscaling if too small (helps Tesseract with tiny fonts)
-                ensureMinTextScale(bw, /*minLongSide*/ 1800, /*scaleMax*/ 2.5);
+                // 5b) Retinex-like normalization to flatten illumination
+                try {
+                    retinexNormalize(work, /*sigma*/ Math.max(15, Math.min(work.width(), work.height()) / 20));
+                } catch (Throwable ignore) {
+                }
 
-                // 6) -> ARGB_8888
+                // 5c) Edge-preserving denoise: prefer fastNlMeans (grayscale) then bilateral as fallback
+                try {
+                    // h tuned to keep strokes (unit ~ pixel intensity)
+                    Photo.fastNlMeansDenoising(work, work, /*h*/ 10, /*templateWindowSize*/ 7, /*searchWindowSize*/ 21);
+                } catch (Throwable tNl) {
+                    try {
+                        int longSide = Math.max(work.width(), work.height());
+                        int d = (longSide >= 2200 ? 7 : 5);
+                        double sigmaColor = (longSide >= 2200 ? 65 : 55);
+                        double sigmaSpace = (longSide >= 2200 ? 65 : 55);
+                        Imgproc.bilateralFilter(work, work, d, sigmaColor, sigmaSpace);
+                    } catch (Throwable ignore2) {
+                    }
+                }
+
+                // 5d) High-quality binarization: build multiple candidates and pick the best by quality score
+                List<Mat> candidates = new ArrayList<>();
+                List<String> candNames = new ArrayList<>();
+                try {
+                    // Candidate A/B/C: Sauvola with varying k and window sizes (real devices only)
+                    if (!isSafeMode()) {
+                        int baseWin = Math.max(31, ((Math.min(work.width(), work.height()) / 24) | 1));
+                        if (baseWin % 2 == 0) baseWin++;
+                        int[] wins = new int[]{baseWin, Math.max(31, baseWin + 8), Math.max(31, baseWin - 8)};
+                        double[] ks = new double[]{0.30, 0.34, 0.40};
+                        for (int wv : wins) {
+                            for (double kv : ks) {
+                                try {
+                                    Mat m = new Mat();
+                                    sauvolaThreshold(work, m, wv, kv, 128.0);
+                                    candidates.add(m);
+                                    candNames.add("Sauvola w=" + wv + " k=" + kv);
+                                } catch (Throwable ignore) {
+                                }
+                            }
+                        }
+                    }
+                    // Candidate D: Otsu (robust global)
+                    try {
+                        Mat m = new Mat();
+                        Imgproc.threshold(work, m, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
+                        candidates.add(m);
+                        candNames.add("Otsu");
+                    } catch (Throwable ignore) {
+                    }
+                    // Candidate E: Adaptive mean (device only)
+                    if (!isSafeMode()) {
+                        try {
+                            Mat m = new Mat();
+                            int bs = Math.max(31, ((Math.min(work.width(), work.height()) / 32) | 1));
+                            if (bs % 2 == 0) bs++;
+                            Imgproc.adaptiveThreshold(work, m, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, bs, 5);
+                            candidates.add(m);
+                            candNames.add("AdaptiveMean");
+                        } catch (Throwable ignore) {
+                        }
+                    }
+                    // Pick best by lowest score
+                    double bestScore = Double.POSITIVE_INFINITY;
+                    int bestIdx = -1;
+                    for (int i = 0; i < candidates.size(); i++) {
+                        Mat m = candidates.get(i);
+                        double s = scoreBwQuality(m);
+                        if (s < bestScore) {
+                            bestScore = s;
+                            bestIdx = i;
+                        }
+                    }
+                    if (bestIdx >= 0) {
+                        candidates.get(bestIdx).copyTo(bw);
+                    } else {
+                        // Fallback: simple Otsu
+                        Imgproc.threshold(work, bw, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
+                    }
+                } finally {
+                    // release all candidates except the chosen one (bw already copied)
+                    for (Mat m : candidates) {
+                        try {
+                            m.release();
+                        } catch (Throwable ignore) {
+                        }
+                    }
+                }
+
+                // 5e) Post-binarization refinement
+                //     - despeckle small salt/pepper
+                //     - micro closing to reconnect thin strokes
+                //     - connected components cleanup with dynamic thresholds
+                try {
+                    despeckleFast(bw);
+                } catch (Throwable ignore) {
+                }
+                try {
+                    Mat kClose = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(2, 2));
+                    Imgproc.morphologyEx(bw, bw, Imgproc.MORPH_CLOSE, kClose);
+                    kClose.release();
+                } catch (Throwable ignore) {
+                }
+                try {
+                    int area = bw.rows() * bw.cols();
+                    int minArea = Math.max(10, area / 15000);
+                    int minHeight = Math.max(3, Math.min(10, Math.max(bw.rows(), bw.cols()) / 170));
+                    removeSmallComponents(bw, minArea, minHeight);
+                } catch (Throwable ignore) {
+                }
+
+                // 5f) Smart scaling near target glyph size (~22 px median height)
+                try {
+                    int targetGlyphPx = 24;
+                    int medH = estimateMedianComponentHeight(bw);
+                    if (medH > 0 && medH < targetGlyphPx) {
+                        double scale = Math.min(2.2, Math.max(1.0, targetGlyphPx / (double) medH));
+                        if (scale > 1.05) {
+                            Mat tmp = new Mat();
+                            Imgproc.resize(bw, tmp, new Size(0, 0), scale, scale, Imgproc.INTER_CUBIC);
+                            tmp.copyTo(bw);
+                            tmp.release();
+                        }
+                    } else if (medH <= 0) {
+                        ensureMinTextScale(bw, /*minLongSide*/ 1900, /*scaleMax*/ 2.2);
+                    }
+                } catch (Throwable ignore) {
+                }
+
+                // 7) -> ARGB_8888
                 out = Bitmap.createBitmap(bw.cols(), bw.rows(), Bitmap.Config.ARGB_8888);
                 Utils.matToBitmap(bw, out);
                 return out;
             } else {
-                // 4b) Grayscale path (no hard threshold; good for already clean scans)
+                // 5b) Grayscale path (no hard threshold; good for already clean scans)
                 // very light unsharp to increase edge contrast
                 try {
                     Mat blurred = new Mat();
-                    Imgproc.GaussianBlur(gray, blurred, new Size(0, 0), 1.0);
-                    Core.addWeighted(gray, 1.5, blurred, -0.5, 0, gray);
+                    Imgproc.GaussianBlur(work, blurred, new Size(0, 0), 1.0);
+                    Core.addWeighted(work, 1.5, blurred, -0.5, 0, work);
                     blurred.release();
                 } catch (Throwable ignore) {
                 }
 
-                ensureMinTextScale(gray, /*minLongSide*/ 1800, /*scaleMax*/ 2.5);
+                ensureMinTextScale(work, /*minLongSide*/ 1800, /*scaleMax*/ 2.0);
 
-                out = Bitmap.createBitmap(gray.cols(), gray.rows(), Bitmap.Config.ARGB_8888);
-                Utils.matToBitmap(gray, out);
+                out = Bitmap.createBitmap(work.cols(), work.rows(), Bitmap.Config.ARGB_8888);
+                Utils.matToBitmap(work, out);
                 return out;
             }
 
@@ -1802,4 +1930,237 @@ public class OpenCVUtils {
         tmp.release();
     }
 
+
+    // --- Heuristics for Robust binarization quality and component analysis ---
+
+    /**
+     * Scores a binarized image: lower is better. Penalizes excessive white coverage and many tiny blobs.
+     */
+    private static double scoreBwQuality(Mat bw /* CV_8UC1 0/255 */) {
+        try {
+            int rows = bw.rows(), cols = bw.cols();
+            if (rows <= 0 || cols <= 0) return Double.POSITIVE_INFINITY;
+            int area = rows * cols;
+            int white = Core.countNonZero(bw);
+            double whiteFrac = Math.min(1.0, Math.max(0.0, white / (double) area));
+
+            Mat labels = new Mat();
+            Mat stats = new Mat();
+            Mat centroids = new Mat();
+            int n = Imgproc.connectedComponentsWithStats(bw, labels, stats, centroids, 8, CvType.CV_32S);
+            int comp = Math.max(0, n - 1);
+            int small = 0;
+            int minArea = Math.max(12, area / 12000);
+            for (int i = 1; i < n; i++) {
+                int ai = (int) stats.get(i, Imgproc.CC_STAT_AREA)[0];
+                int hi = (int) stats.get(i, Imgproc.CC_STAT_HEIGHT)[0];
+                if (ai < minArea || hi < 3) small++;
+            }
+            double smallRatio = (comp > 0) ? (double) small / comp : 1.0;
+            double emptyPenalty = (comp == 0) ? 0.5 : 0.0;
+            labels.release();
+            stats.release();
+            centroids.release();
+            return smallRatio + whiteFrac * 0.6 + emptyPenalty;
+        } catch (Throwable t) {
+            return Double.POSITIVE_INFINITY;
+        }
+    }
+
+    /**
+     * Removes connected components below given size/height thresholds (keeps punctuation by using tiny limits).
+     */
+    private static void removeSmallComponents(Mat bw /* CV_8UC1 0/255 */, int minArea, int minHeight) {
+        Mat labels = new Mat();
+        Mat stats = new Mat();
+        Mat centroids = new Mat();
+        Mat mask = new Mat();
+        try {
+            int n = Imgproc.connectedComponentsWithStats(bw, labels, stats, centroids, 8, CvType.CV_32S);
+            for (int i = 1; i < n; i++) {
+                int ai = (int) stats.get(i, Imgproc.CC_STAT_AREA)[0];
+                int hi = (int) stats.get(i, Imgproc.CC_STAT_HEIGHT)[0];
+                if (ai < minArea || hi < minHeight) {
+                    Core.compare(labels, new Scalar(i), mask, Core.CMP_EQ);
+                    bw.setTo(new Scalar(0), mask); // set to background
+                }
+            }
+        } catch (Throwable ignore) {
+        } finally {
+            labels.release();
+            stats.release();
+            centroids.release();
+            mask.release();
+        }
+    }
+
+    /**
+     * Estimates median height of text components to guide scaling; returns -1 if not available.
+     */
+    private static int estimateMedianComponentHeight(Mat bw /* CV_8UC1 0/255 */) {
+        Mat labels = new Mat();
+        Mat stats = new Mat();
+        Mat centroids = new Mat();
+        try {
+            int n = Imgproc.connectedComponentsWithStats(bw, labels, stats, centroids, 8, CvType.CV_32S);
+            if (n <= 1) return -1;
+            int rows = bw.rows(), cols = bw.cols();
+            int imgArea = rows * cols;
+            int minArea = Math.max(12, imgArea / 20000);
+            int maxArea = Math.max(minArea + 1, imgArea / 5);
+            List<Integer> heights = new ArrayList<>();
+            for (int i = 1; i < n; i++) {
+                int ai = (int) stats.get(i, Imgproc.CC_STAT_AREA)[0];
+                int hi = (int) stats.get(i, Imgproc.CC_STAT_HEIGHT)[0];
+                int wi = (int) stats.get(i, Imgproc.CC_STAT_WIDTH)[0];
+                if (ai < minArea || ai > maxArea) continue;
+                if (hi < 3 || hi > rows * 0.6) continue;
+                if (wi < 2 || wi > cols * 0.6) continue;
+                heights.add(hi);
+            }
+            if (heights.isEmpty()) return -1;
+            Collections.sort(heights);
+            return heights.get(heights.size() / 2);
+        } catch (Throwable t) {
+            return -1;
+        } finally {
+            labels.release();
+            stats.release();
+            centroids.release();
+        }
+    }
+
+    // ===== New helpers for Robust pipeline =====
+
+    /**
+     * Estimates page skew (in degrees) and rotates the image content in-place to correct it.
+     * Uses Hough transform on Canny edges; constrained to small angles to avoid over-rotation.
+     */
+    private static void deskewInPlace(Mat gray /* CV_8U */) {
+        try {
+            Mat edges = new Mat();
+            Imgproc.Canny(gray, edges, 50, 150);
+            Mat lines = new Mat();
+            // Use standard HoughLines for robust angle estimation
+            Imgproc.HoughLines(edges, lines, 1, Math.PI / 180.0, Math.max(120, (int) (0.02 * Math.max(gray.rows(), gray.cols()))));
+            double angleDeg = 0.0;
+            if (lines.rows() > 0) {
+                List<Double> angles = new ArrayList<>();
+                for (int i = 0; i < Math.min(lines.rows(), 200); i++) {
+                    double[] v = lines.get(i, 0);
+                    double theta = v[1];
+                    double deg = Math.toDegrees(theta) - 90.0; // convert to line angle about horizontal
+                    if (deg < -45) deg += 180; // normalize
+                    if (deg > 45) deg -= 180;
+                    if (Math.abs(deg) <= 18.0) angles.add(deg);
+                }
+                if (!angles.isEmpty()) {
+                    Collections.sort(angles);
+                    angleDeg = angles.get(angles.size() / 2);
+                }
+            }
+            edges.release();
+            lines.release();
+            if (Math.abs(angleDeg) > 0.3 && Math.abs(angleDeg) <= 18.0) {
+                Point center = new Point(gray.cols() / 2.0, gray.rows() / 2.0);
+                Mat rot = Imgproc.getRotationMatrix2D(center, -angleDeg, 1.0);
+                Mat rotated = new Mat();
+                Imgproc.warpAffine(gray, rotated, rot, gray.size(), Imgproc.INTER_LINEAR, Core.BORDER_CONSTANT, new Scalar(255));
+                rotated.copyTo(gray);
+                rot.release();
+                rotated.release();
+            }
+        } catch (Throwable ignore) {
+        }
+    }
+
+    /**
+     * Retinex-like illumination normalization: out = 255 * (log(gray+1) - log(blur(gray)+1)) scaled to 0..1.
+     * sigma controls the blur kernel radius used for background estimation.
+     */
+    private static void retinexNormalize(Mat gray /* CV_8U */, int sigma) {
+        int k = Math.max(3, (sigma | 1));
+        Mat blur = new Mat();
+        Mat f = new Mat();
+        Mat fb = new Mat();
+        Mat logI = new Mat();
+        Mat logB = new Mat();
+        Mat diff = new Mat();
+        try {
+            Imgproc.GaussianBlur(gray, blur, new Size(k, k), 0);
+            gray.convertTo(f, CvType.CV_32F);
+            blur.convertTo(fb, CvType.CV_32F);
+            Core.add(f, new Scalar(1.0), f);
+            Core.add(fb, new Scalar(1.0), fb);
+            Core.log(f, logI);
+            Core.log(fb, logB);
+            Core.subtract(logI, logB, diff);
+            Core.normalize(diff, diff, 0, 255, Core.NORM_MINMAX);
+            diff.convertTo(gray, CvType.CV_8U);
+        } finally {
+            blur.release();
+            f.release();
+            fb.release();
+            logI.release();
+            logB.release();
+            diff.release();
+        }
+    }
+
+    /**
+     * Sauvola local adaptive thresholding.
+     *
+     * @param src8u grayscale CV_8U
+     * @param dst   output binary CV_8U (0/255)
+     * @param win   odd window size for local statistics
+     * @param k     typically in [0.2, 0.5]
+     * @param R     dynamic range of standard deviation (typically 128 or 255)
+     */
+    private static void sauvolaThreshold(Mat src8u, Mat dst, int win, double k, double R) {
+        if (win % 2 == 0) win++;
+        int btype = CvType.CV_32F;
+        Mat f = new Mat();
+        Mat mean = new Mat();
+        Mat sq = new Mat();
+        Mat meanSq = new Mat();
+        Mat var = new Mat();
+        Mat stddev = new Mat();
+        Mat thresh = new Mat();
+        Mat mask = new Mat();
+        try {
+            src8u.convertTo(f, btype);
+            Imgproc.boxFilter(f, mean, btype, new Size(win, win));
+            Core.multiply(f, f, sq);
+            Imgproc.boxFilter(sq, meanSq, btype, new Size(win, win));
+            // var = E[x^2] - (E[x])^2
+            Core.multiply(mean, mean, var);
+            Core.subtract(meanSq, var, var);
+            Core.max(var, new Scalar(0.0), var);
+            Core.sqrt(var, stddev);
+
+            // thresh = mean * (1 + k*((std/R) - 1))
+            Mat stdDivR = new Mat();
+            Core.divide(stddev, new Scalar(R), stdDivR);
+            Mat tmp = new Mat();
+            Core.subtract(stdDivR, new Scalar(1.0), tmp);
+            Core.multiply(tmp, new Scalar(k), tmp);
+            Core.add(tmp, new Scalar(1.0), tmp);
+            Core.multiply(mean, tmp, thresh);
+
+            // compare f > thresh -> 255 else 0
+            Core.compare(f, thresh, mask, Core.CMP_GT);
+            dst.create(src8u.size(), CvType.CV_8U);
+            dst.setTo(new Scalar(0));
+            dst.setTo(new Scalar(255), mask);
+        } finally {
+            f.release();
+            mean.release();
+            sq.release();
+            meanSq.release();
+            var.release();
+            stddev.release();
+            thresh.release();
+            mask.release();
+        }
+    }
 }

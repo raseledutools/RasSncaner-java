@@ -23,6 +23,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
+import com.googlecode.tesseract.android.TessBaseAPI;
 import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.databinding.FragmentOcrBinding;
 import de.schliweb.makeacopy.ui.crop.CropViewModel;
@@ -110,7 +111,10 @@ public class OCRFragment extends Fragment {
                         Uri uri = data.getData();
                         boolean ok = uri != null && OcrModelManager.importFromUri(requireContext(), uri);
                         UIUtils.showToast(requireContext(), ok ? getString(R.string.ocr_import_success) : getString(R.string.ocr_import_failed), Toast.LENGTH_SHORT);
-                        if (ok) refreshLanguageSpinner();
+                        if (ok) {
+                            refreshLanguageSpinner();
+                            prepareReprocessAfterModelChange();
+                        }
                     }
                 }
         );
@@ -142,6 +146,11 @@ public class OCRFragment extends Fragment {
                 binding.buttonOcrReview.setAlpha(enableReview ? 1f : 0.4f);
                 binding.buttonOcrReview.setVisibility(View.VISIBLE);
             }
+
+            // Disable settings (OCR options) button while processing is running
+            boolean processing = state.processing();
+            binding.buttonOcrOptions.setEnabled(!processing);
+            binding.buttonOcrOptions.setAlpha(processing ? 0.4f : 1f);
 
             // Proceed to Export
             binding.buttonProcess.setOnClickListener(v ->
@@ -288,6 +297,12 @@ public class OCRFragment extends Fragment {
      */
     private static final String PREFS_NAME = "export_options";
     private static final String PREF_KEY_OCR_LANG = "ocr_language";
+    private static final String PREF_KEY_OCR_MODE = "ocr_prep_mode"; // 0=Original,1=Quick,2=Robust
+
+    // Recognition prep modes (image preprocessing before Tesseract)
+    private static final int OCR_MODE_ORIGINAL = 0;
+    private static final int OCR_MODE_QUICK = 1;
+    private static final int OCR_MODE_ROBUST = 2;
 
     private void setupLanguageSpinner() {
         AutoCompleteTextView dropdown = binding.languageSpinner;
@@ -466,9 +481,9 @@ public class OCRFragment extends Fragment {
                 two = "th";
                 break;
             case "chi_sim":
-                return "Chinese (Simplified)";
+                return appendVariantLabel("Chinese (Simplified)", code);
             case "chi_tra":
-                return "Chinese (Traditional)";
+                return appendVariantLabel("Chinese (Traditional)", code);
             default:
                 // Fallback: try first two letters
                 if (code != null && code.length() >= 2) {
@@ -477,12 +492,60 @@ public class OCRFragment extends Fragment {
                     two = "en";
                 }
         }
+        String baseName;
         try {
             java.util.Locale loc = java.util.Locale.forLanguageTag(two);
-            return loc.getDisplayLanguage(java.util.Locale.getDefault());
+            baseName = loc.getDisplayLanguage(java.util.Locale.getDefault());
         } catch (Throwable ignore) {
-            return code;
+            baseName = code;
         }
+        return appendVariantLabel(baseName, code);
+    }
+
+    private String appendVariantLabel(String baseName, String code) {
+        String variant = determineModelVariant(code);
+        return baseName + " (" + variant + ")";
+    }
+
+    /**
+     * Determine whether the given language code uses the built-in fast asset or an imported best model.
+     * Heuristic: if a file exists in no_backup/tessdata whose size is larger than the asset's size (or asset absent),
+     * treat it as Best; otherwise Fast.
+     */
+    private String determineModelVariant(String code) {
+        try {
+            java.io.File dir = de.schliweb.makeacopy.utils.OCRHelper.getTessdataDir(requireContext());
+            java.io.File local = new java.io.File(dir, code + ".traineddata");
+            long localSize = local.exists() ? local.length() : -1L;
+
+            long assetSize = -1L;
+            try {
+                // Count asset bytes even if compressed in APK
+                java.io.InputStream in = requireContext().getAssets().open("tessdata/" + code + ".traineddata");
+                try {
+                    byte[] buf = new byte[8192];
+                    long total = 0;
+                    int n;
+                    while ((n = in.read(buf)) != -1) total += n;
+                    assetSize = total;
+                } finally {
+                    try {
+                        in.close();
+                    } catch (Throwable ignore) {
+                    }
+                }
+            } catch (Throwable ignore) {
+                // asset not present
+                assetSize = -1L;
+            }
+
+            // Decide Best vs Fast with small margin to avoid equality due to copy
+            if (localSize > 0 && (assetSize < 0 || localSize > assetSize + 1024)) {
+                return "Best";
+            }
+        } catch (Throwable ignoreAll) {
+        }
+        return "Fast";
     }
 
     /**
@@ -499,12 +562,108 @@ public class OCRFragment extends Fragment {
     }
 
     /**
+     * After models are added or removed, allow the user to restart OCR easily.
+     * This switches the primary action to "Process" and wires it to performOCR().
+     */
+    private void prepareReprocessAfterModelChange() {
+        try {
+            Bitmap bmp = cropViewModel != null ? cropViewModel.getImageBitmap().getValue() : null;
+            boolean hasImage = bmp != null;
+            binding.buttonProcess.setText(R.string.btn_process);
+            binding.buttonProcess.setEnabled(hasImage);
+            binding.buttonProcess.setOnClickListener(v -> performOCR());
+        } catch (Throwable ignore) {
+        }
+    }
+
+    private int getSelectedOcrMode() {
+        try {
+            android.content.SharedPreferences sp = requireContext().getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE);
+            return sp.getInt(PREF_KEY_OCR_MODE, OCR_MODE_QUICK);
+        } catch (Throwable ignore) {
+            return OCR_MODE_QUICK;
+        }
+    }
+
+    private void setSelectedOcrMode(int mode) {
+        try {
+            android.content.SharedPreferences sp = requireContext().getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE);
+            sp.edit().putInt(PREF_KEY_OCR_MODE, mode).apply();
+        } catch (Throwable ignore) {
+        }
+    }
+
+    private void showOcrPrepModeDialog() {
+        final CharSequence[] modes = new CharSequence[]{
+                getString(R.string.ocr_mode_original),
+                getString(R.string.ocr_mode_quick),
+                getString(R.string.ocr_mode_robust)
+        };
+        final int[] sel = {Math.max(0, Math.min(2, getSelectedOcrMode()))};
+        AlertDialog dlg = new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.ocr_choose_prep_mode_title)
+                .setSingleChoiceItems(modes, sel[0], (d, which) -> sel[0] = which)
+                .setPositiveButton(R.string.ok, (d, w) -> {
+                    setSelectedOcrMode(sel[0]);
+                    UIUtils.showToast(requireContext(), getString(R.string.ocr_prep_mode_set, modes[sel[0]]), Toast.LENGTH_SHORT);
+                    prepareReprocessAfterModelChange();
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .create();
+        dlg.setOnShowListener(d -> DialogUtils.improveAlertDialogButtonContrastForNight(dlg, requireContext()));
+        dlg.show();
+    }
+
+    /**
      * Open a small dialog with OCR model actions.
      */
     private void showOcrOptionsDialog() {
+        // Determine current language code and whether a deletable local (Best) model exists
+        // Determine current language code and whether a deletable local (Best) model exists
+        String curLang = null;
+        try {
+            curLang = ocrViewModel.getLanguage().getValue();
+        } catch (Throwable ignore) {
+        }
+        final String langCode = curLang;
+
+        boolean hasBestTmp = false;
+        if (langCode != null) {
+            try {
+                java.io.File dir = de.schliweb.makeacopy.utils.OCRHelper.getTessdataDir(requireContext());
+                java.io.File local = new java.io.File(dir, langCode + ".traineddata");
+                long localSize = local.exists() ? local.length() : -1L;
+                long assetSize = -1L;
+                try {
+                    java.io.InputStream in = requireContext().getAssets().open("tessdata/" + langCode + ".traineddata");
+                    try {
+                        byte[] buf = new byte[8192];
+                        long total = 0;
+                        int n;
+                        while ((n = in.read(buf)) != -1) total += n;
+                        assetSize = total;
+                    } finally {
+                        try {
+                            in.close();
+                        } catch (Throwable ignore) {
+                        }
+                    }
+                } catch (Throwable ignore) {
+                    assetSize = -1L;
+                }
+                hasBestTmp = (localSize > 0 && (assetSize < 0 || localSize > assetSize + 1024));
+            } catch (Throwable ignore) {
+                hasBestTmp = false;
+            }
+        }
+        final boolean hasBest = hasBestTmp;
+
         CharSequence[] items = new CharSequence[]{
                 getString(R.string.ocr_import_manual),
-                getString(R.string.ocr_discover_packs)
+                getString(R.string.ocr_discover_packs),
+                getString(R.string.ocr_delete_best_model),
+                getString(R.string.ocr_choose_prep_mode_menu),
+                getString(R.string.ocr_explain_prep_modes)
         };
         AlertDialog dlg = new AlertDialog.Builder(requireContext())
                 .setTitle(R.string.ocr_models_manage)
@@ -514,6 +673,42 @@ public class OCRFragment extends Fragment {
                         openTraineddataLauncher.launch(OcrModelManager.createOpenTraineddataIntent());
                     } else if (which == 1) {
                         showDiscoverPacksDialog();
+                    } else if (which == 2) {
+                        if (langCode == null) {
+                            UIUtils.showToast(requireContext(), getString(R.string.ocr_delete_failed), Toast.LENGTH_SHORT);
+                            return;
+                        }
+                        if (!hasBest) {
+                            UIUtils.showToast(requireContext(), getString(R.string.ocr_nothing_to_delete), Toast.LENGTH_SHORT);
+                            return;
+                        }
+                        // Confirm deletion
+                        String display = codeToDisplayName(langCode);
+                        AlertDialog confirm = new AlertDialog.Builder(requireContext())
+                                .setTitle(R.string.ocr_delete_confirm_title)
+                                .setMessage(getString(R.string.ocr_delete_confirm_msg, display))
+                                .setPositiveButton(R.string.delete, (d2, w2) -> {
+                                    boolean ok = OcrModelManager.deleteLocalModel(requireContext(), langCode);
+                                    UIUtils.showToast(requireContext(), ok ? getString(R.string.ocr_delete_success) : getString(R.string.ocr_delete_failed), Toast.LENGTH_SHORT);
+                                    if (ok) {
+                                        refreshLanguageSpinner();
+                                        prepareReprocessAfterModelChange();
+                                    }
+                                })
+                                .setNegativeButton(R.string.cancel, null)
+                                .create();
+                        confirm.setOnShowListener(dlg2 -> DialogUtils.improveAlertDialogButtonContrastForNight(confirm, requireContext()));
+                        confirm.show();
+                    } else if (which == 3) {
+                        showOcrPrepModeDialog();
+                    } else if (which == 4) {
+                        AlertDialog info = new AlertDialog.Builder(requireContext())
+                                .setTitle(R.string.ocr_prep_modes_title)
+                                .setMessage(R.string.ocr_prep_modes_message)
+                                .setPositiveButton(R.string.ok, null)
+                                .create();
+                        info.setOnShowListener(d2 -> DialogUtils.improveAlertDialogButtonContrastForNight(info, requireContext()));
+                        info.show();
                     }
                 })
                 .setNegativeButton(R.string.cancel, null)
@@ -552,7 +747,10 @@ public class OCRFragment extends Fragment {
                     String filename = files.get(idx);
                     boolean ok = OcrModelManager.importFromPackage(requireContext(), pkg, filename);
                     UIUtils.showToast(requireContext(), ok ? getString(R.string.ocr_import_success) : getString(R.string.ocr_import_failed), Toast.LENGTH_SHORT);
-                    if (ok) refreshLanguageSpinner();
+                    if (ok) {
+                        refreshLanguageSpinner();
+                        prepareReprocessAfterModelChange();
+                    }
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .create();
@@ -659,6 +857,16 @@ public class OCRFragment extends Fragment {
                         return;
                     }
 
+                    // Tune Tesseract PSM based on recognition mode (Robust benefits from PSM_AUTO)
+                    try {
+                        int prepMode = getSelectedOcrMode();
+                        int psm = (prepMode == OCR_MODE_ROBUST)
+                                ? TessBaseAPI.PageSegMode.PSM_AUTO
+                                : TessBaseAPI.PageSegMode.PSM_SINGLE_BLOCK;
+                        localHelper.setPageSegMode(psm);
+                    } catch (Throwable ignore) {
+                    }
+
                     // Try OCR for rotations 0, 90, 180, 270 and keep best result
                     // TODO
                     int[] extraRots = new int[]{0, 90, 180, 270};
@@ -676,15 +884,23 @@ public class OCRFragment extends Fragment {
 
                         Bitmap rotated = (extra == 0) ? src : rotateBitmap(src, extra);
 
-                        // TODO: Settings
-                        // Bitmap inputForOcr = OpenCVUtils.prepareForOCR(rotated, /*binaryOutput*/ false);
-                        // Bitmap inputForOcr = OpenCVUtils.prepareForOCRQuick(rotated);
-                        Bitmap inputForOcr = rotated;
+                        // Apply selected recognition mode (preprocessing)
+                        Bitmap inputForOcr;
+                        int mode = getSelectedOcrMode();
+                        if (mode == OCR_MODE_ORIGINAL) {
+                            inputForOcr = rotated;
+                        } else if (mode == OCR_MODE_QUICK) {
+                            inputForOcr = OpenCVUtils.prepareForOCRQuick(rotated);
+                        } else { // OCR_MODE_ROBUST
+                            // Use grayscale output for Robust mode to preserve fine details and holes in letters (e.g., 'o'),
+                            // avoiding over-aggressive binarization artifacts that can cause substitutions like 'Oktober' → 'Okteber'.
+                            inputForOcr = OpenCVUtils.prepareForOCR(rotated, /*binaryOutput*/ false);
+                        }
                         if (inputForOcr == null) {
                             Log.w(TAG, "prepareForOCR returned null (extraRot=" + extra + "), skipping attempt");
                             continue;
                         }
-                        
+
                         OCRViewModel.OcrTransform tx = new OCRViewModel.OcrTransform(
                                 rotated.getWidth(), rotated.getHeight(),
                                 inputForOcr.getWidth(), inputForOcr.getHeight(),

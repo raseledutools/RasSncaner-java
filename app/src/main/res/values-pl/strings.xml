@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">MakeACopy</string>
 
+    <string name="tip_text_mode_editing">Tryb tekstowy: Podziały wierszy i znaki interpunkcyjne są obecnie normalizowane do spacji. Jeśli wprowadzono mniej słów, niż rozpoznano, pozostałe słowa OCR pozostaną bez zmian. Zmiany zostaną zastosowane po krótkiej przerwie.</string>
+
     <!-- Nowe pozycje menu skanera dokumentów -->
     <string name="title_camera">Aparat</string>
     <string name="title_crop">Kadrowanie</string>
@@ -170,8 +172,28 @@
     <string name="ocr_import_success">Model zaimportowany</string>
     <string name="ocr_import_failed">Import nieudany</string>
 
+    <string name="ocr_delete_best_model">Usuń model Best</string>
+    <string name="ocr_nothing_to_delete">Brak modelu Best do usunięcia dla bieżącego języka</string>
+    <string name="ocr_delete_confirm_title">Usunąć model Best?</string>
+    <string name="ocr_delete_confirm_msg">Usunąć zaimportowany model Best dla %1$s? Wbudowany model Fast pozostanie dostępny.</string>
+    <string name="ocr_delete_success">Model usunięty</string>
+    <string name="ocr_delete_failed">Usuwanie nie powiodło się</string>
+
     <!-- Wskazówka OCR -->
     <string name="ocr_models_hint">Dla szybszego rozpoznawania dołączono kompaktowe modele. Dla większej dokładności możesz zainstalować większe modele „Best”. Połączenie z internetem nie jest wymagane.</string>
+
+    <!-- Tryby rozpoznawania OCR – wyjaśnienie -->
+    <string name="ocr_explain_prep_modes">Wyjaśnij tryby rozpoznawania</string>
+    <string name="ocr_prep_modes_title">Tryby rozpoznawania: proste wyjaśnienie</string>
+    <string name="ocr_prep_modes_message">Istnieją trzy sposoby przekazywania obrazów do silnika OCR:\n\n• Oryginał (bez wstępnego przetwarzania) — najszybszy. Wysyła zdjęcie w oryginalnej postaci. Najlepszy dla już czystych, kontrastowych skanów. Może pominąć słaby lub zaszumiony tekst.\n\n• OpenCV Quick — szybkie czyszczenie: konwersja do skali szarości, lekkie odszumianie, automatyczne przekształcenie na czarno-biały obraz i ewentualne powiększenie. Dobry domyślny wybór dla większości zdjęć. Równowaga między szybkością a jakością.\n\n• OpenCV Robust — zaprojektowany dla maksymalnej dokładności na trudnych stronach. Koryguje przechylenie, normalizuje cienie i oświetlenie, stosuje odszumianie z zachowaniem krawędzi i inteligentne skalowanie. Ważne: przekazuje Tesseractowi wysokiej jakości obraz w skali szarości (nie twardy czarno-biały), aby zachować drobne szczegóły, takie jak pętle w literze „o” i małe cyfry. Najlepsza dokładność na trudnych stronach; wolniejszy i bardziej pamięciożerny.</string>
+
+    <!-- Wybór trybu rozpoznawania OCR -->
+    <string name="ocr_choose_prep_mode_menu">Tryb rozpoznawania…</string>
+    <string name="ocr_choose_prep_mode_title">Wybierz tryb rozpoznawania</string>
+    <string name="ocr_mode_original">Oryginał (bez wstępnego przetwarzania)</string>
+    <string name="ocr_mode_quick">OpenCV Quick (szybki)</string>
+    <string name="ocr_mode_robust">OpenCV Robust (wysoka jakość)</string>
+    <string name="ocr_prep_mode_set">Tryb rozpoznawania ustawiono na %1$s</string>
 
     <!-- Labels -->
     <string name="label_language">Język</string>

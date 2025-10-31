@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">MakeACopy</string>
 
+    <string name="tip_text_mode_editing">文字模式：目前换行符和标点符号会被规范化为空格。如果输入的词比识别出的少，剩余的 OCR 词将保持不变。更改会在短暂的停顿后生效。</string>
+
     <!-- New menu items for document scanner -->
     <string name="title_camera">相机</string>
     <string name="title_crop">裁剪</string>
@@ -171,8 +173,28 @@
     <string name="ocr_import_success">模型已导入</string>
     <string name="ocr_import_failed">导入失败</string>
 
+    <string name="ocr_delete_best_model">删除 Best 模型</string>
+    <string name="ocr_nothing_to_delete">当前语言没有可删除的 Best 模型</string>
+    <string name="ocr_delete_confirm_title">删除 Best 模型？</string>
+    <string name="ocr_delete_confirm_msg">删除 %1$s 的已导入 Best 模型？内置的 Fast 模型将继续可用。</string>
+    <string name="ocr_delete_success">模型已删除</string>
+    <string name="ocr_delete_failed">删除失败</string>
+
     <!-- OCR 模型提示 -->
     <string name="ocr_models_hint">为加快识别速度，已包含紧凑型模型。若需更高精度，可以安装更大的“Best”模型。无需互联网连接。</string>
+
+    <!-- OCR 识别模式 – 说明 -->
+    <string name="ocr_explain_prep_modes">说明识别模式</string>
+    <string name="ocr_prep_modes_title">识别模式：简单说明</string>
+    <string name="ocr_prep_modes_message">将图像输入到 OCR 引擎有三种方式：\n\n• 原始（无预处理） — 速度最快。直接发送原始照片。适合已经清晰、高对比度的扫描。可能无法识别模糊或带噪声的文字。\n\n• OpenCV Quick — 快速清理：转换为灰度图，轻度去噪，自动二值化，并在需要时略微放大。适合大多数照片，是速度与质量的良好平衡。\n\n• OpenCV Robust — 为困难页面提供最高精度而设计。可自动校正倾斜，均衡阴影与光照，应用边缘保留的去噪处理，并智能放大。重要的是，它向 Tesseract 提供高质量灰度图（而非纯黑白图），以保留细节，如字母 “o” 的圈和小数字。适用于复杂页面，精度最高，但速度较慢且占用更多内存。</string>
+
+    <!-- OCR 识别模式选择 -->
+    <string name="ocr_choose_prep_mode_menu">识别模式…</string>
+    <string name="ocr_choose_prep_mode_title">选择识别模式</string>
+    <string name="ocr_mode_original">原始（无预处理）</string>
+    <string name="ocr_mode_quick">OpenCV Quick（快速）</string>
+    <string name="ocr_mode_robust">OpenCV Robust（高质量）</string>
+    <string name="ocr_prep_mode_set">识别模式已设置为 %1$s</string>
 
     <!-- Labels -->
     <string name="label_language">语言</string>
