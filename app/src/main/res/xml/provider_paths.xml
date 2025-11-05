@@ -4,4 +4,6 @@
     <external-files-path name="external_files" path="." />
     <!-- Allow sharing from app-internal files directory (e.g., files/scans/...) -->
     <files-path name="internal_files" path="." />
+    <!-- Allow sharing temporary files from app cache directory (e.g., logs) -->
+    <cache-path name="cache" path="." />
 </paths>

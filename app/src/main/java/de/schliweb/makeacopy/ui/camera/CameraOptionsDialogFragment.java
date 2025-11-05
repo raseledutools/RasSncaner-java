@@ -19,20 +19,9 @@ import de.schliweb.makeacopy.BuildConfig;
 import de.schliweb.makeacopy.R;
 
 /**
- * A dialog fragment that provides options for configuring camera settings such as OCR skipping,
- * cropping, and analysis enabling. This fragment saves user choices persistently and communicates
- * results back to the parent fragment.
- * <p>
- * Constants:
- * - REQUEST_KEY: The key used for returning results via FragmentResult API.
- * - BUNDLE_SKIP_OCR: The bundle key representing whether OCR skipping is enabled.
- * - BUNDLE_ANALYSIS_ENABLED: The bundle key representing the state of analysis enablement.
- * - BUNDLE_SKIP_CROPPING: The bundle key representing whether cropping is skipped.
- * <p>
- * Methods:
- * - show(FragmentManager fm): Static utility method to display the dialog fragment.
- * - onCreateDialog(Bundle savedInstanceState): Inflates and initializes the dialog's UI, attaches
- * functionality for saving choices, and improves button appearance for night mode, if applicable.
+ * A DialogFragment implementation that provides camera-specific options and configurations.
+ * It serves as a UI interface for users to select or adjust camera settings before capturing
+ * or processing images.
  */
 public class CameraOptionsDialogFragment extends DialogFragment {
 
@@ -46,12 +35,12 @@ public class CameraOptionsDialogFragment extends DialogFragment {
     }
 
     /**
-     * Prepares and shares application logs via an intent. This method collects logging information,
-     * adds environment details, ensures the content size is within transaction limits, and invokes
-     * a share intent to allow the user to share the generated log information.
+     * Shares relevant logs and environment information for debugging purposes.
+     * Depending on the size of the logs, the data is either shared inline as plain text
+     * or written to a temporary file and shared as an attachment through a FileProvider.
+     * The logs include application metadata, device details, and the latest process-specific logcat output.
      *
-     * @param ctx The context used to access resources, build environment details, display messages,
-     *            and start the sharing intent.
+     * @param ctx The Android context used for file operations, creating intents, and accessing resources.
      */
     private void shareLogs(@NonNull Context ctx) {
         try {
@@ -59,17 +48,59 @@ public class CameraOptionsDialogFragment extends DialogFragment {
             String logs = collectLogcatForThisProcess();
             if (logs == null) logs = "";
             String body = header + "\n\n" + logs;
-            // Safety: cap to ~200 KB to avoid intent transaction limits
-            final int MAX_LEN = 200 * 1024;
-            if (body.length() > MAX_LEN) {
-                body = body.substring(body.length() - MAX_LEN);
-                header = header + "\n\n[truncated to last " + (MAX_LEN / 1024) + " KB]";
-                body = header + "\n\n" + body;
+
+            // Binder safety thresholds
+            final int INLINE_MAX_CHARS = 48 * 1024; // ~48 KiB safe inline payload
+            final int FILE_MAX_CHARS = 1024 * 1024; // cap file to ~1 MiB
+
+            if (body.length() <= INLINE_MAX_CHARS) {
+                // Share inline as text
+                Intent share = new Intent(Intent.ACTION_SEND);
+                share.setType("text/plain");
+                share.putExtra(Intent.EXTRA_SUBJECT, ctx.getString(R.string.share_logs_subject));
+                share.putExtra(Intent.EXTRA_TEXT, body);
+                startActivity(Intent.createChooser(share, ctx.getString(R.string.share_logs_chooser_title)));
+                return;
             }
+
+            // For large payloads write to a temp file in cache and share via FileProvider
+            String displayNote = "[saved as attachment due to size]";
+            String content = body;
+            if (content.length() > FILE_MAX_CHARS) {
+                content = content.substring(content.length() - FILE_MAX_CHARS);
+                content = header + "\n\n[truncated to last " + (FILE_MAX_CHARS / 1024) + " KB]\n\n" + content;
+            }
+
+            java.io.File cacheDir = new java.io.File(ctx.getCacheDir(), "debug");
+            if (!cacheDir.exists()) {
+                //noinspection ResultOfMethodCallIgnored
+                cacheDir.mkdirs();
+            }
+            String ts = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US)
+                    .format(System.currentTimeMillis());
+            java.io.File outFile = new java.io.File(cacheDir, "makeacopy-logs-" + ts + ".txt");
+            java.io.FileOutputStream fos = null;
+            try {
+                fos = new java.io.FileOutputStream(outFile);
+                byte[] data = content.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                fos.write(data);
+                fos.flush();
+            } finally {
+                if (fos != null) try {
+                    fos.close();
+                } catch (Throwable ignored) {
+                }
+            }
+
+            androidx.core.content.FileProvider.getUriForFile(ctx, BuildConfig.APPLICATION_ID + ".fileprovider", outFile);
+            android.net.Uri uri = androidx.core.content.FileProvider.getUriForFile(ctx, BuildConfig.APPLICATION_ID + ".fileprovider", outFile);
+
             Intent share = new Intent(Intent.ACTION_SEND);
             share.setType("text/plain");
             share.putExtra(Intent.EXTRA_SUBJECT, ctx.getString(R.string.share_logs_subject));
-            share.putExtra(Intent.EXTRA_TEXT, body);
+            share.putExtra(Intent.EXTRA_TEXT, displayNote);
+            share.putExtra(Intent.EXTRA_STREAM, uri);
+            share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             startActivity(Intent.createChooser(share, ctx.getString(R.string.share_logs_chooser_title)));
         } catch (Throwable t) {
             Toast.makeText(ctx, ctx.getString(R.string.share_logs_error, t.getMessage()), Toast.LENGTH_LONG).show();
