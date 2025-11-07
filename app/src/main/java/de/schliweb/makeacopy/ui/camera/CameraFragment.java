@@ -535,14 +535,16 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             );
         }
 
-        // Capture selector (prefer high resolution)
+        // Capture selector (prefer high resolution, but lower it on low-res tier to keep session supported)
         androidx.camera.core.resolutionselector.ResolutionSelector.Builder rsCap =
                 new androidx.camera.core.resolutionselector.ResolutionSelector.Builder()
                         .setAspectRatioStrategy(new androidx.camera.core.resolutionselector.AspectRatioStrategy(
                                 AspectRatio.RATIO_4_3,
                                 androidx.camera.core.resolutionselector.AspectRatioStrategy.FALLBACK_RULE_AUTO
                         ));
-        android.util.Size preferredHigh = new android.util.Size(4032, 3024);
+        android.util.Size preferredHigh = (tier == BindTier.COMPAT_LOWRES)
+                ? new android.util.Size(1920, 1440) // 2.8MP safe cap for troubled devices
+                : new android.util.Size(4032, 3024);
         rsCap.setResolutionStrategy(
                 new androidx.camera.core.resolutionselector.ResolutionStrategy(
                         preferredHigh,
@@ -586,14 +588,41 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         imageCapture = captureBuilder.build();
         preview = previewBuilder.build();
 
-        // Analyzer
-        setupOrUpdateImageAnalysis(rotation);
+        // Analyzer (we may skip it on lowest tier to avoid unsupported session)
+        boolean includeAnalysis = analysisEnabled;
+        if (tier == BindTier.COMPAT_LOWRES) {
+            includeAnalysis = false; // disable analysis to avoid 3-use-case conflict on problematic devices
+        }
+        if (includeAnalysis) {
+            setupOrUpdateImageAnalysis(rotation);
+        } else {
+            // ensure analyzer is cleared and overlay hidden
+            try {
+                if (imageAnalysis == null) {
+                    imageAnalysis = new ImageAnalysis.Builder()
+                            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                            .setTargetRotation(rotation)
+                            .build();
+                }
+                imageAnalysis.clearAnalyzer();
+            } catch (Throwable ignored) {
+            }
+            if (binding != null) {
+                binding.cornerOverlay.setCorners(null);
+                binding.cornerOverlay.setVisibility(View.GONE);
+            }
+        }
 
         CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
 
+        // Try binding with the selected set; if it fails, retry without analysis before escalating
         try {
             cameraProvider.unbindAll();
-            camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview, imageCapture, imageAnalysis);
+            if (includeAnalysis) {
+                camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview, imageCapture, imageAnalysis);
+            } else {
+                camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview, imageCapture);
+            }
 
             // SurfaceProvider → PreviewView
             Preview.SurfaceProvider vfProvider = binding.viewFinder.getSurfaceProvider();
@@ -629,8 +658,20 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             }
 
         } catch (IllegalArgumentException e) {
-            Log.e(TAG, "bindToLifecycle failed: " + e.getMessage(), e);
-            escalateBindTier();
+            Log.e(TAG, "bindToLifecycle failed (includeAnalysis=" + includeAnalysis + "): " + e.getMessage(), e);
+            if (includeAnalysis) {
+                // Retry without analysis before escalating
+                try {
+                    cameraProvider.unbindAll();
+                    camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview, imageCapture);
+                    attachWatchdogs();
+                } catch (IllegalArgumentException e2) {
+                    Log.e(TAG, "Rebind without analysis also failed: " + e2.getMessage(), e2);
+                    escalateBindTier();
+                }
+            } else {
+                escalateBindTier();
+            }
         }
     }
 
@@ -1300,6 +1341,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         }
     }
 
+    // ===== Live overlay & adaptive torch exposure =====
+
     private void setupOrUpdateImageAnalysis(int rotation) {
         if (imageAnalysis == null) {
             ImageAnalysis.Builder iaBuilder = new ImageAnalysis.Builder()
@@ -1509,8 +1552,6 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         return out;
     }
 
-    // ===== Adaptive exposure with torch =====
-
     private void adaptExposureIfTorch(@NonNull ImageProxy image) {
         if (camera == null || !isFlashlightOn) return;
         ExposureState es = camera.getCameraInfo().getExposureState();
@@ -1545,6 +1586,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             }
         }
     }
+
+    // ===== Adaptive exposure with torch =====
 
     private void onTorchTurnedOffRestoreEc() {
         if (camera == null) return;
