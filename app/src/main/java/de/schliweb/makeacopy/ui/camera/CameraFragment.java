@@ -513,10 +513,13 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         lastTier = tier;
 
         // ImplMode
-        binding.viewFinder.setImplementationMode(
-                tier == BindTier.PERF ? PreviewView.ImplementationMode.PERFORMANCE
-                        : PreviewView.ImplementationMode.COMPATIBLE);
+        boolean isSony = "sony".equalsIgnoreCase(android.os.Build.MANUFACTURER);
+        PreviewView.ImplementationMode implMode = isSony ? PreviewView.ImplementationMode.COMPATIBLE
+                : (tier == BindTier.PERF ? PreviewView.ImplementationMode.PERFORMANCE
+                : PreviewView.ImplementationMode.COMPATIBLE);
+        binding.viewFinder.setImplementationMode(implMode);
         binding.viewFinder.setScaleType(PreviewView.ScaleType.FIT_CENTER);
+        Log.i(TAG, "bindWithTier: implMode=" + implMode + ", scaleType=FIT_CENTER, isSony=" + isSony);
 
         int rotation = getViewFinderRotation();
         Log.i(TAG, "bindWithTier: tier=" + tier + ", rotation=" + toDegrees(rotation));
@@ -568,23 +571,37 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         Camera2Interop.Extender<Preview> pExt = new Camera2Interop.Extender<>(previewBuilder);
         Camera2Interop.Extender<ImageCapture> cExt = new Camera2Interop.Extender<>(captureBuilder);
 
-        android.util.Range<Integer> fps = new android.util.Range<>(15, 30);
-        pExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, fps);
-        cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, fps);
+        // Some Sony devices reject sessions when an explicit AE_TARGET_FPS_RANGE is set.
+        // To avoid "Unsupported set of inputs/outputs provided" (endConfigure) we skip forcing FPS on Sony.
+        if (!isSony) {
+            android.util.Range<Integer> fps = new android.util.Range<>(15, 30);
+            pExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, fps);
+            cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, fps);
+        } else {
+            Log.i(TAG, "bindWithTier: skipping AE_TARGET_FPS_RANGE on Sony device");
+        }
 
+        // AF continuous picture is generally safe and expected; keep for all OEMs
         pExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE,
                 android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
         cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE,
                 android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-        cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.NOISE_REDUCTION_MODE,
-                android.hardware.camera2.CaptureRequest.NOISE_REDUCTION_MODE_HIGH_QUALITY);
-        cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.EDGE_MODE,
-                android.hardware.camera2.CaptureRequest.EDGE_MODE_HIGH_QUALITY);
-        cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.COLOR_CORRECTION_ABERRATION_MODE,
-                android.hardware.camera2.CaptureRequest.COLOR_CORRECTION_ABERRATION_MODE_HIGH_QUALITY);
-        cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.SHADING_MODE,
-                android.hardware.camera2.CaptureRequest.SHADING_MODE_HIGH_QUALITY);
-        cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.CONTROL_ENABLE_ZSL, false);
+
+        if (!isSony) {
+            // High-quality post-processing and ZSL toggles can cause session config failures on some Sony devices.
+            // Apply only on non-Sony devices.
+            cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.NOISE_REDUCTION_MODE,
+                    android.hardware.camera2.CaptureRequest.NOISE_REDUCTION_MODE_HIGH_QUALITY);
+            cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.EDGE_MODE,
+                    android.hardware.camera2.CaptureRequest.EDGE_MODE_HIGH_QUALITY);
+            cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.COLOR_CORRECTION_ABERRATION_MODE,
+                    android.hardware.camera2.CaptureRequest.COLOR_CORRECTION_ABERRATION_MODE_HIGH_QUALITY);
+            cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.SHADING_MODE,
+                    android.hardware.camera2.CaptureRequest.SHADING_MODE_HIGH_QUALITY);
+            cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.CONTROL_ENABLE_ZSL, false);
+        } else {
+            Log.i(TAG, "bindWithTier: skipping HQ NR/EDGE/CCA/SHADING and ZSL toggle on Sony device");
+        }
 
         imageCapture = captureBuilder.build();
         preview = previewBuilder.build();
@@ -597,32 +614,74 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         try {
             cameraProvider.unbindAll();
 
-            // 1) Nur Preview
-            camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview);
-            setPreviewSurfaceProviderWithLog(tier);
-
-            // 2) Preview + Analysis
-            try {
-                cameraProvider.unbindAll();
-                camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview, imageAnalysis);
+            if (isSony) {
+                // Sony: prefer fewer outputs first to avoid stream config errors.
+                // 1) Preview only
+                camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview);
                 setPreviewSurfaceProviderWithLog(tier);
+                logResolutions("Sony bind: Preview");
 
-                // 3) Preview + Analysis + Capture
+                // 2) Preview + Capture
                 try {
-                    cameraProvider.unbindAll();
-                    camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview, imageAnalysis, imageCapture);
-                    setPreviewSurfaceProviderWithLog(tier);
-                } catch (IllegalArgumentException e3) {
-                    Log.w(TAG, "Bind failed for Preview+Analysis+Capture on " + tier + " → fallback Preview+Capture", e3);
                     cameraProvider.unbindAll();
                     camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview, imageCapture);
                     setPreviewSurfaceProviderWithLog(tier);
+                    logResolutions("Sony bind: Preview+Capture");
+
+                    // 3) Preview + Capture + Analysis (add analysis last)
+                    try {
+                        cameraProvider.unbindAll();
+                        camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview, imageCapture, imageAnalysis);
+                        setPreviewSurfaceProviderWithLog(tier);
+                        logResolutions("Sony bind: Preview+Capture+Analysis");
+                    } catch (IllegalArgumentException e3) {
+                        Log.w(TAG, "Bind failed for Preview+Capture+Analysis on " + tier + " → keep Preview+Capture", e3);
+                        cameraProvider.unbindAll();
+                        camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview, imageCapture);
+                        setPreviewSurfaceProviderWithLog(tier);
+                        logResolutions("Sony fallback: Preview+Capture");
+                    }
+                } catch (IllegalArgumentException e2) {
+                    Log.w(TAG, "Bind failed for Preview+Capture on " + tier + " → fallback Preview only", e2);
+                    cameraProvider.unbindAll();
+                    camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview);
+                    setPreviewSurfaceProviderWithLog(tier);
+                    logResolutions("Sony fallback: Preview");
                 }
-            } catch (IllegalArgumentException e2) {
-                Log.w(TAG, "Bind failed for Preview+Analysis on " + tier + " → fallback Preview only", e2);
-                cameraProvider.unbindAll();
+            } else {
+                // Non-Sony: keep existing sequence Preview → Preview+Analysis → Preview+Analysis+Capture
+                // 1) Preview only
                 camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview);
                 setPreviewSurfaceProviderWithLog(tier);
+                logResolutions("Bind: Preview");
+
+                // 2) Preview + Analysis
+                try {
+                    cameraProvider.unbindAll();
+                    camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview, imageAnalysis);
+                    setPreviewSurfaceProviderWithLog(tier);
+                    logResolutions("Bind: Preview+Analysis");
+
+                    // 3) Preview + Analysis + Capture
+                    try {
+                        cameraProvider.unbindAll();
+                        camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview, imageAnalysis, imageCapture);
+                        setPreviewSurfaceProviderWithLog(tier);
+                        logResolutions("Bind: Preview+Analysis+Capture");
+                    } catch (IllegalArgumentException e3) {
+                        Log.w(TAG, "Bind failed for Preview+Analysis+Capture on " + tier + " → fallback Preview+Capture", e3);
+                        cameraProvider.unbindAll();
+                        camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview, imageCapture);
+                        setPreviewSurfaceProviderWithLog(tier);
+                        logResolutions("Fallback: Preview+Capture");
+                    }
+                } catch (IllegalArgumentException e2) {
+                    Log.w(TAG, "Bind failed for Preview+Analysis on " + tier + " → fallback Preview only", e2);
+                    cameraProvider.unbindAll();
+                    camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview);
+                    setPreviewSurfaceProviderWithLog(tier);
+                    logResolutions("Fallback: Preview");
+                }
             }
 
             // OrientationListener
@@ -630,12 +689,14 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 orientationListener = new OrientationEventListener(requireContext()) {
                     @Override
                     public void onOrientationChanged(int orientation) {
-                        if (!isAdded() || imageCapture == null || binding == null) return;
+                        if (!isAdded() || binding == null) return;
                         int rot = getViewFinderRotation();
                         try {
-                            imageCapture.setTargetRotation(rot);
+                            if (imageCapture != null) imageCapture.setTargetRotation(rot);
                             if (preview != null) preview.setTargetRotation(rot);
-                        } catch (Exception ignored) {
+                            if (imageAnalysis != null) imageAnalysis.setTargetRotation(rot);
+                        } catch (Exception e) {
+                            Log.w(TAG, "Orientation update failed: " + e.getMessage());
                         }
                     }
                 };
@@ -663,6 +724,32 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                     Log.i(TAG, "Preview SurfaceRequest: " + s.getWidth() + "x" + s.getHeight() + " tier=" + tier);
                     vfProvider.onSurfaceRequested(request);
                 });
+    }
+
+    private void logResolutions(String label) {
+        try {
+            String prev = "see SurfaceRequest log";
+            String cap = "n/a";
+            String ana = "n/a";
+
+            if (imageCapture != null) {
+                ResolutionInfo ri = imageCapture.getResolutionInfo();
+                if (ri != null) {
+                    cap = ri.getResolution().getWidth() + "x" + ri.getResolution().getHeight() +
+                            " rot=" + ri.getRotationDegrees() + "°";
+                }
+            }
+            if (imageAnalysis != null) {
+                ResolutionInfo ri2 = imageAnalysis.getResolutionInfo();
+                if (ri2 != null) {
+                    ana = ri2.getResolution().getWidth() + "x" + ri2.getResolution().getHeight() +
+                            " rot=" + ri2.getRotationDegrees() + "°";
+                }
+            }
+            Log.i(TAG, "UseCase resolutions [" + label + "]: Preview=" + prev + ", Capture=" + cap + ", Analysis=" + ana);
+        } catch (Throwable t) {
+            Log.w(TAG, "logResolutions failed: " + t.getMessage());
+        }
     }
 
     private void attachWatchdogs() {
