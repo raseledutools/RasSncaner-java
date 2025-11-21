@@ -108,17 +108,30 @@ public class CameraOptionsDialogFragment extends DialogFragment {
     }
 
     /**
-     * Constructs and returns a header string containing detailed environment and application information.
-     * The header includes app version, device details, locale, current time, and other relevant data.
+     * Builds and returns a string containing detailed environment information for debugging purposes.
+     * The data includes application version, device details, system properties, and user preferences.
      *
-     * @param ctx The Android context used to fetch shared preferences or system-related configurations.
-     * @return A string representing the environment header with application and device metadata.
+     * @param ctx The Android context from which system and application-specific information is retrieved.
+     * @return A string containing the environment header information, which includes details such as
+     * app version, device info, locale, and time. If an error occurs while retrieving this data,
+     * a partial or default header is returned instead.
      */
     private String buildEnvHeader(Context ctx) {
         StringBuilder sb = new StringBuilder();
+
+        String versionName;
+        long versionCode;
         try {
-            String versionName = BuildConfig.VERSION_NAME;
-            int versionCode = BuildConfig.VERSION_CODE;
+            android.content.pm.PackageManager pm = ctx.getPackageManager();
+            android.content.pm.PackageInfo pi = pm.getPackageInfo(ctx.getPackageName(), 0);
+            versionName = pi.versionName;
+            versionCode = pi.getLongVersionCode();
+        } catch (Exception e) {
+            versionName = BuildConfig.VERSION_NAME;
+            versionCode = BuildConfig.VERSION_CODE;
+        }
+
+        try {
             java.util.Locale loc = java.util.Locale.getDefault();
             String abis = Build.SUPPORTED_ABIS != null ? java.util.Arrays.toString(Build.SUPPORTED_ABIS) : "unknown";
             boolean analysisPref = ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE)
