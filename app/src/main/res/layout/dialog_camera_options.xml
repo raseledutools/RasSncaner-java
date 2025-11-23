@@ -26,6 +26,12 @@
         android:layout_height="wrap_content"
         android:text="@string/preview_corner_detection" />
 
+    <CheckBox
+        android:id="@+id/dialog_checkbox_accessibility_mode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/accessibility_mode_label" />
+
     <!-- Share logs button placed directly under the options (de-emphasized) -->
     <Button
         android:id="@+id/button_share_logs"

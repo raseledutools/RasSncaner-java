@@ -306,4 +306,33 @@
     <string name="removed_from_collection">Rimosso dalla raccolta</string>
     <string name="indexed_new_items">%1$d nuovo/i elemento/i indicizzato/i</string>
     <string name="nothing_new_to_index">Nessun nuovo elemento da indicizzare</string>
+
+    <!-- Accessibility guidance phrases -->
+    <string name="a11y_hint_ok">Documento allineato</string>
+    <string name="a11y_hint_move_left">Spostati a sinistra</string>
+    <string name="a11y_hint_move_right">Spostati a destra</string>
+    <string name="a11y_hint_move_up">Spostati verso l’alto</string>
+    <string name="a11y_hint_move_down">Spostati verso il basso</string>
+    <string name="a11y_hint_move_closer">Avvicinati</string>
+    <string name="a11y_hint_move_back">Allontanati</string>
+    <string name="a11y_hint_tilt_left">Inclina a sinistra</string>
+    <string name="a11y_hint_tilt_right">Inclina a destra</string>
+    <string name="a11y_hint_tilt_forward">Inclina in avanti</string>
+    <string name="a11y_hint_tilt_back">Inclina all’indietro</string>
+
+    <!-- Accessibility Mode -->
+    <string name="a11y_doc_ready">Documento rilevato — pronto per la cattura.</string>
+    <string name="accessibility_mode_label">Modalità accessibilità</string>
+    <string name="a11y_camera_ready">Fotocamera pronta. Tocca due volte su “Scansiona” per catturare.</string>
+    <string name="a11y_low_light_toggle_flash">Scarsa illuminazione rilevata. Tocca due volte su “Flash” per attivarlo.</string>
+    <string name="a11y_capture_failed">Cattura non riuscita.</string>
+    <string name="a11y_volume_shutter_hint">Suggerimento: in modalità accessibilità puoi catturare anche con i tasti del volume.</string>
+    <string name="a11y_capture_success">Immagine catturata.</string>
+    <string name="a11y_verbose_logs_label">Log dettagliati di accessibilità</string>
+    <string name="a11y_option_auto_capture">Cattura automatica con rilevamento stabile (Modalità accessibilità)</string>
+    <string name="a11y_option_auto_torch">Attiva automaticamente il flash in condizioni di scarsa luce (Modalità accessibilità)</string>
+    <string name="a11y_capturing_now">Cattura in corso…</string>
+    <string name="a11y_score_now">Qualità del rilevamento: %1$d%%.</string>
+    <string name="a11y_scan_with_score">Scansiona. Qualità del rilevamento: %1$d%%.</string>
+
 </resources>

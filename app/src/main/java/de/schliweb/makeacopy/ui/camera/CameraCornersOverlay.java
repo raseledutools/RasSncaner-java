@@ -15,10 +15,13 @@ import androidx.annotation.Nullable;
 public class CameraCornersOverlay extends View {
     private final Paint linePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint shadowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path path = new Path();
 
     @Nullable
     private PointF[] corners; // 4 points in view coords
+    @Nullable
+    private Double score; // optional: live detection score (0..1)
 
     public CameraCornersOverlay(Context context) {
         super(context);
@@ -54,6 +57,11 @@ public class CameraCornersOverlay extends View {
 
         shadowPaint.setStyle(Paint.Style.FILL);
         shadowPaint.setColor(Color.TRANSPARENT); // no fill; kept for potential future use
+
+        textPaint.setStyle(Paint.Style.FILL);
+        textPaint.setColor(Color.WHITE);
+        textPaint.setTextSize(dp(14));
+        textPaint.setShadowLayer(dp(2), dp(1), dp(1), Color.BLACK);
     }
 
     /**
@@ -94,6 +102,15 @@ public class CameraCornersOverlay extends View {
     }
 
     /**
+     * Sets the live detection score to be rendered on top of the preview.
+     * Pass null to hide the score. Expected range is [0..1].
+     */
+    public void setScore(@Nullable Double value) {
+        this.score = value;
+        invalidate();
+    }
+
+    /**
      * Draws the overlay by rendering a polygon based on the provided corner points and
      * using the configured paint for styling. If the corner points are not set, the
      * method exits without performing any drawing.
@@ -105,12 +122,28 @@ public class CameraCornersOverlay extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (corners == null) return;
-        path.reset();
-        path.moveTo(corners[0].x, corners[0].y);
-        for (int i = 1; i < 4; i++) path.lineTo(corners[i].x, corners[i].y);
-        path.close();
-        canvas.drawPath(path, linePaint);
+        if (corners != null) {
+            path.reset();
+            path.moveTo(corners[0].x, corners[0].y);
+            for (int i = 1; i < 4; i++) path.lineTo(corners[i].x, corners[i].y);
+            path.close();
+            canvas.drawPath(path, linePaint);
+        }
+
+        // Draw score in the top-left corner if available
+        if (score != null) {
+            float pad = dp(8);
+            // format to two decimals without allocating heavy objects repeatedly
+            String txt;
+            double s = score;
+            // Clamp and format
+            if (s < 0) s = 0;
+            else if (s > 1) s = 1;
+            int p = (int) Math.round(s * 100);
+            // Show as percentage for better intuition
+            txt = p + "%";
+            canvas.drawText(txt, pad, pad + textPaint.getTextSize(), textPaint);
+        }
     }
 
     /**

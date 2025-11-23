@@ -307,4 +307,32 @@
     <string name="indexed_new_items">Indexerade %1$d nya objekt</string>
     <string name="nothing_new_to_index">Inget nytt att indexera</string>
 
+    <!-- Accessibility guidance phrases -->
+    <string name="a11y_hint_ok">Dokumentet är justerat</string>
+    <string name="a11y_hint_move_left">Flytta åt vänster</string>
+    <string name="a11y_hint_move_right">Flytta åt höger</string>
+    <string name="a11y_hint_move_up">Flytta uppåt</string>
+    <string name="a11y_hint_move_down">Flytta nedåt</string>
+    <string name="a11y_hint_move_closer">Gå närmare</string>
+    <string name="a11y_hint_move_back">Gå längre bakåt</string>
+    <string name="a11y_hint_tilt_left">Luta åt vänster</string>
+    <string name="a11y_hint_tilt_right">Luta åt höger</string>
+    <string name="a11y_hint_tilt_forward">Luta framåt</string>
+    <string name="a11y_hint_tilt_back">Luta bakåt</string>
+
+    <!-- Accessibility Mode -->
+    <string name="a11y_doc_ready">Dokument upptäckt — klart att fångas.</string>
+    <string name="accessibility_mode_label">Tillgänglighetsläge</string>
+    <string name="a11y_camera_ready">Kameran är redo. Dubbeltryck på Skanna för att ta bilden.</string>
+    <string name="a11y_low_light_toggle_flash">Svagt ljus upptäckt. Dubbeltryck på Blixt för att aktivera.</string>
+    <string name="a11y_capture_failed">Fångning misslyckades.</string>
+    <string name="a11y_volume_shutter_hint">Tips: I tillgänglighetsläget kan du ta bilden med volymknapparna.</string>
+    <string name="a11y_capture_success">Bild tagen.</string>
+    <string name="a11y_verbose_logs_label">Detaljerade tillgänglighetsloggar</string>
+    <string name="a11y_option_auto_capture">Automatisk fångning vid stabil detektering (Tillgänglighetsläge)</string>
+    <string name="a11y_option_auto_torch">Aktivera blixt automatiskt vid svagt ljus (Tillgänglighetsläge)</string>
+    <string name="a11y_capturing_now">Fångar…</string>
+    <string name="a11y_score_now">Detekteringskvalitet: %1$d%%.</string>
+    <string name="a11y_scan_with_score">Skanna. Detekteringskvalitet: %1$d%%.</string>
+
 </resources>

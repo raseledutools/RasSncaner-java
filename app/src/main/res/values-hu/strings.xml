@@ -308,4 +308,33 @@
     <string name="indexed_new_items">%1$d új elem indexelve</string>
     <string name="nothing_new_to_index">Nincs új elem indexelésre</string>
 
+    <!-- Accessibility guidance phrases -->
+    <string name="a11y_hint_ok">Dokumentum igazítva</string>
+    <string name="a11y_hint_move_left">Mozduljon balra</string>
+    <string name="a11y_hint_move_right">Mozduljon jobbra</string>
+    <string name="a11y_hint_move_up">Mozduljon felfelé</string>
+    <string name="a11y_hint_move_down">Mozduljon lefelé</string>
+    <string name="a11y_hint_move_closer">Menjen közelebb</string>
+    <string name="a11y_hint_move_back">Menjen hátrébb</string>
+    <string name="a11y_hint_tilt_left">Döntse balra</string>
+    <string name="a11y_hint_tilt_right">Döntse jobbra</string>
+    <string name="a11y_hint_tilt_forward">Döntse előre</string>
+    <string name="a11y_hint_tilt_back">Döntse hátra</string>
+
+    <!-- Accessibility Mode -->
+    <string name="a11y_doc_ready">Dokumentum érzékelve — készen áll a rögzítésre.</string>
+    <string name="accessibility_mode_label">Kisegítő mód</string>
+    <string name="a11y_camera_ready">A kamera kész. A rögzítéshez koppintson duplán a Szkennelésre.</string>
+    <string name="a11y_low_light_toggle_flash">Gyenge fény észlelve. A bekapcsoláshoz koppintson duplán a Vaku gombra.</string>
+    <string name="a11y_capture_failed">A rögzítés sikertelen.</string>
+    <string name="a11y_volume_shutter_hint">Tipp: Kisegítő módban a hangerőgombokkal is készíthet felvételt.</string>
+    <string name="a11y_capture_success">Kép rögzítve.</string>
+    <string name="a11y_verbose_logs_label">Részletes kisegítő naplók</string>
+    <string name="a11y_option_auto_capture">Automatikus rögzítés stabil felismerésnél (Kisegítő mód)</string>
+    <string name="a11y_option_auto_torch">Vaku automatikus bekapcsolása gyenge fényben (Kisegítő mód)</string>
+    <string name="a11y_capturing_now">Rögzítés…</string>
+    <string name="a11y_score_now">Érzékelési minőség: %1$d%%.</string>
+    <string name="a11y_scan_with_score">Szkennelés. Érzékelési minőség: %1$d%%.</string>
+
+
 </resources>

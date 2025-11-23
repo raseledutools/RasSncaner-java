@@ -308,4 +308,32 @@
     <string name="indexed_new_items">Se indexaron %1$d nuevos elemento(s)</string>
     <string name="nothing_new_to_index">No hay nada nuevo para indexar</string>
 
+    <!-- Accessibility guidance phrases -->
+    <string name="a11y_hint_ok">Documento alineado</string>
+    <string name="a11y_hint_move_left">Muévete a la izquierda</string>
+    <string name="a11y_hint_move_right">Muévete a la derecha</string>
+    <string name="a11y_hint_move_up">Muévete hacia arriba</string>
+    <string name="a11y_hint_move_down">Muévete hacia abajo</string>
+    <string name="a11y_hint_move_closer">Acércate</string>
+    <string name="a11y_hint_move_back">Aléjate</string>
+    <string name="a11y_hint_tilt_left">Inclina a la izquierda</string>
+    <string name="a11y_hint_tilt_right">Inclina a la derecha</string>
+    <string name="a11y_hint_tilt_forward">Inclina hacia adelante</string>
+    <string name="a11y_hint_tilt_back">Inclina hacia atrás</string>
+
+    <!-- Accessibility Mode -->
+    <string name="a11y_doc_ready">Documento detectado — listo para capturar.</string>
+    <string name="accessibility_mode_label">Modo de accesibilidad</string>
+    <string name="a11y_camera_ready">Cámara lista. Doble toque en Escanear para capturar.</string>
+    <string name="a11y_low_light_toggle_flash">Poca luz detectada. Doble toque en Flash para activar.</string>
+    <string name="a11y_capture_failed">Error al capturar.</string>
+    <string name="a11y_volume_shutter_hint">Consejo: En el modo de accesibilidad, puedes capturar con los botones de volumen.</string>
+    <string name="a11y_capture_success">Imagen capturada.</string>
+    <string name="a11y_verbose_logs_label">Registros detallados de accesibilidad</string>
+    <string name="a11y_option_auto_capture">Captura automática con detección estable (Modo de accesibilidad)</string>
+    <string name="a11y_option_auto_torch">Activar automáticamente la linterna con poca luz (Modo de accesibilidad)</string>
+    <string name="a11y_capturing_now">Capturando…</string>
+    <string name="a11y_score_now">Calidad de detección: %1$d%%.</string>
+    <string name="a11y_scan_with_score">Escanear. Calidad de detección: %1$d%%.</string>
+
 </resources>

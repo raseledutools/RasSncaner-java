@@ -15,6 +15,7 @@ import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.data.library.ExistingScansIndexer;
 import de.schliweb.makeacopy.data.library.LibraryServiceLocator;
 import de.schliweb.makeacopy.data.library.ScanEntity;
+import de.schliweb.makeacopy.utils.FeatureFlags;
 
 import java.util.List;
 
@@ -123,7 +124,7 @@ public class ScansLibraryFragment extends Fragment {
         list.setAdapter(adapter);
         list.addItemDecoration(new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL));
 
-        if (!BuildConfig.FEATURE_SCAN_LIBRARY) {
+        if (!FeatureFlags.isScanLibraryEnable()) {
             de.schliweb.makeacopy.utils.UIUtils.showToast(requireContext(), R.string.feature_scan_library_disabled, android.widget.Toast.LENGTH_SHORT);
             // Optionally navigate up if embedded in backstack
             requireActivity().getOnBackPressedDispatcher().onBackPressed();
@@ -252,7 +253,7 @@ public class ScansLibraryFragment extends Fragment {
                 boolean isEmpty = (finalData == null || finalData.isEmpty());
                 emptyText.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
                 // Always offer incremental indexing when feature is enabled; safe to run repeatedly
-                boolean showIndexBtn = BuildConfig.FEATURE_SCAN_LIBRARY;
+                boolean showIndexBtn = FeatureFlags.isScanLibraryEnable();
                 if (buttonIndexExistingIcon != null) {
                     buttonIndexExistingIcon.setVisibility(showIndexBtn ? View.VISIBLE : View.GONE);
                 }

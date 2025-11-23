@@ -308,4 +308,32 @@
     <string name="indexed_new_items">Au fost indexate %1$d element(e) noi</string>
     <string name="nothing_new_to_index">Nimic nou de indexat</string>
 
+    <!-- Accessibility guidance phrases -->
+    <string name="a11y_hint_ok">Document aliniat</string>
+    <string name="a11y_hint_move_left">Mutați spre stânga</string>
+    <string name="a11y_hint_move_right">Mutați spre dreapta</string>
+    <string name="a11y_hint_move_up">Mutați în sus</string>
+    <string name="a11y_hint_move_down">Mutați în jos</string>
+    <string name="a11y_hint_move_closer">Apropiați-vă</string>
+    <string name="a11y_hint_move_back">Îndepărtați-vă</string>
+    <string name="a11y_hint_tilt_left">Înclinați spre stânga</string>
+    <string name="a11y_hint_tilt_right">Înclinați spre dreapta</string>
+    <string name="a11y_hint_tilt_forward">Înclinați în față</string>
+    <string name="a11y_hint_tilt_back">Înclinați în spate</string>
+
+    <!-- Accessibility Mode -->
+    <string name="a11y_doc_ready">Document detectat — gata pentru captură.</string>
+    <string name="accessibility_mode_label">Mod de accesibilitate</string>
+    <string name="a11y_camera_ready">Camera este gata. Atingeți de două ori „Scanare” pentru a captura.</string>
+    <string name="a11y_low_light_toggle_flash">Luminozitate scăzută detectată. Atingeți de două ori „Bliț” pentru a activa.</string>
+    <string name="a11y_capture_failed">Captura a eșuat.</string>
+    <string name="a11y_volume_shutter_hint">Sfat: În modul de accesibilitate puteți captura și cu butoanele de volum.</string>
+    <string name="a11y_capture_success">Imagine capturată.</string>
+    <string name="a11y_verbose_logs_label">Jurnale detaliate de accesibilitate</string>
+    <string name="a11y_option_auto_capture">Captură automată la detectare stabilă (Mod de accesibilitate)</string>
+    <string name="a11y_option_auto_torch">Activează automat blițul în lumină scăzută (Mod de accesibilitate)</string>
+    <string name="a11y_capturing_now">Se capturează…</string>
+    <string name="a11y_score_now">Calitatea detecției: %1$d%%.</string>
+    <string name="a11y_scan_with_score">Scanați. Calitatea detecției: %1$d%%.</string>
+
 </resources>

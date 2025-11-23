@@ -309,4 +309,32 @@
     <string name="indexed_new_items">已索引 %1$d 个新项目</string>
     <string name="nothing_new_to_index">没有新的项目可索引</string>
 
+    <!-- Accessibility guidance phrases -->
+    <string name="a11y_hint_ok">文档已对齐</string>
+    <string name="a11y_hint_move_left">向左移动</string>
+    <string name="a11y_hint_move_right">向右移动</string>
+    <string name="a11y_hint_move_up">向上移动</string>
+    <string name="a11y_hint_move_down">向下移动</string>
+    <string name="a11y_hint_move_closer">靠近一点</string>
+    <string name="a11y_hint_move_back">后退一点</string>
+    <string name="a11y_hint_tilt_left">向左倾斜</string>
+    <string name="a11y_hint_tilt_right">向右倾斜</string>
+    <string name="a11y_hint_tilt_forward">向前倾斜</string>
+    <string name="a11y_hint_tilt_back">向后倾斜</string>
+
+    <!-- Accessibility Mode -->
+    <string name="a11y_doc_ready">检测到文档 — 准备拍摄。</string>
+    <string name="accessibility_mode_label">无障碍模式</string>
+    <string name="a11y_camera_ready">相机已就绪。双击“扫描”即可拍摄。</string>
+    <string name="a11y_low_light_toggle_flash">检测到光线不足。双击“闪光灯”以开启。</string>
+    <string name="a11y_capture_failed">拍摄失败。</string>
+    <string name="a11y_volume_shutter_hint">提示：在无障碍模式下，可使用音量键拍摄。</string>
+    <string name="a11y_capture_success">已拍摄图像。</string>
+    <string name="a11y_verbose_logs_label">详细无障碍日志</string>
+    <string name="a11y_option_auto_capture">稳定检测时自动拍摄（无障碍模式）</string>
+    <string name="a11y_option_auto_torch">在光线不足时自动开启闪光灯（无障碍模式）</string>
+    <string name="a11y_capturing_now">正在拍摄…</string>
+    <string name="a11y_score_now">检测质量：%1$d%%。</string>
+    <string name="a11y_scan_with_score">扫描。检测质量：%1$d%%。</string>
+
 </resources>

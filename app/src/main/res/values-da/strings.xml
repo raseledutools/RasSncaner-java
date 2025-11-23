@@ -308,4 +308,33 @@
     <string name="indexed_new_items">Indekserede %1$d nye element(er)</string>
     <string name="nothing_new_to_index">Intet nyt at indeksere</string>
 
+    <!-- Accessibility guidance phrases -->
+    <string name="a11y_hint_ok">Dokument justeret</string>
+    <string name="a11y_hint_move_left">Flyt til venstre</string>
+    <string name="a11y_hint_move_right">Flyt til højre</string>
+    <string name="a11y_hint_move_up">Flyt op</string>
+    <string name="a11y_hint_move_down">Flyt ned</string>
+    <string name="a11y_hint_move_closer">Flyt tættere på</string>
+    <string name="a11y_hint_move_back">Flyt tilbage</string>
+    <string name="a11y_hint_tilt_left">Vip til venstre</string>
+    <string name="a11y_hint_tilt_right">Vip til højre</string>
+    <string name="a11y_hint_tilt_forward">Vip fremad</string>
+    <string name="a11y_hint_tilt_back">Vip bagud</string>
+
+    <!-- Accessibility Mode -->
+    <string name="a11y_doc_ready">Dokument registreret – klar til optagelse.</string>
+    <string name="accessibility_mode_label">Tilgængelighedstilstand</string>
+    <string name="a11y_camera_ready">Kamera klar. Dobbelttryk på Scan for at optage.</string>
+    <string name="a11y_low_light_toggle_flash">Lavt lys. Dobbelttryk på Flash for at aktivere.</string>
+    <string name="a11y_capture_failed">Optagelse mislykkedes.</string>
+    <string name="a11y_volume_shutter_hint">Tip: I tilgængelighedstilstand kan du optage med lydstyrketasterne.</string>
+    <string name="a11y_capture_success">Billede optaget.</string>
+    <string name="a11y_verbose_logs_label">Uddybede tilgængelighedslogfiler</string>
+    <string name="a11y_option_auto_capture">Automatisk optagelse ved stabil registrering (tilgængelighedstilstand)</string>
+    <string name="a11y_option_auto_torch">Automatisk tænding af lygte i svagt lys (tilgængelighedstilstand)</string>
+    <string name="a11y_capturing_now">Optager…</string>
+    <string name="a11y_score_now">Registreringskvalitet: %1$d%%.</string>
+    <string name="a11y_scan_with_score">Scan. Registreringskvalitet: %1$d%%.</string>
+
+
 </resources>

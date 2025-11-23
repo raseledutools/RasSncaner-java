@@ -308,5 +308,32 @@
     <string name="indexed_new_items">Zindeksowano %1$d nowych element(ów)</string>
     <string name="nothing_new_to_index">Brak nowych elementów do zindeksowania</string>
 
+    <!-- Accessibility guidance phrases -->
+    <string name="a11y_hint_ok">Documento alinhado</string>
+    <string name="a11y_hint_move_left">Desloque-se para a esquerda</string>
+    <string name="a11y_hint_move_right">Desloque-se para a direita</string>
+    <string name="a11y_hint_move_up">Desloque-se para cima</string>
+    <string name="a11y_hint_move_down">Desloque-se para baixo</string>
+    <string name="a11y_hint_move_closer">Aproxime-se</string>
+    <string name="a11y_hint_move_back">Afastar-se</string>
+    <string name="a11y_hint_tilt_left">Incline para a esquerda</string>
+    <string name="a11y_hint_tilt_right">Incline para a direita</string>
+    <string name="a11y_hint_tilt_forward">Incline para a frente</string>
+    <string name="a11y_hint_tilt_back">Incline para trás</string>
+
+    <!-- Accessibility Mode -->
+    <string name="a11y_doc_ready">Documento detetado — pronto para capturar.</string>
+    <string name="accessibility_mode_label">Modo de acessibilidade</string>
+    <string name="a11y_camera_ready">Câmara pronta. Toque duas vezes em “Digitalizar” para capturar.</string>
+    <string name="a11y_low_light_toggle_flash">Pouca luz detetada. Toque duas vezes em “Flash” para ativar.</string>
+    <string name="a11y_capture_failed">Falha ao capturar.</string>
+    <string name="a11y_volume_shutter_hint">Dica: No modo de acessibilidade, pode capturar usando os botões de volume.</string>
+    <string name="a11y_capture_success">Imagem capturada.</string>
+    <string name="a11y_verbose_logs_label">Registos de acessibilidade detalhados</string>
+    <string name="a11y_option_auto_capture">Captura automática com deteção estável (Modo de acessibilidade)</string>
+    <string name="a11y_option_auto_torch">Ativar automaticamente o flash em pouca luz (Modo de acessibilidade)</string>
+    <string name="a11y_capturing_now">A capturar…</string>
+    <string name="a11y_score_now">Qualidade da deteção: %1$d%%.</string>
+    <string name="a11y_scan_with_score">Digitalizar. Qualidade da deteção: %1$d%%.</string>
 
 </resources>

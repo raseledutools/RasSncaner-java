@@ -1035,7 +1035,7 @@ public class ExportFragment extends Fragment {
                         String displayName = FileUtils.getDisplayNameFromUri(requireContext(), lastExportedDocumentUri);
                         lastExportedPdfName = displayName;
                         setShareButtonsEnabled(true);
-                        if (!de.schliweb.makeacopy.BuildConfig.FEATURE_SCAN_LIBRARY) {
+                        if (!FeatureFlags.isScanLibraryEnable()) {
                             String msg = getString(isMulti ? R.string.document_multipage_exported : R.string.document_exported, lastExportedPdfName);
                             UIUtils.showToast(appContext, msg, Toast.LENGTH_LONG);
                         }
@@ -1222,7 +1222,7 @@ public class ExportFragment extends Fragment {
                         String displayName = FileUtils.getDisplayNameFromUri(requireContext(), lastExportedDocumentUri);
                         lastExportedPdfName = displayName;
                         setShareButtonsEnabled(true);
-                        if (!de.schliweb.makeacopy.BuildConfig.FEATURE_SCAN_LIBRARY) {
+                        if (!FeatureFlags.isScanLibraryEnable()) {
                             UIUtils.showToast(appContext, getString(R.string.image_exported, displayName), Toast.LENGTH_LONG);
                         }
 
@@ -1378,7 +1378,7 @@ public class ExportFragment extends Fragment {
                         String displayName = FileUtils.getDisplayNameFromUri(requireContext(), exportUri);
                         lastExportedPdfName = displayName;
                         setShareButtonsEnabled(true);
-                        if (!de.schliweb.makeacopy.BuildConfig.FEATURE_SCAN_LIBRARY) {
+                        if (!FeatureFlags.isScanLibraryEnable()) {
                             UIUtils.showToast(appContext, getString(R.string.zip_exported, displayName), Toast.LENGTH_LONG);
                         }
                         // Begin: index exported multi-page scan in background (feature-guarded via service locator)
@@ -1538,7 +1538,7 @@ public class ExportFragment extends Fragment {
                 os.write((content != null ? content : "").getBytes(java.nio.charset.StandardCharsets.UTF_8));
                 os.close();
                 exportViewModel.setTxtExportUri(txtUri);
-                if (!de.schliweb.makeacopy.BuildConfig.FEATURE_SCAN_LIBRARY) {
+                if (!FeatureFlags.isScanLibraryEnable()) {
                     UIUtils.showToast(requireContext(), getString(R.string.ocr_text_exported_as_txt), Toast.LENGTH_SHORT);
                 }
                 // If assignment snackbar was deferred until TXT save, show it now
@@ -1818,7 +1818,7 @@ public class ExportFragment extends Fragment {
     // Flag-gated: offer assignment to a collection via snackbar
     private void maybeShowAssignSnackbar() {
         try {
-            if (!de.schliweb.makeacopy.BuildConfig.FEATURE_SCAN_LIBRARY) return;
+            if (!FeatureFlags.isScanLibraryEnable()) return;
             if (binding == null) return;
             View anchor = binding.exportOptionsGroup;
             com.google.android.material.snackbar.Snackbar

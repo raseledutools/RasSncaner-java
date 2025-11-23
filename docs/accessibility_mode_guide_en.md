@@ -114,7 +114,7 @@ Q: If both “Preview corner detection” (Live analysis) and Accessibility Mode
 A: Yes. The normal camera preview remains visible. If "Preview corner detection" is enabled, the visual corner overlay is also shown even in Accessibility Mode. Analysis runs in the background regardless, to power scoring and feedback.
 
 Q: Does Accessibility Mode work without TalkBack?
-A: Yes. Spoken output is done as a system announcement. With TalkBack, you also get the usual screen reader navigation.
+A: Partly. Spoken output requires an active screen reader (e.g., TalkBack or Select‑to‑Speak). Without a screen reader, you still get tones and gentle haptics, but no speech.
 
 —
 

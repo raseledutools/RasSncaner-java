@@ -307,4 +307,33 @@
     <string name="removed_from_collection">Aus Sammlung entfernt</string>
     <string name="indexed_new_items">%1$d neue Element(e) indiziert</string>
     <string name="nothing_new_to_index">Nichts Neues zu indizieren</string>
+
+    <!-- Accessibility guidance phrases -->
+    <string name="a11y_hint_ok">Dokument ausgerichtet</string>
+    <string name="a11y_hint_move_left">Nach links bewegen</string>
+    <string name="a11y_hint_move_right">Nach rechts bewegen</string>
+    <string name="a11y_hint_move_up">Nach oben bewegen</string>
+    <string name="a11y_hint_move_down">Nach unten bewegen</string>
+    <string name="a11y_hint_move_closer">Näher heran</string>
+    <string name="a11y_hint_move_back">Weiter zurück</string>
+    <string name="a11y_hint_tilt_left">Nach links kippen</string>
+    <string name="a11y_hint_tilt_right">Nach rechts kippen</string>
+    <string name="a11y_hint_tilt_forward">Nach vorne kippen</string>
+    <string name="a11y_hint_tilt_back">Nach hinten kippen</string>
+
+    <!-- Accessibility Mode -->
+    <string name="a11y_doc_ready">Dokument erkannt – bereit zum Aufnehmen.</string>
+    <string name="accessibility_mode_label">Barrierefreiheitsmodus</string>
+    <string name="a11y_camera_ready">Kamera bereit. Doppeltippen auf „Scannen“ zum Aufnehmen.</string>
+    <string name="a11y_low_light_toggle_flash">Wenig Licht erkannt. Doppeltippen auf „Blitz“ zum Aktivieren.</string>
+    <string name="a11y_capture_failed">Aufnahme fehlgeschlagen.</string>
+    <string name="a11y_volume_shutter_hint">Tipp: Im Barrierefreiheitsmodus kannst du auch die Lautstärketasten zum Auslösen verwenden.</string>
+    <string name="a11y_capture_success">Bild aufgenommen.</string>
+    <string name="a11y_verbose_logs_label">Ausführliche Barrierefreiheits-Logs</string>
+    <string name="a11y_option_auto_capture">Automatische Aufnahme bei stabiler Erkennung (Barrierefreiheitsmodus)</string>
+    <string name="a11y_option_auto_torch">Blitz bei wenig Licht automatisch aktivieren (Barrierefreiheitsmodus)</string>
+    <string name="a11y_capturing_now">Nehme auf…</string>
+    <string name="a11y_score_now">Erkennungsqualität: %1$d%%.</string>
+    <string name="a11y_scan_with_score">Scannen. Erkennungsqualität: %1$d%%.</string>
+
 </resources>

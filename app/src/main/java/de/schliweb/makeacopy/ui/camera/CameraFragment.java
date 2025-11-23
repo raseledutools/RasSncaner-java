@@ -12,6 +12,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.AudioManager;
+import android.media.ToneGenerator;
 import android.net.Uri;
 import android.os.*;
 import android.util.Log;
@@ -45,7 +47,12 @@ import de.schliweb.makeacopy.BuildConfig;
 import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.databinding.FragmentCameraBinding;
 import de.schliweb.makeacopy.ui.crop.CropViewModel;
+import de.schliweb.makeacopy.framing.AccessibilityGuidanceController;
+import de.schliweb.makeacopy.framing.FramingEngine;
+import de.schliweb.makeacopy.framing.FramingResult;
+import de.schliweb.makeacopy.framing.GuidanceHint;
 import de.schliweb.makeacopy.ui.ocr.OCRViewModel;
+import de.schliweb.makeacopy.utils.FeatureFlags;
 import de.schliweb.makeacopy.utils.UIUtils;
 
 import java.io.File;
@@ -113,6 +120,31 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     private long lastAnalysisTs = 0L;
     // Logging throttle for adaptive EC
     private long lastEcLogTs = 0L;
+
+    // Accessibility Mode – Stabilitäts- und Feedback-Status
+    private double lastScore = 0.0;
+    private int stableCount = 0;
+    private long lastA11ySignalTs = 0L;
+    // Accessibility Mode – weitere Debounce‑Marker
+    private long lastA11yReadyAnnounceTs = 0L;
+    private long lastA11yLowLightTs = 0L;
+    private long lastVolumeShutterTs = 0L;
+    private long lastA11yVolumeHintTs = 0L;
+    // Accessibility Mode – Scoring-Zugänglichkeit
+    private long lastA11yScoreAnnounceTs = 0L;
+    private int lastA11ySpokenScore = -1;
+
+    // Overlay-Stabilisierung (Jitter-Reduktion)
+    // Exponentielles Glätten für Ecken + Score und Hysterese für Sichtbarkeit
+    private android.graphics.PointF[] lastFilteredCorners = null; // in View-Koordinaten
+    private double lastScoreEma = -1.0; // <0 bedeutet: uninitialisiert
+    private int consecutiveValidFrames = 0;
+    private int consecutiveInvalidFrames = 0;
+    // Tuning: minimale gültige Frames bevor Anzeige einblendet; erlaubte Lücke bevor ausgeblendet wird
+    private static final int OVERLAY_SHOW_AFTER_VALID = 2;   // mind. 2 gültige Frames
+    private static final int OVERLAY_HIDE_AFTER_INVALID = 3; // erst nach 3 ungültigen Frames ausblenden
+    private static final float CORNER_EMA_ALPHA = 0.25f;     // je höher, desto reaktiver (0..1)
+    private static final double SCORE_EMA_ALPHA = 0.25;      // wie oben, für Score
 
     // Light sensor
     private SensorManager sensorManager;
@@ -264,12 +296,15 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             getParentFragmentManager().setFragmentResultListener(CameraOptionsDialogFragment.REQUEST_KEY, getViewLifecycleOwner(), (requestKey, bundle) -> {
                 boolean skip = bundle.getBoolean(CameraOptionsDialogFragment.BUNDLE_SKIP_OCR, false);
                 boolean analysisPref = bundle.getBoolean(CameraOptionsDialogFragment.BUNDLE_ANALYSIS_ENABLED, true);
+                boolean a11yPref = bundle.getBoolean(CameraOptionsDialogFragment.BUNDLE_ACCESSIBILITY_MODE, false);
                 try {
                     android.content.SharedPreferences prefs = requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE);
                     prefs.edit()
                             .putBoolean("skip_ocr", skip)
                             .putBoolean("include_ocr", !skip)
                             .putBoolean("analysis_enabled", analysisPref)
+                            // Accessibility is already persisted by the dialog; keep a mirror for local reads if needed
+                            .putBoolean(CameraOptionsDialogFragment.BUNDLE_ACCESSIBILITY_MODE, a11yPref)
                             .apply();
                 } catch (Throwable ignore) {
                 }
@@ -277,6 +312,20 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 try {
                     if (binding != null && binding.viewFinder.getVisibility() == View.VISIBLE) {
                         setLiveAnalysisEnabled(analysisPref);
+                        // Re-assert focus so volume keys are captured again after closing dialog
+                        try {
+                            binding.getRoot().setFocusableInTouchMode(true);
+                            binding.getRoot().requestFocus();
+                        } catch (Throwable ignored) {
+                        }
+                        // If Accessibility Mode was enabled, give a one-time ready announcement (debounced)
+                        if (isAccessibilityModeEnabled()) {
+                            long now = System.currentTimeMillis();
+                            if (now - lastA11yReadyAnnounceTs > 4000L) {
+                                lastA11yReadyAnnounceTs = now;
+                                announce(R.string.a11y_camera_ready);
+                            }
+                        }
                     }
                 } catch (Throwable ignore) {
                 }
@@ -285,9 +334,44 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             CameraOptionsDialogFragment.show(getParentFragmentManager());
         });
 
+        // Intercept hardware volume keys in Accessibility Mode to trigger shutter
+        try {
+            root.setFocusableInTouchMode(true);
+            root.requestFocus();
+            root.setOnKeyListener((v, keyCode, event) -> {
+                if (!isAccessibilityModeEnabled()) return false;
+                if (keyCode != android.view.KeyEvent.KEYCODE_VOLUME_UP && keyCode != android.view.KeyEvent.KEYCODE_VOLUME_DOWN)
+                    return false;
+                if (event.getAction() != android.view.KeyEvent.ACTION_DOWN)
+                    return true; // consume UP as well by returning true on DOWN
+
+                long now = System.currentTimeMillis();
+                if (now - lastVolumeShutterTs < 800L) return true; // debounce
+                lastVolumeShutterTs = now;
+
+                // Haptic feedback on key press
+                try {
+                    v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+                } catch (Throwable ignored) {
+                }
+
+                // Only trigger if not already processing and camera is visible
+                try {
+                    boolean cameraVisible = binding != null && binding.viewFinder.getVisibility() == View.VISIBLE;
+                    boolean ready = binding != null && binding.buttonScan.isEnabled();
+                    if (cameraVisible && ready) {
+                        captureImage();
+                    }
+                } catch (Throwable ignored) {
+                }
+                return true; // consume to suppress actual volume change
+            });
+        } catch (Throwable ignored) {
+        }
+
         // Library entry from Camera screen (feature-gated)
         try {
-            if (BuildConfig.FEATURE_SCAN_LIBRARY) {
+            if (FeatureFlags.isScanLibraryEnable()) {
                 binding.buttonOpenLibraryCam.setVisibility(View.VISIBLE);
                 binding.buttonOpenLibraryCam.setOnClickListener(v -> {
                     try {
@@ -756,8 +840,25 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         // StreamState Log
         if (!streamObserverAttached) {
             binding.viewFinder.getPreviewStreamState()
-                    .observe(getViewLifecycleOwner(), (Observer<? super PreviewView.StreamState>) state ->
-                            Log.d(TAG, "Preview stream state: " + state + " (tier=" + lastTier + ")"));
+                    .observe(getViewLifecycleOwner(), (Observer<? super PreviewView.StreamState>) state -> {
+                        Log.d(TAG, "Preview stream state: " + state + " (tier=" + lastTier + ")");
+                        // Accessibility: announce camera ready once when streaming starts
+                        if (state == PreviewView.StreamState.STREAMING && isAccessibilityModeEnabled()) {
+                            long now = System.currentTimeMillis();
+                            if (now - lastA11yReadyAnnounceTs > 4000L) {
+                                lastA11yReadyAnnounceTs = now;
+                                announce(R.string.a11y_camera_ready);
+                                // Optional hint: volume keys act as shutter (announce once per session)
+                                if (now - lastA11yVolumeHintTs > 60000L) { // once per minute/session window
+                                    lastA11yVolumeHintTs = now;
+                                    try {
+                                        binding.viewFinder.postDelayed(() -> announce(R.string.a11y_volume_shutter_hint), 1200);
+                                    } catch (Throwable ignored) {
+                                    }
+                                }
+                            }
+                        }
+                    });
             streamObserverAttached = true;
         }
 
@@ -892,6 +993,14 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                     @Override
                     public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
                         Log.d(TAG, "Image saved: " + photoFile.getAbsolutePath() + ", size=" + photoFile.length());
+                        // Accessibility: confirm capture success with haptic + spoken cue
+                        try {
+                            if (isAccessibilityModeEnabled() && binding != null) {
+                                binding.getRoot().performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+                                announce(R.string.a11y_capture_success);
+                            }
+                        } catch (Throwable ignored) {
+                        }
                         Uri imageUri;
                         try {
                             imageUri = FileProvider.getUriForFile(
@@ -960,6 +1069,13 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         UIUtils.showToast(requireContext(), getString(R.string.error_image_capture_failed, exception.getMessage()), Toast.LENGTH_SHORT);
         binding.textCamera.setText(R.string.camera_ready_tap_the_button_to_scan_a_document);
         setProcessing(false);
+        // Accessibility: speak failure
+        try {
+            if (isAccessibilityModeEnabled()) {
+                announce(R.string.a11y_capture_failed);
+            }
+        } catch (Throwable ignored) {
+        }
     }
 
     /**
@@ -1047,6 +1163,17 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             if (binding != null && binding.buttonFlash != null) {
                 binding.buttonFlash.setImageResource(isFlashlightOn ? R.drawable.ic_flash_on : R.drawable.ic_flash_off);
                 UIUtils.showToast(requireContext(), isFlashlightOn ? R.string.flashlight_on : R.string.flashlight_off, Toast.LENGTH_SHORT);
+                // Accessibility feedback: speak state + light haptic
+                if (isAccessibilityModeEnabled()) {
+                    try {
+                        binding.getRoot().performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+                    } catch (Throwable ignored) {
+                    }
+                    try {
+                        announce(isFlashlightOn ? R.string.flashlight_on : R.string.flashlight_off);
+                    } catch (Throwable ignored) {
+                    }
+                }
             }
         } catch (Exception e) {
             Log.e(TAG, "toggleFlashlight error: " + e.getMessage(), e);
@@ -1224,6 +1351,17 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         long now = System.currentTimeMillis();
         if (lowLightPromptShown || (now - lastPromptTime) < MIN_TIME_BETWEEN_PROMPTS) return;
 
+        // Accessibility Mode: speak hint instead of showing dialog
+        if (isAccessibilityModeEnabled()) {
+            if (now - lastA11yLowLightTs >= MIN_TIME_BETWEEN_PROMPTS) {
+                lastA11yLowLightTs = now;
+                announce(R.string.a11y_low_light_toggle_flash);
+            }
+            lowLightPromptShown = true;
+            lastPromptTime = now;
+            return;
+        }
+
         try {
             isLowLightDialogVisible = true;
             AlertDialog dialog = new AlertDialog.Builder(requireContext())
@@ -1392,6 +1530,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             analysisEnabled = enabled;
             return;
         }
+        // Persist the user's explicit preference only
         analysisEnabled = enabled;
         try {
             android.content.SharedPreferences prefs =
@@ -1400,17 +1539,33 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         } catch (Throwable ignore) {
         }
 
+        // Effective analysis: run analyzer whenever user enabled it OR Accessibility Mode is on
+        boolean a11y = isAccessibilityModeEnabled();
+        boolean effectiveAnalysis = enabled || a11y;
+
         if (binding != null) {
-            if (enabled && binding.viewFinder.getVisibility() == View.VISIBLE) {
-                binding.cornerOverlay.setVisibility(View.VISIBLE);
+            if (effectiveAnalysis && binding.viewFinder.getVisibility() == View.VISIBLE) {
+                // Overlay visibility now follows the user's analysis preference only
+                binding.cornerOverlay.setVisibility(enabled ? View.VISIBLE : View.GONE);
+                if (!enabled) {
+                    binding.cornerOverlay.setCorners(null);
+                    try {
+                        binding.cornerOverlay.setScore(null);
+                    } catch (Throwable ignored) {
+                    }
+                }
             } else {
                 binding.cornerOverlay.setCorners(null);
                 binding.cornerOverlay.setVisibility(View.GONE);
+                try {
+                    binding.cornerOverlay.setScore(null);
+                } catch (Throwable ignored) {
+                }
             }
         }
         try {
             if (imageAnalysis != null) {
-                if (enabled) {
+                if (effectiveAnalysis) {
                     ensureAnalysisExecutor();
                     imageAnalysis.setAnalyzer(analysisExecutor, this::analyzeFrameForCorners);
                 } else {
@@ -1454,12 +1609,29 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             }
         }
 
-        if (analysisEnabled) {
+        // Analyzer should run when either user enabled visual preview or Accessibility Mode is on
+        boolean a11y = isAccessibilityModeEnabled();
+        boolean effectiveAnalysis = analysisEnabled || a11y;
+
+        if (effectiveAnalysis) {
             ensureAnalysisExecutor();
             imageAnalysis.setAnalyzer(analysisExecutor, this::analyzeFrameForCorners);
             if (binding != null) {
-                binding.cornerOverlay.setVisibility(View.VISIBLE);
-                binding.cornerOverlay.setCorners(null);
+                // Overlay visibility now depends solely on the user's analysis preference
+                binding.cornerOverlay.setVisibility(analysisEnabled ? View.VISIBLE : View.GONE);
+                if (!analysisEnabled) {
+                    binding.cornerOverlay.setCorners(null);
+                    try {
+                        binding.cornerOverlay.setScore(null);
+                    } catch (Throwable ignored) {
+                    }
+                }
+            }
+            // Initialize Accessibility Guidance controller when active and flagged
+            if (de.schliweb.makeacopy.utils.FeatureFlags.isA11yGuidanceEnabled() && a11y) {
+                initA11yGuidanceController();
+            } else {
+                clearA11yGuidanceController();
             }
         } else {
             try {
@@ -1469,7 +1641,12 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             if (binding != null) {
                 binding.cornerOverlay.setCorners(null);
                 binding.cornerOverlay.setVisibility(View.GONE);
+                try {
+                    binding.cornerOverlay.setScore(null);
+                } catch (Throwable ignored) {
+                }
             }
+            clearA11yGuidanceController();
         }
     }
 
@@ -1483,13 +1660,29 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         }
     }
 
+    private AccessibilityGuidanceController a11yGuidanceController;
+
+    private void initA11yGuidanceController() {
+        if (a11yGuidanceController == null) {
+            a11yGuidanceController = new AccessibilityGuidanceController(1200, 2, 6000);
+        } else {
+            a11yGuidanceController.reset();
+        }
+    }
+
+    private void clearA11yGuidanceController() {
+        a11yGuidanceController = null;
+    }
+
     private void analyzeFrameForCorners(@NonNull ImageProxy image) {
         try {
             // Note: Do NOT adapt exposure during live corner preview.
             // Running adaptive EC per analyzed frame caused progressive darkening when the torch is on.
             // We keep exposure stable here to ensure a consistent preview brightness.
 
-            if (!analysisEnabled || binding == null || !isAdded()) return;
+            // Run analyzer if user enabled visual analysis OR A11y mode is active (internal analysis)
+            boolean effectiveAnalysis = analysisEnabled || isAccessibilityModeEnabled();
+            if (!effectiveAnalysis || binding == null || !isAdded()) return;
 
             long now = System.currentTimeMillis();
             if (now - lastAnalysisTs < 180) return; // ~5–6 FPS
@@ -1507,20 +1700,166 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             } catch (Throwable ignored) {
             }
 
-            org.opencv.core.Point[] pts = de.schliweb.makeacopy.utils.OpenCVUtils.detectDocumentCorners(requireContext(), bmp);
-            if (pts == null || pts.length != 4) {
-                // hide overlay if not found
-                runOnUiThreadSafe(() -> {
-                    if (binding != null) binding.cornerOverlay.setCorners(null);
-                });
-                return;
+            de.schliweb.makeacopy.utils.OpenCVUtils.DetectionResult det = de.schliweb.makeacopy.utils.OpenCVUtils.detectDocumentCornersResult(requireContext(), bmp);
+            org.opencv.core.Point[] pts = det != null ? det.corners() : null;
+            boolean hasValid = (pts != null && pts.length == 4);
+
+            // Map bitmap coords to overlay coords (PreviewView with FIT_CENTER) when valid
+            android.graphics.PointF[] viewPts = hasValid ? mapToOverlayPoints(pts, bmp.getWidth(), bmp.getHeight()) : null;
+
+            // Optional: Evaluate FramingEngine (logging and/or accessibility guidance)
+            boolean wantFraming = de.schliweb.makeacopy.utils.FeatureFlags.isFramingLoggingEnabled()
+                    || (de.schliweb.makeacopy.utils.FeatureFlags.isA11yGuidanceEnabled() && isAccessibilityModeEnabled());
+            FramingResult fr = null;
+            if (wantFraming) {
+                try {
+                    android.graphics.PointF[] quad = null;
+                    if (hasValid) {
+                        quad = new android.graphics.PointF[4];
+                        for (int i = 0; i < 4; i++) {
+                            quad[i] = new android.graphics.PointF((float) pts[i].x, (float) pts[i].y);
+                        }
+                    }
+                    android.graphics.RectF fbRect = de.schliweb.makeacopy.utils.OpenCVUtils.getFallbackRectF(
+                            bmp.getWidth(), bmp.getHeight());
+                    FramingEngine.Input feIn = new FramingEngine.Input(
+                            bmp.getWidth(), bmp.getHeight(),
+                            quad,
+                            fbRect
+                    );
+                    fr = new FramingEngine().evaluate(feIn);
+                    if (de.schliweb.makeacopy.utils.FeatureFlags.isFramingLoggingEnabled()) {
+                        android.util.Log.d("Framing", "FramingResult=" + fr);
+                    }
+                    if (a11yGuidanceController != null && isAccessibilityModeEnabled()) {
+                        final FramingResult frFinal = fr;
+                        a11yGuidanceController.onResult(frFinal, now, hint -> {
+                            int resId = mapHintToRes(hint);
+                            if (resId != 0) {
+                                runOnUiThreadSafe(() -> announce(resId));
+                            }
+                        });
+                    }
+                } catch (Throwable ignored) {
+                }
             }
 
-            // Map bitmap coords to overlay coords (PreviewView with FIT_CENTER)
-            android.graphics.PointF[] viewPts = mapToOverlayPoints(pts, bmp.getWidth(), bmp.getHeight());
+            // --- Jitter-Reduktion & Hysterese für die Eckenvorschau ---
+            if (hasValid && viewPts != null) {
+                consecutiveValidFrames++;
+                consecutiveInvalidFrames = 0;
+                // Init Filter
+                if (lastFilteredCorners == null) {
+                    lastFilteredCorners = new android.graphics.PointF[4];
+                    for (int i = 0; i < 4; i++)
+                        lastFilteredCorners[i] = new android.graphics.PointF(viewPts[i].x, viewPts[i].y);
+                } else {
+                    // EMA auf jede Koordinate anwenden
+                    for (int i = 0; i < 4; i++) {
+                        float fx = lastFilteredCorners[i].x;
+                        float fy = lastFilteredCorners[i].y;
+                        float nx = CORNER_EMA_ALPHA * viewPts[i].x + (1f - CORNER_EMA_ALPHA) * fx;
+                        float ny = CORNER_EMA_ALPHA * viewPts[i].y + (1f - CORNER_EMA_ALPHA) * fy;
+                        lastFilteredCorners[i].x = nx;
+                        lastFilteredCorners[i].y = ny;
+                    }
+                }
+            } else {
+                consecutiveInvalidFrames++;
+                consecutiveValidFrames = 0;
+            }
+
+            // Score-EMA berechnen, nur wenn ein Wert vorliegt
+            double rawScore = (det != null) ? det.score() : 0.0;
+            if (hasValid) {
+                if (lastScoreEma < 0) lastScoreEma = rawScore;
+                else lastScoreEma = SCORE_EMA_ALPHA * rawScore + (1.0 - SCORE_EMA_ALPHA) * lastScoreEma;
+            }
+
+            // UI-Update: Overlay und Score unter Berücksichtigung der Hysterese
             runOnUiThreadSafe(() -> {
-                if (binding != null) binding.cornerOverlay.setCorners(viewPts);
+                if (binding == null) return;
+
+                // Sichtbare Eckenvorschau nur, wenn Nutzer die visuelle Analyse aktiviert hat
+                if (analysisEnabled) {
+                    boolean shouldShow = (consecutiveValidFrames >= OVERLAY_SHOW_AFTER_VALID) || binding.cornerOverlay.getVisibility() == View.VISIBLE;
+                    if (hasValid && lastFilteredCorners != null && shouldShow) {
+                        binding.cornerOverlay.setCorners(lastFilteredCorners);
+                    } else {
+                        // Nur ausblenden, wenn genügend ungültige Frames am Stück
+                        if (consecutiveInvalidFrames >= OVERLAY_HIDE_AFTER_INVALID) {
+                            binding.cornerOverlay.setCorners(null);
+                            lastFilteredCorners = null;
+                        }
+                    }
+                    // Score visualisieren: bei gültigen Frames via EMA, sonst erst nach Hysterese löschen
+                    try {
+                        if (hasValid) {
+                            binding.cornerOverlay.setScore(lastScoreEma >= 0 ? lastScoreEma : rawScore);
+                        } else {
+                            if (consecutiveInvalidFrames >= OVERLAY_HIDE_AFTER_INVALID) {
+                                binding.cornerOverlay.setScore(null);
+                            }
+                        }
+                    } catch (Throwable ignored) {
+                    }
+                } else {
+                    // Analyse visuell aus → keine Ecken/Score zeichnen
+                    try {
+                        binding.cornerOverlay.setCorners(null);
+                        binding.cornerOverlay.setScore(null);
+                    } catch (Throwable ignored) {
+                    }
+                }
+
+                // A11y: ContentDescription der Scan-Taste zurücksetzen, wenn aktuell keine gültigen Ecken
+                try {
+                    if (isAccessibilityModeEnabled() && binding.buttonScan != null && !hasValid) {
+                        // Nur zurücksetzen, wenn wir auch wirklich visuell ausblenden würden
+                        if (consecutiveInvalidFrames >= OVERLAY_HIDE_AFTER_INVALID) {
+                            binding.buttonScan.setContentDescription(null);
+                        }
+                    }
+                } catch (Throwable ignored) {
+                }
             });
+
+            // Accessibility-Feedback bei stabilem, gutem Score
+            if (isAccessibilityModeEnabled()) {
+                // Für Stabilitätslogik den geglätteten Score verwenden, falls verfügbar
+                lastScore = (lastScoreEma >= 0 ? lastScoreEma : (det != null ? det.score() : 0.0));
+                // Mache das Scoring im A11y-Modus zugänglich:
+                // 1) Aktualisiere die ContentDescription der Scan-Taste mit dem aktuellen Prozentwert
+                // 2) Sprich gelegentlich den Score, wenn er sich deutlich geändert hat (≥15 Punkte), entprellt
+                final int pct = (int) Math.round(Math.max(0.0, Math.min(1.0, lastScore)) * 100.0);
+                runOnUiThreadSafe(() -> {
+                    try {
+                        if (binding != null && binding.buttonScan != null) {
+                            // Setze eine aussagekräftige ContentDescription für Screenreader
+                            binding.buttonScan.setContentDescription(getString(R.string.a11y_scan_with_score, pct));
+                        }
+                    } catch (Throwable ignored) {
+                    }
+                });
+
+                long nowTs = System.currentTimeMillis();
+                boolean bigChange = (lastA11ySpokenScore < 0) || (Math.abs(pct - lastA11ySpokenScore) >= 15);
+                if (pct > 0 && bigChange && (nowTs - lastA11yScoreAnnounceTs >= 4000L)) {
+                    lastA11yScoreAnnounceTs = nowTs;
+                    lastA11ySpokenScore = pct;
+                    try {
+                        announceText(getString(R.string.a11y_score_now, pct));
+                    } catch (Throwable ignored) {
+                    }
+                }
+                if (isStableFor(5, 0.8)) {
+                    maybeSignalGoodFraming();
+                }
+            } else {
+                // Reset Zähler, wenn Modus aus
+                lastScore = 0.0;
+                stableCount = 0;
+            }
         } catch (Throwable t) {
             Log.w(TAG, "analyzeFrameForCorners failed: " + t.getMessage());
         } finally {
@@ -1529,6 +1868,35 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             } catch (Throwable ignored) {
             }
         }
+    }
+
+    private int mapHintToRes(GuidanceHint hint) {
+        if (hint == null) return 0;
+        switch (hint) {
+            case OK:
+                return R.string.a11y_hint_ok;
+            case MOVE_LEFT:
+                return R.string.a11y_hint_move_left;
+            case MOVE_RIGHT:
+                return R.string.a11y_hint_move_right;
+            case MOVE_UP:
+                return R.string.a11y_hint_move_up;
+            case MOVE_DOWN:
+                return R.string.a11y_hint_move_down;
+            case MOVE_CLOSER:
+                return R.string.a11y_hint_move_closer;
+            case MOVE_BACK:
+                return R.string.a11y_hint_move_back;
+            case TILT_LEFT:
+                return R.string.a11y_hint_tilt_left;
+            case TILT_RIGHT:
+                return R.string.a11y_hint_tilt_right;
+            case TILT_FORWARD:
+                return R.string.a11y_hint_tilt_forward;
+            case TILT_BACK:
+                return R.string.a11y_hint_tilt_back;
+        }
+        return 0;
     }
 
     private void runOnUiThreadSafe(Runnable r) {
@@ -1558,6 +1926,82 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             out[i] = new android.graphics.PointF(offX + x * scale, offY + y * scale);
         }
         return out;
+    }
+
+    // --- Accessibility Mode Hilfslogik ---
+
+    private boolean isAccessibilityModeEnabled() {
+        try {
+            Context ctx = requireContext();
+            android.content.SharedPreferences prefs = ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE);
+            return prefs.getBoolean(de.schliweb.makeacopy.ui.camera.CameraOptionsDialogFragment.BUNDLE_ACCESSIBILITY_MODE, false);
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+
+    private boolean isStableFor(int frames, double threshold) {
+        if (lastScore > threshold) {
+            stableCount++;
+        } else {
+            stableCount = 0;
+        }
+        return stableCount >= frames;
+    }
+
+    private void maybeSignalGoodFraming() {
+        long now = System.currentTimeMillis();
+        // Rate Limit: max alle 3 Sekunden
+        if (now - lastA11ySignalTs < 3000L) return;
+        lastA11ySignalTs = now;
+        signalGoodFraming();
+    }
+
+    private void signalGoodFraming() {
+        // Kurzer Systemton
+        try {
+            ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_SYSTEM, 80);
+            tg.startTone(ToneGenerator.TONE_PROP_ACK, 80);
+        } catch (Throwable ignored) {
+        }
+        // Haptik (leichter Tap)
+        try {
+            if (binding != null) {
+                binding.getRoot().performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+            }
+        } catch (Throwable ignored) {
+        }
+        // Ansage
+        announce(R.string.a11y_doc_ready);
+    }
+
+    @SuppressWarnings("deprecation")
+    private void announce(int resId) {
+        runOnUiThreadSafe(() -> {
+            try {
+                if (binding == null) return;
+                View root = binding.getRoot();
+                CharSequence text = getString(resId);
+                root.setContentDescription(text);
+                // Verwende die eingebaute A11y-Announcement API
+                root.announceForAccessibility(text);
+            } catch (Throwable ignored) {
+            }
+        });
+    }
+
+    @SuppressWarnings("deprecation")
+    private void announceText(@NonNull CharSequence text) {
+        runOnUiThreadSafe(() -> {
+            try {
+                if (binding == null) return;
+                View root = binding.getRoot();
+                root.setContentDescription(text);
+                root.announceForAccessibility(text);
+            } catch (Throwable ignored) {
+            }
+        });
     }
 
     private Bitmap yuvToBitmapUprightSmall(@NonNull ImageProxy image, int maxSize) {

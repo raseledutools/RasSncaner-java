@@ -306,4 +306,33 @@
     <string name="removed_from_collection">Removed from collection</string>
     <string name="indexed_new_items">Indexed %1$d new item(s)</string>
     <string name="nothing_new_to_index">Nothing new to index</string>
+
+    <!-- Accessibility guidance phrases -->
+    <string name="a11y_hint_ok">Document aligned</string>
+    <string name="a11y_hint_move_left">Move left</string>
+    <string name="a11y_hint_move_right">Move right</string>
+    <string name="a11y_hint_move_up">Move up</string>
+    <string name="a11y_hint_move_down">Move down</string>
+    <string name="a11y_hint_move_closer">Move closer</string>
+    <string name="a11y_hint_move_back">Move back</string>
+    <string name="a11y_hint_tilt_left">Tilt left</string>
+    <string name="a11y_hint_tilt_right">Tilt right</string>
+    <string name="a11y_hint_tilt_forward">Tilt forward</string>
+    <string name="a11y_hint_tilt_back">Tilt back</string>
+
+    <!-- Accessibility Mode -->
+    <string name="a11y_doc_ready">Document detected – ready to capture.</string>
+    <string name="accessibility_mode_label">Accessibility Mode</string>
+    <string name="a11y_camera_ready">Camera ready. Double tap Scan to capture.</string>
+    <string name="a11y_low_light_toggle_flash">Low light detected. Double tap Flash to enable.</string>
+    <string name="a11y_capture_failed">Capture failed.</string>
+    <string name="a11y_volume_shutter_hint">Tip: In Accessibility Mode, press the volume keys to capture.</string>
+    <string name="a11y_capture_success">Image captured.</string>
+    <string name="a11y_verbose_logs_label">Verbose Accessibility logs</string>
+    <string name="a11y_option_auto_capture">Auto-capture on stable detection (Accessibility Mode)</string>
+    <string name="a11y_option_auto_torch">Auto-enable flashlight in low light (Accessibility Mode)</string>
+    <string name="a11y_capturing_now">Capturing…</string>
+    <string name="a11y_score_now">Detection quality: %1$d%%.</string>
+    <string name="a11y_scan_with_score">Scan. Detection quality: %1$d%%.</string>
+
 </resources>

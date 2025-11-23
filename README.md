@@ -43,6 +43,12 @@ apksigner verify --print-certs MakeACopy-vX.Y.Z.apk
 - **Dark Mode**: Material 3 theme with day/night support
 - **Privacy-Focused**: 100% offline functionality, no internet connection required
 
+### Accessibility Mode 
+- MakeACopy includes an Accessibility Mode that provides spoken and haptic feedback and lets you use the hardware volume keys as the shutter.
+- Guide:
+  - English: docs/accessibility_mode_guide_en.md
+  - Deutsch: docs/accessibility_mode_guide_de.md
+
 ### OCR Languages
 
 MakeACopy supports OCR via Tesseract. You can choose the OCR language during the OCR step.

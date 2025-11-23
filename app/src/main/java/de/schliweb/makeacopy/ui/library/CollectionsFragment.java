@@ -15,6 +15,7 @@ import de.schliweb.makeacopy.BuildConfig;
 import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.data.library.CollectionEntity;
 import de.schliweb.makeacopy.data.library.LibraryServiceLocator;
+import de.schliweb.makeacopy.utils.FeatureFlags;
 import de.schliweb.makeacopy.utils.UIUtils;
 
 import java.util.ArrayList;
@@ -84,7 +85,7 @@ public class CollectionsFragment extends Fragment {
             });
         }
 
-        if (!BuildConfig.FEATURE_SCAN_LIBRARY) {
+        if (!FeatureFlags.isScanLibraryEnable()) {
             UIUtils.showToast(requireContext(), R.string.feature_scan_library_disabled, android.widget.Toast.LENGTH_SHORT);
             requireActivity().getOnBackPressedDispatcher().onBackPressed();
             return root;

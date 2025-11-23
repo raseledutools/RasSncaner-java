@@ -308,4 +308,32 @@
     <string name="indexed_new_items">Zindeksowano %1$d nowych element(ów)</string>
     <string name="nothing_new_to_index">Brak nowych elementów do zindeksowania</string>
 
+    <!-- Accessibility guidance phrases -->
+    <string name="a11y_hint_ok">Dokument wyrównany</string>
+    <string name="a11y_hint_move_left">Przesuń w lewo</string>
+    <string name="a11y_hint_move_right">Przesuń w prawo</string>
+    <string name="a11y_hint_move_up">Przesuń w górę</string>
+    <string name="a11y_hint_move_down">Przesuń w dół</string>
+    <string name="a11y_hint_move_closer">Zbliż się</string>
+    <string name="a11y_hint_move_back">Oddal się</string>
+    <string name="a11y_hint_tilt_left">Przechyl w lewo</string>
+    <string name="a11y_hint_tilt_right">Przechyl w prawo</string>
+    <string name="a11y_hint_tilt_forward">Przechyl do przodu</string>
+    <string name="a11y_hint_tilt_back">Przechyl do tyłu</string>
+
+    <!-- Accessibility Mode -->
+    <string name="a11y_doc_ready">Wykryto dokument — gotowe do wykonania zdjęcia.</string>
+    <string name="accessibility_mode_label">Tryb dostępności</string>
+    <string name="a11y_camera_ready">Aparat gotowy. Stuknij dwukrotnie „Skanuj”, aby wykonać zdjęcie.</string>
+    <string name="a11y_low_light_toggle_flash">Wykryto słabe oświetlenie. Stuknij dwukrotnie „Lampa”, aby włączyć.</string>
+    <string name="a11y_capture_failed">Nie udało się wykonać zdjęcia.</string>
+    <string name="a11y_volume_shutter_hint">Wskazówka: w trybie dostępności możesz robić zdjęcia przyciskami głośności.</string>
+    <string name="a11y_capture_success">Zdjęcie wykonane.</string>
+    <string name="a11y_verbose_logs_label">Szczegółowe logi dostępności</string>
+    <string name="a11y_option_auto_capture">Automatyczne zdjęcie przy stabilnym wykryciu (Tryb dostępności)</string>
+    <string name="a11y_option_auto_torch">Automatyczne włączanie lampy błyskowej przy słabym świetle (Tryb dostępności)</string>
+    <string name="a11y_capturing_now">Trwa wykonywanie zdjęcia…</string>
+    <string name="a11y_score_now">Jakość wykrycia: %1$d%%.</string>
+    <string name="a11y_scan_with_score">Skanuj. Jakość wykrycia: %1$d%%.</string>
+
 </resources>

@@ -307,5 +307,32 @@
     <string name="indexed_new_items">Indexováno %1$d nových položek</string>
     <string name="nothing_new_to_index">Žádné nové položky k indexování</string>
 
+    <!-- Accessibility guidance phrases -->
+    <string name="a11y_hint_ok">Dokument zarovnán</string>
+    <string name="a11y_hint_move_left">Posuňte doleva</string>
+    <string name="a11y_hint_move_right">Posuňte doprava</string>
+    <string name="a11y_hint_move_up">Posuňte nahoru</string>
+    <string name="a11y_hint_move_down">Posuňte dolů</string>
+    <string name="a11y_hint_move_closer">Přibližte</string>
+    <string name="a11y_hint_move_back">Vraťte se zpět</string>
+    <string name="a11y_hint_tilt_left">Nakloňte doleva</string>
+    <string name="a11y_hint_tilt_right">Nakloňte doprava</string>
+    <string name="a11y_hint_tilt_forward">Nakloňte dopředu</string>
+    <string name="a11y_hint_tilt_back">Nakloňte dozadu</string>
+
+    <!-- Accessibility Mode -->
+    <string name="a11y_doc_ready">Dokument detekován – připraveno k zachycení.</string>
+    <string name="accessibility_mode_label">Režim přístupnosti</string>
+    <string name="a11y_camera_ready">Kamera připravena. Dvojitým klepnutím na Skenovat zachytíte.</string>
+    <string name="a11y_low_light_toggle_flash">Nedostatek světla. Dvojitým klepnutím na Blesk jej zapnete.</string>
+    <string name="a11y_capture_failed">Zachycení selhalo.</string>
+    <string name="a11y_volume_shutter_hint">Tip: V režimu přístupnosti můžete zachytit také tlačítky hlasitosti.</string>
+    <string name="a11y_capture_success">Obrázek zachycen.</string>
+    <string name="a11y_verbose_logs_label">Podrobné logy přístupnosti</string>
+    <string name="a11y_option_auto_capture">Automatické zachycení při stabilní detekci (Režim přístupnosti)</string>
+    <string name="a11y_option_auto_torch">Automatické zapnutí blesku při nízkém světle (Režim přístupnosti)</string>
+    <string name="a11y_capturing_now">Probíhá zachycení…</string>
+    <string name="a11y_score_now">Kvalita detekce: %1$d%%.</string>
+    <string name="a11y_scan_with_score">Skenovat. Kvalita detekce: %1$d%%.</string>
 
 </resources>

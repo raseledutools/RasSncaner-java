@@ -309,4 +309,32 @@
     <string name="indexed_new_items">Indekserte %1$d nye element(er)</string>
     <string name="nothing_new_to_index">Ingenting nytt å indeksere</string>
 
+    <!-- Accessibility guidance phrases -->
+    <string name="a11y_hint_ok">Dokument justert</string>
+    <string name="a11y_hint_move_left">Flytt til venstre</string>
+    <string name="a11y_hint_move_right">Flytt til høyre</string>
+    <string name="a11y_hint_move_up">Flytt opp</string>
+    <string name="a11y_hint_move_down">Flytt ned</string>
+    <string name="a11y_hint_move_closer">Gå nærmere</string>
+    <string name="a11y_hint_move_back">Gå lenger tilbake</string>
+    <string name="a11y_hint_tilt_left">Vipp til venstre</string>
+    <string name="a11y_hint_tilt_right">Vipp til høyre</string>
+    <string name="a11y_hint_tilt_forward">Vipp fremover</string>
+    <string name="a11y_hint_tilt_back">Vipp bakover</string>
+
+    <!-- Accessibility Mode -->
+    <string name="a11y_doc_ready">Dokument oppdaget — klart for opptak.</string>
+    <string name="accessibility_mode_label">Tilgjengelighetsmodus</string>
+    <string name="a11y_camera_ready">Kamera klart. Dobbelttrykk på Skann for å ta bilde.</string>
+    <string name="a11y_low_light_toggle_flash">Svakt lys oppdaget. Dobbelttrykk på Blits for å slå på.</string>
+    <string name="a11y_capture_failed">Opptak mislyktes.</string>
+    <string name="a11y_volume_shutter_hint">Tips: I tilgjengelighetsmodus kan du ta bilde med volumtastene.</string>
+    <string name="a11y_capture_success">Bilde tatt.</string>
+    <string name="a11y_verbose_logs_label">Detaljerte tilgjengelighetslogger</string>
+    <string name="a11y_option_auto_capture">Automatisk opptak ved stabil gjenkjenning (Tilgjengelighetsmodus)</string>
+    <string name="a11y_option_auto_torch">Slå på blits automatisk ved svakt lys (Tilgjengelighetsmodus)</string>
+    <string name="a11y_capturing_now">Tar bilde…</string>
+    <string name="a11y_score_now">Gjenkjenningskvalitet: %1$d%%.</string>
+    <string name="a11y_scan_with_score">Skann. Gjenkjenningskvalitet: %1$d%%.</string>
+
 </resources>

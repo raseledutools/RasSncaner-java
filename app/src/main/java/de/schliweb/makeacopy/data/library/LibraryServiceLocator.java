@@ -2,6 +2,7 @@ package de.schliweb.makeacopy.data.library;
 
 import android.content.Context;
 import de.schliweb.makeacopy.BuildConfig;
+import de.schliweb.makeacopy.utils.FeatureFlags;
 
 /**
  * Singleton service locator for providing repository instances to manage
@@ -32,7 +33,7 @@ public final class LibraryServiceLocator {
      * @return true if the "Scan Library" feature is enabled, false otherwise.
      */
     private static boolean isFeatureEnabled() {
-        return BuildConfig.FEATURE_SCAN_LIBRARY;
+        return FeatureFlags.isScanLibraryEnable();
     }
 
     /**

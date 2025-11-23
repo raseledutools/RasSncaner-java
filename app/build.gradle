@@ -14,8 +14,8 @@ android {
         applicationId "de.schliweb.makeacopy"
         minSdk = 29
         targetSdk = 36
-        versionCode 20202
-        versionName "2.2.2"
+        versionCode 20300
+        versionName "2.3.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -24,6 +24,8 @@ android {
         // Feature flags
         buildConfigField "boolean", "FEATURE_SCAN_LIBRARY", "true"
         buildConfigField "boolean", "FEATURE_REVIEW_OCR", "false"
+        buildConfigField "boolean", "FEATURE_FRAMING_LOGGING", "true"
+        buildConfigField "boolean", "FEATURE_A11Y_GUIDANCE", "true"
     }
 
     dependenciesInfo {

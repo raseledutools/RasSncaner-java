@@ -307,4 +307,32 @@
     <string name="indexed_new_items">%1$d nieuw(e) item(s) geïndexeerd</string>
     <string name="nothing_new_to_index">Niets nieuws om te indexeren</string>
 
+    <!-- Accessibility guidance phrases -->
+    <string name="a11y_hint_ok">Document uitgelijnd</string>
+    <string name="a11y_hint_move_left">Beweeg naar links</string>
+    <string name="a11y_hint_move_right">Beweeg naar rechts</string>
+    <string name="a11y_hint_move_up">Beweeg omhoog</string>
+    <string name="a11y_hint_move_down">Beweeg omlaag</string>
+    <string name="a11y_hint_move_closer">Kom dichterbij</string>
+    <string name="a11y_hint_move_back">Ga verder naar achteren</string>
+    <string name="a11y_hint_tilt_left">Kantel naar links</string>
+    <string name="a11y_hint_tilt_right">Kantel naar rechts</string>
+    <string name="a11y_hint_tilt_forward">Kantel naar voren</string>
+    <string name="a11y_hint_tilt_back">Kantel naar achteren</string>
+
+    <!-- Accessibility Mode -->
+    <string name="a11y_doc_ready">Document gedetecteerd — klaar om vast te leggen.</string>
+    <string name="accessibility_mode_label">Toegankelijkheidsmodus</string>
+    <string name="a11y_camera_ready">Camera klaar. Dubbel tik op Scannen om vast te leggen.</string>
+    <string name="a11y_low_light_toggle_flash">Weinig licht gedetecteerd. Dubbel tik op Flits om in te schakelen.</string>
+    <string name="a11y_capture_failed">Vastleggen mislukt.</string>
+    <string name="a11y_volume_shutter_hint">Tip: In de toegankelijkheidsmodus kunt u ook met de volumetoetsen vastleggen.</string>
+    <string name="a11y_capture_success">Afbeelding vastgelegd.</string>
+    <string name="a11y_verbose_logs_label">Uitgebreide toegankelijkheidslogboeken</string>
+    <string name="a11y_option_auto_capture">Automatisch vastleggen bij stabiele detectie (Toegankelijkheidsmodus)</string>
+    <string name="a11y_option_auto_torch">Flits automatisch inschakelen bij weinig licht (Toegankelijkheidsmodus)</string>
+    <string name="a11y_capturing_now">Bezig met vastleggen…</string>
+    <string name="a11y_score_now">Detectiekwaliteit: %1$d%%.</string>
+    <string name="a11y_scan_with_score">Scannen. Detectiekwaliteit: %1$d%%.</string>
+
 </resources>

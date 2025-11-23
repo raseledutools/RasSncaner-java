@@ -49,4 +49,32 @@ public final class FeatureFlags {
             return false;
         }
     }
+
+    /**
+     * Feature flag: enables logging of FramingEngine results during camera analysis.
+     * This does not change any UI behavior and is safe for experimental builds.
+     */
+    public static boolean isFramingLoggingEnabled() {
+        try {
+            Class<?> c = de.schliweb.makeacopy.BuildConfig.class;
+            java.lang.reflect.Field f = c.getField("FEATURE_FRAMING_LOGGING");
+            return f.getBoolean(null);
+        } catch (Throwable ignore) {
+            return false;
+        }
+    }
+
+    /**
+     * Feature flag: enables experimental Accessibility Guidance based on FramingEngine results.
+     * When disabled, no additional announcements are produced during preview.
+     */
+    public static boolean isA11yGuidanceEnabled() {
+        try {
+            Class<?> c = de.schliweb.makeacopy.BuildConfig.class;
+            java.lang.reflect.Field f = c.getField("FEATURE_A11Y_GUIDANCE");
+            return f.getBoolean(null);
+        } catch (Throwable ignore) {
+            return false;
+        }
+    }
 }

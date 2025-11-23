@@ -29,6 +29,7 @@ public class CameraOptionsDialogFragment extends DialogFragment {
     public static final String BUNDLE_SKIP_OCR = "skip_ocr";
     public static final String BUNDLE_ANALYSIS_ENABLED = "analysis_enabled";
     public static final String BUNDLE_SKIP_CROPPING = "skip_cropping";
+    public static final String BUNDLE_ACCESSIBILITY_MODE = "accessibility_mode";
 
     public static void show(@NonNull FragmentManager fm) {
         new CameraOptionsDialogFragment().show(fm, "CameraOptionsDialogFragment");
@@ -118,7 +119,6 @@ public class CameraOptionsDialogFragment extends DialogFragment {
      */
     private String buildEnvHeader(Context ctx) {
         StringBuilder sb = new StringBuilder();
-
         String versionName;
         long versionCode;
         try {
@@ -135,7 +135,7 @@ public class CameraOptionsDialogFragment extends DialogFragment {
             java.util.Locale loc = java.util.Locale.getDefault();
             String abis = Build.SUPPORTED_ABIS != null ? java.util.Arrays.toString(Build.SUPPORTED_ABIS) : "unknown";
             boolean analysisPref = ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE)
-                    .getBoolean("analysis_enabled", false);
+                    .getBoolean(BUNDLE_ANALYSIS_ENABLED, false);
             sb.append("MakeACopy logs\n");
             sb.append("App: ").append(versionName).append(" (code ").append(versionCode).append(")\n");
             sb.append("SDK: ").append(android.os.Build.VERSION.SDK_INT)
@@ -214,14 +214,18 @@ public class CameraOptionsDialogFragment extends DialogFragment {
         CheckBox cbSkip = view.findViewById(R.id.dialog_checkbox_skip_ocr);
         CheckBox cbSkipCropping = view.findViewById(R.id.dialog_checkbox_skip_cropping);
         CheckBox cbAnalysis = view.findViewById(R.id.dialog_checkbox_analysis_enabled);
+        CheckBox cbAccessibility = view.findViewById(R.id.dialog_checkbox_accessibility_mode);
+        // Auto‑Capture/Auto‑Torch options removed to keep it simple
 
         SharedPreferences prefs = ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE);
-        boolean skipOcr = prefs.getBoolean("skip_ocr", false);
-        boolean skipPerspective = prefs.getBoolean("skip_cropping", false);
-        boolean analysisEnabled = prefs.getBoolean("analysis_enabled", false);
+        boolean skipOcr = prefs.getBoolean(BUNDLE_SKIP_OCR, false);
+        boolean skipPerspective = prefs.getBoolean(BUNDLE_SKIP_CROPPING, false);
+        boolean analysisEnabled = prefs.getBoolean(BUNDLE_ANALYSIS_ENABLED, false);
+        boolean accessibilityMode = prefs.getBoolean(BUNDLE_ACCESSIBILITY_MODE, false);
         cbSkip.setChecked(skipOcr);
         if (cbSkipCropping != null) cbSkipCropping.setChecked(skipPerspective);
         if (cbAnalysis != null) cbAnalysis.setChecked(analysisEnabled);
+        if (cbAccessibility != null) cbAccessibility.setChecked(accessibilityMode);
 
         // Wire up the Share Logs button placed under the options
         View shareBtn = view.findViewById(R.id.button_share_logs);
@@ -237,19 +241,23 @@ public class CameraOptionsDialogFragment extends DialogFragment {
                     boolean skip = cbSkip.isChecked();
                     boolean skipCropping = cbSkipCropping != null && cbSkipCropping.isChecked();
                     boolean analysis = cbAnalysis != null && cbAnalysis.isChecked();
+                    boolean accessibility = cbAccessibility != null && cbAccessibility.isChecked();
+                    // No extra A11y options persisted
 
                     // Persist and keep legacy/new flags in sync
                     prefs.edit()
-                            .putBoolean("skip_ocr", skip)
-                            .putBoolean("include_ocr", !skip)
-                            .putBoolean("skip_cropping", skipCropping)
-                            .putBoolean("analysis_enabled", analysis)
+                            .putBoolean(BUNDLE_SKIP_OCR, skip)
+                            .putBoolean("include_ocr", !skip) // TODO
+                            .putBoolean(BUNDLE_SKIP_CROPPING, skipCropping)
+                            .putBoolean(BUNDLE_ANALYSIS_ENABLED, analysis)
+                            .putBoolean(BUNDLE_ACCESSIBILITY_MODE, accessibility)
                             .apply();
 
                     Bundle result = new Bundle();
                     result.putBoolean(BUNDLE_SKIP_OCR, skip);
                     result.putBoolean(BUNDLE_SKIP_CROPPING, skipCropping);
                     result.putBoolean(BUNDLE_ANALYSIS_ENABLED, analysis);
+                    result.putBoolean(BUNDLE_ACCESSIBILITY_MODE, accessibility);
                     getParentFragmentManager().setFragmentResult(REQUEST_KEY, result);
                 })
                 .create();
