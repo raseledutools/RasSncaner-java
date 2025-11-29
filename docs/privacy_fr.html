@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Politique de confidentialité - MakeACopy</title>
+    <!-- Canonical -->
+    <link rel="canonical" href="https://egdels.github.io/makeacopy/privacy_fr.html" />
+    <!-- Language alternates -->
+    <link rel="alternate" hreflang="en" href="https://egdels.github.io/makeacopy/privacy.html" />
+    <link rel="alternate" hreflang="de" href="https://egdels.github.io/makeacopy/privacy_de.html" />
+    <link rel="alternate" hreflang="fr" href="https://egdels.github.io/makeacopy/privacy_fr.html" />
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -17,8 +23,8 @@
             color: #607D8B;
             margin-top: 30px;
         }
-        a { color: #4A90E2; text-decoration: none; }
-        a:hover { text-decoration: underline; }
+        a { color: #0B63CE; text-decoration: underline; text-underline-offset: 2px; }
+        a:hover, a:focus-visible { text-decoration-thickness: 2px; text-underline-offset: 3px; }
         code {
             background-color: #f5f5f5;
             padding: 2px 5px;
@@ -39,9 +45,14 @@
             font-style: italic;
             color: #666;
         }
+        :focus-visible { outline: 3px solid #ffab00; outline-offset: 2px; }
+        .skip-link { position: absolute; left: -9999px; top: auto; }
+        .skip-link:focus { left: 12px; top: 12px; z-index: 1000; background: #000; color: #fff; padding: 8px 12px; }
     </style>
 </head>
 <body>
+    <a class="skip-link" href="#main">Aller au contenu principal</a>
+    <main id="main">
     <h1>Politique de confidentialité</h1>
 
     <p class="last-updated"><em>Dernière mise à jour: 29 juillet 2025</em></p>
@@ -107,8 +118,9 @@
 
     <p>MakeACopy est un logiciel open source. Vous pouvez consulter le code source sur <a href="https://github.com/egdels/makeacopy">https://github.com/egdels/makeacopy</a> afin de vérifier nos pratiques en matière de confidentialité.</p>
 
-    <div class="footer-links">
-        <a href="index_fr.html">Accueil</a> | <a href="privacy.html">English</a> | <a href="privacy_de.html">Deutsch</a>
-    </div>
+    <nav class="footer-links" aria-label="Pied de page">
+        <a href="index_fr.html">Accueil</a> | <a href="privacy.html" hreflang="en">English</a> | <a href="privacy_de.html" hreflang="de">Deutsch</a>
+    </nav>
+</main>
 </body>
 </html>

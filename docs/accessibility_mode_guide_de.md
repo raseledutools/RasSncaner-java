@@ -97,6 +97,7 @@ Datenschutz und Offline‑Betrieb
 - Es findet kein Hochladen oder Teilen im Accessibility‑Modus statt. Keine Internetverbindung nötig.
 
 Häufige Fragen (FAQ)
+Siehe auch: Website‑FAQ → Scannen (Kamera): docs/index_de.html#faq-scanning
 F: Ich höre die „Dokument erkannt“‑Hinweise sehr häufig.
 A: Die App begrenzt Wiederholungen bereits. Bewege das Gerät leicht weg und richte es dann erneut aus. Beim stabilen Erkennen kommt ein Ton + Vibration + Ansage.
 
@@ -115,6 +116,26 @@ A: Ja. Die normale Kameravorschau bleibt sichtbar. Ist „Ecken‑Vorschau/Analy
 
 F: Funktioniert der Accessibility‑Modus auch ohne TalkBack?
 A: Teilweise. Gesprochene Ausgaben erfordern einen aktiven Screenreader (z. B. TalkBack oder „Vorlesen/Select‑to‑Speak“). Ohne Screenreader erhältst du weiterhin Töne und leichte Haptik, aber keine Sprachausgabe.
+
+<a id="guide-de-directional-hints-landscape"></a>
+F: Was bedeuten „links/rechts/oben/unten“, wenn ich das Gerät im Querformat halte?
+A: Die Richtungs‑Hinweise beziehen sich auf die physischen Geräteseiten so, wie du es gerade hältst – nicht auf ein festes Hochformat der UI. „Nach links bewegen“ bedeutet: Bewege das Telefon nach links aus deiner Sicht; „Nach oben bewegen“ bedeutet: Bewege es von dir weg (zur Oberkante, die du aktuell oben hältst) – auch wenn das Gerät gedreht ist. Die Hinweise passen sich deiner aktuellen Geräte‑Ausrichtung an.
+
+<a id="guide-de-orientation-tip"></a>
+F: Gibt die App einen Tipp, ob Hoch- oder Querformat besser ist?
+A: Ja. Im Accessibility‑Modus enthält die Vorschau einen leichten „Orientierungstipp“. Er analysiert die Bildstruktur und schätzt, ob eher Hoch‑ oder Querformat passt. Damit es ruhig bleibt, spricht der Tipp nur, wenn (a) die Konfidenz ausreichend ist, (b) die Schätzung kurz stabil war und (c) seit dem letzten Tipp eine Abklingzeit verstrichen ist. Du hörst dann z. B. „Das sieht nach Hochformat aus …“ oder „… nach Querformat …“. Die normalen Richtungs‑Hinweise bleiben unverändert.
+
+F: Was bedeutet der Framing-/Qualitäts‑Score?
+A: Während des Ausrichtens kann der Accessibility‑Modus einen Prozentwert (0–100 %) ansagen. Er ist ein einfacher Indikator dafür, wie „gut“ das aktuelle Framing zum Scannen aussieht. Er kombiniert: (a) Flächenfüllung, (b) Rechteckigkeit/Skew der erkannten Ecken, und (c) kurzfristige Stabilität über die letzten Frames. Faustregel: ~70 %+ ist gut, ~85 %+ ist sehr gut.
+
+F: Wie kann ich den Score verbessern?
+A: Nutze gleichmäßiges, helles Licht und vermeide Blendungen; halte das Telefon parallel zur Seite; lasse alle vier Ecken mit einem kleinen Rand sichtbar; wenn du zu nah dran bist, gehe ein Stück zurück und schneide später zu; lege das Papier auf einen kontrastreichen, matten Hintergrund; halte kurz ruhig, damit sich die Erkennung stabilisiert; wähle eine passende Ausrichtung (A4/Letter: meist Hochformat).
+
+Hinweis: Eine ausführlichere Erklärung mit Beispielen findest du auf der Website: docs/index.html → FAQ → „Scanning (Camera)“.
+
+<a id="guide-de-move-back"></a>
+F: Ich höre ständig „Weiter weg/Move back“.
+A: Die App unterdrückt Entfernungs‑Hinweise, wenn kein plausibler Dokument‑Kandidat erkannt wird, und bremst Wiederholungen. Verbessere die Beleuchtung (Taschenlampe einschalten, falls nötig), nimm die komplette Seite mit kleinem Rand ins Bild und halte kurz ruhig, damit sich die Erkennung stabilisieren kann.
 
 —
 

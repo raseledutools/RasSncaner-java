@@ -30,6 +30,10 @@
     <meta name="description" content="MakeACopy est une application Android de numérisation de documents avec OCR, respectueuse de la vie privée. Fonctionne entièrement hors ligne, sans pubs, open source." />
     <meta name="robots" content="index,follow" />
     <title>MakeACopy - Application de numérisation de documents</title>
+    <!-- Language alternates -->
+    <link rel="alternate" hreflang="en" href="https://egdels.github.io/makeacopy/index.html" />
+    <link rel="alternate" hreflang="de" href="https://egdels.github.io/makeacopy/index_de.html" />
+    <link rel="alternate" hreflang="fr" href="https://egdels.github.io/makeacopy/index_fr.html" />
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -43,8 +47,8 @@
             color: #607D8B;
             margin-top: 30px;
         }
-        a { color: #4A90E2; text-decoration: none; }
-        a:hover { text-decoration: underline; }
+        a { color: #0B63CE; text-decoration: underline; text-underline-offset: 2px; }
+        a:hover, a:focus-visible { text-decoration-thickness: 2px; text-underline-offset: 3px; }
         code {
             background-color: #f5f5f5;
             padding: 2px 5px;
@@ -57,20 +61,32 @@
             overflow-x: auto;
         }
         .nav-links { margin: 20px 0; }
+        :focus-visible { outline: 3px solid #ffab00; outline-offset: 2px; }
+        .skip-link { position: absolute; left: -9999px; top: auto; }
+        .skip-link:focus { left: 12px; top: 12px; z-index: 1000; background: #000; color: #fff; padding: 8px 12px; }
     </style>
 </head>
 <body>
-    <h1>MakeACopy</h1>
-
-    <p>MakeACopy est une application open source de numérisation de documents pour Android qui vous permet de numériser des documents papier avec OCR. L’application est conçue dans le respect de la vie privée : elle fonctionne entièrement hors ligne, sans cloud ni suivi.</p>
-
-    <div class="nav-links">
+    <a class="skip-link" href="#main">Aller au contenu principal</a>
+    <nav class="nav-links" aria-label="Primary">
         <a href="https://github.com/egdels/makeacopy/releases">Télécharger l’APK</a> |
         <a href="https://github.com/egdels/makeacopy">Voir sur GitHub</a> |
-        <a href="index_de.html">Deutsch</a> |
-        <a href="index.html">English</a> |
+        <a href="index_de.html" hreflang="de">Deutsch</a> |
+        <a href="index.html" hreflang="en">English</a> |
         <a href="#faq">FAQ</a>
-    </div>
+    </nav>
+    <main id="main">
+    <h1>MakeACopy</h1>
+    
+    <p>MakeACopy est une application open source de numérisation de documents pour Android qui vous permet de numériser des documents papier avec OCR. L’application est conçue dans le respect de la vie privée : elle fonctionne entièrement hors ligne, sans cloud ni suivi.</p>
+    
+    <nav class="nav-links" aria-label="Language">
+        <ul>
+            <li style="display:inline; margin-right:8px;"><a href="index.html" hreflang="en">English</a></li>
+            <li style="display:inline; margin-right:8px;"><a href="index_de.html" hreflang="de">Deutsch</a></li>
+            <li style="display:inline; margin-right:8px;"><a href="index_fr.html" hreflang="fr" aria-current="page">Français</a></li>
+        </ul>
+    </nav>
 
     <div class="store-badges" style="margin: 10px 0;">
         <a href="https://f-droid.org/packages/de.schliweb.makeacopy/"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Disponible sur F-Droid" height="80"></a>
@@ -91,6 +107,18 @@
         <li><strong>Partager & Enregistrer</strong> : enregistrement local ou partage avec d’autres applications</li>
         <li><strong>Mode sombre</strong> : thème Material 3 avec support jour/nuit</li>
         <li><strong>Respect de la vie privée</strong> : 100% hors ligne, aucune connexion Internet requise</li>
+    </ul>
+
+    <h3 id="faq-bibliotheque">Bibliothèque & Collections</h3>
+    <ul>
+        <li><strong>Où vont mes scans s’ils n’apparaissent pas sous une collection ?</strong><br>
+            Si un scan (ou une image de page) ne peut pas être lié à un document/collection (par ex. anciens exports sans
+            manifeste compagnon, ou fichiers recopiés sur le téléphone), il est traité comme <em>Non classé</em>. L’application
+            regroupe ces éléments dans un compartiment virtuel « Non classé » au lieu d’afficher chaque page brute comme
+            document de premier niveau. De là, vous pouvez créer un nouveau document à partir des éléments sélectionnés
+            ou les joindre à un document existant. Lors de l’export avec la version actuelle, un petit manifeste est écrit
+            afin que les indexations futures puissent lier automatiquement les pages.
+        </li>
     </ul>
 
     <h2>Langues OCR</h2>
@@ -126,10 +154,10 @@
 
     <h2>Captures d’écran</h2>
     <p align="center">
-        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/1_en-US.png" alt="Capture MakeACopy 1" width="110" />
-        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/2_en-US.png" alt="Capture MakeACopy 2" width="110" />
-        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/3_en-US.png" alt="Capture MakeACopy 3" width="110" />
-        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/4_en-US.png" alt="Capture MakeACopy 4" width="110" />
+        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/1_en-US.png" alt="" role="presentation" width="110" />
+        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/2_en-US.png" alt="" role="presentation" width="110" />
+        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/3_en-US.png" alt="" role="presentation" width="110" />
+        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/4_en-US.png" alt="" role="presentation" width="110" />
     </p>
 
     <h2>Guide d’utilisation</h2>
@@ -191,7 +219,7 @@ appverifier verify MakeACopy-vX.Y.Z.apk
 
     <h2 id="faq">FAQ</h2>
 
-    <h3>Numérisation (Caméra)</h3>
+    <h3 id="faq-scanning">Numérisation (Caméra)</h3>
     <ul>
         <li><strong>L’image est floue / le texte est difficile à lire</strong><br>
             - Assurez un éclairage suffisant ; évitez une lumière d’ambiance faible et chaude. <br>
@@ -210,6 +238,34 @@ appverifier verify MakeACopy-vX.Y.Z.apk
         </li>
         <li><strong>Perspective déformée</strong><br>
             - Prenez la photo le plus perpendiculairement possible à la surface du document.
+        </li>
+        <li id="faq-score-meaning"><strong>Que signifie le score d’encadrement/qualité ?</strong><br>
+            Le Mode Accessibilité peut annoncer un pourcentage (0–100 %) pendant l’alignement. C’est un indicateur simple
+            de la « qualité » du cadrage pour la numérisation. Il combine :<br>
+            - <em>Remplissage</em> : quelle part de l’image occupe la page (pas trop petite, bords visibles).<br>
+            - <em>Rectangularité</em> : droiture/alignment des coins et bords détectés (moins d’inclinaison = mieux).<br>
+            - <em>Stabilité</em> : stabilité de la détection sur les derniers frames.<br>
+            Règle pratique : ~70 %+ = bon, ~85 %+ = très bon.
+        </li>
+        <li id="faq-score-improve"><strong>Comment améliorer le score ?</strong><br>
+            - Éclairage homogène et suffisant ; évitez l’éblouissement/les ombres dures. <br>
+            - Tenez le téléphone <em>parallèle</em> à la page ; évitez de le pencher. Gardez une petite marge avec les quatre coins visibles. <br>
+            - Si vous êtes trop près, reculez légèrement et recadrez ensuite. <br>
+            - Placez le papier sur un fond mat et contrasté. <br>
+            - Restez brièvement immobile pour stabiliser la détection. <br>
+            - Adaptez l’orientation : A4/Letter → souvent portrait ; éléments très larges (tickets/cartes) → essayez paysage.
+        </li>
+        <li id="faq-portrait-vs-landscape"><strong>Dois‑je tenir le téléphone en portrait ou en paysage ?</strong><br>
+            A4/Letter : le portrait convient généralement. Éléments très larges (tickets, cartes) : essayez paysage. Les indications s’adaptent à la façon dont vous tenez le téléphone.
+        </li>
+        <li id="faq-directional-hints-landscape"><strong>Que signifient « gauche/droite/haut/bas » en mode paysage ?</strong><br>
+            Les indications se réfèrent aux côtés physiques du téléphone. « À gauche » = déplacez le téléphone vers la gauche ; « vers le haut » = éloignez‑le de vous — aussi en paysage. Les images sont normalisées pour garder des directions cohérentes.
+        </li>
+        <li id="faq-move-back"><strong>J’entends constamment « Éloignez‑vous/Move back »</strong><br>
+            L’application supprime les invites de distance sans document clair et limite les répétitions. Améliorez l’éclairage (utilisez la lampe si besoin), incluez toute la page avec une petite marge, et restez brièvement immobile.
+        </li>
+        <li id="faq-orientation-tip"><strong>L’application suggère‑t‑elle portrait ou paysage ?</strong><br>
+            En Mode Accessibilité, un « conseil d’orientation » léger peut suggérer portrait/paysage. Il ne parle que si la confiance est suffisante, après une courte stabilité, avec un délai anti‑répétition pour rester discret.
         </li>
     </ul>
 
@@ -294,5 +350,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
     </pre>
+</main>
 </body>
 </html>

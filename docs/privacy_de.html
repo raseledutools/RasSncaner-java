@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Datenschutzerklärung - MakeACopy</title>
+    <!-- Canonical -->
+    <link rel="canonical" href="https://egdels.github.io/makeacopy/privacy_de.html" />
+    <!-- Language alternates -->
+    <link rel="alternate" hreflang="en" href="https://egdels.github.io/makeacopy/privacy.html" />
+    <link rel="alternate" hreflang="de" href="https://egdels.github.io/makeacopy/privacy_de.html" />
+    <link rel="alternate" hreflang="fr" href="https://egdels.github.io/makeacopy/privacy_fr.html" />
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -19,13 +25,8 @@
             color: #607D8B;
             margin-top: 30px;
         }
-        a {
-            color: #4A90E2;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
+        a { color: #0B63CE; text-decoration: underline; text-underline-offset: 2px; }
+        a:hover, a:focus-visible { text-decoration-thickness: 2px; text-underline-offset: 3px; }
         code {
             background-color: #f5f5f5;
             padding: 2px 5px;
@@ -46,9 +47,14 @@
             font-style: italic;
             color: #666;
         }
+        :focus-visible { outline: 3px solid #ffab00; outline-offset: 2px; }
+        .skip-link { position: absolute; left: -9999px; top: auto; }
+        .skip-link:focus { left: 12px; top: 12px; z-index: 1000; background: #000; color: #fff; padding: 8px 12px; }
     </style>
 </head>
 <body>
+    <a class="skip-link" href="#main">Zum Hauptinhalt springen</a>
+    <main id="main">
     <h1>Datenschutzerklärung</h1>
     
     <p class="last-updated"><em>Zuletzt aktualisiert: 29. Juli 2025</em></p>
@@ -106,7 +112,7 @@
     <p>Wenn Sie Fragen zu dieser Datenschutzerklärung haben, kontaktieren Sie uns bitte:</p>
     
     <ul>
-        <li>Per E-Mail: <a href="mailto:contact@example.com">cristian.kierdorf@schliweb.de</a></li>
+        <li>Per E-Mail: <a href="mailto:christian.kierdorf@schliweb.de">christian.kierdorf@schliweb.de</a></li>
         <li>Durch Besuch dieser Seite auf unserer Website: <a href="https://egdels.github.io/makeacopy/">https://egdels.github.io/makeacopy/</a></li>
     </ul>
     
@@ -114,8 +120,11 @@
     
     <p>MakeACopy ist Open-Source-Software. Sie können den Quellcode unter <a href="https://github.com/egdels/makeacopy">https://github.com/egdels/makeacopy</a> überprüfen, um unsere Datenschutzpraktiken zu verifizieren.</p>
     
-    <div class="footer-links">
-        <a href="index_de.html">Startseite</a> | <a href="privacy.html">English</a>
-    </div>
+    <nav class="footer-links" aria-label="Footer">
+        <a href="index_de.html">Startseite</a> |
+        <a href="privacy.html" hreflang="en">English</a> |
+        <a href="privacy_fr.html" hreflang="fr">Français</a>
+    </nav>
+</main>
 </body>
 </html>

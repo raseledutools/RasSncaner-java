@@ -17,6 +17,7 @@
     <meta property="og:site_name" content="MakeACopy" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:locale:alternate" content="de_DE" />
+    <meta property="og:locale:alternate" content="fr_FR" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -28,6 +29,10 @@
     <meta name="description" content="MakeACopy is a lightweight, privacy-friendly OCR document scanner for Android. Works completely offline, no ads, open source." />
     <meta name="robots" content="index,follow" />
     <title>MakeACopy - Document Scanner App</title>
+    <!-- Language alternates -->
+    <link rel="alternate" hreflang="en" href="https://egdels.github.io/makeacopy/index.html" />
+    <link rel="alternate" hreflang="de" href="https://egdels.github.io/makeacopy/index_de.html" />
+    <link rel="alternate" hreflang="fr" href="https://egdels.github.io/makeacopy/index_fr.html" />
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -44,11 +49,14 @@
             margin-top: 30px;
         }
         a {
-            color: #4A90E2;
-            text-decoration: none;
-        }
-        a:hover {
+            color: #0B63CE; /* higher contrast */
             text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+        a:hover,
+        a:focus-visible {
+            text-decoration-thickness: 2px;
+            text-underline-offset: 3px;
         }
         code {
             background-color: #f5f5f5;
@@ -64,20 +72,46 @@
         .nav-links {
             margin: 20px 0;
         }
+        :focus-visible {
+            outline: 3px solid #ffab00;
+            outline-offset: 2px;
+        }
+        .skip-link {
+            position: absolute;
+            left: -9999px;
+            top: auto;
+        }
+        .skip-link:focus {
+            left: 12px;
+            top: 12px;
+            z-index: 1000;
+            background: #000;
+            color: #fff;
+            padding: 8px 12px;
+        }
     </style>
 </head>
 <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <nav class="nav-links" aria-label="Primary">
+        <a href="https://github.com/egdels/makeacopy/releases">Download APK</a> | 
+        <a href="https://github.com/egdels/makeacopy">View on GitHub</a> | 
+        <a href="index_de.html" hreflang="de">Deutsch</a> | 
+        <a href="index_fr.html" hreflang="fr">Français</a> | 
+        <a href="#faq">FAQ</a>
+    </nav>
+    <main id="main">
     <h1>MakeACopy</h1>
     
     <p>MakeACopy is an open-source document scanner app for Android that allows you to digitize paper documents with OCR functionality. The app is designed to be privacy-friendly, working completely offline without any cloud connection or tracking.</p>
     
-    <div class="nav-links">
-        <a href="https://github.com/egdels/makeacopy/releases">Download APK</a> | 
-        <a href="https://github.com/egdels/makeacopy">View on GitHub</a> | 
-        <a href="index_de.html">Deutsch</a> | 
-        <a href="index_fr.html">Français</a> | 
-        <a href="#faq">FAQ</a>
-    </div>
+    <nav class="nav-links" aria-label="Language">
+        <ul>
+            <li style="display:inline; margin-right:8px;"><a href="index.html" hreflang="en" aria-current="page">English</a></li>
+            <li style="display:inline; margin-right:8px;"><a href="index_de.html" hreflang="de">Deutsch</a></li>
+            <li style="display:inline; margin-right:8px;"><a href="index_fr.html" hreflang="fr">Français</a></li>
+        </ul>
+    </nav>
     
     <div class="store-badges" style="margin: 10px 0;">
         <a href="https://f-droid.org/packages/de.schliweb.makeacopy/"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80"></a>
@@ -135,10 +169,10 @@
     <h2>Screenshots</h2>
     
     <p align="center">
-        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/1_en-US.png" alt="MakeACopy screenshot 1" width="110" />
-        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/2_en-US.png" alt="MakeACopy screenshot 2" width="110" />
-        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/3_en-US.png" alt="MakeACopy screenshot 3" width="110" />
-        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/4_en-US.png" alt="MakeACopy screenshot 4" width="110" />
+        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/1_en-US.png" alt="" role="presentation" width="110" />
+        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/2_en-US.png" alt="" role="presentation" width="110" />
+        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/3_en-US.png" alt="" role="presentation" width="110" />
+        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/4_en-US.png" alt="" role="presentation" width="110" />
     </p>
     
     <h2>How to Use</h2>
@@ -215,7 +249,7 @@ appverifier verify MakeACopy-vX.Y.Z.apk
     
     <h2 id="faq">FAQ</h2>
 
-    <h3>Scanning (Camera)</h3>
+    <h3 id="faq-scanning">Scanning (Camera)</h3>
     <ul>
         <li><strong>The image is blurry / text is hard to read</strong><br>
             - Ensure sufficient lighting; avoid dim, warm ambient light. <br>
@@ -234,6 +268,48 @@ appverifier verify MakeACopy-vX.Y.Z.apk
         </li>
         <li><strong>Distorted perspective</strong><br>
             - Shoot as straight-on and parallel to the document surface as possible.
+        </li>
+        <li id="faq-score-meaning"><strong>What does the framing/quality score mean?</strong><br>
+            The Accessibility Mode can announce a percentage score (0–100%) while you align the page. It is a simple
+            indicator of how “good” the current framing looks for scanning. The score combines three things:<br>
+            - <em>Fill/area</em>: How much of the camera view the page covers (not too small, all edges in view).<br>
+            - <em>Rectangularity</em>: How straight and well‑aligned the detected corners/edges are (less skew is better).<br>
+            - <em>Stability</em>: Whether the detection is stable over the last frames (less shaking / fewer jumps).<br>
+            As a rule of thumb: ~70%+ is good, ~85%+ is very good. If you are below ~40%, adjust lighting, distance or
+            angle until the hints calm down and the score rises.
+        </li>
+        <li id="faq-score-improve"><strong>How can I improve the score?</strong><br>
+            - Use even, bright lighting; avoid glare and hard shadows (see tips above).<br>
+            - Hold the phone <em>parallel</em> to the page; try not to tilt it. Keep a small margin around the paper so all four
+              corners are visible.<br>
+            - If you are too close, focus may struggle and corners may be cut off — move a little further away and crop later.<br>
+            - Place the paper on a high‑contrast, matte background so edges are easier to detect.<br>
+            - Keep still for a moment so the detection can stabilize; rest your hands or elbows if possible.<br>
+            - Match orientation: for A4/Letter, portrait usually fits best; for wide receipts or cards, try landscape.
+        </li>
+        <li id="faq-portrait-vs-landscape"><strong>Should I hold the phone in portrait or landscape while capturing?</strong><br>
+            A4/Letter: portrait usually fits best. Very wide items (receipts, cards): try landscape. Guidance adapts to how you hold the phone.
+        </li>
+        <li id="faq-directional-hints-landscape"><strong>What do “left/right/up/down” mean if I hold the phone in landscape?</strong><br>
+            Hints refer to the phone’s physical sides. “Move left” = move the phone left; “Move up” = away from you — also in landscape. Frames are normalized so directions stay consistent.
+        </li>
+        <li id="faq-move-back"><strong>I keep hearing “Move back” all the time</strong><br>
+            The app suppresses distance prompts without a clear document and rate‑limits repeats. Improve light (use flashlight), include the whole page with a small margin, and hold still briefly.
+        </li>
+        <li id="faq-orientation-tip"><strong>Does the app suggest portrait vs. landscape?</strong><br>
+            In Accessibility Mode, a lightweight tip suggests portrait vs. landscape. It speaks only with enough confidence, after brief stability, and with a cooldown to stay calm.
+        </li>
+    </ul>
+
+    <h3 id="faq-library">Library & Collections</h3>
+    <ul>
+        <li><strong>Where do my scans go if they don’t appear under a collection?</strong><br>
+            If a scan (or page image) cannot be linked to a document/collection (e.g., older exports without a sidecar
+            manifest or files copied back to the phone), it is treated as <em>Unfiled</em>. The app groups such items in a
+            virtual “Unfiled” bucket instead of showing each raw page as a top‑level document. From there you can
+            create a new document from selected items or attach them to an existing document. When you export a
+            document with the current app version, a small manifest is written so future indexing can link pages
+            automatically.
         </li>
     </ul>
 
@@ -319,5 +395,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
     </pre>
+</main>
 </body>
 </html>

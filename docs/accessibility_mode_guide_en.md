@@ -97,6 +97,7 @@ Privacy and offline operation
 - No upload or sharing takes place in Accessibility Mode. No internet connection required.
 
 Frequently Asked Questions (FAQ)
+See also: Website FAQ → Scanning (Camera): docs/index.html#faq-scanning
 Q: I hear “Document detected” very often.
 A: The app already limits repetitions. Move the device slightly away and realign. When the detection is stable you’ll get a tone + vibration + announcement.
 
@@ -115,6 +116,26 @@ A: Yes. The normal camera preview remains visible. If "Preview corner detection"
 
 Q: Does Accessibility Mode work without TalkBack?
 A: Partly. Spoken output requires an active screen reader (e.g., TalkBack or Select‑to‑Speak). Without a screen reader, you still get tones and gentle haptics, but no speech.
+
+<a id="guide-en-directional-hints-landscape"></a>
+Q: What do “left/right/up/down” mean if I hold the phone in landscape?
+A: The directional hints refer to the physical sides as you hold the device, not to a fixed portrait UI. “Move left” means move the phone to your left; “Move up” means move it away from you (toward the top edge you are currently holding), even when the device is rotated. In other words, the guidance adapts to your current device orientation.
+
+<a id="guide-en-orientation-tip"></a>
+Q: Does the app suggest portrait vs. landscape?
+A: Accessibility Mode can suggest portrait vs. landscape. It speaks only when confident, after short stability, with a cooldown. Normal guidance stays the same.
+
+Q: What does the framing/quality score mean?
+A: While aligning the page, Accessibility Mode may announce a percentage score (0–100%). It’s a simple indicator of how good the current framing looks for scanning. It combines: (a) fill/area (page size in view), (b) rectangularity/skew (how straight the detected corners are), and (c) short‑term stability over the last frames. Rule of thumb: ~70%+ is good, ~85%+ is very good.
+
+Q: How can I improve the score?
+A: Use even, bright lighting and avoid glare; hold the phone parallel to the page; keep all four corners in view with a small margin; if you’re too close, step back a little and crop later; place the paper on a high‑contrast, matte background; keep still briefly so detection can stabilize; match orientation (A4/Letter: portrait usually fits best).
+
+Tip: A more detailed explanation with examples is available on the website: docs/index.html → FAQ → “Scanning (Camera)”.
+
+<a id="guide-en-move-back"></a>
+Q: I keep hearing “Move back” all the time.
+A: Distance prompts are suppressed without a plausible document and rate‑limited. Improve lighting, include the whole page, and hold still briefly.
 
 —
 

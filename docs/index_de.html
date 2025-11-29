@@ -4,6 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MakeACopy - Dokumentenscanner-App</title>
+    <!-- Canonical -->
+    <link rel="canonical" href="https://egdels.github.io/makeacopy/" />
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://egdels.github.io/makeacopy/" />
+    <meta property="og:title" content="MakeACopy – Datenschutzfreundlicher Dokumentenscanner" />
+    <meta property="og:description" content="Scannen. Speichern. Teilen. Leichter, datenschutzfreundlicher Dokumentenscanner mit OCR. 100% offline, Open Source, ohne Werbung." />
+    <meta property="og:image" content="https://egdels.github.io/makeacopy/og/makeacopy-1200x630.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="MakeACopy" />
+    <meta property="og:locale" content="de_DE" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:locale:alternate" content="fr_FR" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="MakeACopy – Datenschutzfreundlicher Dokumentenscanner" />
+    <meta name="twitter:description" content="Leichtgewichtiges OCR-Scannen, vollständig offline, Open Source und ohne Werbung." />
+    <meta name="twitter:image" content="https://egdels.github.io/makeacopy/og/makeacopy-1200x630.png" />
+    
+    <!-- Basic SEO -->
+    <meta name="description" content="MakeACopy ist ein leichter, datenschutzfreundlicher OCR-Dokumentenscanner für Android. Funktioniert komplett offline, ohne Werbung, Open Source." />
+    <meta name="robots" content="index,follow" />
+    <!-- Language alternates -->
+    <link rel="alternate" hreflang="en" href="https://egdels.github.io/makeacopy/index.html" />
+    <link rel="alternate" hreflang="de" href="https://egdels.github.io/makeacopy/index_de.html" />
+    <link rel="alternate" hreflang="fr" href="https://egdels.github.io/makeacopy/index_fr.html" />
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -20,11 +49,14 @@
             margin-top: 30px;
         }
         a {
-            color: #4A90E2;
-            text-decoration: none;
-        }
-        a:hover {
+            color: #0B63CE; /* higher contrast */
             text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+        a:hover,
+        a:focus-visible {
+            text-decoration-thickness: 2px;
+            text-underline-offset: 3px;
         }
         code {
             background-color: #f5f5f5;
@@ -40,20 +72,46 @@
         .nav-links {
             margin: 20px 0;
         }
+        :focus-visible {
+            outline: 3px solid #ffab00;
+            outline-offset: 2px;
+        }
+        .skip-link {
+            position: absolute;
+            left: -9999px;
+            top: auto;
+        }
+        .skip-link:focus {
+            left: 12px;
+            top: 12px;
+            z-index: 1000;
+            background: #000;
+            color: #fff;
+            padding: 8px 12px;
+        }
     </style>
 </head>
 <body>
+    <a class="skip-link" href="#main">Zum Hauptinhalt springen</a>
+    <nav class="nav-links" aria-label="Primary">
+        <a href="https://github.com/egdels/makeacopy/releases">APK herunterladen</a> | 
+        <a href="https://github.com/egdels/makeacopy">Auf GitHub ansehen</a> | 
+        <a href="index.html" hreflang="en">English</a> | 
+        <a href="index_fr.html" hreflang="fr">Français</a> | 
+        <a href="#faq">FAQ</a>
+    </nav>
+    <main id="main">
     <h1>MakeACopy</h1>
     
     <p>MakeACopy ist eine Open-Source-Dokumentenscanner-App für Android, mit der Sie Papierdokumente mit OCR-Funktionalität digitalisieren können. Die App ist datenschutzfreundlich konzipiert und arbeitet vollständig offline ohne Cloud-Anbindung oder Tracking.</p>
     
-    <div class="nav-links">
-        <a href="https://github.com/egdels/makeacopy/releases">APK herunterladen</a> | 
-        <a href="https://github.com/egdels/makeacopy">Auf GitHub ansehen</a> | 
-        <a href="index.html">English</a> | 
-        <a href="index_fr.html">Français</a> | 
-        <a href="#faq">FAQ</a>
-    </div>
+    <nav class="nav-links" aria-label="Language">
+        <ul>
+            <li style="display:inline; margin-right:8px;"><a href="index.html" hreflang="en">English</a></li>
+            <li style="display:inline; margin-right:8px;"><a href="index_de.html" hreflang="de" aria-current="page">Deutsch</a></li>
+            <li style="display:inline; margin-right:8px;"><a href="index_fr.html" hreflang="fr">Français</a></li>
+        </ul>
+    </nav>
     
     <div class="store-badges" style="margin: 10px 0;">
         <a href="https://f-droid.org/packages/de.schliweb.makeacopy/"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Hol es dir bei F-Droid" height="80"></a>
@@ -111,10 +169,10 @@
     <h2>Screenshots</h2>
     
     <p align="center">
-        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/1_en-US.png" alt="MakeACopy Screenshot 1" width="110" />
-        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/2_en-US.png" alt="MakeACopy Screenshot 2" width="110" />
-        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/3_en-US.png" alt="MakeACopy Screenshot 3" width="110" />
-        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/4_en-US.png" alt="MakeACopy Screenshot 4" width="110" />
+        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/1_en-US.png" alt="" role="presentation" width="110" />
+        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/2_en-US.png" alt="" role="presentation" width="110" />
+        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/3_en-US.png" alt="" role="presentation" width="110" />
+        <img src="https://raw.githubusercontent.com/egdels/makeacopy/main/fastlane/metadata/android/en-US/images/phoneScreenshots/4_en-US.png" alt="" role="presentation" width="110" />
     </p>
     
     <h2>Verwendung</h2>
@@ -190,7 +248,7 @@ appverifier verify MakeACopy-vX.Y.Z.apk
 
     <h2 id="faq">FAQ</h2>
 
-    <h3>Scannen (Kamera)</h3>
+    <h3 id="faq-scanning">Scannen (Kamera)</h3>
     <ul>
         <li><strong>Das Bild ist unscharf / Text schwer lesbar</strong><br>
             - Achte auf genügend Licht; vermeide schwaches, warmes Umgebungslicht. <br>
@@ -210,6 +268,34 @@ appverifier verify MakeACopy-vX.Y.Z.apk
         <li><strong>Verzerrte Perspektive</strong><br>
             - Fotografiere möglichst frontal und parallel zur Dokumentenfläche. 
         </li>
+        <li id="faq-score-meaning"><strong>Was bedeutet der Framing-/Qualitäts‑Score?</strong><br>
+            Der Accessibility‑Modus kann beim Ausrichten einen Prozentwert (0–100 %) ansagen. Er ist ein einfacher
+            Indikator dafür, wie „gut“ das aktuelle Framing zum Scannen aussieht. Er kombiniert drei Faktoren:<br>
+            - <em>Füllung</em>: Wie groß die Seite im Bild ist (nicht zu klein, Kanten sichtbar).<br>
+            - <em>Rechteckigkeit</em>: Wie gerade die erkannten Ecken/Kanten sind (weniger Schiefstand ist besser).<br>
+            - <em>Stabilität</em>: Ob die Erkennung über die letzten Frames ruhig bleibt.<br>
+            Faustregel: ~70 %+ ist gut, ~85 %+ ist sehr gut.
+        </li>
+        <li id="faq-score-improve"><strong>Wie kann ich den Score verbessern?</strong><br>
+            - Gleichmäßiges, helles Licht; Blendungen und harte Schatten vermeiden. <br>
+            - Telefon <em>parallel</em> zur Seite halten; nicht kippen. Kleinen Rand lassen, alle vier Ecken sichtbar. <br>
+            - Wenn du zu nah dran bist, etwas zurückgehen und später zuschneiden. <br>
+            - Papier auf matten, kontrastreichen Untergrund legen. <br>
+            - Kurz stillhalten, damit sich die Erkennung stabilisieren kann. <br>
+            - Orientierung passend wählen: A4/Letter → meist Hochformat; sehr breite Belege/Karten → Querformat.
+        </li>
+        <li id="faq-portrait-vs-landscape"><strong>Soll ich beim Aufnehmen im Hoch- oder Querformat halten?</strong><br>
+            A4/Letter: Hochformat passt meist am besten. Sehr breite Vorlagen (Belege, Karten): Querformat probieren. Die Hinweise passen sich deiner Haltung an.
+        </li>
+        <li id="faq-directional-hints-landscape"><strong>Was bedeuten „links/rechts/oben/unten“ im Querformat?</strong><br>
+            Die Hinweise beziehen sich auf die <em>physischen</em> Geräteseiten. „Nach links“ = Gerät nach links bewegen; „nach oben“ = von dir weg – auch im Querformat. Die Bildanalyse wird normalisiert, damit Richtungen konsistent bleiben.
+        </li>
+        <li id="faq-move-back"><strong>Ich höre ständig „Weiter weg/Move back“</strong><br>
+            Die App unterdrückt Distanz‑Hinweise ohne erkennbares Dokument und drosselt Wiederholungen. Beleuchtung verbessern (Taschenlampe bei Bedarf), ganze Seite mit kleinem Rand ins Bild nehmen, kurz ruhig halten.
+        </li>
+        <li id="faq-orientation-tip"><strong>Gibt es einen Tipp für Hoch‑/Querformat?</strong><br>
+            Im Accessibility‑Modus gibt ein leichter Orientierungstipp bei Bedarf eine Empfehlung. Er spricht nur bei ausreichender Konfidenz, nach kurzer Stabilität und mit Abklingzeit, um ruhig zu bleiben.
+        </li>
     </ul>
 
     <h3>Eckenerkennung (Randerkennung)</h3>
@@ -225,6 +311,18 @@ appverifier verify MakeACopy-vX.Y.Z.apk
         </li>
         <li><strong>Ergebnis ist schief oder abgeschnitten</strong><br>
             - Prüfe nach der automatischen Erkennung alle vier Punkte und korrigiere sie bei Bedarf manuell. <br>
+        </li>
+    </ul>
+
+    <h3 id="faq-bibliothek">Bibliothek & Sammlungen</h3>
+    <ul>
+        <li><strong>Wo landen meine Scans, wenn sie nicht unter einer Sammlung erscheinen?</strong><br>
+            Wenn ein Scan (oder eine Seiten‑Bilddatei) keiner Sammlung zugeordnet werden kann (z. B. ältere Exporte ohne
+            Sidecar‑Manifest oder zurückkopierte Dateien), wird er als <em>Unzugeordnet</em> behandelt. Die App bündelt solche
+            Elemente in einem virtuellen Bereich „Unzugeordnet“, anstatt jede Rohseite als eigenes Top‑Level‑Dokument zu
+            zeigen. Von dort kannst du neue Dokumente erstellen oder Seiten an bestehende Dokumente anhängen. Bei Exporten
+            mit der aktuellen App‑Version wird ein kleines Manifest geschrieben, damit künftige Indexläufe Seiten automatisch
+            verknüpfen können.
         </li>
     </ul>
 
@@ -294,5 +392,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
     </pre>
+</main>
 </body>
 </html>
