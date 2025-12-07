@@ -135,14 +135,23 @@ public class ScansLibraryFragment extends Fragment {
             collectionIdArg = getArguments().getString("collectionId");
             collectionNameArg = getArguments().getString("collectionName");
         }
-        // Show collection name as title when provided
-        if (titleCollection != null) {
-            if (collectionNameArg != null && !collectionNameArg.trim().isEmpty()) {
-                titleCollection.setText(collectionNameArg);
-                titleCollection.setVisibility(View.VISIBLE);
-            } else {
+        // If no collection specified, show all completed documents (no collection title)
+        if (collectionIdArg == null) {
+            if (titleCollection != null) {
                 titleCollection.setVisibility(View.GONE);
             }
+            loadDataAsync();
+        } else {
+            // Show collection name as title when provided
+            if (titleCollection != null) {
+                if (collectionNameArg != null && !collectionNameArg.trim().isEmpty()) {
+                    titleCollection.setText(collectionNameArg);
+                    titleCollection.setVisibility(View.VISIBLE);
+                } else {
+                    titleCollection.setVisibility(View.GONE);
+                }
+            }
+            loadDataAsync();
         }
         // When viewing a specific collection, enable long-press to remove an item from that collection
         if (collectionIdArg != null) {
@@ -208,19 +217,43 @@ public class ScansLibraryFragment extends Fragment {
             });
         }
 
-        loadDataAsync();
+        // loadDataAsync() already called above depending on collection presence
         return root;
     }
 
     private void loadDataAsync() {
         showLoading(true);
+        final android.content.Context appCtx = requireContext().getApplicationContext();
         new Thread(() -> {
             List<ScanEntity> data;
+            boolean showIndexBtnComputed = false;
             try {
                 if (collectionIdArg == null) {
-                    data = LibraryServiceLocator.getScansRepository(requireContext()).getAllScans(requireContext());
+                    data = LibraryServiceLocator.getScansRepository(appCtx).getAllScans(appCtx);
+                    // On home screen: hide single-page CompletedScanEntry items from the registry.
+                    // We detect these by a lightweight marker in sourceMetaJson: {"kind":"CompletedScanEntry"}
+                    if (data != null && !data.isEmpty()) {
+                        java.util.ArrayList<ScanEntity> filtered = new java.util.ArrayList<>(data.size());
+                        for (ScanEntity se : data) {
+                            if (se == null) continue;
+                            String sm = se.sourceMetaJson;
+                            // Keep if not explicitly marked as CompletedScanEntry
+                            if (sm == null || sm.isEmpty() || !sm.contains("\"CompletedScanEntry\"")) {
+                                filtered.add(se);
+                            }
+                        }
+                        data = filtered;
+                    }
+                    // On home (no collection), the index button should NOT be shown.
                 } else {
-                    data = LibraryServiceLocator.getScansRepository(requireContext()).getScansForCollection(requireContext(), collectionIdArg);
+                    data = LibraryServiceLocator.getScansRepository(appCtx).getScansForCollection(appCtx, collectionIdArg);
+                    // Only show the index button when viewing the default "Completed Scans" collection
+                    try {
+                        de.schliweb.makeacopy.data.library.CollectionsRepository cr = LibraryServiceLocator.getCollectionsRepository(appCtx);
+                        de.schliweb.makeacopy.data.library.CollectionEntity def = cr.getOrCreateDefaultCompletedCollection(appCtx);
+                        showIndexBtnComputed = (def != null && def.id != null && def.id.equals(collectionIdArg));
+                    } catch (Throwable ignore) {
+                    }
                 }
             } catch (Throwable t) {
                 data = java.util.Collections.emptyList();
@@ -229,11 +262,11 @@ public class ScansLibraryFragment extends Fragment {
             // Build memberships: scanId -> list of collection names
             final java.util.Map<String, java.util.List<String>> memberships = new java.util.LinkedHashMap<>();
             try {
-                de.schliweb.makeacopy.data.library.CollectionsRepository cr = LibraryServiceLocator.getCollectionsRepository(requireContext());
+                de.schliweb.makeacopy.data.library.CollectionsRepository cr = LibraryServiceLocator.getCollectionsRepository(appCtx);
                 if (finalData != null) {
                     for (ScanEntity se : finalData) {
                         if (se == null) continue;
-                        java.util.List<de.schliweb.makeacopy.data.library.CollectionEntity> cols = cr.getCollectionsForScan(requireContext(), se.id);
+                        java.util.List<de.schliweb.makeacopy.data.library.CollectionEntity> cols = cr.getCollectionsForScan(appCtx, se.id);
                         if (cols != null && !cols.isEmpty()) {
                             java.util.ArrayList<String> names = new java.util.ArrayList<>(cols.size());
                             for (de.schliweb.makeacopy.data.library.CollectionEntity c : cols) {
@@ -245,6 +278,7 @@ public class ScansLibraryFragment extends Fragment {
                 }
             } catch (Throwable ignore) {
             }
+            final boolean finalShowIndexBtn = (de.schliweb.makeacopy.utils.FeatureFlags.isScanLibraryEnable() && showIndexBtnComputed);
             if (!isAdded()) return;
             requireActivity().runOnUiThread(() -> {
                 adapter.setMemberships(memberships);
@@ -252,10 +286,8 @@ public class ScansLibraryFragment extends Fragment {
                 showLoading(false);
                 boolean isEmpty = (finalData == null || finalData.isEmpty());
                 emptyText.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
-                // Always offer incremental indexing when feature is enabled; safe to run repeatedly
-                boolean showIndexBtn = FeatureFlags.isScanLibraryEnable();
                 if (buttonIndexExistingIcon != null) {
-                    buttonIndexExistingIcon.setVisibility(showIndexBtn ? View.VISIBLE : View.GONE);
+                    buttonIndexExistingIcon.setVisibility(finalShowIndexBtn ? View.VISIBLE : View.GONE);
                 }
             });
         }).start();

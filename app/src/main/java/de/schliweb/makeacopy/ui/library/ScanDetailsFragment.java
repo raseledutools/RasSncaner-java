@@ -236,7 +236,19 @@ public class ScanDetailsFragment extends Fragment {
             } catch (Throwable t) {
                 cols = java.util.Collections.emptyList();
             }
-            final java.util.List<de.schliweb.makeacopy.data.library.CollectionEntity> finalCols = cols;
+            // Filter out the default "Completed Scans" collection when adding finished documents
+            java.util.List<de.schliweb.makeacopy.data.library.CollectionEntity> filtered = new java.util.ArrayList<>();
+            try {
+                String defName = appCtx.getString(de.schliweb.makeacopy.R.string.collection_completed_scans);
+                for (de.schliweb.makeacopy.data.library.CollectionEntity c : cols) {
+                    if (c == null) continue;
+                    if (defName != null && defName.equals(c.name)) continue; // exclude default
+                    filtered.add(c);
+                }
+            } catch (Throwable ignore) {
+                filtered = cols; // fallback
+            }
+            final java.util.List<de.schliweb.makeacopy.data.library.CollectionEntity> finalCols = filtered;
             if (!isAdded()) return;
             requireActivity().runOnUiThread(() -> {
                 try {
@@ -397,7 +409,25 @@ public class ScanDetailsFragment extends Fragment {
         }
 
         // Load a document preview between title/meta and the bottom action container
-        String source = (e.coverPath != null && !e.coverPath.isEmpty()) ? e.coverPath : firstUriFromJson(e.exportPathsJson);
+        // For CompletedScanEntry (single pages in the special collection), prioritize the original/export URI
+        // over the (low-res) cover/thumbnail to avoid blurry previews. For normal finished documents,
+        // keep the previous behavior: prefer coverPath for speed, then fall back to export URI.
+        String source;
+        boolean isCompletedScanEntry = false;
+        try {
+            String sm = e.sourceMetaJson;
+            isCompletedScanEntry = (sm != null && sm.contains("\"CompletedScanEntry\""));
+        } catch (Throwable ignore) {
+            isCompletedScanEntry = false;
+        }
+        if (isCompletedScanEntry) {
+            source = firstUriFromJson(e.exportPathsJson);
+            if (source == null || source.isEmpty()) {
+                source = e.coverPath; // fallback if no export/original available
+            }
+        } else {
+            source = (e.coverPath != null && !e.coverPath.isEmpty()) ? e.coverPath : firstUriFromJson(e.exportPathsJson);
+        }
         android.net.Uri primaryUri = getPrimaryExportUri();
         boolean showPdfPager = false;
         if (primaryUri != null) {
