@@ -89,7 +89,7 @@
 
     <!-- Multipage Export -->
     <string name="pages_header">Stránky (%1$d)</string>
-    <string name="add_another_page">Přidat</string>
+    <string name="add_another_page">Přidat stránku</string>
     <string name="clear_all_pages">Vymazat vše</string>
     <string name="remove_this_page">Odebrat tuto stránku</string>
     <string name="multipage_not_implemented">Vícestránkový export zatím není implementován</string>
@@ -110,6 +110,8 @@
     <!-- Registry Picker -->
     <string name="picker_title_completed_scans">Vyberte z dokončených skenů</string>
     <string name="picker_empty">Nebyly nalezeny žádné dokončené skeny</string>
+    <!-- Library default collection -->
+    <string name="collection_completed_scans">Dokončené skeny</string>
     <string name="done">Další</string>
     <string name="thumbnail">Náhled</string>
     <string name="delete">Smazat</string>
@@ -148,7 +150,8 @@
     <string name="jpeg_enhancement_title">Vylepšení JPEG</string>
     <string name="btn_options">Možnosti</string>
     <string name="btn_save">Uložit</string>
-    <string name="btn_new">Nový</string>
+    <string name="btn_new">Nové skenování</string>
+
     <string name="btn_review">Kontrola</string>
     <string name="edit_word_title">Upravit slovo</string>
     <string name="review_summary_format">Slova: %1$d  •  Nízká spolehlivost: %2$d</string>
@@ -313,8 +316,8 @@
     <string name="a11y_hint_move_right">Posuňte doprava</string>
     <string name="a11y_hint_move_up">Posuňte nahoru</string>
     <string name="a11y_hint_move_down">Posuňte dolů</string>
-    <string name="a11y_hint_move_closer">Přibližte</string>
-    <string name="a11y_hint_move_back">Vraťte se zpět</string>
+    <string name="a11y_hint_move_closer">Blíže k povrchu</string>
+    <string name="a11y_hint_move_back">Dále od povrchu</string>
     <string name="a11y_hint_tilt_left">Nakloňte doleva</string>
     <string name="a11y_hint_tilt_right">Nakloňte doprava</string>
     <string name="a11y_hint_tilt_forward">Nakloňte dopředu</string>

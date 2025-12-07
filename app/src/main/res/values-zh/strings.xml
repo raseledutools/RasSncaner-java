@@ -90,7 +90,8 @@
 
     <!-- Multipage Export (v1 increment) -->
     <string name="pages_header">页面（%1$d）</string>
-    <string name="add_another_page">添加</string>
+    <string name="add_another_page">添加页面</string>
+
     <string name="clear_all_pages">全部清除</string>
     <string name="remove_this_page">移除此页</string>
     <string name="multipage_not_implemented">尚未实现多页导出</string>
@@ -112,6 +113,8 @@
     <!-- Registry Picker -->
     <string name="picker_title_completed_scans">从已完成的扫描中选择</string>
     <string name="picker_empty">未找到已完成的扫描</string>
+    <!-- Library default collection -->
+    <string name="collection_completed_scans">已完成的扫描</string>
     <string name="done">下一步</string>
     <string name="thumbnail">缩略图</string>
     <string name="delete">删除</string>
@@ -150,7 +153,7 @@
     <string name="jpeg_enhancement_title">JPEG 增强</string>
     <string name="btn_options">选项</string>
     <string name="btn_save">保存</string>
-    <string name="btn_new">新建</string>
+    <string name="btn_new">新扫描</string>
     <string name="btn_review">检查</string>
     <string name="edit_word_title">编辑单词</string>
     <string name="review_summary_format">词语: %1$d  •  低置信度: %2$d</string>
@@ -315,8 +318,8 @@
     <string name="a11y_hint_move_right">向右移动</string>
     <string name="a11y_hint_move_up">向上移动</string>
     <string name="a11y_hint_move_down">向下移动</string>
-    <string name="a11y_hint_move_closer">靠近一点</string>
-    <string name="a11y_hint_move_back">后退一点</string>
+    <string name="a11y_hint_move_closer">更靠近表面</string>
+    <string name="a11y_hint_move_back">远离表面</string>
     <string name="a11y_hint_tilt_left">向左倾斜</string>
     <string name="a11y_hint_tilt_right">向右倾斜</string>
     <string name="a11y_hint_tilt_forward">向前倾斜</string>

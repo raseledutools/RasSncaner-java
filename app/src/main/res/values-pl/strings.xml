@@ -90,7 +90,7 @@
 
     <!-- Eksport wielostronicowy -->
     <string name="pages_header">Strony (%1$d)</string>
-    <string name="add_another_page">Dodaj</string>
+    <string name="add_another_page">Dodaj stronę</string>
     <string name="clear_all_pages">Wyczyść wszystko</string>
     <string name="remove_this_page">Usuń tę stronę</string>
     <string name="multipage_not_implemented">Eksport wielostronicowy nie jest jeszcze dostępny</string>
@@ -111,6 +111,8 @@
     <!-- Rejestr zeskanowanych -->
     <string name="picker_title_completed_scans">Wybierz z ukończonych skanów</string>
     <string name="picker_empty">Brak ukończonych skanów</string>
+    <!-- Library default collection -->
+    <string name="collection_completed_scans">Zakończone skany</string>
     <string name="done">Dalej</string>
     <string name="thumbnail">Miniatura</string>
     <string name="delete">Usuń</string>
@@ -149,7 +151,7 @@
     <string name="jpeg_enhancement_title">Ulepszenie JPEG</string>
     <string name="btn_options">Opcje</string>
     <string name="btn_save">Zapisz</string>
-    <string name="btn_new">Nowy</string>
+    <string name="btn_new">Nowe skanowanie</string>
     <string name="btn_review">Przegląd</string>
     <string name="edit_word_title">Edytuj słowo</string>
     <string name="review_summary_format">Słowa: %1$d  •  Niska pewność: %2$d</string>
@@ -314,8 +316,8 @@
     <string name="a11y_hint_move_right">Przesuń w prawo</string>
     <string name="a11y_hint_move_up">Przesuń w górę</string>
     <string name="a11y_hint_move_down">Przesuń w dół</string>
-    <string name="a11y_hint_move_closer">Zbliż się</string>
-    <string name="a11y_hint_move_back">Oddal się</string>
+    <string name="a11y_hint_move_closer">Bliżej powierzchni</string>
+    <string name="a11y_hint_move_back">Dalej od powierzchni</string>
     <string name="a11y_hint_tilt_left">Przechyl w lewo</string>
     <string name="a11y_hint_tilt_right">Przechyl w prawo</string>
     <string name="a11y_hint_tilt_forward">Przechyl do przodu</string>

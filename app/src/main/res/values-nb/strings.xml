@@ -91,7 +91,7 @@
 
     <!-- Multipage Export -->
     <string name="pages_header">Sider (%1$d)</string>
-    <string name="add_another_page">Legg til</string>
+    <string name="add_another_page">Legg til side</string>
     <string name="clear_all_pages">Fjern alle</string>
     <string name="remove_this_page">Fjern denne siden</string>
     <string name="multipage_not_implemented">Flersidig eksport er ikke implementert ennå</string>
@@ -112,6 +112,8 @@
     <!-- Registry Picker -->
     <string name="picker_title_completed_scans">Velg fra fullførte skanninger</string>
     <string name="picker_empty">Ingen fullførte skanninger funnet</string>
+    <!-- Library default collection -->
+    <string name="collection_completed_scans">Fullførte skanninger</string>
     <string name="done">Neste</string>
     <string name="thumbnail">Miniatyrbilde</string>
     <string name="delete">Slett</string>
@@ -150,7 +152,8 @@
     <string name="jpeg_enhancement_title">JPEG-forbedring</string>
     <string name="btn_options">Alternativer</string>
     <string name="btn_save">Lagre</string>
-    <string name="btn_new">Ny</string>
+    <string name="btn_new">Ny skanning</string>
+
     <string name="btn_review">Gjennomgå</string>
     <string name="edit_word_title">Rediger ord</string>
     <string name="review_summary_format">Ord: %1$d  •  Lav tillit: %2$d</string>
@@ -315,8 +318,8 @@
     <string name="a11y_hint_move_right">Flytt til høyre</string>
     <string name="a11y_hint_move_up">Flytt opp</string>
     <string name="a11y_hint_move_down">Flytt ned</string>
-    <string name="a11y_hint_move_closer">Gå nærmere</string>
-    <string name="a11y_hint_move_back">Gå lenger tilbake</string>
+    <string name="a11y_hint_move_closer">Nærmere overflaten</string>
+    <string name="a11y_hint_move_back">Lenger bort fra overflaten</string>
     <string name="a11y_hint_tilt_left">Vipp til venstre</string>
     <string name="a11y_hint_tilt_right">Vipp til høyre</string>
     <string name="a11y_hint_tilt_forward">Vipp fremover</string>

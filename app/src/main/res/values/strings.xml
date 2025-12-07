@@ -89,7 +89,7 @@
     
     <!-- Multipage Export (v1 increment) -->
     <string name="pages_header">Pages (%1$d)</string>
-    <string name="add_another_page">Add</string>
+    <string name="add_another_page">Add page</string>
     <string name="clear_all_pages">Clear all</string>
     <string name="remove_this_page">Remove this page</string>
     <string name="multipage_not_implemented">Multi-page export not implemented yet</string>
@@ -110,6 +110,8 @@
     <!-- Registry Picker -->
     <string name="picker_title_completed_scans">Choose from completed scans</string>
     <string name="picker_empty">No completed scans found</string>
+    <!-- Library default collection -->
+    <string name="collection_completed_scans">Completed Scans</string>
     <string name="done">Next</string>
     <string name="thumbnail">Thumbnail</string>
     <string name="delete">Delete</string>
@@ -147,7 +149,7 @@
     <string name="jpeg_enhancement_title">JPEG enhancement</string>
     <string name="btn_options">Options</string>
     <string name="btn_save">Save</string>
-    <string name="btn_new">New</string>
+    <string name="btn_new">New scan</string>
     <string name="btn_review">Review</string>
     <string name="edit_word_title">Edit word</string>
     <string name="review_summary_format">Words: %1$d  •  Low confidence: %2$d</string>
@@ -313,8 +315,8 @@
     <string name="a11y_hint_move_right">Move right</string>
     <string name="a11y_hint_move_up">Move up</string>
     <string name="a11y_hint_move_down">Move down</string>
-    <string name="a11y_hint_move_closer">Move closer</string>
-    <string name="a11y_hint_move_back">Move back</string>
+    <string name="a11y_hint_move_closer">Closer to the surface</string>
+    <string name="a11y_hint_move_back">Further from the surface</string>
     <string name="a11y_hint_tilt_left">Tilt left</string>
     <string name="a11y_hint_tilt_right">Tilt right</string>
     <string name="a11y_hint_tilt_forward">Tilt forward</string>

@@ -90,7 +90,8 @@
 
     <!-- Multipage Export (v1 increment) -->
     <string name="pages_header">Страницы (%1$d)</string>
-    <string name="add_another_page">Добавить</string>
+    <string name="add_another_page">Добавить страницу</string>
+
     <string name="clear_all_pages">Очистить все</string>
     <string name="remove_this_page">Удалить эту страницу</string>
     <string name="multipage_not_implemented">Многостраничный экспорт ещё не реализован</string>
@@ -112,6 +113,8 @@
     <string name="picker_title_completed_scans">Выберите из завершённых сканов</string>
     <string name="picker_empty">Завершённые сканы не найдены</string>
     <string name="done">Далее</string>
+    <!-- Library default collection -->
+    <string name="collection_completed_scans">Завершённые сканы</string>
     <string name="thumbnail">Миниатюра</string>
     <string name="delete">Удалить</string>
 
@@ -149,7 +152,7 @@
     <string name="jpeg_enhancement_title">Улучшение JPEG</string>
     <string name="btn_options">Параметры</string>
     <string name="btn_save">Сохранить</string>
-    <string name="btn_new">Новый</string>
+    <string name="btn_new">Новое сканирование</string>
     <string name="btn_review">Проверить</string>
     <string name="edit_word_title">Редактировать слово</string>
     <string name="review_summary_format">Слова: %1$d  •  Низкая уверенность: %2$d</string>
@@ -314,8 +317,8 @@
     <string name="a11y_hint_move_right">Сместитесь вправо</string>
     <string name="a11y_hint_move_up">Сместитесь вверх</string>
     <string name="a11y_hint_move_down">Сместитесь вниз</string>
-    <string name="a11y_hint_move_closer">Приблизьтесь</string>
-    <string name="a11y_hint_move_back">Отойдите назад</string>
+    <string name="a11y_hint_move_closer">Ближе к поверхности</string>
+    <string name="a11y_hint_move_back">Дальше от поверхности</string>
     <string name="a11y_hint_tilt_left">Наклоните влево</string>
     <string name="a11y_hint_tilt_right">Наклоните вправо</string>
     <string name="a11y_hint_tilt_forward">Наклоните вперёд</string>

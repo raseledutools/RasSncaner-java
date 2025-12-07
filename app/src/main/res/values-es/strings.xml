@@ -91,7 +91,7 @@
     
     <!-- Multipage Export (v1 increment) -->
     <string name="pages_header">Páginas (%1$d)</string>
-    <string name="add_another_page">Añadir</string>
+    <string name="add_another_page">Agregar página</string>
     <string name="clear_all_pages">Eliminar todas</string>
     <string name="remove_this_page">Eliminar esta página</string>
     <string name="multipage_not_implemented">Exportación de varias páginas aún no implementada</string>
@@ -112,6 +112,8 @@
     <!-- Registry Picker -->
     <string name="picker_title_completed_scans">Elegir de escaneos completados</string>
     <string name="picker_empty">No se encontraron escaneos completados</string>
+    <!-- Library default collection -->
+    <string name="collection_completed_scans">Escaneos completados</string>
     <string name="done">Siguiente</string>
     <string name="thumbnail">Miniatura</string>
     <string name="delete">Eliminar</string>
@@ -149,7 +151,8 @@
     <string name="jpeg_enhancement_title">Mejora de JPEG</string>
     <string name="btn_options">Opciones</string>
     <string name="btn_save">Guardar</string>
-    <string name="btn_new">Nuevo</string>
+    <string name="btn_new">Nuevo escaneo</string>
+
     <string name="btn_review">Revisar</string>
     <string name="edit_word_title">Editar palabra</string>
     <string name="review_summary_format">Palabras: %1$d  •  Baja confianza: %2$d</string>
@@ -314,8 +317,8 @@
     <string name="a11y_hint_move_right">Muévete a la derecha</string>
     <string name="a11y_hint_move_up">Muévete hacia arriba</string>
     <string name="a11y_hint_move_down">Muévete hacia abajo</string>
-    <string name="a11y_hint_move_closer">Acércate</string>
-    <string name="a11y_hint_move_back">Aléjate</string>
+    <string name="a11y_hint_move_closer">Más cerca de la superficie</string>
+    <string name="a11y_hint_move_back">Más lejos de la superficie</string>
     <string name="a11y_hint_tilt_left">Inclina a la izquierda</string>
     <string name="a11y_hint_tilt_right">Inclina a la derecha</string>
     <string name="a11y_hint_tilt_forward">Inclina hacia adelante</string>

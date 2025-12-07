@@ -90,7 +90,8 @@
 
     <!-- Multipage Export -->
     <string name="pages_header">Stránky (%1$d)</string>
-    <string name="add_another_page">Pridať</string>
+    <string name="add_another_page">Pridať stránku</string>
+
     <string name="clear_all_pages">Vymazať všetko</string>
     <string name="remove_this_page">Odstrániť túto stránku</string>
     <string name="multipage_not_implemented">Viacstránkový export zatiaľ nie je implementovaný</string>
@@ -111,6 +112,8 @@
     <!-- Registry Picker -->
     <string name="picker_title_completed_scans">Vyberte z dokončených skenov</string>
     <string name="picker_empty">Neboli nájdené žiadne dokončené skeny</string>
+    <!-- Library default collection -->
+    <string name="collection_completed_scans">Dokončené skeny</string>
     <string name="done">Ďalej</string>
     <string name="thumbnail">Miniatúra</string>
     <string name="delete">Odstrániť</string>
@@ -149,7 +152,7 @@
     <string name="jpeg_enhancement_title">Vylepšenie JPEG</string>
     <string name="btn_options">Možnosti</string>
     <string name="btn_save">Uložiť</string>
-    <string name="btn_new">Nový</string>
+    <string name="btn_new">Nové skenovanie</string>
     <string name="btn_review">Kontrola</string>
     <string name="edit_word_title">Upraviť slovo</string>
     <string name="review_summary_format">Slová: %1$d  •  Nízka spoľahlivosť: %2$d</string>
@@ -314,8 +317,8 @@
     <string name="a11y_hint_move_right">Posuňte doprava</string>
     <string name="a11y_hint_move_up">Posuňte nahor</string>
     <string name="a11y_hint_move_down">Posuňte nadol</string>
-    <string name="a11y_hint_move_closer">Priblížte sa</string>
-    <string name="a11y_hint_move_back">Ustúpte späť</string>
+    <string name="a11y_hint_move_closer">Bližšie k povrchu</string>
+    <string name="a11y_hint_move_back">Ďalej od povrchu</string>
     <string name="a11y_hint_tilt_left">Nakloňte doľava</string>
     <string name="a11y_hint_tilt_right">Nakloňte doprava</string>
     <string name="a11y_hint_tilt_forward">Nakloňte dopredu</string>

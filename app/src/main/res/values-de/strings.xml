@@ -89,7 +89,7 @@
     
     <!-- Mehrseiten-Export (v1 Inkrement) -->
     <string name="pages_header">Seiten (%1$d)</string>
-    <string name="add_another_page">Hinzufügen</string>
+    <string name="add_another_page">Seite hinzufügen</string>
     <string name="clear_all_pages">Alle entfernen</string>
     <string name="remove_this_page">Diese Seite entfernen</string>
     <string name="multipage_not_implemented">Mehrseiten-Export noch nicht implementiert</string>
@@ -109,6 +109,8 @@
     
     <!-- Registry Picker -->
     <string name="picker_title_completed_scans">Aus fertigen Scans wählen</string>
+    <!-- Standard-Collection in der Bibliothek -->
+    <string name="collection_completed_scans">Abgeschlossene Scans</string>
     <string name="picker_empty">Keine fertigen Scans gefunden</string>
     <string name="done">Weiter</string>
     <string name="thumbnail">Miniaturansicht</string>
@@ -147,7 +149,7 @@
     <string name="jpeg_enhancement_title">JPEG-Verbesserung</string>
     <string name="btn_options">Optionen</string>
     <string name="btn_save">Speichern</string>
-    <string name="btn_new">Neu</string>
+    <string name="btn_new">Neuer Scan</string>
     <string name="btn_review">Überprüfen</string>
     <string name="edit_word_title">Wort bearbeiten</string>
     <string name="review_summary_format">Wörter: %1$d  •  Geringe Erkennungssicherheit: %2$d</string>
@@ -314,8 +316,8 @@
     <string name="a11y_hint_move_right">Nach rechts bewegen</string>
     <string name="a11y_hint_move_up">Nach oben bewegen</string>
     <string name="a11y_hint_move_down">Nach unten bewegen</string>
-    <string name="a11y_hint_move_closer">Näher heran</string>
-    <string name="a11y_hint_move_back">Weiter zurück</string>
+    <string name="a11y_hint_move_closer">Näher an die Oberfläche</string>
+    <string name="a11y_hint_move_back">Weiter weg von der Oberfläche</string>
     <string name="a11y_hint_tilt_left">Nach links kippen</string>
     <string name="a11y_hint_tilt_right">Nach rechts kippen</string>
     <string name="a11y_hint_tilt_forward">Nach vorne kippen</string>

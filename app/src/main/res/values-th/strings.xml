@@ -90,7 +90,8 @@
 
     <!-- Multipage Export (v1 increment) -->
     <string name="pages_header">หน้า (%1$d)</string>
-    <string name="add_another_page">เพิ่ม</string>
+    <string name="add_another_page">เพิ่มหน้า</string>
+
     <string name="clear_all_pages">ล้างทั้งหมด</string>
     <string name="remove_this_page">ลบหน้านี้</string>
     <string name="multipage_not_implemented">ยังไม่รองรับการส่งออกหลายหน้า</string>
@@ -111,6 +112,8 @@
     <!-- Registry Picker -->
     <string name="picker_title_completed_scans">เลือกจากการสแกนที่เสร็จแล้ว</string>
     <string name="picker_empty">ไม่พบการสแกนที่เสร็จแล้ว</string>
+    <!-- Library default collection -->
+    <string name="collection_completed_scans">การสแกนที่เสร็จสมบูรณ์</string>
     <string name="done">ถัดไป</string>
     <string name="thumbnail">ภาพขนาดย่อ</string>
     <string name="delete">ลบ</string>
@@ -149,7 +152,8 @@
     <string name="jpeg_enhancement_title">การปรับปรุง JPEG</string>
     <string name="btn_options">ตัวเลือก</string>
     <string name="btn_save">บันทึก</string>
-    <string name="btn_new">ใหม่</string>
+    <string name="btn_new">สแกนใหม่</string>
+
     <string name="btn_review">ตรวจทาน</string>
     <string name="edit_word_title">แก้ไขคำ</string>
     <string name="review_summary_format">คำ: %1$d  •  ความมั่นใจต่ำ: %2$d</string>
@@ -315,8 +319,8 @@
     <string name="a11y_hint_move_right">ขยับไปทางขวา</string>
     <string name="a11y_hint_move_up">ขยับขึ้น</string>
     <string name="a11y_hint_move_down">ขยับลง</string>
-    <string name="a11y_hint_move_closer">เข้าไปใกล้ขึ้น</string>
-    <string name="a11y_hint_move_back">ถอยออกไป</string>
+    <string name="a11y_hint_move_closer">เข้าใกล้พื้นผิวมากขึ้น</string>
+    <string name="a11y_hint_move_back">ถอยห่างจากพื้นผิวมากขึ้น</string>
     <string name="a11y_hint_tilt_left">เอียงไปทางซ้าย</string>
     <string name="a11y_hint_tilt_right">เอียงไปทางขวา</string>
     <string name="a11y_hint_tilt_forward">เอียงไปด้านหน้า</string>

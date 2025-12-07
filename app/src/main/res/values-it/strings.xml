@@ -90,7 +90,7 @@
     
     <!-- Multipage Export (v1 increment) -->
     <string name="pages_header">Pagine (%1$d)</string>
-    <string name="add_another_page">Aggiungi</string>
+    <string name="add_another_page">Aggiungi pagina</string>
     <string name="clear_all_pages">Cancella tutto</string>
     <string name="remove_this_page">Rimuovi questa pagina</string>
     <string name="multipage_not_implemented">Esportazione multipagina non ancora implementata</string>
@@ -111,6 +111,8 @@
     <!-- Registry Picker -->
     <string name="picker_title_completed_scans">Scegli dalle scansioni completate</string>
     <string name="picker_empty">Nessuna scansione completata trovata</string>
+    <!-- Library default collection -->
+    <string name="collection_completed_scans">Scansioni completate</string>
     <string name="done">Avanti</string>
     <string name="thumbnail">Miniatura</string>
     <string name="delete">Elimina</string>
@@ -148,7 +150,7 @@
     <string name="jpeg_enhancement_title">Miglioramento JPEG</string>
     <string name="btn_options">Opzioni</string>
     <string name="btn_save">Salva</string>
-    <string name="btn_new">Nuovo</string>
+    <string name="btn_new">Nuova scansione</string>
     <string name="btn_review">Verifica</string>
     <string name="edit_word_title">Modifica parola</string>
     <string name="review_summary_format">Parole: %1$d  •  Bassa affidabilità: %2$d</string>
@@ -313,8 +315,8 @@
     <string name="a11y_hint_move_right">Spostati a destra</string>
     <string name="a11y_hint_move_up">Spostati verso l’alto</string>
     <string name="a11y_hint_move_down">Spostati verso il basso</string>
-    <string name="a11y_hint_move_closer">Avvicinati</string>
-    <string name="a11y_hint_move_back">Allontanati</string>
+    <string name="a11y_hint_move_closer">Più vicino alla superficie</string>
+    <string name="a11y_hint_move_back">Più lontano dalla superficie</string>
     <string name="a11y_hint_tilt_left">Inclina a sinistra</string>
     <string name="a11y_hint_tilt_right">Inclina a destra</string>
     <string name="a11y_hint_tilt_forward">Inclina in avanti</string>

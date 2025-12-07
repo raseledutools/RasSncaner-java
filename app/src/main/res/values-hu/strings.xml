@@ -90,7 +90,7 @@
 
     <!-- Multipage Export -->
     <string name="pages_header">Oldalak (%1$d)</string>
-    <string name="add_another_page">Hozzáadás</string>
+    <string name="add_another_page">Oldal hozzáadása</string>
     <string name="clear_all_pages">Összes törlése</string>
     <string name="remove_this_page">Oldal eltávolítása</string>
     <string name="multipage_not_implemented">Többoldalas exportálás még nem elérhető</string>
@@ -111,6 +111,8 @@
     <!-- Registry Picker -->
     <string name="picker_title_completed_scans">Válasszon a befejezett szkennelések közül</string>
     <string name="picker_empty">Nincs befejezett szkennelés</string>
+    <!-- Library default collection -->
+    <string name="collection_completed_scans">Befejezett szkennelések</string>
     <string name="done">Tovább</string>
     <string name="thumbnail">Előnézet</string>
     <string name="delete">Törlés</string>
@@ -149,7 +151,8 @@
     <string name="jpeg_enhancement_title">JPEG javítás</string>
     <string name="btn_options">Beállítások</string>
     <string name="btn_save">Mentés</string>
-    <string name="btn_new">Új</string>
+    <string name="btn_new">Új szkennelés</string>
+
     <string name="btn_review">Ellenőrzés</string>
     <string name="edit_word_title">Szó szerkesztése</string>
     <string name="review_summary_format">Szavak: %1$d  •  Alacsony bizalom: %2$d</string>
@@ -314,8 +317,8 @@
     <string name="a11y_hint_move_right">Mozduljon jobbra</string>
     <string name="a11y_hint_move_up">Mozduljon felfelé</string>
     <string name="a11y_hint_move_down">Mozduljon lefelé</string>
-    <string name="a11y_hint_move_closer">Menjen közelebb</string>
-    <string name="a11y_hint_move_back">Menjen hátrébb</string>
+    <string name="a11y_hint_move_closer">Közelebb a felülethez</string>
+    <string name="a11y_hint_move_back">Távolabb a felülettől</string>
     <string name="a11y_hint_tilt_left">Döntse balra</string>
     <string name="a11y_hint_tilt_right">Döntse jobbra</string>
     <string name="a11y_hint_tilt_forward">Döntse előre</string>

@@ -90,7 +90,8 @@
 
     <!-- Multipage Export -->
     <string name="pages_header">Pagini (%1$d)</string>
-    <string name="add_another_page">Adaugă</string>
+    <string name="add_another_page">Adaugă pagină</string>
+
     <string name="clear_all_pages">Șterge tot</string>
     <string name="remove_this_page">Elimină această pagină</string>
     <string name="multipage_not_implemented">Exportul multipagină nu este încă implementat</string>
@@ -111,6 +112,8 @@
     <!-- Registry Picker -->
     <string name="picker_title_completed_scans">Alege din scanările finalizate</string>
     <string name="picker_empty">Nu au fost găsite scanări finalizate</string>
+    <!-- Library default collection -->
+    <string name="collection_completed_scans">Digitalizações concluídas</string>
     <string name="done">Următor</string>
     <string name="thumbnail">Miniatură</string>
     <string name="delete">Șterge</string>
@@ -149,7 +152,8 @@
     <string name="jpeg_enhancement_title">Îmbunătățire JPEG</string>
     <string name="btn_options">Opțiuni</string>
     <string name="btn_save">Salvează</string>
-    <string name="btn_new">Nou</string>
+    <string name="btn_new">Scanare nouă</string>
+
     <string name="btn_review">Revizuire</string>
     <string name="edit_word_title">Editează cuvântul</string>
     <string name="review_summary_format">Cuvinte: %1$d  •  Încredere scăzută: %2$d</string>
@@ -314,8 +318,8 @@
     <string name="a11y_hint_move_right">Mutați spre dreapta</string>
     <string name="a11y_hint_move_up">Mutați în sus</string>
     <string name="a11y_hint_move_down">Mutați în jos</string>
-    <string name="a11y_hint_move_closer">Apropiați-vă</string>
-    <string name="a11y_hint_move_back">Îndepărtați-vă</string>
+    <string name="a11y_hint_move_closer">Mai aproape de suprafață</string>
+    <string name="a11y_hint_move_back">Mai departe de suprafață</string>
     <string name="a11y_hint_tilt_left">Înclinați spre stânga</string>
     <string name="a11y_hint_tilt_right">Înclinați spre dreapta</string>
     <string name="a11y_hint_tilt_forward">Înclinați în față</string>
