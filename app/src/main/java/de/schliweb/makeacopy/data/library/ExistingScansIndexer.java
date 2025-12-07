@@ -16,6 +16,9 @@ public final class ExistingScansIndexer {
     private static final String TAG = "ExistingScansIndexer";
     private static final String PREFS = "scan_library";
     private static final String KEY_DONE = "existing_index_done";
+    // Marker used in ScanEntity.sourceMetaJson to denote a single-page registry entry
+    // that should not appear on the Library home screen (only in the Completed Scans collection).
+    private static final String META_COMPLETED_SCAN_ENTRY = "{\"kind\":\"CompletedScanEntry\"}";
 
     private ExistingScansIndexer() {
     }
@@ -88,6 +91,25 @@ public final class ExistingScansIndexer {
                             }
                         } catch (Throwable ignoreRepair2) {
                         }
+                        // Ensure sourceMetaJson marks this as a CompletedScanEntry for UI filtering
+                        try {
+                            String sm = existing.sourceMetaJson;
+                            if (sm == null || sm.isEmpty() || !sm.contains("\"CompletedScanEntry\"")) {
+                                // Use indexExportedScan to update only sourceMetaJson, leaving other fields intact
+                                ScanIndexMeta patchMeta = new ScanIndexMeta(id, null, 0L, 0, null, null, META_COMPLETED_SCAN_ENTRY);
+                                repo.indexExportedScan(app, patchMeta);
+                            }
+                        } catch (Throwable ignoreMark) {
+                        }
+                        // Ensure membership in default collection
+                        try {
+                            CollectionsRepository cr = LibraryServiceLocator.getCollectionsRepository(app);
+                            CollectionEntity def = cr.getOrCreateDefaultCompletedCollection(app);
+                            if (def != null) {
+                                cr.assignScanToCollection(app, id, def.id);
+                            }
+                        } catch (Throwable ignoreMembership) {
+                        }
                         continue;
                     }
                 } catch (Throwable ignore) {
@@ -97,9 +119,18 @@ public final class ExistingScansIndexer {
                 int pages = 1; // Registry tracks single pages; multi-page support may extend this later
                 String cover = s.thumbPath();
                 String exportJson = makeSingleFileUriJson(safeFilePath(s));
-                String metaJson = null; // keep null for MVP
+                String metaJson = META_COMPLETED_SCAN_ENTRY; // mark registry single-page entries
                 ScanIndexMeta meta = new ScanIndexMeta(id, title, created, pages, cover, exportJson, metaJson);
                 repo.indexExportedScan(app, meta);
+                // Assign to default collection
+                try {
+                    CollectionsRepository cr = LibraryServiceLocator.getCollectionsRepository(app);
+                    CollectionEntity def = cr.getOrCreateDefaultCompletedCollection(app);
+                    if (def != null) {
+                        cr.assignScanToCollection(app, id, def.id);
+                    }
+                } catch (Throwable ignoreAssign) {
+                }
                 newCount++;
             }
             return newCount;
