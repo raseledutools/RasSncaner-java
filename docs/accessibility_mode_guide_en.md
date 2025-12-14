@@ -119,14 +119,28 @@ A: Partly. Spoken output requires an active screen reader (e.g., TalkBack or Sel
 
 <a id="guide-en-directional-hints-landscape"></a>
 Q: What do “left/right/up/down” mean if I hold the phone in landscape?
-A: The directional hints refer to the physical sides as you hold the device, not to a fixed portrait UI. “Move left” means move the phone to your left; “Move up” means move it away from you (toward the top edge you are currently holding), even when the device is rotated. In other words, the guidance adapts to your current device orientation.
+A: Note about holding the phone (landscape): the camera screen stays in portrait orientation. The directional hints (“left/right/up/down”) refer to the upright-aligned preview.
+
+If you hold the phone sideways, depending on your device/Android version,
+- the hints may still behave like in portrait (because the UI does not switch to landscape), or
+- the internal analysis axes may follow the display’s rotation.
+
+If “left/right/up/down” feels confusing, return to portrait or rotate the phone by 180° and check whether the hints make more sense.
 
 <a id="guide-en-orientation-tip"></a>
 Q: Does the app suggest portrait vs. landscape?
-A: Accessibility Mode can suggest portrait vs. landscape. It speaks only when confident, after short stability, with a cooldown. Normal guidance stays the same.
+A: Yes. In Accessibility Mode, the app can suggest whether portrait or landscape seems more appropriate for the current page.
+
+The tip is only given when
+- the estimate is sufficiently confident (confidence ≥ 0.30), and
+- no plausible document is currently detected (so it does not override the normal guidance).
+
+To stay calm, the tip goes through the same guidance logic as other announcements (brief stability over multiple frames) and is rate-limited. You may hear, for example, “This looks like portrait …” or “… like landscape …”. Normal directional guidance stays the same.
 
 Q: What does the framing/quality score mean?
-A: While aligning the page, Accessibility Mode may announce a percentage score (0–100%). It’s a simple indicator of how good the current framing looks for scanning. It combines: (a) fill/area (page size in view), (b) rectangularity/skew (how straight the detected corners are), and (c) short‑term stability over the last frames. Rule of thumb: ~70%+ is good, ~85%+ is very good.
+A: While aligning the page, Accessibility Mode may announce a percentage (0–100%). This value is a confidence indicator for the current corner detection: it is based on (a) the detected quadrilateral’s area relative to the image, (b) how rectangular the corners are (angles closer to 90°), and (c) how symmetric opposite side lengths are.
+
+Important: stability over multiple frames is used separately to keep announcements calm — it is not part of this percentage. If the value drops below about 20%, the app treats this as “No document detected”.
 
 Q: How can I improve the score?
 A: Use even, bright lighting and avoid glare; hold the phone parallel to the page; keep all four corners in view with a small margin; if you’re too close, step back a little and crop later; place the paper on a high‑contrast, matte background; keep still briefly so detection can stabilize; match orientation (A4/Letter: portrait usually fits best).

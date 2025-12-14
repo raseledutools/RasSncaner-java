@@ -109,18 +109,6 @@
         <li><strong>Respect de la vie privée</strong> : 100% hors ligne, aucune connexion Internet requise</li>
     </ul>
 
-    <h3 id="faq-bibliotheque">Bibliothèque & Collections</h3>
-    <ul>
-        <li><strong>Où vont mes scans s’ils n’apparaissent pas sous une collection ?</strong><br>
-            Si un scan (ou une image de page) ne peut pas être lié à un document/collection (par ex. anciens exports sans
-            manifeste compagnon, ou fichiers recopiés sur le téléphone), il est traité comme <em>Non classé</em>. L’application
-            regroupe ces éléments dans un compartiment virtuel « Non classé » au lieu d’afficher chaque page brute comme
-            document de premier niveau. De là, vous pouvez créer un nouveau document à partir des éléments sélectionnés
-            ou les joindre à un document existant. Lors de l’export avec la version actuelle, un petit manifeste est écrit
-            afin que les indexations futures puissent lier automatiquement les pages.
-        </li>
-    </ul>
-
     <h2>Langues OCR</h2>
     <p>MakeACopy prend en charge l’OCR hors ligne via Tesseract. Vous pouvez sélectionner la langue lors de l’étape OCR.</p>
     <ul>
@@ -240,12 +228,9 @@ appverifier verify MakeACopy-vX.Y.Z.apk
             - Prenez la photo le plus perpendiculairement possible à la surface du document.
         </li>
         <li id="faq-score-meaning"><strong>Que signifie le score d’encadrement/qualité ?</strong><br>
-            Le Mode Accessibilité peut annoncer un pourcentage (0–100 %) pendant l’alignement. C’est un indicateur simple
-            de la « qualité » du cadrage pour la numérisation. Il combine :<br>
-            - <em>Remplissage</em> : quelle part de l’image occupe la page (pas trop petite, bords visibles).<br>
-            - <em>Rectangularité</em> : droiture/alignment des coins et bords détectés (moins d’inclinaison = mieux).<br>
-            - <em>Stabilité</em> : stabilité de la détection sur les derniers frames.<br>
-            Règle pratique : ~70 %+ = bon, ~85 %+ = très bon.
+            Le Mode Accessibilité peut annoncer un pourcentage (0–100 %) pendant l’alignement. Cette valeur est un indicateur de confiance pour la détection des coins : elle dépend (a) de la surface du quadrilatère détecté dans l’image, (b) du caractère « rectangulaire » des coins (angles proches de 90°) et (c) de la symétrie des longueurs des côtés opposés.<br>
+            <br>
+            Important : la stabilité sur plusieurs images est utilisée séparément pour garder les annonces discrètes ; elle ne fait pas partie de ce pourcentage.
         </li>
         <li id="faq-score-improve"><strong>Comment améliorer le score ?</strong><br>
             - Éclairage homogène et suffisant ; évitez l’éblouissement/les ombres dures. <br>
@@ -259,13 +244,25 @@ appverifier verify MakeACopy-vX.Y.Z.apk
             A4/Letter : le portrait convient généralement. Éléments très larges (tickets, cartes) : essayez paysage. Les indications s’adaptent à la façon dont vous tenez le téléphone.
         </li>
         <li id="faq-directional-hints-landscape"><strong>Que signifient « gauche/droite/haut/bas » en mode paysage ?</strong><br>
-            Les indications se réfèrent aux côtés physiques du téléphone. « À gauche » = déplacez le téléphone vers la gauche ; « vers le haut » = éloignez‑le de vous — aussi en paysage. Les images sont normalisées pour garder des directions cohérentes.
+            Remarque sur la tenue du téléphone (paysage) : l’écran caméra reste en orientation portrait. Les indications directionnelles (« gauche/droite/haut/bas ») se réfèrent à l’aperçu aligné « à l’endroit ».<br>
+            <br>
+            Si vous tenez le téléphone de côté, selon l’appareil/la version d’Android,
+            - les indications peuvent rester celles du mode portrait (car l’interface ne passe pas en paysage), ou
+            - les axes d’analyse internes peuvent suivre la rotation de l’affichage.<br>
+            <br>
+            Si « gauche/droite/haut/bas » semble illogique, revenez en portrait ou faites pivoter le téléphone de 180° et voyez si les indications deviennent plus cohérentes.
         </li>
         <li id="faq-move-back"><strong>J’entends constamment « Éloignez‑vous/Move back »</strong><br>
             L’application supprime les invites de distance sans document clair et limite les répétitions. Améliorez l’éclairage (utilisez la lampe si besoin), incluez toute la page avec une petite marge, et restez brièvement immobile.
         </li>
         <li id="faq-orientation-tip"><strong>L’application suggère‑t‑elle portrait ou paysage ?</strong><br>
-            En Mode Accessibilité, un « conseil d’orientation » léger peut suggérer portrait/paysage. Il ne parle que si la confiance est suffisante, après une courte stabilité, avec un délai anti‑répétition pour rester discret.
+            Oui. En Mode Accessibilité, l’application peut suggérer si le portrait ou le paysage semble mieux convenir à la page actuelle.<br>
+            <br>
+            Le conseil n’est donné que si
+            - l’estimation est suffisamment fiable (confiance ≥ 0,30), et
+            - aucun document plausible n’est actuellement détecté (pour ne pas masquer les indications normales).<br>
+            <br>
+            Pour rester discret, ce conseil passe par la même logique de guidage que les autres annonces (stabilité brève sur plusieurs images) et il est limité en fréquence.
         </li>
     </ul>
 
@@ -308,6 +305,11 @@ appverifier verify MakeACopy-vX.Y.Z.apk
             - L’application détecte automatiquement l’orientation : elle essaie l’OCR en interne par pas de 90° (0°, 90°, 180°, 270°) et retient le meilleur résultat. Si la page est déjà bien orientée, elle s’arrête plus tôt pour gagner du temps. <br>
             - Si la page est très inclinée, faites-la pivoter avant l’OCR à l’aide des boutons de rotation par pas de 90°, jusqu’à ce que les lignes de texte soient horizontales. <br>
             - Évitez une forte perspective ; alignez le document aussi droit que possible.
+        </li>
+        <li id="faq-ocr-auto-rotate-apply-export"><strong>Que fait l’option « Rotation automatique OCR (appliquer aussi à l’export) » ?</strong><br>
+            Lorsqu’elle est activée, l’application exécute l’OCR avec des rotations supplémentaires par pas de 90° (0°, 90°, 180°, 270°) et choisit le meilleur résultat (selon la confiance moyenne OCR ; en cas d’égalité, selon la longueur du texte). Si la première tentative (0°) est déjà suffisamment bonne, les rotations restantes sont ignorées pour gagner du temps.<br>
+            <br>
+            Elle applique aussi la rotation détectée au scan courant, afin que l’image/le PDF exporté soit orienté en conséquence. Lorsqu’elle est désactivée, l’OCR n’est exécuté que dans l’orientation actuelle et rien n’est automatiquement pivoté pour l’export.
         </li>
         <li><strong>La recherche dans le PDF ne fonctionne pas</strong><br>
             - Vérifiez si la langue sélectionnée est correcte ; une mauvaise langue produit un texte reconnu non concordant. <br>

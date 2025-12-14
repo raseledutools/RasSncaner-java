@@ -119,14 +119,28 @@ A: Teilweise. Gesprochene Ausgaben erfordern einen aktiven Screenreader (z. B.
 
 <a id="guide-de-directional-hints-landscape"></a>
 F: Was bedeuten „links/rechts/oben/unten“, wenn ich das Gerät im Querformat halte?
-A: Die Richtungs‑Hinweise beziehen sich auf die physischen Geräteseiten so, wie du es gerade hältst – nicht auf ein festes Hochformat der UI. „Nach links bewegen“ bedeutet: Bewege das Telefon nach links aus deiner Sicht; „Nach oben bewegen“ bedeutet: Bewege es von dir weg (zur Oberkante, die du aktuell oben hältst) – auch wenn das Gerät gedreht ist. Die Hinweise passen sich deiner aktuellen Geräte‑Ausrichtung an.
+A: Hinweis zur Gerätehaltung (Querformat): Die Kameraansicht der App bleibt im Hochformat (Portrait). Die Richtungs‑Hinweise („links/rechts/oben/unten“) beziehen sich auf die aufrecht ausgerichtete Vorschau.
+
+Wenn du das Telefon seitlich hältst, kann es je nach Gerät/Android‑Version sein,
+- dass die Hinweise weiterhin wie im Hochformat gemeint sind (weil die Oberfläche nicht ins Querformat wechselt), oder
+- dass die Analyse‑Achsen intern mit der Display‑Ausrichtung mitgehen.
+
+Wenn dir „links/rechts/oben/unten“ unlogisch vorkommt, richte das Telefon wieder ins Hochformat aus oder drehe es um 180° und prüfe, ob die Hinweise dann besser passen.
 
 <a id="guide-de-orientation-tip"></a>
 F: Gibt die App einen Tipp, ob Hoch- oder Querformat besser ist?
-A: Ja. Im Accessibility‑Modus enthält die Vorschau einen leichten „Orientierungstipp“. Er analysiert die Bildstruktur und schätzt, ob eher Hoch‑ oder Querformat passt. Damit es ruhig bleibt, spricht der Tipp nur, wenn (a) die Konfidenz ausreichend ist, (b) die Schätzung kurz stabil war und (c) seit dem letzten Tipp eine Abklingzeit verstrichen ist. Du hörst dann z. B. „Das sieht nach Hochformat aus …“ oder „… nach Querformat …“. Die normalen Richtungs‑Hinweise bleiben unverändert.
+A: Ja. Im Accessibility‑Modus kann die App einen Hinweis geben, ob Hoch‑ oder Querformat für die aktuelle Seite sinnvoller wirkt.
+
+Der Hinweis wird nur gegeben, wenn
+- die Schätzung ausreichend sicher ist (Konfidenz ≥ 0,30) und
+- aktuell kein plausibles Dokument erkannt wird (damit die normalen Ausrichtungs‑Hinweise nicht überlagert werden).
+
+Damit es ruhig bleibt, wird der Hinweis über dieselbe Guidance‑Logik wie die anderen Ansagen geglättet (kurze Stabilität über mehrere Frames) und zeitlich begrenzt (Rate‑Limit). Du hörst dann z. B. „Das sieht nach Hochformat aus …“ oder „… nach Querformat …“. Die normalen Richtungs‑Hinweise bleiben unverändert.
 
 F: Was bedeutet der Framing-/Qualitäts‑Score?
-A: Während des Ausrichtens kann der Accessibility‑Modus einen Prozentwert (0–100 %) ansagen. Er ist ein einfacher Indikator dafür, wie „gut“ das aktuelle Framing zum Scannen aussieht. Er kombiniert: (a) Flächenfüllung, (b) Rechteckigkeit/Skew der erkannten Ecken, und (c) kurzfristige Stabilität über die letzten Frames. Faustregel: ~70 %+ ist gut, ~85 %+ ist sehr gut.
+A: Während des Ausrichtens kann der Accessibility‑Modus einen Prozentwert (0–100 %) ansagen. Dieser Wert ist ein „Confidence“-Indikator der aktuellen Eckenerkennung: Er basiert auf (a) dem Flächenanteil des erkannten Vierecks im Bild, (b) wie rechteckig die Ecken sind (Winkel näher an 90°), und (c) wie symmetrisch gegenüberliegende Kantenlängen sind.
+
+Wichtig: Die Stabilität über mehrere Frames wird separat genutzt, um Ansagen ruhiger zu machen – sie ist nicht Teil dieses Prozentwerts. Wenn der Wert unter ca. 20 % liegt, behandelt die App das als „Kein Dokument erkannt“.
 
 F: Wie kann ich den Score verbessern?
 A: Nutze gleichmäßiges, helles Licht und vermeide Blendungen; halte das Telefon parallel zur Seite; lasse alle vier Ecken mit einem kleinen Rand sichtbar; wenn du zu nah dran bist, gehe ein Stück zurück und schneide später zu; lege das Papier auf einen kontrastreichen, matten Hintergrund; halte kurz ruhig, damit sich die Erkennung stabilisiert; wähle eine passende Ausrichtung (A4/Letter: meist Hochformat).

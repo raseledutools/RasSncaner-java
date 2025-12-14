@@ -48,6 +48,7 @@ apksigner verify --print-certs MakeACopy-vX.Y.Z.apk
 - Guide:
   - English: docs/accessibility_mode_guide_en.md
   - Deutsch: docs/accessibility_mode_guide_de.md
+  - Français: docs/accessibility_mode_guide_fr.md
 
 ### OCR Languages
 

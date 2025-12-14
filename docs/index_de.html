@@ -269,12 +269,9 @@ appverifier verify MakeACopy-vX.Y.Z.apk
             - Fotografiere möglichst frontal und parallel zur Dokumentenfläche. 
         </li>
         <li id="faq-score-meaning"><strong>Was bedeutet der Framing-/Qualitäts‑Score?</strong><br>
-            Der Accessibility‑Modus kann beim Ausrichten einen Prozentwert (0–100 %) ansagen. Er ist ein einfacher
-            Indikator dafür, wie „gut“ das aktuelle Framing zum Scannen aussieht. Er kombiniert drei Faktoren:<br>
-            - <em>Füllung</em>: Wie groß die Seite im Bild ist (nicht zu klein, Kanten sichtbar).<br>
-            - <em>Rechteckigkeit</em>: Wie gerade die erkannten Ecken/Kanten sind (weniger Schiefstand ist besser).<br>
-            - <em>Stabilität</em>: Ob die Erkennung über die letzten Frames ruhig bleibt.<br>
-            Faustregel: ~70 %+ ist gut, ~85 %+ ist sehr gut.
+            Der Accessibility‑Modus kann beim Ausrichten einen Prozentwert (0–100 %) ansagen. Dieser Wert ist ein „Confidence“-Indikator der aktuellen Eckenerkennung: Er basiert auf (a) dem Flächenanteil des erkannten Vierecks im Bild, (b) wie rechteckig die Ecken sind (Winkel näher an 90°), und (c) wie symmetrisch gegenüberliegende Kantenlängen sind.<br>
+            <br>
+            Wichtig: Die Stabilität über mehrere Frames wird separat genutzt, um Ansagen ruhiger zu machen – sie ist nicht Teil dieses Prozentwerts.
         </li>
         <li id="faq-score-improve"><strong>Wie kann ich den Score verbessern?</strong><br>
             - Gleichmäßiges, helles Licht; Blendungen und harte Schatten vermeiden. <br>
@@ -288,13 +285,25 @@ appverifier verify MakeACopy-vX.Y.Z.apk
             A4/Letter: Hochformat passt meist am besten. Sehr breite Vorlagen (Belege, Karten): Querformat probieren. Die Hinweise passen sich deiner Haltung an.
         </li>
         <li id="faq-directional-hints-landscape"><strong>Was bedeuten „links/rechts/oben/unten“ im Querformat?</strong><br>
-            Die Hinweise beziehen sich auf die <em>physischen</em> Geräteseiten. „Nach links“ = Gerät nach links bewegen; „nach oben“ = von dir weg – auch im Querformat. Die Bildanalyse wird normalisiert, damit Richtungen konsistent bleiben.
+            Hinweis zur Gerätehaltung (Querformat): Die Kameraansicht der App bleibt im Hochformat (Portrait). Die Richtungs‑Hinweise („links/rechts/oben/unten“) beziehen sich auf die aufrecht ausgerichtete Vorschau.<br>
+            <br>
+            Wenn du das Telefon seitlich hältst, kann es je nach Gerät/Android‑Version sein,
+            - dass die Hinweise weiterhin wie im Hochformat gemeint sind (weil die Oberfläche nicht ins Querformat wechselt), oder
+            - dass die Analyse‑Achsen intern mit der Display‑Ausrichtung mitgehen.<br>
+            <br>
+            Wenn dir „links/rechts/oben/unten“ unlogisch vorkommt, richte das Telefon wieder ins Hochformat aus oder drehe es um 180° und prüfe, ob die Hinweise dann besser passen.
         </li>
         <li id="faq-move-back"><strong>Ich höre ständig „Weiter weg/Move back“</strong><br>
             Die App unterdrückt Distanz‑Hinweise ohne erkennbares Dokument und drosselt Wiederholungen. Beleuchtung verbessern (Taschenlampe bei Bedarf), ganze Seite mit kleinem Rand ins Bild nehmen, kurz ruhig halten.
         </li>
         <li id="faq-orientation-tip"><strong>Gibt es einen Tipp für Hoch‑/Querformat?</strong><br>
-            Im Accessibility‑Modus gibt ein leichter Orientierungstipp bei Bedarf eine Empfehlung. Er spricht nur bei ausreichender Konfidenz, nach kurzer Stabilität und mit Abklingzeit, um ruhig zu bleiben.
+            Ja. Im Accessibility‑Modus kann die App einen Hinweis geben, ob Hoch‑ oder Querformat für die aktuelle Seite sinnvoller wirkt.<br>
+            <br>
+            Der Hinweis wird nur gegeben, wenn
+            - die Schätzung ausreichend sicher ist (Konfidenz ≥ 0,30) und
+            - aktuell kein plausibles Dokument erkannt wird (damit die normalen Ausrichtungs‑Hinweise nicht überlagert werden).<br>
+            <br>
+            Damit es ruhig bleibt, wird der Hinweis über dieselbe Guidance‑Logik wie die anderen Ansagen geglättet (kurze Stabilität über mehrere Frames) und zeitlich begrenzt (Rate‑Limit).
         </li>
     </ul>
 
@@ -311,18 +320,6 @@ appverifier verify MakeACopy-vX.Y.Z.apk
         </li>
         <li><strong>Ergebnis ist schief oder abgeschnitten</strong><br>
             - Prüfe nach der automatischen Erkennung alle vier Punkte und korrigiere sie bei Bedarf manuell. <br>
-        </li>
-    </ul>
-
-    <h3 id="faq-bibliothek">Bibliothek & Sammlungen</h3>
-    <ul>
-        <li><strong>Wo landen meine Scans, wenn sie nicht unter einer Sammlung erscheinen?</strong><br>
-            Wenn ein Scan (oder eine Seiten‑Bilddatei) keiner Sammlung zugeordnet werden kann (z. B. ältere Exporte ohne
-            Sidecar‑Manifest oder zurückkopierte Dateien), wird er als <em>Unzugeordnet</em> behandelt. Die App bündelt solche
-            Elemente in einem virtuellen Bereich „Unzugeordnet“, anstatt jede Rohseite als eigenes Top‑Level‑Dokument zu
-            zeigen. Von dort kannst du neue Dokumente erstellen oder Seiten an bestehende Dokumente anhängen. Bei Exporten
-            mit der aktuellen App‑Version wird ein kleines Manifest geschrieben, damit künftige Indexläufe Seiten automatisch
-            verknüpfen können.
         </li>
     </ul>
 
@@ -349,6 +346,11 @@ appverifier verify MakeACopy-vX.Y.Z.apk
             - Die App erkennt die Ausrichtung automatisch: Sie testet die OCR intern in 90°‑Schritten (0°, 90°, 180°, 270°) und verwendet das beste Ergebnis. Bei bereits korrekt ausgerichteten Seiten wird aus Zeitgründen früh abgebrochen. <br>
             - Falls die Seite stark schief ist, drehe sie vor der OCR mit den Dreh‑Tasten in 90°‑Schritten, bis die Textzeilen horizontal verlaufen. <br>
             - Vermeide starke Perspektive; richte das Dokument möglichst gerade aus.
+        </li>
+        <li id="faq-ocr-auto-rotate-apply-export"><strong>Was macht die Option „OCR‑Auto‑Drehung (auch beim Export anwenden)“?</strong><br>
+            Wenn diese Option aktiv ist, versucht die App die OCR zusätzlich in 90°‑Schritten (0°, 90°, 180°, 270°) und wählt das beste Ergebnis (nach OCR‑Konfidenz; bei Gleichstand nach Textlänge). Wenn die erste Prüfung (0°) bereits „gut genug“ ist, werden die weiteren Drehungen übersprungen, um Zeit zu sparen.<br>
+            <br>
+            Zusätzlich wird die gefundene Drehung auf den aktuellen Scan übernommen, sodass das Bild beim Export entsprechend gedreht wird. Wenn die Option aus ist, wird OCR nur in der aktuellen Ausrichtung ausgeführt und es wird nichts automatisch für den Export gedreht.
         </li>
         <li><strong>Suche im PDF funktioniert nicht</strong><br>
             - Prüfe, ob die gewählte Sprache korrekt war; falsche Sprache erzeugt unpassenden erkannten Text.<br>
