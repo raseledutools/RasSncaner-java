@@ -2,6 +2,12 @@
 
 MakeACopy is an open-source document scanner app for Android that allows you to digitize paper documents with OCR functionality. The app is designed to be privacy-friendly, working completely offline without any cloud connection or tracking.
 
+## Design Philosophy
+
+MakeACopy treats privacy and offline operation as technical design decisions, not as moral or political statements.
+The app works fully offline, is open source, and avoids tracking or cloud services because this results in a simpler, more robust, and more auditable system.
+Users are encouraged to evaluate MakeACopy based on its concrete features and implementation rather than on positioning or narratives.
+
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
      alt="Get it on F-Droid"
      height="80">](https://f-droid.org/packages/de.schliweb.makeacopy/)
