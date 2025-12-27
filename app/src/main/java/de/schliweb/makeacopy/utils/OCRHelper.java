@@ -2,10 +2,13 @@ package de.schliweb.makeacopy.utils;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.Log;
 import androidx.core.content.ContextCompat;
 import com.googlecode.tesseract.android.TessBaseAPI;
+import de.schliweb.makeacopy.utils.layout.DocumentLayoutAnalyzer;
+import de.schliweb.makeacopy.utils.layout.DocumentRegion;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -684,7 +687,7 @@ public class OCRHelper {
             this.meanConfidence = meanConfidence;
         }
     }
-    
+
     /**
      * Represents the result of an OCR (Optical Character Recognition) process with detailed
      * recognition information at the word level. This class extends {@code OcrResult} by
@@ -701,5 +704,240 @@ public class OCRHelper {
             super(text, meanConfidence);
             this.words = (words != null) ? words : new ArrayList<>();
         }
+    }
+
+    /**
+     * Represents the result of an OCR process with layout analysis.
+     * Contains OCR results organized by document regions for improved
+     * reading order and structure preservation.
+     */
+    public static class OcrResultWithLayout extends OcrResult {
+        public final List<RegionOcrResult> regionResults;
+        public final DocumentLayoutAnalyzer.AnalysisResult layoutAnalysis;
+
+        public OcrResultWithLayout(String text, Integer meanConfidence,
+                                   List<RegionOcrResult> regionResults,
+                                   DocumentLayoutAnalyzer.AnalysisResult layoutAnalysis) {
+            super(text, meanConfidence);
+            this.regionResults = (regionResults != null) ? regionResults : new ArrayList<>();
+            this.layoutAnalysis = layoutAnalysis;
+        }
+    }
+
+    /**
+         * Represents the OCR result for a single document region.
+         */
+        public record RegionOcrResult(DocumentRegion region, OcrResultWords ocrResult) {
+    }
+
+    /**
+     * Performs OCR with layout analysis for complex documents.
+     * Analyzes the document structure (columns, tables, headers, footers)
+     * and processes each region with optimal settings for improved accuracy.
+     * <p>
+     * Note: This method requires the FEATURE_LAYOUT_ANALYSIS feature flag to be enabled.
+     * If disabled, it falls back to standard OCR without layout analysis.
+     *
+     * @param bitmap the input document image
+     * @return OCR result with layout information and region-specific results
+     */
+    public OcrResultWithLayout runOcrWithLayout(Bitmap bitmap) {
+        if (bitmap == null || bitmap.isRecycled()) {
+            Log.w(TAG, "runOcrWithLayout: null or recycled bitmap");
+            return new OcrResultWithLayout("", null, new ArrayList<>(), null);
+        }
+
+        // Check feature flag - fall back to standard OCR if layout analysis is disabled
+        if (!FeatureFlags.isLayoutAnalysisEnabled()) {
+            Log.d(TAG, "runOcrWithLayout: FEATURE_LAYOUT_ANALYSIS is disabled, falling back to standard OCR");
+            OcrResultWords standardResult = runOcrWithWords(bitmap);
+            return new OcrResultWithLayout(
+                    standardResult != null ? standardResult.text : "",
+                    standardResult != null ? standardResult.meanConfidence : null,
+                    new ArrayList<>(),
+                    null);
+        }
+
+        // Perform layout analysis
+        DocumentLayoutAnalyzer analyzer = new DocumentLayoutAnalyzer();
+        analyzer.setLanguage(language);
+        DocumentLayoutAnalyzer.AnalysisResult layoutAnalysis = analyzer.analyzeWithMetadata(bitmap);
+
+        List<DocumentRegion> regions = layoutAnalysis.regions();
+        List<RegionOcrResult> regionResults = new ArrayList<>();
+        StringBuilder fullText = new StringBuilder();
+        int totalConfidence = 0;
+        int confidenceCount = 0;
+
+        // Save current PSM to restore later
+        int originalPsm = pageSegMode;
+
+        try {
+            // Process each region with optimal PSM
+            for (DocumentRegion region : regions) {
+                // Skip non-text regions
+                if (region.getType() == DocumentRegion.Type.FIGURE) {
+                    continue;
+                }
+
+                // Extract region bitmap
+                Bitmap regionBitmap = extractRegionBitmap(bitmap, region.getBounds());
+                if (regionBitmap == null) {
+                    continue;
+                }
+
+                try {
+                    // Set optimal PSM for this region type
+                    int optimalPsm = region.getOptimalPsm();
+                    setPageSegMode(optimalPsm);
+
+                    // Run OCR on region
+                    OcrResultWords result = runOcrWithWords(regionBitmap);
+
+                    if (result != null && !result.text.isEmpty()) {
+                        // Adjust word bounding boxes to absolute coordinates
+                        List<RecognizedWord> adjustedWords = adjustWordCoordinates(
+                                result.words, region.getBounds());
+
+                        OcrResultWords adjustedResult = new OcrResultWords(
+                                result.text, result.meanConfidence, adjustedWords);
+
+                        regionResults.add(new RegionOcrResult(region, adjustedResult));
+
+                        // Append to full text with proper spacing
+                        if (fullText.length() > 0) {
+                            fullText.append("\n\n");
+                        }
+                        fullText.append(result.text);
+
+                        // Accumulate confidence
+                        if (result.meanConfidence != null) {
+                            totalConfidence += result.meanConfidence;
+                            confidenceCount++;
+                        }
+                    }
+                } finally {
+                    if (regionBitmap != bitmap) {
+                        regionBitmap.recycle();
+                    }
+                }
+            }
+        } finally {
+            // Restore original PSM
+            setPageSegMode(originalPsm);
+        }
+
+        Integer avgConfidence = confidenceCount > 0 ? totalConfidence / confidenceCount : null;
+
+        Log.d(TAG, "runOcrWithLayout: processed " + regionResults.size() + " regions, " +
+                "columns=" + layoutAnalysis.columnCount() +
+                ", hasTable=" + layoutAnalysis.hasTable());
+
+        return new OcrResultWithLayout(fullText.toString(), avgConfidence, regionResults, layoutAnalysis);
+    }
+
+    /**
+     * Extracts a sub-bitmap for a specific region.
+     *
+     * @param source the source bitmap
+     * @param bounds the region bounds
+     * @return extracted bitmap or null if extraction fails
+     */
+    private Bitmap extractRegionBitmap(Bitmap source, Rect bounds) {
+        if (source == null || bounds == null) {
+            return null;
+        }
+
+        try {
+            // Clamp bounds to image dimensions
+            int left = Math.max(0, bounds.left);
+            int top = Math.max(0, bounds.top);
+            int right = Math.min(source.getWidth(), bounds.right);
+            int bottom = Math.min(source.getHeight(), bounds.bottom);
+
+            int width = right - left;
+            int height = bottom - top;
+
+            if (width <= 0 || height <= 0) {
+                return null;
+            }
+
+            return Bitmap.createBitmap(source, left, top, width, height);
+        } catch (Exception e) {
+            Log.e(TAG, "extractRegionBitmap: error", e);
+            return null;
+        }
+    }
+
+    /**
+     * Adjusts word bounding box coordinates from region-relative to absolute image coordinates.
+     *
+     * @param words        list of recognized words with region-relative coordinates
+     * @param regionBounds the region's bounds in absolute coordinates
+     * @return list of words with adjusted coordinates
+     */
+    private List<RecognizedWord> adjustWordCoordinates(List<RecognizedWord> words, Rect regionBounds) {
+        if (words == null || regionBounds == null) {
+            return words;
+        }
+
+        List<RecognizedWord> adjusted = new ArrayList<>();
+        for (RecognizedWord word : words) {
+            RectF originalBox = word.getBoundingBox();
+            RectF adjustedBox = new RectF(
+                    originalBox.left + regionBounds.left,
+                    originalBox.top + regionBounds.top,
+                    originalBox.right + regionBounds.left,
+                    originalBox.bottom + regionBounds.top
+            );
+            adjusted.add(new RecognizedWord(word.getText(), adjustedBox, word.getConfidence()));
+        }
+        return adjusted;
+    }
+
+    /**
+     * Checks if the document has a complex layout that would benefit from layout analysis.
+     * <p>
+     * Note: This method requires the FEATURE_LAYOUT_ANALYSIS feature flag to be enabled.
+     * If disabled, it always returns false.
+     *
+     * @param bitmap the input document image
+     * @return true if the document has multiple columns or tables, false if feature is disabled
+     */
+    public boolean hasComplexLayout(Bitmap bitmap) {
+        if (!FeatureFlags.isLayoutAnalysisEnabled()) {
+            Log.d(TAG, "hasComplexLayout: FEATURE_LAYOUT_ANALYSIS is disabled");
+            return false;
+        }
+
+        if (bitmap == null || bitmap.isRecycled()) {
+            return false;
+        }
+
+        DocumentLayoutAnalyzer analyzer = new DocumentLayoutAnalyzer();
+        return analyzer.hasComplexLayout(bitmap);
+    }
+
+    /**
+     * Gets the estimated number of columns in the document.
+     * <p>
+     * Note: This method requires the FEATURE_LAYOUT_ANALYSIS feature flag to be enabled.
+     * If disabled, it always returns 1 (single column).
+     *
+     * @param bitmap the input document image
+     * @return number of columns (1 for single column documents or if feature is disabled)
+     */
+    public int getDocumentColumnCount(Bitmap bitmap) {
+        if (!FeatureFlags.isLayoutAnalysisEnabled()) {
+            Log.d(TAG, "getDocumentColumnCount: FEATURE_LAYOUT_ANALYSIS is disabled");
+            return 1;
+        }
+
+        if (bitmap == null || bitmap.isRecycled()) {
+            return 1;
+        }
+
+        DocumentLayoutAnalyzer analyzer = new DocumentLayoutAnalyzer();
+        return analyzer.getColumnCount(bitmap);
     }
 }

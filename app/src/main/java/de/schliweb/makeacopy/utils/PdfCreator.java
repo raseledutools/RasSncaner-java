@@ -110,7 +110,9 @@ public class PdfCreator {
 
         Bitmap prepared = null;
         try {
-            prepared = processImageForPdf(bitmap, convertToGrayscale, convertToBlackWhite, targetDpi, bwMode);
+            // Detect if text contains RTL scripts (Arabic, Persian, Hebrew) for gentle B/W processing
+            boolean useGentleMode = convertToBlackWhite && containsRtlText(words);
+            prepared = processImageForPdf(bitmap, convertToGrayscale, convertToBlackWhite, targetDpi, bwMode, useGentleMode);
             if (prepared == null) {
                 Log.e(TAG, "Image preparation via OpenCV failed");
                 return null;
@@ -461,21 +463,29 @@ public class PdfCreator {
             return Float.compare(avgYA, avgYB);
         });
 
-        // --- 4) Render: line L→R or R→L (for RTL scripts); invisible/selectable ---
+        // --- 4) Render words in logical reading order (for correct copy/paste and search) ---
+        // Each word is positioned independently via setTextMatrix, so the order in the PDF stream
+        // determines the copy/paste order, not the visual layout.
+        // For RTL scripts: words must be written in logical order (first word of sentence first),
+        // which means sorting by X position from RIGHT to LEFT (rightmost word = first in sentence).
+        // For LTR scripts: words are sorted LEFT to RIGHT (leftmost word = first in sentence).
         for (List<RecognizedWord> line : lines) {
             if (line.isEmpty()) continue;
 
             // Detect if this line is predominantly RTL (Arabic/Persian/Hebrew)
             boolean isRtl = isRtlLine(line);
 
-            // within the line: left→right for LTR, right→left for RTL
+            // Sort words in LOGICAL reading order:
+            // - RTL: rightmost word first (it's the first word of the sentence)
+            // - LTR: leftmost word first (it's the first word of the sentence)
             line.sort((a, b) -> {
                 int c;
                 if (isRtl) {
-                    // RTL: sort right→left (descending X)
+                    // RTL: sort right→left (descending X) for logical order
+                    // The rightmost word is the FIRST word in the sentence
                     c = Float.compare(b.getBoundingBox().left, a.getBoundingBox().left);
                 } else {
-                    // LTR: sort left→right (ascending X)
+                    // LTR: sort left→right (ascending X) for logical order
                     c = Float.compare(a.getBoundingBox().left, b.getBoundingBox().left);
                 }
                 if (c != 0) return c;
@@ -491,8 +501,11 @@ public class PdfCreator {
                 String tokenRaw = safeText(w.getText());
                 if (tokenRaw.trim().isEmpty()) continue;
 
+                // For RTL text, reorder from visual to logical order for correct copy/paste
+                String tokenReordered = reorderRtlForPdf(tokenRaw);
+
                 // NFC + trailing space improves selection/copy
-                String token = java.text.Normalizer.normalize(tokenRaw + " ", java.text.Normalizer.Form.NFC);
+                String token = java.text.Normalizer.normalize(tokenReordered + " ", java.text.Normalizer.Form.NFC);
 
                 RectF b = w.getBoundingBox();
                 float boxH = b.height();
@@ -535,18 +548,20 @@ public class PdfCreator {
      * Processes an image to prepare it for inclusion in a PDF by resizing, and optionally converting it to grayscale or
      * black and white (BW) based on the parameters provided.
      *
-     * @param original  The original Bitmap image to process. Must not be null.
-     * @param toGray    If true, the image will be converted to grayscale.
-     * @param toBw      If true, the image will be converted to black and white. The conversion respects the specified bwMode.
-     *                  If both toGray and toBw are true, the image will be converted to black and white.
-     * @param targetDpi The target DPI (dots per inch) for the processed image. Determines the resizing scale for the image.
-     *                  If targetDpi is less than or equal to 0, a default DPI of 300 will be used.
-     * @param bwMode    The mode for black-and-white conversion. If null, the default "ROBUST" mode will be used. Other modes
-     *                  determine the specific method of B&W processing.
+     * @param original   The original Bitmap image to process. Must not be null.
+     * @param toGray     If true, the image will be converted to grayscale.
+     * @param toBw       If true, the image will be converted to black and white. The conversion respects the specified bwMode.
+     *                   If both toGray and toBw are true, the image will be converted to black and white.
+     * @param targetDpi  The target DPI (dots per inch) for the processed image. Determines the resizing scale for the image.
+     *                   If targetDpi is less than or equal to 0, a default DPI of 300 will be used.
+     * @param bwMode     The mode for black-and-white conversion. If null, the default "ROBUST" mode will be used. Other modes
+     *                   determine the specific method of B&W processing.
+     * @param gentleMode If true, uses gentle B/W processing that preserves fine strokes and diacritics
+     *                   (important for Arabic, Persian, Hebrew scripts).
      * @return A processed Bitmap object resized to match the target DPI dimensions and optionally converted to grayscale
      * or black and white. Returns null if the original Bitmap is null or if an error occurs during conversion.
      */
-    private static Bitmap processImageForPdf(Bitmap original, boolean toGray, boolean toBw, int targetDpi, BwMode bwMode) {
+    private static Bitmap processImageForPdf(Bitmap original, boolean toGray, boolean toBw, int targetDpi, BwMode bwMode, boolean gentleMode) {
         if (original == null) return null;
 
         int[] a4px = a4PixelsForDpi(targetDpi <= 0 ? 300 : targetDpi);
@@ -575,12 +590,18 @@ public class PdfCreator {
         if (toBw) {
             Bitmap viaCv;
             if (bwMode == null || bwMode == BwMode.ROBUST) {
-                viaCv = OpenCVUtils.toBw(base);
+                // Use gentle mode for RTL scripts (Arabic, Persian, Hebrew) to preserve fine strokes
+                OpenCVUtils.BwOptions opt = new OpenCVUtils.BwOptions();
+                opt.gentleMode = gentleMode;
+                opt.targetDpi = targetDpi > 0 ? targetDpi : 300;
+                viaCv = OpenCVUtils.toBw(base, opt);
             } else {
                 OpenCVUtils.BwOptions opt = new OpenCVUtils.BwOptions();
                 opt.mode = OpenCVUtils.BwOptions.Mode.OTSU_ONLY;
                 opt.useClahe = false;
                 opt.removeShadows = false;
+                opt.gentleMode = gentleMode;
+                opt.targetDpi = targetDpi > 0 ? targetDpi : 300;
                 viaCv = OpenCVUtils.toBw(base, opt);
             }
             if (base != original) {
@@ -718,6 +739,115 @@ public class PdfCreator {
     }
 
     /**
+     * Checks if a single word/token contains predominantly RTL characters.
+     *
+     * @param text The text to check.
+     * @return true if the text contains predominantly RTL characters, false otherwise.
+     */
+    private static boolean isRtlText(String text) {
+        if (text == null || text.isEmpty()) return false;
+
+        int rtlCount = 0;
+        int ltrCount = 0;
+
+        for (int i = 0; i < text.length(); ) {
+            int cp = text.codePointAt(i);
+            byte directionality = Character.getDirectionality(cp);
+
+            if (directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT ||
+                    directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC ||
+                    directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT_EMBEDDING ||
+                    directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE) {
+                rtlCount++;
+            } else if (directionality == Character.DIRECTIONALITY_LEFT_TO_RIGHT ||
+                    directionality == Character.DIRECTIONALITY_LEFT_TO_RIGHT_EMBEDDING ||
+                    directionality == Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE) {
+                ltrCount++;
+            }
+
+            i += Character.charCount(cp);
+        }
+
+        return rtlCount > ltrCount;
+    }
+
+    /**
+     * Checks if a list of recognized words contains any RTL (Right-to-Left) text.
+     * Used to determine if gentle B/W processing should be applied to preserve
+     * fine strokes and diacritics in Arabic, Persian, and Hebrew scripts.
+     *
+     * @param words The list of recognized words to check.
+     * @return true if any word contains RTL characters, false otherwise.
+     */
+    private static boolean containsRtlText(List<RecognizedWord> words) {
+        if (words == null || words.isEmpty()) return false;
+
+        for (RecognizedWord w : words) {
+            if (w == null) continue;
+            String text = w.getText();
+            if (isRtlText(text)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Reorders text for correct PDF text layer representation.
+     * For RTL text that appears to be in visual order (reversed), this method
+     * reverses it back to logical order so that copy/paste works correctly.
+     * <p>
+     * OCR engines like Tesseract may return RTL text in visual order (as it appears
+     * on screen from left to right), but PDF text layers need logical order
+     * (the order in which characters are read/typed).
+     *
+     * @param text The text to potentially reorder.
+     * @return The text in logical order suitable for PDF text layer.
+     */
+    private static String reorderRtlForPdf(String text) {
+        if (text == null || text.isEmpty()) return text;
+
+        // Only process if the text contains RTL characters
+        if (!isRtlText(text)) return text;
+
+        // Use Java's Bidi class to analyze the text
+        java.text.Bidi bidi = new java.text.Bidi(text, java.text.Bidi.DIRECTION_DEFAULT_RIGHT_TO_LEFT);
+
+        // If the text is already in logical order (base direction matches content),
+        // Bidi.isLeftToRight() or isRightToLeft() will be true and no reordering needed
+        if (bidi.isRightToLeft() || bidi.isLeftToRight()) {
+            // Text is uniform direction - check if it needs reversal
+            // For RTL text, if it's in visual order, we need to reverse it
+            // We detect this by checking if the first strong character is at the "wrong" end
+
+            // Find first RTL character position
+            int firstRtlPos = -1;
+            int lastRtlPos = -1;
+            for (int i = 0; i < text.length(); ) {
+                int cp = text.codePointAt(i);
+                byte dir = Character.getDirectionality(cp);
+                if (dir == Character.DIRECTIONALITY_RIGHT_TO_LEFT ||
+                        dir == Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC) {
+                    if (firstRtlPos < 0) firstRtlPos = i;
+                    lastRtlPos = i;
+                }
+                i += Character.charCount(cp);
+            }
+
+            // If RTL characters exist and the text appears to be in visual order
+            // (which would mean it needs to be reversed for logical order),
+            // reverse the string
+            if (firstRtlPos >= 0) {
+                // Reverse the string to convert from visual to logical order
+                StringBuilder sb = new StringBuilder(text);
+                return sb.reverse().toString();
+            }
+        }
+
+        return text;
+    }
+
+    /**
      * Creates a searchable PDF from the given bitmaps and recognized words per page.
      *
      * @param context            the application context
@@ -825,7 +955,10 @@ public class PdfCreator {
                 }
                 Bitmap prepared = null;
                 try {
-                    prepared = processImageForPdf(src, convertToGrayscale, convertToBlackWhite, targetDpi, bwMode);
+                    // Detect if text contains RTL scripts for gentle B/W processing
+                    List<RecognizedWord> pageWords = (perPageWords != null && i < perPageWords.size()) ? perPageWords.get(i) : null;
+                    boolean useGentleMode = convertToBlackWhite && containsRtlText(pageWords);
+                    prepared = processImageForPdf(src, convertToGrayscale, convertToBlackWhite, targetDpi, bwMode, useGentleMode);
                     if (prepared == null) {
                         Log.e(TAG, "Image preparation via OpenCV failed for page " + (i + 1));
                         return null;

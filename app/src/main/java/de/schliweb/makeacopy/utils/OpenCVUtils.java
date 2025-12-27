@@ -428,6 +428,18 @@ public class OpenCVUtils {
          * Offset for adaptiveThreshold (typ. 5–10)
          */
         public int C = 5;
+        /**
+         * Gentle mode for scripts with fine strokes and diacritics (Arabic, Persian, Hebrew).
+         * When true, skips aggressive despeckle and morphological closing operations
+         * that can destroy small but important character components like dots and thin strokes.
+         */
+        public boolean gentleMode = false;
+        /**
+         * Target DPI for the output image. Used to scale despeckle aggressiveness.
+         * At lower DPI, despeckle is less aggressive to preserve readability.
+         * 0 = auto (assumes 300 DPI as default).
+         */
+        public int targetDpi = 0;
     }
 
 
@@ -512,19 +524,26 @@ public class OpenCVUtils {
                 }
             }
 
-            despeckleFast(bw);
-
             // --- 5) Fallback: Otsu (emulator or error) ---
             if (!ok) {
                 Imgproc.threshold(work, bw, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
             }
 
+            // Despeckle after bw is guaranteed to be filled
+            // Skip for gentle mode (Arabic/Persian/Hebrew scripts with fine strokes and diacritics)
+            if (!opt.gentleMode) {
+                despeckleFast(bw, opt.targetDpi);
+            }
+
             // --- 6) very gentle closing stabilizes characters ---
-            try {
-                Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(2, 2));
-                Imgproc.morphologyEx(bw, bw, Imgproc.MORPH_CLOSE, kernel);
-                kernel.release();
-            } catch (Throwable ignore) { /* optional */ }
+            // Skip for gentle mode to preserve fine character details
+            if (!opt.gentleMode) {
+                try {
+                    Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(2, 2));
+                    Imgproc.morphologyEx(bw, bw, Imgproc.MORPH_CLOSE, kernel);
+                    kernel.release();
+                } catch (Throwable ignore) { /* optional */ }
+            }
 
             Bitmap out = Bitmap.createBitmap(src.getWidth(), src.getHeight(), Bitmap.Config.ARGB_8888);
             Utils.matToBitmap(bw, out);
@@ -563,26 +582,60 @@ public class OpenCVUtils {
      * Removes small speckles from a binary image using morphological operations.
      * The function processes the input binary image to eliminate noise or small artifacts,
      * leaving the major structures intact.
+     * <p>
+     * The aggressiveness of despeckle is scaled based on target DPI:
+     * - At 300 DPI (reference): uses 3x3 kernel and minArea=15
+     * - At lower DPI (e.g., 72-150): uses smaller kernel (2x2) and lower minArea to preserve readability
+     * - At higher DPI (e.g., 600): can use larger kernel and higher minArea
      *
-     * @param bw Input binary image of type Mat (CV_8UC1), with pixel values of 0 or 255.
-     *           It will be modified in-place to remove speckles.
+     * @param bw        Input binary image of type Mat (CV_8UC1), with pixel values of 0 or 255.
+     *                  It will be modified in-place to remove speckles.
+     * @param targetDpi Target DPI for the output. 0 or negative values default to 300 DPI.
      */
-    private static void despeckleFast(Mat bw /* CV_8UC1, 0/255 */) {
-        Mat inv = new Mat();
-        Mat k3 = null;
-        try {
-            // Make text and speckles white so the opening operation removes them
-            Core.bitwise_not(bw, inv);
-            k3 = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
-            Imgproc.morphologyEx(inv, inv, Imgproc.MORPH_OPEN, k3);
-            Core.bitwise_not(inv, bw);
-        } finally {
-            inv.release();
-            if (k3 != null) k3.release();
+    private static void despeckleFast(Mat bw /* CV_8UC1, 0/255 */, int targetDpi) {
+        // Reference DPI for scaling calculations
+        final int REFERENCE_DPI = 300;
+        int effectiveDpi = targetDpi > 0 ? targetDpi : REFERENCE_DPI;
+
+        // Scale factor relative to reference DPI
+        float dpiScale = (float) effectiveDpi / REFERENCE_DPI;
+
+        // At low DPI (< 150), skip morphological opening entirely to preserve fine details
+        // At medium DPI (150-250), use 2x2 kernel
+        // At high DPI (>= 250), use 3x3 kernel
+        int kernelSize;
+        if (effectiveDpi < 150) {
+            kernelSize = 0; // Skip morphological opening
+        } else if (effectiveDpi < 250) {
+            kernelSize = 2;
+        } else {
+            kernelSize = 3;
         }
 
-        // Additional pass: remove very small connected components (likely noise, not text)
-        removeSmallComponents(bw, /*minArea*/ 15);
+        Mat inv = new Mat();
+        Mat kernel = null;
+        try {
+            if (kernelSize > 0) {
+                // Make text and speckles white so the opening operation removes them
+                Core.bitwise_not(bw, inv);
+                kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(kernelSize, kernelSize));
+                Imgproc.morphologyEx(inv, inv, Imgproc.MORPH_OPEN, kernel);
+                Core.bitwise_not(inv, bw);
+            }
+        } finally {
+            inv.release();
+            if (kernel != null) kernel.release();
+        }
+
+        // Scale minArea based on DPI: at 300 DPI use 15, scale proportionally
+        // At low DPI, use smaller minArea to avoid removing small but valid characters
+        // Formula: minArea = 15 * (dpi/300)^2, with minimum of 4 pixels
+        int minArea = Math.max(4, Math.round(15 * dpiScale * dpiScale));
+
+        // At very low DPI (< 100), skip component removal entirely
+        if (effectiveDpi >= 100) {
+            removeSmallComponents(bw, minArea);
+        }
     }
 
     /**
@@ -1996,7 +2049,7 @@ public class OpenCVUtils {
                 //     - micro closing to reconnect thin strokes
                 //     - connected components cleanup with dynamic thresholds
                 try {
-                    despeckleFast(bw);
+                    despeckleFast(bw, 0); // Use default DPI (300) for OCR preparation
                 } catch (Throwable ignore) {
                 }
                 try {
@@ -2161,7 +2214,7 @@ public class OpenCVUtils {
             Imgproc.threshold(gray, bw, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
 
             // 5) Remove small disturbances
-            despeckleFast(bw);
+            despeckleFast(bw, 0); // Use default DPI (300) for OCR preparation
 
             // 5b) Clear border noise to remove edge artifacts that cause OCR errors
             clearBorderNoise(bw);
@@ -2694,12 +2747,12 @@ public class OpenCVUtils {
      * @param bucketDeg  0 or 90
      * @param confidence 0..1
      */
-        public record OrientationEstimate(int bucketDeg, double confidence) {
-            public OrientationEstimate(int bucketDeg, double confidence) {
-                this.bucketDeg = (bucketDeg == 90) ? 90 : 0;
-                this.confidence = Math.max(0.0, Math.min(1.0, confidence));
-            }
+    public record OrientationEstimate(int bucketDeg, double confidence) {
+        public OrientationEstimate(int bucketDeg, double confidence) {
+            this.bucketDeg = (bucketDeg == 90) ? 90 : 0;
+            this.confidence = Math.max(0.0, Math.min(1.0, confidence));
         }
+    }
 
     /**
      * Estimate whether text runs mostly horizontally (0° bucket) or vertically (90° bucket).

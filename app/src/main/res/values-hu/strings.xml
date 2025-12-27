@@ -204,7 +204,7 @@
     <!-- OCR felismerési módok – magyarázat -->
     <string name="ocr_explain_prep_modes">Felismerési módok magyarázata</string>
     <string name="ocr_prep_modes_title">Felismerési módok: egyszerű magyarázat</string>
-    <string name="ocr_prep_modes_message">Három módon lehet képeket továbbítani az OCR motorhoz:\n\n• Eredeti (előfeldolgozás nélkül) — a leggyorsabb. A fényképet változtatás nélkül küldi. Tiszta, nagy kontrasztú szkennelt képekhez ideális. Előfordulhat, hogy a halvány vagy zajos szövegrészeket kihagyja.\n\n• OpenCV Quick — gyors tisztítás: szürkeárnyalatossá alakít, enyhén zajtalanít, automatikusan fekete-fehérré konvertál, és szükség esetén kissé felnagyítja a képet. Jó alapértelmezett beállítás a legtöbb fényképhez. Kiegyensúlyozott sebesség és minőség.\n\n• OpenCV Robust — maximális pontosságra tervezve nehéz oldalakhoz. Korrigálja a ferdeséget, normalizálja az árnyékokat és a megvilágítást, élmegőrző zajszűrést és intelligens felnagyítást alkalmaz. Fontos: a Tesseract egy magas minőségű szürkeárnyalatos képet kap (nem kemény fekete-fehéret), hogy megőrizze az apró részleteket, például az „o” betű hurkait és a kis számokat. A legjobb pontosság nehéz oldalaknál; lassabb és több memóriát igényel.</string>
+    <string name="ocr_prep_modes_message">Három módja van annak, hogyan lehet a képeket az OCR-motorba továbbítani:\n\n• Eredeti (előfeldolgozás nélkül) — a leggyorsabb. A fotó változtatás nélkül kerül feldolgozásra. Tiszta, nagy kontrasztú beolvasásokhoz ideális. Előfordulhat, hogy a halvány vagy zajos szöveget nem ismeri fel.\n\n• OpenCV Gyors — gyors tisztítás: szürkeárnyalatos átalakítás, enyhe zajcsökkentés, automatikus fekete-fehér átalakítás, és szükség esetén enyhe felnagyítás. Jó alapértelmezett választás a legtöbb fényképhez. Kiegyensúlyozott sebesség és minőség.\n\n• OpenCV Robusztus — újratervezve a maximális pontosság érdekében nehéz oldalaknál. Kijavítja a ferdeséget, normalizálja az árnyékokat és a megvilágítást, élmegőrző zajcsökkentést és intelligens felnagyítást alkalmaz. Fontos, hogy a Tesseract kiváló minőségű szürkeárnyalatos képet kap (nem kemény fekete-fehéret), így megmaradnak az apró részletek, például az „o” betű hurkai és a kis számjegyek. A legjobb pontosságot nyújtja nehéz oldalaknál, de lassabb és több memóriát használ.\n\nOCR utófeldolgozás: Javítja a gyakori felismerési hibákat, például az összetévesztéseket (0↔O, 1↔l↔I, rn↔m), és a bizonytalan szavakat szótár alapján ellenőrzi. Alapértelmezés szerint engedélyezve; technikai kódok vagy sorozatszámok esetén kapcsolja ki.</string>
 
     <!-- OCR felismerési módok kiválasztása -->
     <string name="ocr_choose_prep_mode_menu">Felismerési mód…</string>
@@ -360,6 +360,10 @@
 
     <!-- Options: OCR auto-rotate toggle -->
     <string name="opt_ocr_auto_rotate_apply_export">OCR automatikus elforgatás (exportáláskor is alkalmazza)</string>
+    <!-- Options: OCR post-processing toggle -->
+    <string name="opt_ocr_post_processing">OCR utófeldolgozás (gyakori hibák javítása)</string>
+    <string name="opt_layout_analysis">Elrendezés-elemzés (oszlopok, táblázatok)</string>
+    <string name="opt_layout_analysis_hint">Javítja az OCR-t többoszlopos dokumentumokhoz és táblázatokhoz</string>
 
     <!-- Options: Experimental directional mapping fallback -->
     <string name="opt_force_direction_mapping">Fekvő tájolású súgótérkép kényszerítése (kísérleti)</string>
@@ -372,4 +376,13 @@
     <string name="open_unfiled">Rendezetlen megnyitása</string>
     <string name="a11y_unfiled_summary">Rendezetlen: %1$d elem</string>
 
+    <!-- PDF Import -->
+    <string name="error_unknown_file_type">Ismeretlen fájltípus</string>
+    <string name="error_unsupported_file_type">Ez a fájltípus nem támogatott</string>
+    <string name="error_cannot_open_pdf">Nem lehet megnyitni a PDF-et</string>
+    <string name="error_pdf_empty">A PDF nem tartalmaz oldalakat</string>
+    <string name="error_pdf_import_failed">A PDF importálása sikertelen</string>
+    <string name="error_pdf_page_render_failed">Az oldal megjelenítése nem sikerült</string>
+    <string name="pdf_select_page">Oldal kiválasztása</string>
+    <string name="pdf_page_number">%1$d. oldal</string>
 </resources>

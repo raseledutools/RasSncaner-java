@@ -203,7 +203,7 @@
     <!-- Tryby rozpoznawania OCR – wyjaśnienie -->
     <string name="ocr_explain_prep_modes">Wyjaśnij tryby rozpoznawania</string>
     <string name="ocr_prep_modes_title">Tryby rozpoznawania: proste wyjaśnienie</string>
-    <string name="ocr_prep_modes_message">Istnieją trzy sposoby przekazywania obrazów do silnika OCR:\n\n• Oryginał (bez wstępnego przetwarzania) — najszybszy. Wysyła zdjęcie w oryginalnej postaci. Najlepszy dla już czystych, kontrastowych skanów. Może pominąć słaby lub zaszumiony tekst.\n\n• OpenCV Quick — szybkie czyszczenie: konwersja do skali szarości, lekkie odszumianie, automatyczne przekształcenie na czarno-biały obraz i ewentualne powiększenie. Dobry domyślny wybór dla większości zdjęć. Równowaga między szybkością a jakością.\n\n• OpenCV Robust — zaprojektowany dla maksymalnej dokładności na trudnych stronach. Koryguje przechylenie, normalizuje cienie i oświetlenie, stosuje odszumianie z zachowaniem krawędzi i inteligentne skalowanie. Ważne: przekazuje Tesseractowi wysokiej jakości obraz w skali szarości (nie twardy czarno-biały), aby zachować drobne szczegóły, takie jak pętle w literze „o” i małe cyfry. Najlepsza dokładność na trudnych stronach; wolniejszy i bardziej pamięciożerny.</string>
+    <string name="ocr_prep_modes_message">Istnieją trzy sposoby przekazywania obrazów do silnika OCR:\n\n• Oryginał (bez wstępnego przetwarzania) — najszybszy. Zdjęcie jest przekazywane w niezmienionej formie. Najlepsze dla już czystych skanów o wysokim kontraście. Może pominąć słaby lub zaszumiony tekst.\n\n• OpenCV Szybki — szybkie czyszczenie: konwersja do skali szarości, lekkie odszumianie, automatyczna konwersja do czerni i bieli oraz w razie potrzeby niewielkie skalowanie w górę. Dobry wybór domyślny dla większości zdjęć. Zrównoważony kompromis między szybkością a jakością.\n\n• OpenCV Solidny — przeprojektowany z myślą o maksymalnej dokładności na trudnych stronach. Koryguje przekrzywienie, normalizuje cienie i oświetlenie, stosuje odszumianie z zachowaniem krawędzi oraz inteligentne skalowanie. Ważne jest to, że Tesseract otrzymuje obraz w skali szarości wysokiej jakości (a nie twardą czerń i biel), co pozwala zachować drobne detale, takie jak pętle w literze „o” czy małe cyfry. Zapewnia najlepszą dokładność na wymagających stronach, ale jest wolniejszy i zużywa więcej pamięci.\n\nPost-processing OCR: Koryguje typowe błędy rozpoznawania, takie jak pomyłki (0↔O, 1↔l↔I, rn↔m), oraz sprawdza niepewne słowa przy użyciu słownika. Domyślnie włączony; wyłącz go w przypadku kodów technicznych lub numerów seryjnych.</string>
 
     <!-- Wybór trybu rozpoznawania OCR -->
     <string name="ocr_choose_prep_mode_menu">Tryb rozpoznawania…</string>
@@ -359,7 +359,10 @@
 
     <!-- Options: OCR auto-rotate toggle -->
     <string name="opt_ocr_auto_rotate_apply_export">Automatyczne obracanie OCR (zastosuj także przy eksporcie)</string>
-
+    <!-- Options: OCR post-processing toggle -->
+    <string name="opt_ocr_post_processing">Przetwarzanie końcowe OCR (popraw typowe błędy)</string>
+    <string name="opt_layout_analysis">Analiza układu (kolumny, tabele)</string>
+    <string name="opt_layout_analysis_hint">Poprawia OCR dla dokumentów wielokolumnowych i tabel</string>
     <!-- Options: Experimental directional mapping fallback -->
     <string name="opt_force_direction_mapping">Wymuś mapowanie podpowiedzi dla trybu poziomego (eksperymentalne)</string>
 
@@ -371,5 +374,14 @@
     <string name="open_unfiled">Otwórz Nieskategoryzowane</string>
     <string name="a11y_unfiled_summary">Nieskategoryzowane: %1$d element(ów)</string>
 
+    <!-- PDF Import -->
+    <string name="error_unknown_file_type">Nieznany typ pliku</string>
+    <string name="error_unsupported_file_type">Ten typ pliku nie jest obsługiwany</string>
+    <string name="error_cannot_open_pdf">Nie można otworzyć pliku PDF</string>
+    <string name="error_pdf_empty">Plik PDF nie zawiera stron</string>
+    <string name="error_pdf_import_failed">Import pliku PDF nie powiódł się</string>
+    <string name="error_pdf_page_render_failed">Nie można wyrenderować strony</string>
+    <string name="pdf_select_page">Wybierz stronę</string>
+    <string name="pdf_page_number">Strona %1$d</string>
 
 </resources>

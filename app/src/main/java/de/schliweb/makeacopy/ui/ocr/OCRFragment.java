@@ -70,6 +70,7 @@ public class OCRFragment extends Fragment {
     private ActivityResultLauncher<Intent> openTraineddataLauncher;
 
     public static final String BUNDLE_OCR_AUTO_ROTATE_APPLY_EXPORT = "ocr_auto_rotate_apply_export";
+    public static final String BUNDLE_OCR_POST_PROCESSING = "ocr_post_processing";
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -614,6 +615,8 @@ public class OCRFragment extends Fragment {
         }
     }
 
+    private static final String BUNDLE_LAYOUT_ANALYSIS = "layout_analysis";
+
     private void showOcrPrepModeDialog() {
         android.view.LayoutInflater inflater = android.view.LayoutInflater.from(requireContext());
         android.view.View view = inflater.inflate(R.layout.dialog_ocr_prep_mode, null);
@@ -623,6 +626,12 @@ public class OCRFragment extends Fragment {
         android.widget.RadioButton rbQuick = view.findViewById(R.id.rbtn_mode_quick);
         android.widget.RadioButton rbRobust = view.findViewById(R.id.rbtn_mode_robust);
         android.widget.CheckBox cbOcrAuto = view.findViewById(R.id.checkbox_ocr_auto_rotate_apply_export_dialog);
+        android.widget.CheckBox cbOcrPostProc = view.findViewById(R.id.checkbox_ocr_post_processing_dialog);
+        android.widget.CheckBox cbLayoutAnalysis = view.findViewById(R.id.checkbox_layout_analysis_dialog);
+
+        // Only show layout analysis checkbox if feature flag is enabled
+        boolean layoutFeatureEnabled = FeatureFlags.isLayoutAnalysisEnabled();
+        cbLayoutAnalysis.setVisibility(layoutFeatureEnabled ? android.view.View.VISIBLE : android.view.View.GONE);
 
         int mode = Math.max(0, Math.min(2, getSelectedOcrMode()));
         if (mode == 0) rbOriginal.setChecked(true);
@@ -630,12 +639,18 @@ public class OCRFragment extends Fragment {
         else rbRobust.setChecked(true);
 
         boolean ocrAutoRotateApply = false;
+        boolean ocrPostProcessing = true; // default ON
+        boolean layoutAnalysis = false; // default OFF
         try {
             android.content.SharedPreferences p = requireContext().getSharedPreferences("export_options", android.content.Context.MODE_PRIVATE);
             ocrAutoRotateApply = p.getBoolean(BUNDLE_OCR_AUTO_ROTATE_APPLY_EXPORT, false);
+            ocrPostProcessing = p.getBoolean(BUNDLE_OCR_POST_PROCESSING, true);
+            layoutAnalysis = p.getBoolean(BUNDLE_LAYOUT_ANALYSIS, false);
         } catch (Throwable ignore) {
         }
         cbOcrAuto.setChecked(ocrAutoRotateApply);
+        cbOcrPostProc.setChecked(ocrPostProcessing);
+        cbLayoutAnalysis.setChecked(layoutAnalysis && layoutFeatureEnabled);
 
         AlertDialog dlg = new AlertDialog.Builder(requireContext())
                 .setTitle(R.string.ocr_choose_prep_mode_title)
@@ -651,7 +666,11 @@ public class OCRFragment extends Fragment {
                     setSelectedOcrMode(selectedMode);
                     try {
                         android.content.SharedPreferences p = requireContext().getSharedPreferences("export_options", android.content.Context.MODE_PRIVATE);
-                        p.edit().putBoolean(BUNDLE_OCR_AUTO_ROTATE_APPLY_EXPORT, cbOcrAuto.isChecked()).apply();
+                        p.edit()
+                                .putBoolean(BUNDLE_OCR_AUTO_ROTATE_APPLY_EXPORT, cbOcrAuto.isChecked())
+                                .putBoolean(BUNDLE_OCR_POST_PROCESSING, cbOcrPostProc.isChecked())
+                                .putBoolean(BUNDLE_LAYOUT_ANALYSIS, cbLayoutAnalysis.isChecked())
+                                .apply();
                     } catch (Throwable ignore) {
                     }
 
@@ -660,11 +679,22 @@ public class OCRFragment extends Fragment {
                             getString(R.string.ocr_mode_quick),
                             getString(R.string.ocr_mode_robust)
                     };
-                    // Show toast including selected mode AND current status of OCR Auto-Rotate option
+                    // Show toast including selected mode AND current status of OCR options
                     String modeMsg = getString(R.string.ocr_prep_mode_set, modes[selectedMode]);
                     String autoLabel = getString(R.string.opt_ocr_auto_rotate_apply_export);
                     String autoState = cbOcrAuto.isChecked() ? "[ON]" : "[OFF]";
-                    UIUtils.showToast(requireContext(), modeMsg + " — " + autoLabel + ": " + autoState, Toast.LENGTH_SHORT);
+                    String postProcLabel = getString(R.string.opt_ocr_post_processing);
+                    String postProcState = cbOcrPostProc.isChecked() ? "[ON]" : "[OFF]";
+                    StringBuilder toastMsg = new StringBuilder(modeMsg)
+                            .append("\n").append(autoLabel).append(": ").append(autoState)
+                            .append("\n").append(postProcLabel).append(": ").append(postProcState);
+                    // Only show layout analysis in toast if feature is enabled
+                    if (FeatureFlags.isLayoutAnalysisEnabled()) {
+                        String layoutLabel = getString(R.string.opt_layout_analysis);
+                        String layoutState = cbLayoutAnalysis.isChecked() ? "[ON]" : "[OFF]";
+                        toastMsg.append("\n").append(layoutLabel).append(": ").append(layoutState);
+                    }
+                    UIUtils.showToast(requireContext(), toastMsg.toString(), Toast.LENGTH_SHORT);
                     prepareReprocessAfterModelChange();
                 })
                 .create();
@@ -947,11 +977,15 @@ public class OCRFragment extends Fragment {
 
                     // Try OCR rotations only when Auto‑Rotate is enabled. Otherwise, use current orientation only.
                     boolean allowOcrAutoRotate = false;
+                    boolean useLayoutAnalysis = false;
                     try {
                         android.content.SharedPreferences p = requireContext().getSharedPreferences("export_options", android.content.Context.MODE_PRIVATE);
                         allowOcrAutoRotate = p.getBoolean(BUNDLE_OCR_AUTO_ROTATE_APPLY_EXPORT, false);
+                        // Layout analysis requires both feature flag AND user preference
+                        useLayoutAnalysis = FeatureFlags.isLayoutAnalysisEnabled() && p.getBoolean(BUNDLE_LAYOUT_ANALYSIS, false);
                     } catch (Throwable ignore) {
                     }
+                    final boolean layoutAnalysisEnabled = useLayoutAnalysis;
 
                     // When disabled, restrict to a single attempt at the current orientation (extra=0)
                     int[] extraRots = allowOcrAutoRotate ? new int[]{0, 90, 180, 270} : new int[]{0};
@@ -994,8 +1028,21 @@ public class OCRFragment extends Fragment {
                         );
                         Log.d(TAG, LP + "Transform: src=" + tx.srcW() + "x" + tx.srcH() + ", dst=" + tx.dstW() + "x" + tx.dstH() + ", sx=" + tx.scaleX() + ", sy=" + tx.scaleY());
 
-                        // Run OCR
-                        OCRHelper.OcrResultWords r = localHelper.runOcrWithRetry(inputForOcr);
+                        // Run OCR (use layout analysis if enabled)
+                        OCRHelper.OcrResultWords r;
+                        if (layoutAnalysisEnabled) {
+                            OCRHelper.OcrResultWithLayout layoutResult = localHelper.runOcrWithLayout(inputForOcr);
+                            // Collect all words from all regions
+                            List<RecognizedWord> allWords = new ArrayList<>();
+                            for (OCRHelper.RegionOcrResult regionResult : layoutResult.regionResults) {
+                                if (regionResult.ocrResult() != null && regionResult.ocrResult().words != null) {
+                                    allWords.addAll(regionResult.ocrResult().words);
+                                }
+                            }
+                            r = new OCRHelper.OcrResultWords(layoutResult.text, layoutResult.meanConfidence, allWords);
+                        } else {
+                            r = localHelper.runOcrWithRetry(inputForOcr);
+                        }
 
                         if (ocrCancelled.get()) {
                             Log.w(TAG, LP + "Cancelled after OCR run (extraRot=" + extra + ")");
@@ -1068,17 +1115,28 @@ public class OCRFragment extends Fragment {
                     List<RecognizedWord> ocrWords = (bestResult.words != null) ? bestResult.words : new ArrayList<>();
 
                     // Apply post-processing to correct common OCR errors (including dictionary-based correction)
+                    // Only if the option is enabled (default: ON)
+                    boolean postProcessingEnabled = true;
                     try {
-                        ocrWords = OCRPostProcessor.processWithDictionary(ocrWords, lang, requireContext());
-                        // Also correct the full text
-                        if (ocrText != null && !ocrText.equals(getString(R.string.ocr_results_will_appear_here))) {
-                            ocrText = OCRPostProcessor.processTextWithDictionary(ocrText, lang, requireContext());
+                        android.content.SharedPreferences pp = requireContext().getSharedPreferences("export_options", android.content.Context.MODE_PRIVATE);
+                        postProcessingEnabled = pp.getBoolean(BUNDLE_OCR_POST_PROCESSING, true);
+                    } catch (Throwable ignore) {
+                    }
+                    if (postProcessingEnabled) {
+                        try {
+                            ocrWords = OCRPostProcessor.processWithDictionary(ocrWords, lang, requireContext());
+                            // Also correct the full text
+                            if (ocrText != null && !ocrText.equals(getString(R.string.ocr_results_will_appear_here))) {
+                                ocrText = OCRPostProcessor.processTextWithDictionary(ocrText, lang, requireContext());
+                            }
+                            // Log quality statistics
+                            OCRPostProcessor.OcrQualityStats stats = OCRPostProcessor.analyzeQuality(ocrWords);
+                            Log.d(TAG, LP + "OCR Quality: " + stats);
+                        } catch (Throwable t) {
+                            Log.w(TAG, LP + "Post-processing failed", t);
                         }
-                        // Log quality statistics
-                        OCRPostProcessor.OcrQualityStats stats = OCRPostProcessor.analyzeQuality(ocrWords);
-                        Log.d(TAG, LP + "OCR Quality: " + stats);
-                    } catch (Throwable t) {
-                        Log.w(TAG, LP + "Post-processing failed", t);
+                    } else {
+                        Log.d(TAG, LP + "OCR post-processing disabled by user preference");
                     }
 
                     // Create final variables for lambda

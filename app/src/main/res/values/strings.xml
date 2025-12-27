@@ -200,7 +200,7 @@
     <!-- OCR prep modes explanation -->
     <string name="ocr_explain_prep_modes">Explain recognition modes</string>
     <string name="ocr_prep_modes_title">Recognition modes: simple explanation</string>
-    <string name="ocr_prep_modes_message">There are three ways to feed images into the OCR engine:\n\n• Original (no preprocessing) — fastest. We send the photo as-is. Best for already clean, high-contrast scans. May miss faint or noisy text.\n\n• OpenCV Quick — a fast cleanup: convert to grayscale, lightly denoise, make it black/white automatically, and upscale a bit if needed. Good default for most photos. Balanced speed and quality.\n\n• OpenCV Robust — rebuilt for maximum accuracy on difficult pages. It deskews, normalizes shadows/illumination, applies edge‑preserving denoise and smart upscaling. Importantly, it feeds Tesseract a high‑quality grayscale image (not hard black/white) to preserve fine details like loops in “o” and small digits. Best accuracy on tough pages; slower and uses more memory.</string>
+    <string name="ocr_prep_modes_message">There are three ways to feed images into the OCR engine:\n\n• Original (no preprocessing) — fastest. We send the photo as-is. Best for already clean, high-contrast scans. May miss faint or noisy text.\n\n• OpenCV Quick — a fast cleanup: convert to grayscale, lightly denoise, make it black/white automatically, and upscale a bit if needed. Good default for most photos. Balanced speed and quality.\n\n• OpenCV Robust — rebuilt for maximum accuracy on difficult pages. It deskews, normalizes shadows/illumination, applies edge‑preserving denoise and smart upscaling. Importantly, it feeds Tesseract a high‑quality grayscale image (not hard black/white) to preserve fine details like loops in “o” and small digits. Best accuracy on tough pages; slower and uses more memory.\n\nOCR Post-Processing: Corrects typical recognition errors like confusions (0↔O, 1↔l↔I, rn↔m) and checks uncertain words against a dictionary. Enabled by default; disable for technical codes or serial numbers.</string>
 
     <!-- OCR prep modes selection -->
     <string name="ocr_choose_prep_mode_menu">Recognition mode…</string>
@@ -358,6 +358,11 @@
     
     <!-- Options: OCR auto-rotate toggle -->
     <string name="opt_ocr_auto_rotate_apply_export">OCR auto-rotate (also apply to export)</string>
+    <!-- Options: OCR post-processing toggle -->
+    <string name="opt_ocr_post_processing">OCR post-processing (correct common errors)</string>
+    <!-- Options: Layout analysis for complex documents -->
+    <string name="opt_layout_analysis">Layout analysis (columns, tables)</string>
+    <string name="opt_layout_analysis_hint">Improves OCR for multi-column documents and tables</string>
     <!-- Options: Experimental directional mapping fallback -->
     <string name="opt_force_direction_mapping">Force landscape hint mapping (experimental)</string>
     <!-- Developer / Debug options -->
@@ -366,4 +371,14 @@
     <string name="unfiled_collection_title">Unfiled</string>
     <string name="open_unfiled">Open Unfiled</string>
     <string name="a11y_unfiled_summary">Unfiled: %1$d item(s)</string>
+
+    <!-- PDF Import -->
+    <string name="error_unknown_file_type">Unknown file type</string>
+    <string name="error_unsupported_file_type">This file type is not supported</string>
+    <string name="error_cannot_open_pdf">Could not open PDF</string>
+    <string name="error_pdf_empty">The PDF contains no pages</string>
+    <string name="error_pdf_import_failed">PDF import failed</string>
+    <string name="error_pdf_page_render_failed">Could not render page</string>
+    <string name="pdf_select_page">Select page</string>
+    <string name="pdf_page_number">Page %1$d</string>
 </resources>

@@ -202,7 +202,7 @@
     <!-- Erklärung der Erkennungsmodi -->
     <string name="ocr_explain_prep_modes">Erkennungsmodi erklären</string>
     <string name="ocr_prep_modes_title">Erkennungsmodi – einfach erklärt</string>
-    <string name="ocr_prep_modes_message">Es gibt drei Wege, das Bild an die Texterkennung zu übergeben:\n\n• Original (ohne Vorverarbeitung) — am schnellsten. Wir schicken das Foto so wie es ist. Gut für bereits saubere, kontrastreiche Scans. Kann blasse oder „schmutzige“ Texte übersehen.\n\n• OpenCV Schnell — eine flotte Aufbereitung: in Graustufen umwandeln, leichtes Entrauschen, automatisch Schwarz/Weiß und bei Bedarf etwas vergrößern. Gute Standardeinstellung für die meisten Fotos. Gutes Gleichgewicht aus Tempo und Qualität.\n\n• OpenCV Robust — für maximale Genauigkeit auf schwierigen Seiten neu aufgebaut. Begradigt (Deskew), normalisiert Schatten/Beleuchtung, nutzt kanten‑erhaltendes Entrauschen und smartes Vergrößern. Wichtig: Tesseract erhält hier ein hochwertiges Graustufenbild (kein hartes Schwarz/Weiß), damit feine Details wie Schleifen in „o“ und kleine Ziffern erhalten bleiben. Beste Genauigkeit auf harten Vorlagen; langsamer und speicherintensiver.</string>
+    <string name="ocr_prep_modes_message">Es gibt drei Möglichkeiten, Bilder an die OCR-Engine zu übergeben:\n\n• Original (keine Vorverarbeitung) — am schnellsten. Das Foto wird unverändert übergeben. Am besten geeignet für bereits saubere, kontrastreiche Scans. Schwacher oder verrauschter Text kann übersehen werden.\n\n• OpenCV Schnell — schnelle Aufbereitung: Umwandlung in Graustufen, leichte Rauschreduzierung, automatische Schwarz-Weiß-Konvertierung und bei Bedarf eine leichte Hochskalierung. Gute Standardwahl für die meisten Fotos. Ausgewogenes Verhältnis von Geschwindigkeit und Qualität.\n\n• OpenCV Robust — neu aufgebaut für maximale Genauigkeit bei schwierigen Seiten. Richtet Schräglagen aus, normalisiert Schatten und Beleuchtung, wendet kanten­erhaltende Rauschreduzierung und intelligente Hochskalierung an. Wichtig ist, dass Tesseract ein hochwertiges Graustufenbild erhält (kein hartes Schwarz-Weiß), um feine Details wie Schleifen im „o“ oder kleine Ziffern zu erhalten. Beste Genauigkeit bei anspruchsvollen Seiten, aber langsamer und speicherintensiver.\n\nOCR-Nachverarbeitung: Korrigiert typische Erkennungsfehler wie Verwechslungen (0↔O, 1↔l↔I, rn↔m) und prüft unsichere Wörter mithilfe eines Wörterbuchs. Standardmäßig aktiviert; für technische Codes oder Seriennummern deaktivieren.</string>
 
     <!-- Auswahl des Erkennungsmodus -->
     <string name="ocr_choose_prep_mode_menu">Erkennungsmodus…</string>
@@ -359,6 +359,10 @@
 
     <!-- Options: OCR auto-rotate toggle -->
     <string name="opt_ocr_auto_rotate_apply_export">OCR-Auto-Drehung (auch beim Export anwenden)</string>
+    <!-- Options: OCR post-processing toggle -->
+    <string name="opt_ocr_post_processing">OCR-Nachbearbeitung (häufige Fehler korrigieren)</string>
+    <string name="opt_layout_analysis">Layout-Analyse (Spalten, Tabellen)</string>
+    <string name="opt_layout_analysis_hint">Verbessert OCR für mehrspaltige Dokumente und Tabellen</string>
 
     <!-- Options: Experimental directional mapping fallback -->
     <string name="opt_force_direction_mapping">Hinweiszuordnung für Querformat erzwingen (experimentell)</string>
@@ -370,6 +374,15 @@
     <string name="unfiled_collection_title">Unsortiert</string>
     <string name="open_unfiled">Unsortiertes öffnen</string>
     <string name="a11y_unfiled_summary">Unsortiert: %1$d Element(e)</string>
-
     <!-- Reorder A11y controls (defined above) -->
+
+    <!-- PDF Import -->
+    <string name="error_unknown_file_type">Unbekannter Dateityp</string>
+    <string name="error_unsupported_file_type">Dieser Dateityp wird nicht unterstützt</string>
+    <string name="error_cannot_open_pdf">PDF konnte nicht geöffnet werden</string>
+    <string name="error_pdf_empty">Das PDF enthält keine Seiten</string>
+    <string name="error_pdf_import_failed">PDF-Import fehlgeschlagen</string>
+    <string name="error_pdf_page_render_failed">Seite konnte nicht gerendert werden</string>
+    <string name="pdf_select_page">Seite auswählen</string>
+    <string name="pdf_page_number">Seite %1$d</string>
 </resources>

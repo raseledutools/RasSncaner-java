@@ -204,7 +204,7 @@
     <!-- Modos de reconocimiento OCR – explicación -->
     <string name="ocr_explain_prep_modes">Explicar modos de reconocimiento</string>
     <string name="ocr_prep_modes_title">Modos de reconocimiento: explicación sencilla</string>
-    <string name="ocr_prep_modes_message">Hay tres formas de enviar imágenes al motor OCR:\n\n• Original (sin preprocesamiento): el más rápido. Envía la foto tal cual. Ideal para escaneos limpios y de alto contraste. Puede omitir texto tenue o con ruido.\n\n• OpenCV Quick: una limpieza rápida. Convierte a escala de grises, elimina ligeramente el ruido, convierte automáticamente a blanco y negro y amplía un poco si es necesario. Buena opción por defecto para la mayoría de las fotos. Equilibra velocidad y calidad.\n\n• OpenCV Robust: diseñado para la máxima precisión en páginas difíciles. Corrige inclinaciones, normaliza sombras e iluminación, aplica eliminación de ruido preservando bordes y un escalado inteligente. Importante: envía a Tesseract una imagen en escala de grises de alta calidad (no en blanco y negro puro) para conservar detalles finos como bucles en las letras “o” y dígitos pequeños. Mayor precisión en páginas complejas; más lento y con mayor consumo de memoria.</string>
+    <string name="ocr_prep_modes_message">Hay tres formas de enviar imágenes al motor OCR:\n\n• Original (sin preprocesamiento) — la más rápida. La foto se envía tal como está. Ideal para escaneos ya limpios y con alto contraste. Puede pasar por alto texto tenue o con ruido.\n\n• OpenCV Rápido — limpieza rápida: conversión a escala de grises, reducción ligera de ruido, conversión automática a blanco y negro y un ligero escalado si es necesario. Buena opción predeterminada para la mayoría de las fotos. Equilibrio entre velocidad y calidad.\n\n• OpenCV Robusto — rediseñado para máxima precisión en páginas difíciles. Corrige la inclinación, normaliza sombras e iluminación, aplica reducción de ruido que preserva los bordes y escalado inteligente. Es importante que Tesseract reciba una imagen en escala de grises de alta calidad (no blanco y negro duro) para conservar detalles finos como los bucles de la letra “o” y los dígitos pequeños. Ofrece la mejor precisión en páginas complejas, pero es más lento y consume más memoria.\n\nPosprocesamiento de OCR: Corrige errores típicos de reconocimiento, como confusiones (0↔O, 1↔l↔I, rn↔m), y verifica palabras inciertas con un diccionario. Activado de forma predeterminada; desactívelo para códigos técnicos o números de serie.</string>
 
     <!-- Selección de modo de reconocimiento OCR -->
     <string name="ocr_choose_prep_mode_menu">Modo de reconocimiento…</string>
@@ -360,7 +360,10 @@
 
     <!-- Options: OCR auto-rotate toggle -->
     <string name="opt_ocr_auto_rotate_apply_export">Rotación automática de OCR (aplicar también en la exportación)</string>
-
+    <!-- Options: OCR post-processing toggle -->
+    <string name="opt_ocr_post_processing">Postprocesamiento de OCR (corregir errores comunes)</string>
+    <string name="opt_layout_analysis">Análisis de diseño (columnas, tablas)</string>
+    <string name="opt_layout_analysis_hint">Mejora el OCR para documentos de varias columnas y tablas</string>
     <!-- Options: Experimental directional mapping fallback -->
     <string name="opt_force_direction_mapping">Forzar asignación de indicaciones en modo horizontal (experimental)</string>
 
@@ -372,4 +375,13 @@
     <string name="open_unfiled">Abrir No clasificado</string>
     <string name="a11y_unfiled_summary">No clasificado: %1$d elemento(s)</string>
 
+    <!-- PDF Import -->
+    <string name="error_unknown_file_type">Tipo de archivo desconocido</string>
+    <string name="error_unsupported_file_type">Este tipo de archivo no es compatible</string>
+    <string name="error_cannot_open_pdf">No se pudo abrir el PDF</string>
+    <string name="error_pdf_empty">El PDF no contiene páginas</string>
+    <string name="error_pdf_import_failed">Falló la importación del PDF</string>
+    <string name="error_pdf_page_render_failed">No se pudo renderizar la página</string>
+    <string name="pdf_select_page">Seleccionar página</string>
+    <string name="pdf_page_number">Página %1$d</string>
 </resources>

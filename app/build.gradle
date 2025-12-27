@@ -27,6 +27,7 @@ android {
         buildConfigField "boolean", "FEATURE_REVIEW_OCR", "false"
         buildConfigField "boolean", "FEATURE_FRAMING_LOGGING", "false"
         buildConfigField "boolean", "FEATURE_A11Y_GUIDANCE", "true"
+        buildConfigField "boolean", "FEATURE_LAYOUT_ANALYSIS", "false"
     }
 
     dependenciesInfo {

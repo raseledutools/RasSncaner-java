@@ -77,4 +77,19 @@ public final class FeatureFlags {
             return false;
         }
     }
+
+    /**
+     * Feature flag: enables layout analysis for complex documents.
+     * When enabled, OCR can detect and process multi-column documents and tables
+     * with optimized settings for each region.
+     */
+    public static boolean isLayoutAnalysisEnabled() {
+        try {
+            Class<?> c = de.schliweb.makeacopy.BuildConfig.class;
+            java.lang.reflect.Field f = c.getField("FEATURE_LAYOUT_ANALYSIS");
+            return f.getBoolean(null);
+        } catch (Throwable ignore) {
+            return false;
+        }
+    }
 }

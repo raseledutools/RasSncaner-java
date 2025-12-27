@@ -204,7 +204,7 @@
     <!-- Režimy rozpoznávania OCR – vysvetlenie -->
     <string name="ocr_explain_prep_modes">Vysvetliť režimy rozpoznávania</string>
     <string name="ocr_prep_modes_title">Režimy rozpoznávania: jednoduché vysvetlenie</string>
-    <string name="ocr_prep_modes_message">Existujú tri spôsoby, ako odosielať obrázky do OCR enginu:\n\n• Originál (bez predspracovania) — najrýchlejší. Odošle fotografiu tak, ako je. Najvhodnejší pre čisté, vysoko kontrastné skeny. Môže vynechať slabý alebo zašumený text.\n\n• OpenCV Quick — rýchle vyčistenie: prevedie na odtiene sivej, mierne odstráni šum, automaticky prevedie na čiernobiely obraz a v prípade potreby trochu zväčší. Dobrá predvolená voľba pre väčšinu fotografií. Vyváženie rýchlosti a kvality.\n\n• OpenCV Robust — navrhnutý pre maximálnu presnosť na náročných stranách. Opravuje naklonenie, normalizuje tiene a osvetlenie, používa odstránenie šumu so zachovaním hrán a inteligentné zväčšenie. Dôležité: posiela Tesseractu vysokokvalitný obraz v odtieňoch sivej (nie tvrdý čiernobiely), aby zachoval jemné detaily, ako sú slučky v „o“ a malé číslice. Najlepšia presnosť na zložitých stranách; pomalší a náročnejší na pamäť.</string>
+    <string name="ocr_prep_modes_message">Existujú tri spôsoby, ako odosielať obrázky do OCR enginu:\n\n• Originál (bez predspracovania) — najrýchlejší. Fotografia sa odošle v nezmenenej podobe. Najvhodnejšie pre už čisté skeny s vysokým kontrastom. Môže prehliadnuť slabý alebo zašumený text.\n\n• OpenCV Rýchly — rýchle čistenie: prevod do odtieňov sivej, mierne potlačenie šumu, automatický prevod na čiernobiely obraz a v prípade potreby mierne zväčšenie. Dobrá predvolená voľba pre väčšinu fotografií. Vyvážený pomer rýchlosti a kvality.\n\n• OpenCV Robustný — prepracovaný pre maximálnu presnosť na náročných stranách. Vyrovnáva sklon, normalizuje tiene a osvetlenie, používa potlačenie šumu so zachovaním hrán a inteligentné zväčšenie. Dôležité je, že Tesseract dostáva vysokokvalitný obraz v odtieňoch sivej (nie tvrdý čiernobiely), aby sa zachovali jemné detaily, ako sú slučky písmena „o“ a malé číslice. Poskytuje najlepšiu presnosť na zložitých stranách, no je pomalší a spotrebúva viac pamäte.\n\nNásledné spracovanie OCR: Opravuje typické chyby rozpoznávania, ako sú zámieny (0↔O, 1↔l↔I, rn↔m), a overuje neisté slová pomocou slovníka. Predvolene zapnuté; vypnite ho pre technické kódy alebo sériové čísla.</string>
 
     <!-- Výber režimu rozpoznávania OCR -->
     <string name="ocr_choose_prep_mode_menu">Režim rozpoznávania…</string>
@@ -360,7 +360,10 @@
 
     <!-- Options: OCR auto-rotate toggle -->
     <string name="opt_ocr_auto_rotate_apply_export">Automatické otočenie OCR (použiť aj pri exporte)</string>
-
+    <!-- Options: OCR post-processing toggle -->
+    <string name="opt_ocr_post_processing">OCR následné spracovanie (opraviť bežné chyby)</string>
+    <string name="opt_layout_analysis">Analýza rozloženia (stĺpce, tabuľky)</string>
+    <string name="opt_layout_analysis_hint">Zlepšuje OCR pre viacstĺpcové dokumenty a tabuľky</string>
     <!-- Options: Experimental directional mapping fallback -->
     <string name="opt_force_direction_mapping">Vynútiť mapovanie pokynov pre režim na šírku (experimentálne)</string>
 
@@ -372,5 +375,14 @@
     <string name="open_unfiled">Otvoriť Nezaradené</string>
     <string name="a11y_unfiled_summary">Nezaradené: %1$d položiek</string>
 
+    <!-- PDF Import -->
+    <string name="error_unknown_file_type">Neznámy typ súboru</string>
+    <string name="error_unsupported_file_type">Tento typ súboru nie je podporovaný</string>
+    <string name="error_cannot_open_pdf">Nie je možné otvoriť PDF</string>
+    <string name="error_pdf_empty">PDF neobsahuje žiadne stránky</string>
+    <string name="error_pdf_import_failed">Import PDF zlyhal</string>
+    <string name="error_pdf_page_render_failed">Stránku sa nepodarilo vykresliť</string>
+    <string name="pdf_select_page">Vybrať stránku</string>
+    <string name="pdf_page_number">Stránka %1$d</string>
 
 </resources>

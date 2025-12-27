@@ -202,7 +202,7 @@
     <!-- OCR-herkenningsmodi – uitleg -->
     <string name="ocr_explain_prep_modes">Herkenningsmodi uitleggen</string>
     <string name="ocr_prep_modes_title">Herkenningsmodi: eenvoudige uitleg</string>
-    <string name="ocr_prep_modes_message">Er zijn drie manieren om afbeeldingen naar de OCR-engine te sturen:\n\n• Origineel (geen voorbewerking) — het snelst. Stuurt de foto zoals die is. Beste keuze voor al schone, contrastrijke scans. Kan zwakke of ruisachtige tekst missen.\n\n• OpenCV Quick — snelle opschoning: converteert naar grijswaarden, verwijdert lichte ruis, zet automatisch om naar zwart-wit en schaalt iets op indien nodig. Goede standaardinstelling voor de meeste foto’s. Evenwicht tussen snelheid en kwaliteit.\n\n• OpenCV Robust — ontworpen voor maximale nauwkeurigheid bij moeilijke pagina’s. Corrigeert scheefstand, normaliseert schaduwen en belichting, past randbehoudende ruisonderdrukking en slimme opschaling toe. Belangrijk: levert Tesseract een grijswaardenafbeelding van hoge kwaliteit (geen hard zwart-wit) om fijne details zoals lusjes in “o” en kleine cijfers te behouden. Beste nauwkeurigheid bij moeilijke pagina’s; trager en gebruikt meer geheugen.</string>
+    <string name="ocr_prep_modes_message">Er zijn drie manieren om afbeeldingen naar de OCR-engine te sturen:\n\n• Origineel (geen voorbewerking) — het snelst. De foto wordt ongewijzigd verzonden. Het meest geschikt voor al schone scans met hoog contrast. Kan zwakke of ruisachtige tekst missen.\n\n• OpenCV Snel — snelle opschoning: conversie naar grijstinten, lichte ruisonderdrukking, automatische zwart-witconversie en indien nodig een lichte opschaling. Goede standaardkeuze voor de meeste foto’s. Evenwicht tussen snelheid en kwaliteit.\n\n• OpenCV Robuust — opnieuw ontworpen voor maximale nauwkeurigheid bij moeilijke pagina’s. Corrigeert scheefstand, normaliseert schaduwen en belichting, past randbehoudende ruisonderdrukking en slimme opschaling toe. Belangrijk is dat Tesseract een grijswaardenafbeelding van hoge kwaliteit ontvangt (geen hard zwart-wit) om fijne details zoals lussen in de letter “o” en kleine cijfers te behouden. Biedt de beste nauwkeurigheid op complexe pagina’s, maar is langzamer en gebruikt meer geheugen.\n\nOCR-nabewerking: Corrigeert typische herkenningsfouten zoals verwarringen (0↔O, 1↔l↔I, rn↔m) en controleert onzekere woorden met behulp van een woordenboek. Standaard ingeschakeld; schakel dit uit voor technische codes of serienummers.</string>
 
     <!-- OCR-herkenningsmodi – selectie -->
     <string name="ocr_choose_prep_mode_menu">Herkenningsmodus…</string>
@@ -358,7 +358,10 @@
 
     <!-- Options: OCR auto-rotate toggle -->
     <string name="opt_ocr_auto_rotate_apply_export">OCR automatisch roteren (ook toepassen bij exporteren)</string>
-
+    <!-- Options: OCR post-processing toggle -->
+    <string name="opt_ocr_post_processing">OCR-nabewerking (veelvoorkomende fouten corrigeren)</string>
+    <string name="opt_layout_analysis">Lay-outanalyse (kolommen, tabellen)</string>
+    <string name="opt_layout_analysis_hint">Verbetert OCR voor documenten met meerdere kolommen en tabellen</string>
     <!-- Options: Experimental directional mapping fallback -->
     <string name="opt_force_direction_mapping">Forceer toewijzing van hints voor liggend formaat (experimenteel)</string>
 
@@ -368,5 +371,15 @@
     <string name="unfiled_collection_title">Niet ingedeeld</string>
     <string name="open_unfiled">Open Niet ingedeeld</string>
     <string name="a11y_unfiled_summary">Niet ingedeeld: %1$d item(s)</string>
+
+    <!-- PDF Import -->
+    <string name="error_unknown_file_type">Onbekend bestandstype</string>
+    <string name="error_unsupported_file_type">Dit bestandstype wordt niet ondersteund</string>
+    <string name="error_cannot_open_pdf">Kan PDF niet openen</string>
+    <string name="error_pdf_empty">De PDF bevat geen pagina’s</string>
+    <string name="error_pdf_import_failed">Importeren van PDF mislukt</string>
+    <string name="error_pdf_page_render_failed">Pagina kan niet worden weergegeven</string>
+    <string name="pdf_select_page">Pagina selecteren</string>
+    <string name="pdf_page_number">Pagina %1$d</string>
 
 </resources>

@@ -205,7 +205,7 @@
     <!-- OCR gjenkjenningsmoduser – forklaring -->
     <string name="ocr_explain_prep_modes">Forklar gjenkjenningsmoduser</string>
     <string name="ocr_prep_modes_title">Gjenkjenningsmoduser: enkel forklaring</string>
-    <string name="ocr_prep_modes_message">Det finnes tre måter å sende bilder til OCR-motoren på:\n\n• Original (ingen forhåndsbehandling) — raskest. Sender bildet som det er. Best for rene, høy-kontrast skanninger. Kan gå glipp av svak eller støyende tekst.\n\n• OpenCV Quick — en rask opprydding: konverterer til gråtoner, fjerner lett støy, gjør automatisk svart/hvitt og forstørrer litt om nødvendig. Et godt standardvalg for de fleste bilder. Balanserer hastighet og kvalitet.\n\n• OpenCV Robust — laget for maksimal nøyaktighet på vanskelige sider. Retter skjevhet, normaliserer skygger og lys, bruker kantbevarende støyreduksjon og smart oppskalering. Viktig: sender et høykvalitets gråtonebilde til Tesseract (ikke hardt svart/hvitt) for å bevare fine detaljer som løkker i “o” og små tall. Gir best nøyaktighet på vanskelige sider; tregere og bruker mer minne.</string>
+    <string name="ocr_prep_modes_message">Det finnes tre måter å sende bilder til OCR-motoren på:\n\n• Original (ingen forhåndsbehandling) — raskest. Bildet sendes som det er. Best egnet for allerede rene skanninger med høy kontrast. Kan overse svak eller støyende tekst.\n\n• OpenCV Rask — rask opprydding: konvertering til gråtoner, lett støyreduksjon, automatisk svart-hvitt-konvertering og litt oppskalering ved behov. Et godt standardvalg for de fleste bilder. God balanse mellom hastighet og kvalitet.\n\n• OpenCV Robust — omarbeidet for maksimal nøyaktighet på vanskelige sider. Retter skjevhet, normaliserer skygger og belysning, bruker kantbevarende støyreduksjon og intelligent oppskalering. Viktig er at Tesseract får et gråtonebilde av høy kvalitet (ikke hardt svart-hvitt) for å bevare fine detaljer som løkker i bokstaven «o» og små sifre. Gir best nøyaktighet på krevende sider, men er tregere og bruker mer minne.\n\nOCR-etterbehandling: Korrigerer vanlige gjenkjenningsfeil som forvekslinger (0↔O, 1↔l↔I, rn↔m) og kontrollerer usikre ord mot en ordbok. Aktivert som standard; deaktiver for tekniske koder eller serienumre.</string>
 
     <!-- OCR gjenkjenningsmoduser – valg -->
     <string name="ocr_choose_prep_mode_menu">Gjenkjenningsmodus…</string>
@@ -361,7 +361,10 @@
 
     <!-- Options: OCR auto-rotate toggle -->
     <string name="opt_ocr_auto_rotate_apply_export">Automatisk OCR-rotasjon (bruk også ved eksport)</string>
-
+    <!-- Options: OCR post-processing toggle -->
+    <string name="opt_ocr_post_processing">OCR-etterbehandling (korriger vanlige feil)</string>
+    <string name="opt_layout_analysis">Layoutanalyse (kolonner, tabeller)</string>
+    <string name="opt_layout_analysis_hint">Forbedrer OCR for dokumenter med flere kolonner og tabeller</string>
     <!-- Options: Experimental directional mapping fallback -->
     <string name="opt_force_direction_mapping">Tving hint-kartlegging for liggende modus (eksperimentelt)</string>
 
@@ -372,5 +375,15 @@
     <string name="unfiled_collection_title">Usortert</string>
     <string name="open_unfiled">Åpne Usortert</string>
     <string name="a11y_unfiled_summary">Usortert: %1$d element(er)</string>
+
+    <!-- PDF Import -->
+    <string name="error_unknown_file_type">Ukjent filtype</string>
+    <string name="error_unsupported_file_type">Denne filtypen støttes ikke</string>
+    <string name="error_cannot_open_pdf">Kunne ikke åpne PDF</string>
+    <string name="error_pdf_empty">PDF-en inneholder ingen sider</string>
+    <string name="error_pdf_import_failed">Import av PDF mislyktes</string>
+    <string name="error_pdf_page_render_failed">Kunne ikke vise siden</string>
+    <string name="pdf_select_page">Velg side</string>
+    <string name="pdf_page_number">Side %1$d</string>
 
 </resources>

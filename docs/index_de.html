@@ -366,6 +366,19 @@ appverifier verify MakeACopy-vX.Y.Z.apk
             - <strong>OpenCV Robust</strong>: Für schwierige Seiten maximale Genauigkeit (Begradigen/Deskew, Beleuchtung normalisieren, kanten‑erhaltendes Entrauschen, smartes Vergrößern). Liefert ein hochwertiges Graustufenbild für Tesseract. Beste Genauigkeit, aber langsamer und speicherintensiver. <br>
             <em>Hinweis:</em> Für die meisten Fälle ist „OpenCV Schnell“ empfehlenswert; bei sehr schwierigen Vorlagen „OpenCV Robust“.
         </li>
+        <li id="faq-ocr-post-processing"><strong>Was macht die Option „OCR‑Nachbearbeitung (häufige Fehler korrigieren)"?</strong><br>
+            Diese Option verbessert den erkannten Text automatisch nach der OCR‑Verarbeitung. Sie ist standardmäßig aktiviert und kann im Dialog „Erkennungsmodus auswählen" ein‑ oder ausgeschaltet werden.<br>
+            <br>
+            <strong>Was wird korrigiert?</strong><br>
+            - <em>Zeichen‑Verwechslungen</em>: 0 ↔ O (Null vs. Buchstabe O), 1 ↔ l ↔ I (Eins vs. kleines L vs. großes I), 5 ↔ S, 8 ↔ B, 2 ↔ Z<br>
+            - <em>Ligatur‑Korrekturen</em>: „rn" → „m", „cl" → „d", „vv" → „w" (Zeichenfolgen, die wie andere Buchstaben aussehen)<br>
+            - <em>Kontextbezogene Korrekturen</em>: In Zahlenfolgen werden Buchstaben zu Ziffern korrigiert (z. B. „1O23" → „1023"); in Textpassagen werden Ziffern zu Buchstaben korrigiert (z. B. „H0use" → „House")<br>
+            - <em>Wörterbuch‑basierte Korrektur</em>: Wörter mit niedriger Erkennungssicherheit (unter 70 %) werden gegen ein Wörterbuch geprüft und ggf. ersetzt<br>
+            - <em>Sprachspezifische Korrekturen</em>: Für Deutsch z. B. Korrektur von Umlauten und ß („Strasse" → „Straße")<br>
+            <br>
+            <strong>Wann deaktivieren?</strong><br>
+            In den meisten Fällen verbessert die Nachbearbeitung die Textqualität. Es kann jedoch sinnvoll sein, sie zu deaktivieren, wenn der Text viele technische Codes oder Seriennummern enthält, absichtliche Mischungen aus Buchstaben und Zahlen vorkommen oder der Originaltext exakt erhalten bleiben soll.
+        </li>
         <li><strong>Wie verwalte ich Sprachpakete / OCR‑Modelle?</strong><br>
             - Öffne die OCR‑Ansicht eines Scans und tippe oben rechts auf das Menü (⋮) → „OCR‑Modelle“. <br>
             - „.traineddata importieren…“: Eine einzelne Tesseract‑Modelldatei vom Gerät/Speicher importieren. <br>

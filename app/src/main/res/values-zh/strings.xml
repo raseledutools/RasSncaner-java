@@ -205,7 +205,7 @@
     <!-- OCR 识别模式 – 说明 -->
     <string name="ocr_explain_prep_modes">说明识别模式</string>
     <string name="ocr_prep_modes_title">识别模式：简单说明</string>
-    <string name="ocr_prep_modes_message">将图像输入到 OCR 引擎有三种方式：\n\n• 原始（无预处理） — 速度最快。直接发送原始照片。适合已经清晰、高对比度的扫描。可能无法识别模糊或带噪声的文字。\n\n• OpenCV Quick — 快速清理：转换为灰度图，轻度去噪，自动二值化，并在需要时略微放大。适合大多数照片，是速度与质量的良好平衡。\n\n• OpenCV Robust — 为困难页面提供最高精度而设计。可自动校正倾斜，均衡阴影与光照，应用边缘保留的去噪处理，并智能放大。重要的是，它向 Tesseract 提供高质量灰度图（而非纯黑白图），以保留细节，如字母 “o” 的圈和小数字。适用于复杂页面，精度最高，但速度较慢且占用更多内存。</string>
+    <string name="ocr_prep_modes_message">将图像送入 OCR 引擎有三种方式：\n\n• 原始（无预处理）— 速度最快。照片按原样发送。适合已经干净、对比度高的扫描件。可能会遗漏较淡或有噪点的文字。\n\n• OpenCV 快速 — 快速清理：转换为灰度、轻度去噪、自动转换为黑白，并在需要时进行轻微放大。适合作为大多数照片的默认选择，在速度与质量之间取得平衡。\n\n• OpenCV 强化 — 为在困难页面上获得最高准确率而重新设计。可校正倾斜、规范化阴影和光照，应用保边去噪和智能放大。重要的是，它会向 Tesseract 提供高质量的灰度图像（而非硬性的黑白图像），以保留诸如字母“o”的环形细节和较小的数字。在复杂页面上提供最佳准确率，但速度较慢且占用更多内存。\n\nOCR 后处理：纠正常见的识别错误，例如混淆（0↔O、1↔l↔I、rn↔m），并使用词典检查不确定的词语。默认启用；对于技术代码或序列号可将其关闭。</string>
 
     <!-- OCR 识别模式选择 -->
     <string name="ocr_choose_prep_mode_menu">识别模式…</string>
@@ -361,7 +361,10 @@
 
     <!-- Options: OCR auto-rotate toggle -->
     <string name="opt_ocr_auto_rotate_apply_export">OCR 自动旋转（导出时也应用）</string>
-
+    <!-- Options: OCR post-processing toggle -->
+    <string name="opt_ocr_post_processing">OCR 后处理（纠正常见错误）</string>
+    <string name="opt_layout_analysis">布局分析（列、表格）</string>
+    <string name="opt_layout_analysis_hint">改善多列文档和表格的 OCR 效果</string>
     <!-- Options: Experimental directional mapping fallback -->
     <string name="opt_force_direction_mapping">强制横向提示映射（实验性）</string>
 
@@ -373,5 +376,14 @@
     <string name="open_unfiled">打开未分类</string>
     <string name="a11y_unfiled_summary">未分类：%1$d 项</string>
 
+    <!-- PDF Import -->
+    <string name="error_unknown_file_type">未知的文件类型</string>
+    <string name="error_unsupported_file_type">不支持此文件类型</string>
+    <string name="error_cannot_open_pdf">无法打开 PDF</string>
+    <string name="error_pdf_empty">PDF 不包含任何页面</string>
+    <string name="error_pdf_import_failed">PDF 导入失败</string>
+    <string name="error_pdf_page_render_failed">无法渲染页面</string>
+    <string name="pdf_select_page">选择页面</string>
+    <string name="pdf_page_number">第 %1$d 页</string>
 
 </resources>

@@ -204,7 +204,7 @@
     <!-- Modos de reconhecimento OCR – explicação -->
     <string name="ocr_explain_prep_modes">Explicar modos de reconhecimento</string>
     <string name="ocr_prep_modes_title">Modos de reconhecimento: explicação simples</string>
-    <string name="ocr_prep_modes_message">Existem três maneiras de enviar imagens para o mecanismo de OCR:\n\n• Original (sem pré-processamento) — o mais rápido. Envia a foto como está. Melhor para digitalizações já limpas e com alto contraste. Pode não reconhecer textos fracos ou com ruído.\n\n• OpenCV Quick — uma limpeza rápida: converte para tons de cinza, remove ligeiramente o ruído, transforma automaticamente em preto e branco e amplia um pouco, se necessário. Boa opção padrão para a maioria das fotos. Equilíbrio entre velocidade e qualidade.\n\n• OpenCV Robust — projetado para máxima precisão em páginas difíceis. Corrige inclinação, normaliza sombras e iluminação, aplica redução de ruído com preservação de bordas e redimensionamento inteligente. Importante: envia ao Tesseract uma imagem em tons de cinza de alta qualidade (não um preto e branco rígido) para preservar detalhes finos como os laços do “o” e dígitos pequenos. Melhor precisão em páginas difíceis; mais lento e consome mais memória.</string>
+    <string name="ocr_prep_modes_message">Existem três formas de enviar imagens para o motor de OCR:\n\n• Original (sem pré-processamento) — a mais rápida. A foto é enviada tal como está. Ideal para digitalizações já limpas e com alto contraste. Pode não detetar texto fraco ou com ruído.\n\n• OpenCV Rápido — limpeza rápida: conversão para tons de cinzento, redução ligeira de ruído, conversão automática para preto e branco e, se necessário, um ligeiro aumento de escala. Boa opção predefinida para a maioria das fotos. Equilíbrio entre velocidade e qualidade.\n\n• OpenCV Robusto — redesenhado para máxima precisão em páginas difíceis. Corrige inclinações, normaliza sombras e iluminação, aplica redução de ruído com preservação de contornos e escalonamento inteligente. É importante que o Tesseract receba uma imagem em tons de cinzento de alta qualidade (e não preto e branco rígido), preservando detalhes finos como os laços da letra “o” e dígitos pequenos. Oferece a melhor precisão em páginas exigentes, mas é mais lento e utiliza mais memória.\n\nPós-processamento de OCR: Corrige erros comuns de reconhecimento, como confusões (0↔O, 1↔l↔I, rn↔m), e verifica palavras incertas com recurso a um dicionário. Ativado por predefinição; desative para códigos técnicos ou números de série.</string>
 
     <!-- Seleção de modo de reconhecimento OCR -->
     <string name="ocr_choose_prep_mode_menu">Modo de reconhecimento…</string>
@@ -360,6 +360,10 @@
 
     <!-- Options: OCR auto-rotate toggle -->
     <string name="opt_ocr_auto_rotate_apply_export">Rotação automática de OCR (aplicar também na exportação)</string>
+    <!-- Options: OCR post-processing toggle -->
+    <string name="opt_ocr_post_processing">Pós-processamento de OCR (corrigir erros comuns)</string>
+    <string name="opt_layout_analysis">Análise de layout (colunas, tabelas)</string>
+    <string name="opt_layout_analysis_hint">Melhora o OCR para documentos com várias colunas e tabelas</string>
 
     <!-- Options: Experimental directional mapping fallback -->
     <string name="opt_force_direction_mapping">Forçar mapeamento de dicas em modo paisagem (experimental)</string>
@@ -371,5 +375,15 @@
     <string name="unfiled_collection_title">Não classificados</string>
     <string name="open_unfiled">Abrir Não classificados</string>
     <string name="a11y_unfiled_summary">Não classificados: %1$d item(ns)</string>
+
+    <!-- PDF Import -->
+    <string name="error_unknown_file_type">Tipo de ficheiro desconhecido</string>
+    <string name="error_unsupported_file_type">Este tipo de ficheiro não é suportado</string>
+    <string name="error_cannot_open_pdf">Não foi possível abrir o PDF</string>
+    <string name="error_pdf_empty">O PDF não contém páginas</string>
+    <string name="error_pdf_import_failed">Falha ao importar o PDF</string>
+    <string name="error_pdf_page_render_failed">Não foi possível renderizar a página</string>
+    <string name="pdf_select_page">Selecionar página</string>
+    <string name="pdf_page_number">Página %1$d</string>
 
 </resources>

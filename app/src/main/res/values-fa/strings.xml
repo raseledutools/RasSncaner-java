@@ -200,7 +200,7 @@
     <!-- OCR prep modes explanation -->
     <string name="ocr_explain_prep_modes">توضیح حالت‌های تشخیص</string>
     <string name="ocr_prep_modes_title">حالت‌های تشخیص: توضیح ساده</string>
-    <string name="ocr_prep_modes_message">سه روش برای تغذیهٔ تصاویر به موتور OCR وجود دارد:\n\n• اصلی (بدون پیش‌پردازش) — سریع‌ترین. عکس همان‌طور که هست ارسال می‌شود. بهترین برای اسکن‌های تمیز و پرکنتراست. ممکن است متن‌های کم‌رنگ یا پرنویز را از دست بدهد.\n\n• OpenCV Quick — پاکسازی سریع: تبدیل به خاکستری، نویزگیری سبک، سیاه/سفید کردن خودکار و در صورت نیاز کمی بزرگ‌نمایی. پیش‌فرض خوب برای بیشتر عکس‌ها. تعادل بین سرعت و کیفیت.\n\n• OpenCV Robust — بازطراحی‌شده برای بیشترین دقت در صفحات دشوار. کجی را اصلاح می‌کند، سایه‌ها/نوردهی را نرمال می‌کند، نویزگیریِ حفظ‌کنندهٔ لبه و بزرگ‌نمایی هوشمند اعمال می‌کند. مهم‌تر اینکه یک تصویر خاکستری باکیفیت (نه سیاه/سفیدِ سخت) به Tesseract می‌دهد تا جزئیات ظریف مانند حلقه‌های «o» و ارقام کوچک حفظ شوند. بهترین دقت برای صفحات سخت؛ کندتر و پرمصرف‌تر از نظر حافظه.</string>
+    <string name="ocr_prep_modes_message">سه روش برای ارسال تصاویر به موتور OCR وجود دارد:\n\n• اصلی (بدون پیش‌پردازش) — سریع‌ترین حالت. عکس به همان شکل ارسال می‌شود. مناسب برای اسکن‌های تمیز و با کنتراست بالا. ممکن است متن‌های کم‌رنگ یا پرنویز را از دست بدهد.\n\n• OpenCV سریع — پاک‌سازی سریع: تبدیل به طیف خاکستری، کاهش نویز سبک، تبدیل خودکار به سیاه‌وسفید و در صورت نیاز کمی بزرگ‌نمایی. گزینهٔ پیش‌فرض مناسب برای اکثر عکس‌ها، با تعادل بین سرعت و کیفیت.\n\n• OpenCV مقاوم — بازطراحی‌شده برای بیشترین دقت در صفحات دشوار. کجی تصویر را اصلاح می‌کند، سایه‌ها و روشنایی را نرمال‌سازی می‌کند، کاهش نویز با حفظ لبه‌ها و بزرگ‌نمایی هوشمند اعمال می‌کند. نکتهٔ مهم این است که به Tesseract یک تصویر خاکستری با کیفیت بالا (نه سیاه‌وسفید سخت) داده می‌شود تا جزئیات ظریف مانند حلقه‌های حرف «o» و ارقام کوچک حفظ شوند. بهترین دقت را برای صفحات سخت ارائه می‌دهد، اما کندتر است و حافظهٔ بیشتری مصرف می‌کند.\n\nپردازش پس از OCR: خطاهای رایج تشخیص مانند اشتباهات (0↔O، 1↔l↔I، rn↔m) را اصلاح می‌کند و واژه‌های نامطمئن را با یک فرهنگ لغت بررسی می‌کند. به‌طور پیش‌فرض فعال است؛ برای کدهای فنی یا شماره‌های سریال آن را غیرفعال کنید.</string>
 
     <!-- OCR prep modes selection -->
     <string name="ocr_choose_prep_mode_menu">حالت تشخیص…</string>
@@ -358,6 +358,10 @@
 
     <!-- Options: OCR auto-rotate toggle -->
     <string name="opt_ocr_auto_rotate_apply_export">چرخش خودکار OCR (همچنین اعمال در خروجی)</string>
+    <!-- Options: OCR post-processing toggle -->
+    <string name="opt_ocr_post_processing">پس‌پردازش OCR (اصلاح خطاهای رایج)</string>
+    <string name="opt_layout_analysis">تحلیل چیدمان (ستون‌ها، جداول)</string>
+    <string name="opt_layout_analysis_hint">OCR را برای اسناد چند ستونی و جداول بهبود می‌بخشد</string>
     <!-- Options: Experimental directional mapping fallback -->
     <string name="opt_force_direction_mapping">اجبار نگاشت راهنمای حالت افقی (آزمایشی)</string>
     <!-- Developer / Debug options -->
@@ -366,4 +370,14 @@
     <string name="unfiled_collection_title">بدون دسته‌بندی</string>
     <string name="open_unfiled">باز کردن بدون دسته‌بندی</string>
     <string name="a11y_unfiled_summary">بدون دسته‌بندی: %1$d مورد</string>
+
+    <!-- PDF Import -->
+    <string name="error_unknown_file_type">نوع فایل ناشناخته است</string>
+    <string name="error_unsupported_file_type">این نوع فایل پشتیبانی نمی‌شود</string>
+    <string name="error_cannot_open_pdf">امکان باز کردن فایل PDF وجود ندارد</string>
+    <string name="error_pdf_empty">فایل PDF هیچ صفحه‌ای ندارد</string>
+    <string name="error_pdf_import_failed">وارد کردن فایل PDF ناموفق بود</string>
+    <string name="error_pdf_page_render_failed">نمایش صفحه امکان‌پذیر نیست</string>
+    <string name="pdf_select_page">انتخاب صفحه</string>
+    <string name="pdf_page_number">صفحه %1$d</string>
 </resources>

@@ -201,7 +201,8 @@
     <!-- OCR prep modes explanation -->
     <string name="ocr_explain_prep_modes">شرح أوضاع التعرّف</string>
     <string name="ocr_prep_modes_title">أوضاع التعرّف: شرح مبسط</string>
-    <string name="ocr_prep_modes_message">هناك ثلاث طرق لإدخال الصور إلى محرك OCR:\n\n• الأصلية (بدون معالجة مسبقة) — الأسرع. نرسل الصورة كما هي. الأفضل للصور النظيفة عالية التباين. قد يفوت نص باهت أو مشوش.\n\n• OpenCV Quick — تنظيف سريع: تحويل إلى تدرج رمادي، تقليل ضوضاء خفيف، تحويل تلقائي إلى أبيض/أسود، وتكبير قليلًا عند الحاجة. خيار افتراضي جيد لمعظم الصور. توازن بين السرعة والجودة.\n\n• OpenCV Robust — مُعاد بناؤه لتحقيق أقصى دقة للصفحات الصعبة. يقوم بتقويم الميل، وتطبيع الظلال/الإضاءة، وتطبيق تقليل ضوضاء يحافظ على الحواف وتكبير ذكي. والأهم أنه يزوّد Tesseract بصورة رمادية عالية الجودة (وليس أبيض/أسود قاسيًا) للحفاظ على التفاصيل الدقيقة مثل حلقات حرف “o” والأرقام الصغيرة. أفضل دقة للصفحات الصعبة؛ أبطأ ويستخدم ذاكرة أكثر.</string>
+    <string name="ocr_prep_modes_message">هناك ثلاث طرق لإدخال الصور إلى محرّك التعرّف الضوئي على النص (OCR):\n\n• الأصلي (بدون معالجة مسبقة) — الأسرع. يتم إرسال الصورة كما هي. مناسب للصور النظيفة وعالية التباين. قد يفوّت النصوص الباهتة أو المشوَّشة.\n\n• OpenCV السريع — تنظيف سريع: تحويل إلى تدرّج الرمادي، تقليل ضوضاء خفيف، تحويل تلقائي إلى أبيض وأسود، مع تكبير بسيط عند الحاجة. خيار افتراضي جيّد لمعظم الصور، بتوازن بين السرعة والجودة.\n\n• OpenCV المتقدّم — مُعاد تصميمه لتحقيق أعلى دقّة مع الصفحات الصعبة. يقوم بتصحيح الميل، وتوحيد الظلال والإضاءة، وتطبيق تقليل ضوضاء يحافظ على الحواف، مع تكبير ذكي. والأهم أنه يزوّد Tesseract بصورة عالية الجودة بتدرّج رمادي (وليس أبيض وأسود صارم) للحفاظ على التفاصيل الدقيقة مثل حلقات حرف “o” والأرقام الصغيرة. يوفّر أفضل دقّة مع الصفحات الصعبة، لكنه أبطأ ويستهلك ذاكرة أكبر.\n\nالمعالجة اللاحقة لـ OCR: تصحّح أخطاء التعرّف الشائعة مثل الالتباس (0↔O، 1↔l↔I، rn↔m)، وتتحقّق من الكلمات غير المؤكّدة باستخدام قاموس. مفعّلة افتراضيًا؛ عطّلها عند معالجة الأكواد التقنية أو الأرقام التسلسلية.</string>
+
 
     <!-- OCR prep modes selection -->
     <string name="ocr_choose_prep_mode_menu">وضع التعرّف…</string>
@@ -359,6 +360,10 @@
 
     <!-- Options: OCR auto-rotate toggle -->
     <string name="opt_ocr_auto_rotate_apply_export">الدوران التلقائي لـ OCR (وتطبيقه أيضًا عند التصدير)</string>
+    <!-- Options: OCR post-processing toggle -->
+    <string name="opt_ocr_post_processing">معالجة OCR اللاحقة (تصحيح الأخطاء الشائعة)</string>
+    <string name="opt_layout_analysis">تحليل التخطيط (الأعمدة، الجداول)</string>
+    <string name="opt_layout_analysis_hint">يحسن OCR للمستندات متعددة الأعمدة والجداول</string>
     <!-- Options: Experimental directional mapping fallback -->
     <string name="opt_force_direction_mapping">فرض تعيين تلميح الوضع الأفقي (تجريبي)</string>
     <!-- Developer / Debug options -->
@@ -367,4 +372,15 @@
     <string name="unfiled_collection_title">غير مُصنّف</string>
     <string name="open_unfiled">فتح غير مُصنّف</string>
     <string name="a11y_unfiled_summary">غير مُصنّف: %1$d عنصر/عناصر</string>
+
+    <!-- PDF Import -->
+    <string name="error_unknown_file_type">نوع الملف غير معروف</string>
+    <string name="error_unsupported_file_type">نوع هذا الملف غير مدعوم</string>
+    <string name="error_cannot_open_pdf">تعذّر فتح ملف PDF</string>
+    <string name="error_pdf_empty">ملف PDF لا يحتوي على أي صفحات</string>
+    <string name="error_pdf_import_failed">فشل استيراد ملف PDF</string>
+    <string name="error_pdf_page_render_failed">تعذّر عرض الصفحة</string>
+    <string name="pdf_select_page">اختر صفحة</string>
+    <string name="pdf_page_number">الصفحة %1$d</string>
+
 </resources>

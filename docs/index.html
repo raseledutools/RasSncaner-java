@@ -368,6 +368,19 @@ appverifier verify MakeACopy-vX.Y.Z.apk
             - <strong>OpenCV Robust</strong>: Maximum accuracy for difficult pages (deskew, normalize lighting, edge-preserving denoising, smart upscaling). Produces a high-quality grayscale image for Tesseract. Best accuracy, but slower and more memory intensive. <br>
             <em>Note:</em> For most cases, “OpenCV Quick” is recommended; for very tough pages use “OpenCV Robust”.
         </li>
+        <li id="faq-ocr-post-processing"><strong>What does the "OCR post-processing (correct common errors)" option do?</strong><br>
+            This option automatically improves the recognized text after OCR processing. It is enabled by default and can be toggled in the "Choose recognition mode" dialog.<br>
+            <br>
+            <strong>What gets corrected?</strong><br>
+            - <em>Character confusions</em>: 0 ↔ O (zero vs. letter O), 1 ↔ l ↔ I (one vs. lowercase L vs. uppercase I), 5 ↔ S, 8 ↔ B, 2 ↔ Z<br>
+            - <em>Ligature corrections</em>: "rn" → "m", "cl" → "d", "vv" → "w" (character sequences that look like other letters)<br>
+            - <em>Context-aware corrections</em>: In numeric sequences, letters are corrected to digits (e.g., "1O23" → "1023"); in text passages, digits are corrected to letters (e.g., "H0use" → "House")<br>
+            - <em>Dictionary-based correction</em>: Words with low recognition confidence (below 70%) are checked against a dictionary and replaced if a match is found<br>
+            - <em>Language-specific corrections</em>: For German, e.g., correction of umlauts and ß ("Strasse" → "Straße")<br>
+            <br>
+            <strong>When to disable?</strong><br>
+            In most cases, post-processing improves text quality. However, it may be useful to disable it if the text contains many technical codes or serial numbers, intentional mixtures of letters and numbers, or if the original text must be preserved exactly.
+        </li>
         <li><strong>How do I manage language packs / OCR models?</strong><br>
             - Open the OCR view of a scan and tap the menu (⋮) → “OCR models”. <br>
             - “Import .traineddata…”: Import a single Tesseract model file from the device/storage. <br>

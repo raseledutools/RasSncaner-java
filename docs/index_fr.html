@@ -325,6 +325,19 @@ appverifier verify MakeACopy-vX.Y.Z.apk
             - <strong>OpenCV Robuste</strong> : Précision maximale pour des pages difficiles (redressement/deskew, normalisation de l’éclairage, débruitage préservant les contours, agrandissement intelligent). Produit une image en niveaux de gris de haute qualité pour Tesseract. Meilleure précision, mais plus lent et plus gourmand en mémoire. <br>
             <em>Remarque :</em> Pour la plupart des cas, « OpenCV Rapide » est recommandé ; pour des pages très difficiles, utilisez « OpenCV Robuste ».
         </li>
+        <li id="faq-ocr-post-processing"><strong>Que fait l'option « Post‑traitement OCR (corriger les erreurs courantes) » ?</strong><br>
+            Cette option améliore automatiquement le texte reconnu après le traitement OCR. Elle est activée par défaut et peut être activée/désactivée dans le dialogue « Choisir le mode de reconnaissance ».<br>
+            <br>
+            <strong>Qu'est‑ce qui est corrigé ?</strong><br>
+            - <em>Confusions de caractères</em> : 0 ↔ O (zéro vs. lettre O), 1 ↔ l ↔ I (un vs. L minuscule vs. I majuscule), 5 ↔ S, 8 ↔ B, 2 ↔ Z<br>
+            - <em>Corrections de ligatures</em> : « rn » → « m », « cl » → « d », « vv » → « w » (séquences de caractères ressemblant à d'autres lettres)<br>
+            - <em>Corrections contextuelles</em> : Dans les séquences numériques, les lettres sont corrigées en chiffres (p. ex. « 1O23 » → « 1023 ») ; dans les passages de texte, les chiffres sont corrigés en lettres (p. ex. « H0use » → « House »)<br>
+            - <em>Correction basée sur le dictionnaire</em> : Les mots avec une faible confiance de reconnaissance (inférieure à 70 %) sont vérifiés dans un dictionnaire et remplacés si une correspondance est trouvée<br>
+            - <em>Corrections spécifiques à la langue</em> : Pour l'allemand, p. ex. correction des trémas et du ß (« Strasse » → « Straße »)<br>
+            <br>
+            <strong>Quand désactiver ?</strong><br>
+            Dans la plupart des cas, le post‑traitement améliore la qualité du texte. Cependant, il peut être utile de le désactiver si le texte contient de nombreux codes techniques ou numéros de série, des mélanges intentionnels de lettres et de chiffres, ou si le texte original doit être préservé exactement.
+        </li>
         <li><strong>Comment gérer les packs de langue / modèles OCR ?</strong><br>
             - Ouvrez la vue OCR d’un scan et touchez le menu (⋮) → « Modèles OCR ». <br>
             - « Importer .traineddata… » : importer un fichier modèle Tesseract unique depuis l’appareil/le stockage. <br>

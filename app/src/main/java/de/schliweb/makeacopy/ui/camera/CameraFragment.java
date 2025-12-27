@@ -194,7 +194,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                     }
                 });
 
-        // Register the image picker launcher (SAF)
+        // Register the image/PDF picker launcher (SAF)
         pickImageLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(), result -> {
                     if (result == null || result.getData() == null) return;
@@ -202,12 +202,14 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                     Intent data = result.getData();
                     Uri uri = data.getData();
                     if (uri == null) return;
-                    // Validate MIME type to be image/* (SAF already filters, so this is a best-effort check)
+
+                    // Determine MIME type
                     String mime = requireContext().getContentResolver().getType(uri);
-                    if (mime == null || !mime.startsWith("image/")) {
-                        UIUtils.showToast(requireContext(), R.string.error_selected_file_is_not_an_image, Toast.LENGTH_SHORT);
+                    if (mime == null) {
+                        UIUtils.showToast(requireContext(), R.string.error_unknown_file_type, Toast.LENGTH_SHORT);
                         return;
                     }
+
                     // Persist read permission if granted by the chooser (ignore if not allowed)
                     int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                     if ((takeFlags & Intent.FLAG_GRANT_READ_URI_PERMISSION) != 0) {
@@ -217,36 +219,15 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                             Log.w(TAG, "Persistable read permission not granted by provider", se);
                         }
                     }
-                    if (cameraViewModel != null) {
-                        // Reset rotations for a new scan imported from storage
-                        if (cropViewModel != null) {
-                            cropViewModel.setUserRotationDegrees(0);
-                            cropViewModel.setCaptureRotationDegrees(0);
-                            cropViewModel.setImageCropped(false);
-                        }
-                        cameraViewModel.setImagePath(null);
-                        cameraViewModel.setImageUri(uri);
 
-                        // Navigate to next step depending on preference
-                        if (isAdded()) {
-                            boolean skipOcr = false;
-                            boolean skipCropping = false;
-                            Context ctx = getContext();
-                            if (ctx != null) {
-                                android.content.SharedPreferences prefs = ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE);
-                                skipOcr = prefs.getBoolean("skip_ocr", false);
-                                skipCropping = prefs.getBoolean("skip_cropping", false);
-                            }
-                            int dest = skipCropping ? (skipOcr ? R.id.navigation_export : R.id.navigation_ocr) : R.id.navigation_crop;
-                            if (skipCropping && !skipOcr) {
-                                OCRViewModel ocrVm = new ViewModelProvider(requireActivity()).get(OCRViewModel.class);
-                                ocrVm.resetForNewImage();
-                            }
-                            try {
-                                Navigation.findNavController(requireView()).navigate(dest);
-                            } catch (IllegalArgumentException | IllegalStateException ignored) {
-                            }
-                        }
+                    if (mime.startsWith("image/")) {
+                        // Handle image import (existing logic)
+                        handleImageImport(uri);
+                    } else if (mime.equals("application/pdf")) {
+                        // Handle PDF import
+                        handlePdfImport(uri);
+                    } else {
+                        UIUtils.showToast(requireContext(), R.string.error_unsupported_file_type, Toast.LENGTH_SHORT);
                     }
                 });
 
@@ -284,11 +265,13 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         // Set up flashlight button
         binding.buttonFlash.setOnClickListener(v -> toggleFlashlight());
 
-        // Set up pick image button
+        // Set up pick image button (supports images and PDFs)
         binding.buttonPickImage.setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
-            intent.setType("image/*");
+            // Accept both images and PDFs
+            intent.setType("*/*");
+            intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*", "application/pdf"});
             intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
             pickImageLauncher.launch(intent);
@@ -950,6 +933,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                             ocrVm.resetForNewImage();
 
                             cropViewModel.setImageCropped(false);
+                            cropViewModel.setImageBitmap(null);
 
                             boolean skipOcr = false;
                             boolean skipCropping = false;
@@ -2113,5 +2097,370 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     // --- Consolidated guidance decision for A11y & debug overlay ---
     // Encapsulates logic: score threshold → NO_DOCUMENT_DETECTED and dampen distance hints
     private record EffectiveFraming(FramingResult result, boolean suppressDistance) {
+    }
+
+    // ==================== PDF Import Support ====================
+
+    /**
+     * Handles image import from gallery (existing logic extracted to method).
+     */
+    private void handleImageImport(Uri uri) {
+        if (cameraViewModel != null) {
+            // Reset rotations for a new scan imported from storage
+            if (cropViewModel != null) {
+                cropViewModel.setUserRotationDegrees(0);
+                cropViewModel.setCaptureRotationDegrees(0);
+                cropViewModel.setImageCropped(false);
+                cropViewModel.setImageBitmap(null);
+            }
+            cameraViewModel.setImagePath(null);
+            cameraViewModel.setImageUri(uri);
+
+            // Navigate to next step depending on preference
+            if (isAdded()) {
+                boolean skipOcr = false;
+                boolean skipCropping = false;
+                Context ctx = getContext();
+                if (ctx != null) {
+                    android.content.SharedPreferences prefs = ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE);
+                    skipOcr = prefs.getBoolean("skip_ocr", false);
+                    skipCropping = prefs.getBoolean("skip_cropping", false);
+                }
+                int dest = skipCropping ? (skipOcr ? R.id.navigation_export : R.id.navigation_ocr) : R.id.navigation_crop;
+                if (skipCropping && !skipOcr) {
+                    OCRViewModel ocrVm = new ViewModelProvider(requireActivity()).get(OCRViewModel.class);
+                    ocrVm.resetForNewImage();
+                }
+                try {
+                    Navigation.findNavController(requireView()).navigate(dest);
+                } catch (IllegalArgumentException | IllegalStateException ignored) {
+                }
+            }
+        }
+    }
+
+    /**
+     * Handles PDF import - renders PDF page(s) as bitmap and feeds into workflow.
+     */
+    private void handlePdfImport(Uri pdfUri) {
+        new Thread(() -> {
+            android.os.ParcelFileDescriptor pfd = null;
+            android.graphics.pdf.PdfRenderer renderer = null;
+            try {
+                Context ctx = getContext();
+                if (ctx == null || !isAdded()) return;
+
+                pfd = ctx.getContentResolver().openFileDescriptor(pdfUri, "r");
+                if (pfd == null) {
+                    runOnUiThreadSafe(() ->
+                            UIUtils.showToast(requireContext(), R.string.error_cannot_open_pdf, Toast.LENGTH_SHORT));
+                    return;
+                }
+
+                renderer = new android.graphics.pdf.PdfRenderer(pfd);
+                int pageCount = renderer.getPageCount();
+
+                if (pageCount == 0) {
+                    runOnUiThreadSafe(() ->
+                            UIUtils.showToast(requireContext(), R.string.error_pdf_empty, Toast.LENGTH_SHORT));
+                    return;
+                }
+
+                if (pageCount == 1) {
+                    // Single page: render directly
+                    Bitmap bitmap = renderPdfPage(renderer, 0);
+                    runOnUiThreadSafe(() -> processPdfBitmap(bitmap));
+                } else {
+                    // Multiple pages: show selection dialog
+                    runOnUiThreadSafe(() -> showPageSelectionDialog(pdfUri, pageCount));
+                }
+            } catch (java.io.IOException | SecurityException e) {
+                Log.e(TAG, "PDF import error", e);
+                runOnUiThreadSafe(() ->
+                        UIUtils.showToast(requireContext(), R.string.error_pdf_import_failed, Toast.LENGTH_SHORT));
+            } finally {
+                try {
+                    if (renderer != null) renderer.close();
+                    if (pfd != null) pfd.close();
+                } catch (java.io.IOException ignored) {
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * Renders a single PDF page as a high-resolution bitmap suitable for OCR.
+     */
+    private Bitmap renderPdfPage(android.graphics.pdf.PdfRenderer renderer, int pageIndex) {
+        android.graphics.pdf.PdfRenderer.Page page = renderer.openPage(pageIndex);
+
+        // Target DPI for OCR quality (300 DPI recommended)
+        final int TARGET_DPI = 300;
+        final float PDF_DPI = 72f; // Standard PDF resolution
+        float scale = TARGET_DPI / PDF_DPI;
+
+        int width = (int) (page.getWidth() * scale);
+        int height = (int) (page.getHeight() * scale);
+
+        // Memory limit: max 4096x4096 pixels
+        final int MAX_DIMENSION = 4096;
+        if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+            float downScale = Math.min((float) MAX_DIMENSION / width, (float) MAX_DIMENSION / height);
+            width = (int) (width * downScale);
+            height = (int) (height * downScale);
+            scale *= downScale;
+        }
+
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        bitmap.eraseColor(android.graphics.Color.WHITE); // White background for transparent PDFs
+
+        android.graphics.Matrix matrix = new android.graphics.Matrix();
+        matrix.setScale(scale, scale);
+
+        page.render(bitmap, null, matrix, android.graphics.pdf.PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
+        page.close();
+
+        return bitmap;
+    }
+
+    /**
+     * Shows a dialog for selecting a page from a multi-page PDF with thumbnail previews.
+     */
+    private void showPageSelectionDialog(Uri pdfUri, int pageCount) {
+        if (!isAdded()) return;
+
+        // Inflate custom dialog layout
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_pdf_page_selection, null);
+        androidx.recyclerview.widget.RecyclerView recyclerView = dialogView.findViewById(R.id.recycler_pages);
+        View progressBar = dialogView.findViewById(R.id.progress_loading);
+
+        // Set up RecyclerView with GridLayoutManager (3 columns)
+        recyclerView.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(requireContext(), 3));
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .setNegativeButton(android.R.string.cancel, null)
+                .create();
+
+        // Improve button contrast for dark mode
+        dialog.setOnShowListener(dlg -> de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext()));
+
+        // Create adapter with page selection callback
+        PdfPageThumbnailAdapter adapter = new PdfPageThumbnailAdapter(pageCount, pdfUri, selectedPage -> {
+            dialog.dismiss();
+            // Render selected page in full resolution in background
+            new Thread(() -> {
+                android.os.ParcelFileDescriptor pfd = null;
+                android.graphics.pdf.PdfRenderer renderer = null;
+                try {
+                    Context ctx = getContext();
+                    if (ctx == null || !isAdded()) return;
+
+                    pfd = ctx.getContentResolver().openFileDescriptor(pdfUri, "r");
+                    if (pfd == null) return;
+
+                    renderer = new android.graphics.pdf.PdfRenderer(pfd);
+                    Bitmap bitmap = renderPdfPage(renderer, selectedPage);
+
+                    runOnUiThreadSafe(() -> processPdfBitmap(bitmap));
+                } catch (java.io.IOException e) {
+                    Log.e(TAG, "PDF page render error", e);
+                    runOnUiThreadSafe(() ->
+                            UIUtils.showToast(requireContext(), R.string.error_pdf_page_render_failed, Toast.LENGTH_SHORT));
+                } finally {
+                    try {
+                        if (renderer != null) renderer.close();
+                        if (pfd != null) pfd.close();
+                    } catch (java.io.IOException ignored) {
+                    }
+                }
+            }).start();
+        });
+
+        recyclerView.setAdapter(adapter);
+
+        // Load thumbnails in background
+        new Thread(() -> {
+            android.os.ParcelFileDescriptor pfd = null;
+            android.graphics.pdf.PdfRenderer renderer = null;
+            try {
+                Context ctx = getContext();
+                if (ctx == null || !isAdded()) return;
+
+                pfd = ctx.getContentResolver().openFileDescriptor(pdfUri, "r");
+                if (pfd == null) return;
+
+                renderer = new android.graphics.pdf.PdfRenderer(pfd);
+
+                for (int i = 0; i < pageCount; i++) {
+                    if (!isAdded()) break;
+                    final int pageIndex = i;
+                    Bitmap thumbnail = renderPdfPageThumbnail(renderer, pageIndex);
+                    runOnUiThreadSafe(() -> adapter.setThumbnail(pageIndex, thumbnail));
+                }
+
+                // Hide progress bar and show RecyclerView
+                runOnUiThreadSafe(() -> {
+                    if (progressBar != null) progressBar.setVisibility(View.GONE);
+                    recyclerView.setVisibility(View.VISIBLE);
+                });
+            } catch (java.io.IOException e) {
+                Log.e(TAG, "PDF thumbnail loading error", e);
+            } finally {
+                try {
+                    if (renderer != null) renderer.close();
+                    if (pfd != null) pfd.close();
+                } catch (java.io.IOException ignored) {
+                }
+            }
+        }).start();
+
+        dialog.show();
+    }
+
+    /**
+     * Renders a PDF page as a small thumbnail for preview.
+     */
+    private Bitmap renderPdfPageThumbnail(android.graphics.pdf.PdfRenderer renderer, int pageIndex) {
+        android.graphics.pdf.PdfRenderer.Page page = renderer.openPage(pageIndex);
+
+        // Thumbnail size: max 200px on longest side
+        final int THUMBNAIL_SIZE = 200;
+        int pageWidth = page.getWidth();
+        int pageHeight = page.getHeight();
+
+        float scale = Math.min((float) THUMBNAIL_SIZE / pageWidth, (float) THUMBNAIL_SIZE / pageHeight);
+        int width = (int) (pageWidth * scale);
+        int height = (int) (pageHeight * scale);
+
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        bitmap.eraseColor(android.graphics.Color.WHITE);
+
+        android.graphics.Matrix matrix = new android.graphics.Matrix();
+        matrix.setScale(scale, scale);
+
+        page.render(bitmap, null, matrix, android.graphics.pdf.PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
+        page.close();
+
+        return bitmap;
+    }
+
+    /**
+     * Adapter for displaying PDF page thumbnails in a RecyclerView.
+     */
+    private class PdfPageThumbnailAdapter extends androidx.recyclerview.widget.RecyclerView.Adapter<PdfPageThumbnailAdapter.ViewHolder> {
+        private final int pageCount;
+        private final Uri pdfUri;
+        private final Bitmap[] thumbnails;
+        private final OnPageSelectedListener listener;
+
+        interface OnPageSelectedListener {
+            void onPageSelected(int pageIndex);
+        }
+
+        PdfPageThumbnailAdapter(int pageCount, Uri pdfUri, OnPageSelectedListener listener) {
+            this.pageCount = pageCount;
+            this.pdfUri = pdfUri;
+            this.thumbnails = new Bitmap[pageCount];
+            this.listener = listener;
+        }
+
+        void setThumbnail(int pageIndex, Bitmap thumbnail) {
+            if (pageIndex >= 0 && pageIndex < thumbnails.length) {
+                thumbnails[pageIndex] = thumbnail;
+                notifyItemChanged(pageIndex);
+            }
+        }
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_pdf_page_thumbnail, parent, false);
+            return new ViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            holder.pageLabel.setText(getString(R.string.pdf_page_number, position + 1));
+            holder.pageNumberBadge.setText(String.valueOf(position + 1));
+
+            if (thumbnails[position] != null) {
+                holder.thumbnail.setImageBitmap(thumbnails[position]);
+                holder.loadingIndicator.setVisibility(View.GONE);
+            } else {
+                holder.thumbnail.setImageBitmap(null);
+                holder.loadingIndicator.setVisibility(View.VISIBLE);
+            }
+
+            holder.itemView.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onPageSelected(position);
+                }
+            });
+        }
+
+        @Override
+        public int getItemCount() {
+            return pageCount;
+        }
+
+        class ViewHolder extends androidx.recyclerview.widget.RecyclerView.ViewHolder {
+            final android.widget.ImageView thumbnail;
+            final android.widget.TextView pageLabel;
+            final android.widget.TextView pageNumberBadge;
+            final View loadingIndicator;
+
+            ViewHolder(@NonNull View itemView) {
+                super(itemView);
+                thumbnail = itemView.findViewById(R.id.page_thumbnail);
+                pageLabel = itemView.findViewById(R.id.page_label);
+                pageNumberBadge = itemView.findViewById(R.id.page_number_badge);
+                loadingIndicator = itemView.findViewById(R.id.thumbnail_loading);
+            }
+        }
+    }
+
+    /**
+     * Processes a bitmap from PDF and feeds it into the normal workflow (Crop → OCR → Export).
+     */
+    private void processPdfBitmap(Bitmap bitmap) {
+        if (bitmap == null || !isAdded()) return;
+
+        // Reset for new scan
+        if (cropViewModel != null) {
+            cropViewModel.setUserRotationDegrees(0);
+            cropViewModel.setCaptureRotationDegrees(0);
+            cropViewModel.setImageCropped(false);
+            cropViewModel.setImageBitmap(bitmap);
+            cropViewModel.setOriginalImageBitmap(bitmap);
+            cropViewModel.setImageLoaded(true);
+        }
+
+        if (cameraViewModel != null) {
+            cameraViewModel.setImagePath(null); // No file path, from PDF
+            cameraViewModel.setImageUri(null);  // No direct URI
+        }
+
+        // Navigation based on settings
+        boolean skipOcr = false;
+        boolean skipCropping = false;
+        Context ctx = getContext();
+        if (ctx != null) {
+            android.content.SharedPreferences prefs = ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE);
+            skipOcr = prefs.getBoolean("skip_ocr", false);
+            skipCropping = prefs.getBoolean("skip_cropping", false);
+        }
+
+        int dest = skipCropping ? (skipOcr ? R.id.navigation_export : R.id.navigation_ocr) : R.id.navigation_crop;
+        if (skipCropping && !skipOcr) {
+            OCRViewModel ocrVm = new ViewModelProvider(requireActivity()).get(OCRViewModel.class);
+            ocrVm.resetForNewImage();
+        }
+
+        try {
+            Navigation.findNavController(requireView()).navigate(dest);
+        } catch (IllegalArgumentException | IllegalStateException ignored) {
+        }
     }
 }
