@@ -252,6 +252,9 @@ A big thank you to the people who make *MakeACopy* better:
 - **pvagner (Peter)** – initiated and co-shaped the **Accessibility Mode** through issue-driven discussion and extensive real-world testing.  
   His detailed feedback led to substantial improvements in camera guidance, OCR rotation and export behavior, and the accessibility documentation (see issue #44).
 
+  Working together with Peter on accessibility was genuinely enjoyable.  
+  The collaboration was constructive, thoughtful, and ultimately helped improve *MakeACopy* as a whole.
+
 ### 📝 Notes from the Field
 
 - A public review claimed that *MakeACopy* installs other apps and drains the battery.  
