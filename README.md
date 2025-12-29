@@ -236,28 +236,30 @@ Contributions welcome!
 
 A big thank you to the people who make *MakeACopy* better:
 
-- Our very first supporter — created an issue, helped with a fix, and even made a donation 🎉  
-  This is the spirit of open source: collaboration, improvement, and appreciation. ❤️
-- **KalleMerkt** (from the [android-hilfe.de](https://www.android-hilfe.de/) community) – provided valuable suggestions to make the user experience smoother and more intuitive
-- **tofg** – stayed persistent and helped track down a tricky SD card issue affecting some devices. Thanks to their patience and testing, the fix is now in and benefits all users. 💪
-- **Felix H.** – supported the project with a kind donation at a moment of self-doubt -  
-  a reminder that *MakeACopy* truly means something to people out there. 💚
+- Our very first supporter — created an issue, helped with a fix, and even made a donation.  
+  This is the spirit of open source: collaboration, improvement, and appreciation.
+- **KalleMerkt** (from the [android-hilfe.de](https://www.android-hilfe.de/) community) – provided valuable suggestions to make the user experience smoother and more intuitive.
+- **tofg** – stayed persistent and helped track down a tricky SD card issue affecting some devices. Thanks to thorough testing, the fix now benefits all users.
+- **Felix H.** – supported the project with a kind donation at a moment of self-doubt,  
+  a reminder that *MakeACopy* truly means something to people out there.
 - **teastrainer** – tested several release candidates with remarkable precision and patience,  
   helping to refine the crop and rotation workflow step by step.  
-  A great example of constructive collaboration. 🙌
-- **hekele1022** – tested multiple release candidates on his Sony Xperia device, providing logs and feedback that confirmed the new camera system        works reliably without any device-specific hacks. A key contribution that helped make MakeACopy fully cross-device compatible. 📸
-- **djayko** – helped test the Sony builds with great patience on his device, confirming the stability of the new camera flow in real-world use. A    calm, steady tester spirit that every open-source project dreams of. 🙏
+  A great example of constructive collaboration.
+- **hekele1022** – tested multiple release candidates on a Sony Xperia device, providing logs and feedback that confirmed the new camera system works reliably without any device-specific hacks.  
+  A key contribution that helped make *MakeACopy* fully cross-device compatible.
+- **djayko** – helped test Sony builds with great patience in real-world use, confirming the stability of the new camera flow.  
+  A calm, steady tester spirit that every open-source project dreams of.
+- **pvagner (Peter)** – initiated and co-shaped the **Accessibility Mode** through issue-driven discussion and extensive real-world testing.  
+  His detailed feedback led to substantial improvements in camera guidance, OCR rotation and export behavior, and the accessibility documentation (see issue #44).
 
-- **Special Mention 🐴** – A 1★ review claiming *MakeACopy* installs other apps and drains the battery.  
-  Technically impossible (the app only uses the `CAMERA` permission).  
-  The profile picture was *Eeyore* – perfectly fitting for such overly pessimistic feedback. 😅
+### 📝 Notes from the Field
 
-- **Special Mention 🔐** – An anonymous email appeared with the subject  
-  *“Are you out of your mind? 100 MEGABYTES for a scanner?”*  
-  It contained a “public key” and another email as attachments — but no message.  
-  Both were deleted unopened.  
-  A small reminder that open source sometimes attracts not only feedback,  
-  but also encrypted emotions.
+- A public review claimed that *MakeACopy* installs other apps and drains the battery.  
+  This is technically impossible, as the app only requests the `CAMERA` permission.  
+  This highlights how misunderstandings can sometimes appear in public reviews.
+
+- An anonymous email criticized the application size without providing actionable feedback.  
+  While not directly addressable, it serves as a reminder that open-source projects may also receive non-constructive input.
 
 Want to join the Hall of Fame?  
 Contribute code, file helpful issues, or support the project.
