@@ -57,16 +57,23 @@ public class DictionaryManager {
     /**
      * Checks if the language uses word-based dictionary correction.
      * CJK and Thai languages don't use word boundaries like Western languages.
+     * For multi-language specs (e.g., "fas+eng"), returns true if ANY language is word-based.
      *
-     * @param language Tesseract language code
-     * @return true if word-based correction is applicable
+     * @param language Tesseract language code (may contain multiple languages separated by "+")
+     * @return true if word-based correction is applicable for at least one language
      */
     public static boolean isWordBasedLanguage(String language) {
         if (language == null) {
             return false;
         }
-        String primaryLang = language.contains("+") ? language.split("\\+")[0] : language;
-        return !NON_WORD_BASED_LANGUAGES.contains(primaryLang);
+        // Check all languages in spec - if ANY is word-based, return true
+        for (String lang : language.split("\\+")) {
+            String trimmed = lang.trim();
+            if (!trimmed.isEmpty() && !NON_WORD_BASED_LANGUAGES.contains(trimmed)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -96,8 +103,9 @@ public class DictionaryManager {
 
     /**
      * Gets the dictionary for a language, loading it if necessary.
+     * For multi-language specs (e.g., "fas+eng"), combines dictionaries from all languages.
      *
-     * @param language Tesseract language code
+     * @param language Tesseract language code (may contain multiple languages separated by "+")
      * @return Set of words in the dictionary (lowercase), or empty set if not available
      */
     public Set<String> getDictionary(String language) {
@@ -105,17 +113,42 @@ public class DictionaryManager {
             return Collections.emptySet();
         }
 
-        // Handle multi-language specs (e.g., "deu+eng")
-        String primaryLang = language.contains("+") ? language.split("\\+")[0] : language;
+        // Handle multi-language specs (e.g., "fas+eng")
+        if (language.contains("+")) {
+            // Create combined dictionary from all languages
+            Set<String> combined = new HashSet<>();
+            int totalWords = 0;
+            for (String lang : language.split("\\+")) {
+                String trimmed = lang.trim();
+                if (!trimmed.isEmpty()) {
+                    Set<String> langDict = getDictionarySingle(trimmed);
+                    combined.addAll(langDict);
+                    totalWords += langDict.size();
+                }
+            }
+            Log.i(TAG, "Combined dictionary for " + language + ": " + combined.size() +
+                    " unique words (from " + totalWords + " total)");
+            return combined;
+        }
 
+        return getDictionarySingle(language);
+    }
+
+    /**
+     * Gets the dictionary for a single language, loading it if necessary.
+     *
+     * @param language Single Tesseract language code (without "+")
+     * @return Set of words in the dictionary (lowercase), or empty set if not available
+     */
+    private Set<String> getDictionarySingle(String language) {
         // Check cache
-        if (loadedDictionaries.containsKey(primaryLang)) {
-            return loadedDictionaries.get(primaryLang);
+        if (loadedDictionaries.containsKey(language)) {
+            return loadedDictionaries.get(language);
         }
 
         // Load dictionary
-        Set<String> dictionary = loadDictionary(primaryLang);
-        loadedDictionaries.put(primaryLang, dictionary);
+        Set<String> dictionary = loadDictionary(language);
+        loadedDictionaries.put(language, dictionary);
         return dictionary;
     }
 
@@ -178,24 +211,30 @@ public class DictionaryManager {
     /**
      * Checks if a dictionary is available for the given language.
      * Checks for both uncompressed .txt and compressed .txt.gz files.
+     * For multi-language specs (e.g., "fas+eng"), returns true if ANY language has a dictionary.
      *
-     * @param language Tesseract language code
-     * @return true if dictionary exists
+     * @param language Tesseract language code (may contain multiple languages separated by "+")
+     * @return true if dictionary exists for at least one language
      */
     public boolean hasDictionary(String language) {
         if (language == null) {
             return false;
         }
 
-        String primaryLang = language.contains("+") ? language.split("\\+")[0] : language;
-        String targetFileTxt = primaryLang + DICT_EXTENSION_TXT;
-        String targetFileGz = primaryLang + DICT_EXTENSION_GZ;
-
         try {
             String[] files = context.getAssets().list(DICT_DIR);
-            if (files != null) {
-                for (String file : files) {
-                    if (file.equals(targetFileTxt) || file.equals(targetFileGz)) {
+            if (files == null) {
+                return false;
+            }
+            Set<String> fileSet = new HashSet<>(Arrays.asList(files));
+
+            // Check all languages in spec
+            for (String lang : language.split("\\+")) {
+                String trimmed = lang.trim();
+                if (!trimmed.isEmpty()) {
+                    String targetFileTxt = trimmed + DICT_EXTENSION_TXT;
+                    String targetFileGz = trimmed + DICT_EXTENSION_GZ;
+                    if (fileSet.contains(targetFileTxt) || fileSet.contains(targetFileGz)) {
                         return true;
                     }
                 }

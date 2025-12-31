@@ -10,7 +10,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
@@ -307,94 +306,173 @@ public class OCRFragment extends Fragment {
     private static final int OCR_MODE_QUICK = 1;
     private static final int OCR_MODE_ROBUST = 2;
 
+    // Maximum number of languages that can be selected for multi-language OCR
+    private static final int MAX_LANGUAGES = 2;
+
+    // Track currently selected language codes for multi-select
+    private final List<String> selectedLanguageCodes = new ArrayList<>();
+
     private void setupLanguageSpinner() {
         AutoCompleteTextView dropdown = binding.languageSpinner;
         String[] codes = getAvailableLanguages();
         String[] displayNames = mapCodesToDisplayNames(codes);
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
-                android.R.layout.simple_list_item_1, displayNames);
-        dropdown.setAdapter(adapter);
 
         // Determine preferred language: saved preference (if available and installed) else system default
         String systemLang = OCRUtils.mapSystemLanguageToTesseract(java.util.Locale.getDefault().getLanguage());
         android.content.SharedPreferences sp = requireContext().getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE);
-        String savedCodeTmp = null;
+        String savedLangSpec = null;
         try {
-            savedCodeTmp = sp.getString(PREF_KEY_OCR_LANG, null);
+            savedLangSpec = sp.getString(PREF_KEY_OCR_LANG, null);
         } catch (Throwable ignore) {
         }
-        final String savedCode = savedCodeTmp;
 
-        // Pick target code
-        String targetCodeTmp;
-        if (savedCode != null && IntStream.range(0, codes.length).anyMatch(i -> codes[i].equals(savedCode)) && isLanguageAvailableSafe(savedCode)) {
-            targetCodeTmp = savedCode;
-        } else {
-            targetCodeTmp = systemLang;
-            final String sysLangFinal = systemLang;
-            boolean systemInList = IntStream.range(0, codes.length).anyMatch(i -> codes[i].equals(sysLangFinal));
-            if (!systemInList) {
-                targetCodeTmp = codes.length > 0 ? codes[0] : systemLang;
+        // Parse saved language spec (may contain multiple languages separated by +)
+        selectedLanguageCodes.clear();
+        if (savedLangSpec != null && !savedLangSpec.isEmpty()) {
+            for (String lang : savedLangSpec.split("\\+")) {
+                String trimmed = lang.trim();
+                if (!trimmed.isEmpty() && isLanguageAvailableSafe(trimmed)) {
+                    selectedLanguageCodes.add(trimmed);
+                }
             }
         }
-        final String targetCode = targetCodeTmp;
-        // Find index for target
-        final int targetPos = IntStream.range(0, codes.length)
-                .filter(i -> codes[i].equals(targetCode)).findFirst().orElse(0);
 
-        // Apply selection without triggering listeners and update VM
-        dropdown.setText(displayNames[targetPos], false);
-        ocrViewModel.setLanguage(targetCode);
+        // Fallback to system language if no valid saved selection
+        if (selectedLanguageCodes.isEmpty()) {
+            final String sysLangFinal = systemLang;
+            boolean systemInList = IntStream.range(0, codes.length).anyMatch(i -> codes[i].equals(sysLangFinal));
+            if (systemInList && isLanguageAvailableSafe(systemLang)) {
+                selectedLanguageCodes.add(systemLang);
+            } else if (codes.length > 0) {
+                selectedLanguageCodes.add(codes[0]);
+            }
+        }
+
+        // Update dropdown display text
+        updateLanguageDropdownText(dropdown, codes, displayNames);
+
+        // Set initial language in ViewModel
+        String langSpec = buildLangSpec();
+        ocrViewModel.setLanguage(langSpec);
 
         // Initial auto-run logic (only if not already processed)
         Bitmap bitmap = cropViewModel.getImageBitmap().getValue();
         de.schliweb.makeacopy.ui.ocr.OCRViewModel.OcrUiState st0 = ocrViewModel.getState().getValue();
         boolean alreadyProcessed0 = (st0 != null && st0.imageProcessed());
         if (bitmap != null && !alreadyProcessed0) {
-            // Do not auto-run if there is no image; otherwise run once
-            // Note: performOCR() checks executor state and image again
-            // Keeping behavior consistent with previous firstSelection logic
             performOCR();
         }
 
-        final int defaultIndex = targetPos;
-        dropdown.setOnItemClickListener((parent, view, pos, id) -> {
-            String selectedCode = codes[pos];
+        // Set click listener to show multi-select dialog
+        dropdown.setOnClickListener(v -> showMultiLanguageDialog(codes, displayNames, dropdown));
+        dropdown.setFocusable(false);
+        dropdown.setClickable(true);
+    }
 
-            if (!isLanguageAvailableSafe(selectedCode)) {
-                UIUtils.showToast(requireContext(), "Language " + displayNames[pos] + " not available.", Toast.LENGTH_LONG);
-                // Revert to default without firing listener
-                dropdown.setText(displayNames[defaultIndex], false);
-                return;
-            }
+    /**
+     * Shows a multi-select dialog for choosing OCR languages (max 2).
+     */
+    private void showMultiLanguageDialog(String[] codes, String[] displayNames, AutoCompleteTextView dropdown) {
+        boolean[] checkedItems = new boolean[codes.length];
+        for (int i = 0; i < codes.length; i++) {
+            checkedItems[i] = selectedLanguageCodes.contains(codes[i]);
+        }
 
-            String prevLang = null;
-            try {
-                prevLang = ocrViewModel.getLanguage().getValue();
-            } catch (Throwable ignore) {
-            }
-            ocrViewModel.setLanguage(selectedCode);
-            // Persist selected language like other settings
-            try {
-                android.content.SharedPreferences sp2 = requireContext().getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE);
-                sp2.edit().putString(PREF_KEY_OCR_LANG, selectedCode).apply();
-            } catch (Throwable ignore) {
-            }
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.select_ocr_languages)
+                .setMultiChoiceItems(displayNames, checkedItems, (dialog, which, isChecked) -> {
+                    String code = codes[which];
+                    if (isChecked) {
+                        // Check if max languages reached
+                        if (selectedLanguageCodes.size() >= MAX_LANGUAGES) {
+                            // Uncheck this item and show warning
+                            ((AlertDialog) dialog).getListView().setItemChecked(which, false);
+                            checkedItems[which] = false;
+                            UIUtils.showToast(requireContext(), getString(R.string.ocr_max_languages_warning), Toast.LENGTH_SHORT);
+                            return;
+                        }
+                        if (!selectedLanguageCodes.contains(code)) {
+                            selectedLanguageCodes.add(code);
+                        }
+                    } else {
+                        selectedLanguageCodes.remove(code);
+                    }
+                })
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                    if (selectedLanguageCodes.isEmpty()) {
+                        UIUtils.showToast(requireContext(), getString(R.string.ocr_no_language_selected), Toast.LENGTH_SHORT);
+                        // Fallback to first available language
+                        if (codes.length > 0) {
+                            selectedLanguageCodes.add(codes[0]);
+                        }
+                    }
 
-            de.schliweb.makeacopy.ui.ocr.OCRViewModel.OcrUiState st = ocrViewModel.getState().getValue();
-            boolean processed = (st != null && st.imageProcessed());
-            boolean changed = !Objects.equals(prevLang, selectedCode);
-            if (processed && changed) {
-                // Allow re-run with new language
-                binding.buttonProcess.setText(R.string.btn_process);
-                binding.buttonProcess.setOnClickListener(v -> performOCR());
-            } else if (processed) {
-                // Keep "Next" leading to Export
-                binding.buttonProcess.setText(R.string.next);
-                binding.buttonProcess.setOnClickListener(v ->
-                        Navigation.findNavController(requireView()).navigate(R.id.navigation_export));
+                    String prevLang = ocrViewModel.getLanguage().getValue();
+                    String newLangSpec = buildLangSpec();
+
+                    // Update display
+                    updateLanguageDropdownText(dropdown, codes, displayNames);
+
+                    // Update ViewModel
+                    ocrViewModel.setLanguage(newLangSpec);
+
+                    // Persist selection
+                    try {
+                        android.content.SharedPreferences sp = requireContext().getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE);
+                        sp.edit().putString(PREF_KEY_OCR_LANG, newLangSpec).apply();
+                    } catch (Throwable ignore) {
+                    }
+
+                    // Handle re-run if language changed
+                    de.schliweb.makeacopy.ui.ocr.OCRViewModel.OcrUiState st = ocrViewModel.getState().getValue();
+                    boolean processed = (st != null && st.imageProcessed());
+                    boolean changed = !Objects.equals(prevLang, newLangSpec);
+                    if (processed && changed) {
+                        binding.buttonProcess.setText(R.string.btn_process);
+                        binding.buttonProcess.setOnClickListener(v -> performOCR());
+                    } else if (processed) {
+                        binding.buttonProcess.setText(R.string.next);
+                        binding.buttonProcess.setOnClickListener(v ->
+                                Navigation.findNavController(requireView()).navigate(R.id.navigation_export));
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    /**
+     * Builds the language specification string from selected languages (e.g., "deu+eng").
+     */
+    private String buildLangSpec() {
+        if (selectedLanguageCodes.isEmpty()) {
+            return "eng"; // Fallback
+        }
+        return String.join("+", selectedLanguageCodes);
+    }
+
+    /**
+     * Updates the dropdown text to show selected languages.
+     */
+    private void updateLanguageDropdownText(AutoCompleteTextView dropdown, String[] codes, String[] displayNames) {
+        if (selectedLanguageCodes.isEmpty()) {
+            dropdown.setText("", false);
+            return;
+        }
+
+        StringBuilder displayText = new StringBuilder();
+        for (int i = 0; i < selectedLanguageCodes.size(); i++) {
+            String code = selectedLanguageCodes.get(i);
+            // Find display name for this code
+            int idx = IntStream.range(0, codes.length)
+                    .filter(j -> codes[j].equals(code))
+                    .findFirst()
+                    .orElse(-1);
+            if (idx >= 0) {
+                if (displayText.length() > 0) displayText.append(" + ");
+                displayText.append(displayNames[idx]);
             }
-        });
+        }
+        dropdown.setText(displayText.toString(), false);
     }
 
     private boolean isLanguageAvailableSafe(String lang) {
