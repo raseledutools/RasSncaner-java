@@ -1,4 +1,4 @@
-MakeACopy 2.4.0 (Release Candidate)
+MakeACopy 2.4.0 (Release)
 - Arabic and Persian OCR support: Full recognition with AUTO page segmentation and disabled Latin whitelist for proper Arabic script detection.
 - New dictionaries: Added Arabic and Persian frequency dictionaries for improved OCR post-processing.
 - 21 languages now supported: Extended dictionary download to cover all supported OCR languages.
@@ -12,7 +12,3 @@ MakeACopy 2.4.0 (Release Candidate)
 - Bug fix: Fixed OpenCV assertion error in classic B/W export mode when adaptive threshold was skipped.
 - Bug fix: Improved readability of B/W PDFs at low DPI settings. The despeckle algorithm now scales its aggressiveness based on target DPI, preserving fine text details at lower resolutions.
 - Bug fix: Fixed issue where old OCR results were displayed after switching from PDF import to camera capture when cropping was skipped.
-
-Notes
-
-- This is a Release Candidate build; feedback on camera stability and preview behavior is especially welcome.

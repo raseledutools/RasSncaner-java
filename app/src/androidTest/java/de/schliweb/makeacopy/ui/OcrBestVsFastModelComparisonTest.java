@@ -36,7 +36,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(AndroidJUnit4.class)
 public class OcrBestVsFastModelComparisonTest {
 
-    private static final String TEST_IMAGE_ASSET = "instrumented_test_data/20251007_183138.jpg";
+    private static final String TEST_IMAGE_ASSET = "instrumented_test_data/20251007_183138_cropped.jpg";
     private static final String EXPECTED_TXT_ASSET = "instrumented_test_data/DOC_20251223_101951.txt";
     private static final String OCR_LANGUAGE = "deu"; // German
 
