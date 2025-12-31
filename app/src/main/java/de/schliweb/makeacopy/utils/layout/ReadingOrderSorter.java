@@ -88,6 +88,7 @@ public class ReadingOrderSorter {
     /**
      * Sorts regions within columns, maintaining column-first reading order.
      * Each column is read top-to-bottom before moving to the next column.
+     * Headers are always placed first, footers are always placed last.
      *
      * @param regions   list of regions to sort
      * @param direction text direction (LTR or RTL)
@@ -96,6 +97,11 @@ public class ReadingOrderSorter {
         if (regions == null || regions.size() <= 1) {
             return;
         }
+
+        // Separate headers, footers, columns, and other regions
+        List<DocumentRegion> headers = new ArrayList<>();
+        List<DocumentRegion> footers = new ArrayList<>();
+        List<DocumentRegion> otherUnassigned = new ArrayList<>();
 
         // Group regions by column index
         List<List<DocumentRegion>> columnGroups = new ArrayList<>();
@@ -113,16 +119,34 @@ public class ReadingOrderSorter {
             columnGroups.add(new ArrayList<>());
         }
 
-        // Separate regions with and without column index
-        List<DocumentRegion> unassigned = new ArrayList<>();
+        // Categorize regions: headers, footers, columns, and other
         for (DocumentRegion region : regions) {
-            int colIdx = region.getColumnIndex();
-            if (colIdx >= 0 && colIdx < columnGroups.size()) {
-                columnGroups.get(colIdx).add(region);
+            if (region.getType() == DocumentRegion.Type.HEADER) {
+                headers.add(region);
+            } else if (region.getType() == DocumentRegion.Type.FOOTER) {
+                footers.add(region);
             } else {
-                unassigned.add(region);
+                int colIdx = region.getColumnIndex();
+                if (colIdx >= 0 && colIdx < columnGroups.size()) {
+                    columnGroups.get(colIdx).add(region);
+                } else {
+                    otherUnassigned.add(region);
+                }
             }
         }
+
+        // Sort headers by y position (top to bottom)
+        Collections.sort(headers, new Comparator<DocumentRegion>() {
+            @Override
+            public int compare(DocumentRegion r1, DocumentRegion r2) {
+                Rect b1 = r1.getBounds();
+                Rect b2 = r2.getBounds();
+                if (b1 == null && b2 == null) return 0;
+                if (b1 == null) return 1;
+                if (b2 == null) return -1;
+                return Integer.compare(b1.top, b2.top);
+            }
+        });
 
         // Sort each column group by y position
         for (List<DocumentRegion> group : columnGroups) {
@@ -139,14 +163,37 @@ public class ReadingOrderSorter {
             });
         }
 
-        // Sort unassigned regions normally
-        sort(unassigned, direction);
+        // Sort other unassigned regions normally
+        sort(otherUnassigned, direction);
 
-        // Rebuild the list in column order
+        // Sort footers by y position
+        Collections.sort(footers, new Comparator<DocumentRegion>() {
+            @Override
+            public int compare(DocumentRegion r1, DocumentRegion r2) {
+                Rect b1 = r1.getBounds();
+                Rect b2 = r2.getBounds();
+                if (b1 == null && b2 == null) return 0;
+                if (b1 == null) return 1;
+                if (b2 == null) return -1;
+                return Integer.compare(b1.top, b2.top);
+            }
+        });
+
+        // Rebuild the list in correct reading order:
+        // 1. Headers first
+        // 2. Columns (left to right or right to left)
+        // 3. Other unassigned regions
+        // 4. Footers last
         regions.clear();
         int readingOrder = 0;
 
-        // Add columns in order based on text direction
+        // 1. Add headers first
+        for (DocumentRegion header : headers) {
+            header.setReadingOrder(readingOrder++);
+            regions.add(header);
+        }
+
+        // 2. Add columns in order based on text direction
         if (direction == TextDirection.RTL) {
             // Right to left: start from rightmost column
             for (int i = columnGroups.size() - 1; i >= 0; i--) {
@@ -165,10 +212,16 @@ public class ReadingOrderSorter {
             }
         }
 
-        // Add unassigned regions at the end
-        for (DocumentRegion region : unassigned) {
+        // 3. Add other unassigned regions
+        for (DocumentRegion region : otherUnassigned) {
             region.setReadingOrder(readingOrder++);
             regions.add(region);
+        }
+
+        // 4. Add footers last
+        for (DocumentRegion footer : footers) {
+            footer.setReadingOrder(readingOrder++);
+            regions.add(footer);
         }
     }
 

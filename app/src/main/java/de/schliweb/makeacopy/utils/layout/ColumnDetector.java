@@ -20,25 +20,37 @@ public class ColumnDetector {
      * Minimum width of a valley (gap between columns) as fraction of image width.
      * Valleys narrower than this are ignored.
      */
-    private static final double MIN_VALLEY_WIDTH_RATIO = 0.02;
+    private static final double MIN_VALLEY_WIDTH_RATIO = 0.015;
 
     /**
      * Minimum column width as fraction of image width.
      * Columns narrower than this are merged with neighbors.
      */
-    private static final double MIN_COLUMN_WIDTH_RATIO = 0.1;
+    private static final double MIN_COLUMN_WIDTH_RATIO = 0.15;
 
     /**
      * Threshold for valley detection as fraction of maximum projection value.
-     * Lower values detect more valleys.
+     * Higher values detect more valleys (more sensitive).
      */
-    private static final double VALLEY_THRESHOLD_RATIO = 0.1;
+    private static final double VALLEY_THRESHOLD_RATIO = 0.35;
+
+    /**
+     * Threshold for local minimum detection as fraction of neighboring peaks.
+     * Used for detecting valleys that are local minima but not absolute minima.
+     */
+    private static final double LOCAL_MINIMUM_RATIO = 0.5;
 
     /**
      * Margin to exclude from analysis (as fraction of image width).
      * Helps ignore page borders and binding areas.
      */
-    private static final double MARGIN_RATIO = 0.02;
+    private static final double MARGIN_RATIO = 0.05;
+
+    /**
+     * Expected column gap width as fraction of image width.
+     * Typical gap between columns in a 2-column layout.
+     */
+    private static final double EXPECTED_GAP_WIDTH_RATIO = 0.03;
 
     /**
      * Detects columns in a binary document image.
@@ -88,9 +100,9 @@ public class ColumnDetector {
 
     /**
      * Computes the vertical projection of a binary image.
-     * For each x-coordinate, counts the number of black (foreground) pixels.
+     * For each x-coordinate, counts the number of foreground (text) pixels.
      *
-     * @param binary binary image (0 = black/text, 255 = white/background)
+     * @param binary binary image - after THRESH_BINARY_INV: 255 = text, 0 = background
      * @return array of pixel counts per column
      */
     private int[] computeVerticalProjection(Mat binary) {
@@ -104,9 +116,9 @@ public class ColumnDetector {
         for (int y = 0; y < height; y++) {
             binary.get(y, 0, rowData);
             for (int x = 0; x < width; x++) {
-                // In binary image: 0 = black (text), 255 = white (background)
-                // Count black pixels (text)
-                if ((rowData[x] & 0xFF) == 0) {
+                // After THRESH_BINARY_INV: 255 = text (foreground), 0 = background
+                // Count white pixels (text) - non-zero values
+                if ((rowData[x] & 0xFF) != 0) {
                     projection[x]++;
                 }
             }
@@ -142,6 +154,10 @@ public class ColumnDetector {
 
     /**
      * Finds valleys (low points) in the projection that indicate column boundaries.
+     * Uses multiple detection strategies:
+     * 1. Absolute threshold detection for clear gaps
+     * 2. Local minimum detection for subtle column separations
+     * 3. Center-region analysis for typical 2-column layouts
      *
      * @param projection smoothed projection values
      * @param imageWidth width of the image
@@ -150,22 +166,131 @@ public class ColumnDetector {
     private List<int[]> findValleys(int[] projection, int imageWidth) {
         List<int[]> valleys = new ArrayList<>();
 
-        // Find maximum projection value for threshold calculation
+        // Find maximum and average projection values
         int maxProjection = 0;
-        for (int value : projection) {
-            if (value > maxProjection) {
-                maxProjection = value;
+        long sumProjection = 0;
+        int margin = (int) (imageWidth * MARGIN_RATIO);
+
+        // Use a larger margin for valley detection to avoid edge artifacts
+        int valleyMargin = (int) (imageWidth * 0.15); // 15% margin on each side
+
+        for (int i = margin; i < projection.length - margin; i++) {
+            if (projection[i] > maxProjection) {
+                maxProjection = projection[i];
             }
+            sumProjection += projection[i];
         }
 
         if (maxProjection == 0) {
+            Log.d(TAG, "findValleys: maxProjection=0, empty image");
             return valleys; // Empty image
         }
 
+        int effectiveWidth = projection.length - 2 * margin;
+        double avgProjection = (double) sumProjection / effectiveWidth;
+
         int threshold = (int) (maxProjection * VALLEY_THRESHOLD_RATIO);
         int minValleyWidth = (int) (imageWidth * MIN_VALLEY_WIDTH_RATIO);
-        int margin = (int) (imageWidth * MARGIN_RATIO);
 
+        Log.d(TAG, "findValleys: imageWidth=" + imageWidth + ", maxProjection=" + maxProjection +
+                ", avgProjection=" + String.format("%.1f", avgProjection) +
+                ", threshold=" + threshold + ", minValleyWidth=" + minValleyWidth);
+
+        // Strategy 1: Find valleys using absolute threshold (with larger margin to avoid edges)
+        valleys = findValleysWithThreshold(projection, threshold, minValleyWidth, valleyMargin);
+        Log.d(TAG, "findValleys: Strategy 1 (threshold) found " + valleys.size() + " valleys");
+
+        // Filter and merge valleys to get the most significant ones
+        if (valleys.size() > 1) {
+            valleys = filterAndMergeValleys(valleys, projection, imageWidth);
+            Log.d(TAG, "findValleys: After filtering/merging: " + valleys.size() + " valleys");
+        }
+
+        // Strategy 2: If no valleys found, look for local minima in center region
+        if (valleys.isEmpty()) {
+            valleys = findLocalMinimumValleys(projection, imageWidth, valleyMargin, avgProjection);
+            Log.d(TAG, "findValleys: Strategy 2 (local minima) found " + valleys.size() + " valleys");
+        }
+
+        // Strategy 3: If still no valleys, analyze center region for 2-column layout
+        if (valleys.isEmpty()) {
+            int[] centerValley = findCenterValley(projection, imageWidth, margin);
+            if (centerValley != null) {
+                valleys.add(centerValley);
+                Log.d(TAG, "findValleys: Strategy 3 (center) found valley at " +
+                        centerValley[0] + "-" + centerValley[1]);
+            } else {
+                Log.d(TAG, "findValleys: Strategy 3 (center) found no valley");
+            }
+        }
+
+        return valleys;
+    }
+
+    /**
+     * Filters and merges valleys to keep only the most significant column separations.
+     * For typical 2-column layouts, this should result in a single valley in the center.
+     */
+    private List<int[]> filterAndMergeValleys(List<int[]> valleys, int[] projection, int imageWidth) {
+        if (valleys.isEmpty()) {
+            return valleys;
+        }
+
+        // For 2-column detection, find the best valley (deepest and most centered)
+        int centerX = imageWidth / 2;
+        int bestValleyIdx = -1;
+        double bestScore = -1;
+
+        for (int i = 0; i < valleys.size(); i++) {
+            int[] valley = valleys.get(i);
+            int valleyCenter = (valley[0] + valley[1]) / 2;
+            int valleyWidth = valley[1] - valley[0];
+
+            // Calculate minimum projection value in this valley
+            int minProj = Integer.MAX_VALUE;
+            for (int x = valley[0]; x < valley[1]; x++) {
+                if (projection[x] < minProj) {
+                    minProj = projection[x];
+                }
+            }
+
+            // Score based on: depth (lower is better), width (wider is better), 
+            // and proximity to center (closer is better)
+            double distanceFromCenter = Math.abs(valleyCenter - centerX) / (double) imageWidth;
+            double depthScore = 1.0 / (1.0 + minProj); // Lower projection = higher score
+            double widthScore = valleyWidth / (double) imageWidth;
+            double centerScore = 1.0 - distanceFromCenter; // Closer to center = higher score
+
+            // Weight center proximity heavily for 2-column detection
+            double score = depthScore * 0.3 + widthScore * 0.2 + centerScore * 0.5;
+
+            Log.d(TAG, "filterAndMergeValleys: valley " + i + " at " + valley[0] + "-" + valley[1] +
+                    ", center=" + valleyCenter + ", minProj=" + minProj +
+                    ", score=" + String.format("%.3f", score));
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestValleyIdx = i;
+            }
+        }
+
+        // Return only the best valley for clean 2-column detection
+        List<int[]> result = new ArrayList<>();
+        if (bestValleyIdx >= 0) {
+            result.add(valleys.get(bestValleyIdx));
+            Log.d(TAG, "filterAndMergeValleys: selected valley " + bestValleyIdx +
+                    " with score " + String.format("%.3f", bestScore));
+        }
+
+        return result;
+    }
+
+    /**
+     * Finds valleys using absolute threshold detection.
+     */
+    private List<int[]> findValleysWithThreshold(int[] projection, int threshold,
+                                                 int minValleyWidth, int margin) {
+        List<int[]> valleys = new ArrayList<>();
         boolean inValley = false;
         int valleyStart = 0;
 
@@ -181,7 +306,6 @@ public class ColumnDetector {
                     int valleyEnd = i;
                     int valleyWidth = valleyEnd - valleyStart;
 
-                    // Only accept valleys wider than minimum
                     if (valleyWidth >= minValleyWidth) {
                         valleys.add(new int[]{valleyStart, valleyEnd});
                     }
@@ -189,7 +313,7 @@ public class ColumnDetector {
             }
         }
 
-        // Handle valley extending to end of image
+        // Handle valley extending to end
         if (inValley) {
             int valleyEnd = projection.length - margin;
             int valleyWidth = valleyEnd - valleyStart;
@@ -199,6 +323,157 @@ public class ColumnDetector {
         }
 
         return valleys;
+    }
+
+    /**
+     * Finds valleys by detecting local minima that are significantly lower than neighbors.
+     */
+    private List<int[]> findLocalMinimumValleys(int[] projection, int imageWidth,
+                                                int margin, double avgProjection) {
+        List<int[]> valleys = new ArrayList<>();
+
+        // Look for significant dips in the projection
+        int windowSize = (int) (imageWidth * 0.1); // 10% of width for local comparison
+        int minValleyWidth = (int) (imageWidth * MIN_VALLEY_WIDTH_RATIO);
+
+        for (int i = margin + windowSize; i < projection.length - margin - windowSize; i++) {
+            // Find local minimum
+            int localMin = projection[i];
+            int localMinPos = i;
+
+            // Check if this is a local minimum in a small window
+            boolean isLocalMin = true;
+            for (int j = i - 5; j <= i + 5 && j < projection.length - margin; j++) {
+                if (j >= margin && projection[j] < localMin) {
+                    isLocalMin = false;
+                    break;
+                }
+            }
+
+            if (!isLocalMin) continue;
+
+            // Calculate average of left and right neighbors
+            int leftSum = 0, rightSum = 0;
+            int sampleSize = windowSize / 2;
+
+            for (int j = 0; j < sampleSize; j++) {
+                int leftIdx = i - windowSize / 2 - j;
+                int rightIdx = i + windowSize / 2 + j;
+                if (leftIdx >= margin) leftSum += projection[leftIdx];
+                if (rightIdx < projection.length - margin) rightSum += projection[rightIdx];
+            }
+
+            double leftAvg = (double) leftSum / sampleSize;
+            double rightAvg = (double) rightSum / sampleSize;
+            double neighborAvg = (leftAvg + rightAvg) / 2;
+
+            // Check if this point is significantly lower than neighbors
+            if (localMin < neighborAvg * LOCAL_MINIMUM_RATIO &&
+                    localMin < avgProjection * 0.8) {
+
+                // Find the extent of this valley
+                int valleyStart = i;
+                int valleyEnd = i;
+
+                // Expand left
+                while (valleyStart > margin &&
+                        projection[valleyStart - 1] < neighborAvg * 0.7) {
+                    valleyStart--;
+                }
+
+                // Expand right
+                while (valleyEnd < projection.length - margin - 1 &&
+                        projection[valleyEnd + 1] < neighborAvg * 0.7) {
+                    valleyEnd++;
+                }
+
+                int valleyWidth = valleyEnd - valleyStart;
+                if (valleyWidth >= minValleyWidth) {
+                    valleys.add(new int[]{valleyStart, valleyEnd});
+                    // Skip past this valley
+                    i = valleyEnd + windowSize;
+                }
+            }
+        }
+
+        return valleys;
+    }
+
+    /**
+     * Analyzes the center region of the document to find a column gap.
+     * This is specifically designed for 2-column layouts where the gap
+     * is typically in the center third of the page.
+     */
+    private int[] findCenterValley(int[] projection, int imageWidth, int margin) {
+        // Focus on center third of the document
+        int centerStart = projection.length / 3;
+        int centerEnd = 2 * projection.length / 3;
+
+        // Find the minimum in the center region
+        int minValue = Integer.MAX_VALUE;
+        int minPos = -1;
+
+        for (int i = centerStart; i < centerEnd; i++) {
+            if (projection[i] < minValue) {
+                minValue = projection[i];
+                minPos = i;
+            }
+        }
+
+        if (minPos < 0) return null;
+
+        // Calculate average projection in left and right halves
+        long leftSum = 0, rightSum = 0;
+        int leftCount = 0, rightCount = 0;
+
+        for (int i = margin; i < minPos - imageWidth * 0.05; i++) {
+            leftSum += projection[i];
+            leftCount++;
+        }
+
+        for (int i = minPos + (int) (imageWidth * 0.05); i < projection.length - margin; i++) {
+            rightSum += projection[i];
+            rightCount++;
+        }
+
+        if (leftCount == 0 || rightCount == 0) return null;
+
+        double leftAvg = (double) leftSum / leftCount;
+        double rightAvg = (double) rightSum / rightCount;
+
+        // Check if both sides have significant content and center is a gap
+        double minThreshold = Math.min(leftAvg, rightAvg) * LOCAL_MINIMUM_RATIO;
+
+        if (minValue < minThreshold && leftAvg > 0 && rightAvg > 0) {
+            // Find the extent of the valley around the minimum
+            int valleyStart = minPos;
+            int valleyEnd = minPos;
+
+            double gapThreshold = Math.min(leftAvg, rightAvg) * 0.6;
+
+            // Expand left
+            while (valleyStart > margin && projection[valleyStart - 1] < gapThreshold) {
+                valleyStart--;
+            }
+
+            // Expand right  
+            while (valleyEnd < projection.length - margin - 1 &&
+                    projection[valleyEnd + 1] < gapThreshold) {
+                valleyEnd++;
+            }
+
+            int valleyWidth = valleyEnd - valleyStart;
+            int minValleyWidth = (int) (imageWidth * MIN_VALLEY_WIDTH_RATIO);
+
+            if (valleyWidth >= minValleyWidth) {
+                Log.d(TAG, "findCenterValley: found center gap at " + valleyStart + "-" + valleyEnd +
+                        " (width=" + valleyWidth + ", minValue=" + minValue +
+                        ", leftAvg=" + leftAvg + ", rightAvg=" + rightAvg + ")");
+                return new int[]{valleyStart, valleyEnd};
+            }
+        }
+
+        return null;
     }
 
     /**

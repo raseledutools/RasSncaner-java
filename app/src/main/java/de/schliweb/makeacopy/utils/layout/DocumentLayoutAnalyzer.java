@@ -138,7 +138,19 @@ public class DocumentLayoutAnalyzer {
             // 6. Sort regions by reading order
             ReadingOrderSorter.TextDirection direction =
                     ReadingOrderSorter.getDirectionForLanguage(language);
-            ReadingOrderSorter.sortHierarchical(regions, direction);
+
+            // Check if we have multiple columns - use column-aware sorting
+            long columnCount = regions.stream()
+                    .filter(r -> r.getType() == DocumentRegion.Type.COLUMN)
+                    .count();
+
+            if (columnCount > 1) {
+                // Multi-column layout: sort by columns first (left column before right)
+                ReadingOrderSorter.sortByColumns(regions, direction);
+            } else {
+                // Single column or no columns: use hierarchical sorting
+                ReadingOrderSorter.sortHierarchical(regions, direction);
+            }
 
             Log.d(TAG, "analyze: detected " + regions.size() + " region(s)");
 
@@ -211,7 +223,19 @@ public class DocumentLayoutAnalyzer {
             // 6. Sort by reading order
             ReadingOrderSorter.TextDirection direction =
                     ReadingOrderSorter.getDirectionForLanguage(language);
-            ReadingOrderSorter.sortHierarchical(regions, direction);
+
+            // Check if we have multiple columns - use column-aware sorting
+            long columnCount = regions.stream()
+                    .filter(r -> r.getType() == DocumentRegion.Type.COLUMN)
+                    .count();
+
+            if (columnCount > 1) {
+                // Multi-column layout: sort by columns first (left column before right)
+                ReadingOrderSorter.sortByColumns(regions, direction);
+            } else {
+                // Single column or no columns: use hierarchical sorting
+                ReadingOrderSorter.sortHierarchical(regions, direction);
+            }
 
         } catch (Exception e) {
             Log.e(TAG, "analyzeFromBinary: error", e);
@@ -284,9 +308,10 @@ public class DocumentLayoutAnalyzer {
 
     /**
      * Detects columns in the document, excluding already detected regions.
+     * For multi-column layouts, also detects footer regions that span across columns.
      *
      * @param binary          binary image
-     * @param existingRegions already detected regions to exclude
+     * @param existingRegions already detected regions to exclude (will be modified to add footer if detected)
      * @param width           image width
      * @param height          image height
      * @return list of column regions
@@ -296,12 +321,14 @@ public class DocumentLayoutAnalyzer {
         // Calculate body area (excluding header and footer)
         int bodyTop = 0;
         int bodyBottom = height;
+        boolean hasFooter = false;
 
         for (DocumentRegion region : existingRegions) {
             if (region.getType() == DocumentRegion.Type.HEADER) {
                 bodyTop = Math.max(bodyTop, region.getBounds().bottom);
             } else if (region.getType() == DocumentRegion.Type.FOOTER) {
                 bodyBottom = Math.min(bodyBottom, region.getBounds().top);
+                hasFooter = true;
             }
         }
 
@@ -324,6 +351,23 @@ public class DocumentLayoutAnalyzer {
                     bounds.right, bounds.bottom + bodyTop));
         }
 
+        // For multi-column layouts without a detected footer, check for a common footer area
+        // This handles footnotes that span across the bottom of all columns
+        if (columns.size() >= 2 && !hasFooter) {
+            DocumentRegion footerFromColumns = detectFooterInMultiColumnLayout(binary, columns, width, height, bodyBottom);
+            if (footerFromColumns != null) {
+                existingRegions.add(footerFromColumns);
+                // Adjust column heights to exclude the footer area
+                int footerTop = footerFromColumns.getBounds().top;
+                for (DocumentRegion column : columns) {
+                    Rect bounds = column.getBounds();
+                    if (bounds.bottom > footerTop) {
+                        column.setBounds(new Rect(bounds.left, bounds.top, bounds.right, footerTop));
+                    }
+                }
+            }
+        }
+
         // Remove columns that overlap with tables
         List<DocumentRegion> filteredColumns = new ArrayList<>();
         for (DocumentRegion column : columns) {
@@ -341,6 +385,426 @@ public class DocumentLayoutAnalyzer {
         }
 
         return filteredColumns;
+    }
+
+    /**
+     * Detects a footer region in multi-column layouts by analyzing the bottom area
+     * that spans across all columns. This is useful for detecting footnotes.
+     * <p>
+     * The detection works by:
+     * 1. Analyzing the bottom portion of the page for content that spans the full width
+     * 2. Looking for text lines that extend beyond individual column boundaries
+     * 3. Detecting a horizontal gap between column content and footer content
+     * 4. Looking for text at the bottom that starts at the left margin
+     *
+     * @param binary     binary image
+     * @param columns    detected columns
+     * @param width      image width
+     * @param height     image height
+     * @param bodyBottom bottom of the body area
+     * @return footer region or null if not detected
+     */
+    private DocumentRegion detectFooterInMultiColumnLayout(Mat binary, List<DocumentRegion> columns,
+                                                           int width, int height, int bodyBottom) {
+        if (columns.isEmpty() || columns.size() < 2) {
+            return null;
+        }
+
+        // Strategy 1: Look for full-width content at the bottom of the page
+        // Footnotes typically span the entire page width, not just one column
+        DocumentRegion fullWidthFooter = detectFullWidthFooter(binary, columns, width, height, bodyBottom);
+        if (fullWidthFooter != null) {
+            return fullWidthFooter;
+        }
+
+        // Strategy 2: Look for text at the bottom that starts at the left margin
+        // and extends into or beyond the column gap area
+        DocumentRegion bottomFooter = detectBottomFooter(binary, columns, width, height, bodyBottom);
+        if (bottomFooter != null) {
+            return bottomFooter;
+        }
+
+        // Strategy 3: Find the bottom-most content in each column using vertical projection
+        // and check for a gap below all columns
+        int minColumnBottom = bodyBottom;
+        for (DocumentRegion column : columns) {
+            Rect bounds = column.getBounds();
+            // Analyze the bottom portion of each column to find where content ends
+            int columnBottom = findContentBottom(binary, bounds);
+            if (columnBottom < minColumnBottom) {
+                minColumnBottom = columnBottom;
+            }
+        }
+
+        // Check if there's a significant gap between column content and page bottom
+        // that could contain a footer/footnote
+        int potentialFooterHeight = bodyBottom - minColumnBottom;
+        int minFooterHeight = (int) (height * 0.03); // At least 3% of page height
+        int maxFooterHeight = (int) (height * 0.15); // At most 15% of page height
+
+        if (potentialFooterHeight >= minFooterHeight && potentialFooterHeight <= maxFooterHeight) {
+            // Check if there's content in this footer area
+            org.opencv.core.Rect footerRect = new org.opencv.core.Rect(0, minColumnBottom, width, potentialFooterHeight);
+            Mat footerRegion = binary.submat(footerRect);
+            double density = calculateContentDensity(footerRegion);
+            footerRegion.release();
+
+            if (density > MIN_CONTENT_DENSITY && density < MAX_TEXT_DENSITY) {
+                Rect bounds = new Rect(0, minColumnBottom, width, bodyBottom);
+                DocumentRegion footer = new DocumentRegion(bounds, DocumentRegion.Type.FOOTER);
+                footer.setConfidence((float) Math.min(1.0, density * 10));
+                Log.d(TAG, "detectFooterInMultiColumnLayout: detected footer at y=" + minColumnBottom +
+                        " to " + bodyBottom + " (height=" + potentialFooterHeight + ")");
+                return footer;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Detects a footer that spans the full page width in a multi-column layout.
+     * This is specifically designed to detect footnotes that appear below all columns.
+     * <p>
+     * Detection strategies:
+     * 1. Look for content in the gap between columns (traditional approach)
+     * 2. Look for text lines at the bottom that span the full page width
+     * 3. Detect a horizontal gap between column content and footer content
+     *
+     * @param binary     binary image
+     * @param columns    detected columns
+     * @param width      image width
+     * @param height     image height
+     * @param bodyBottom bottom of the body area
+     * @return footer region or null if not detected
+     */
+    private DocumentRegion detectFullWidthFooter(Mat binary, List<DocumentRegion> columns,
+                                                 int width, int height, int bodyBottom) {
+        // Find the boundaries of left and right columns
+        int leftColumnLeft = width;
+        int leftColumnRight = 0;
+        int rightColumnLeft = width;
+        int rightColumnRight = 0;
+
+        for (DocumentRegion column : columns) {
+            Rect bounds = column.getBounds();
+            // Left column (left half of page)
+            if (bounds.left < width / 2) {
+                leftColumnLeft = Math.min(leftColumnLeft, bounds.left);
+                leftColumnRight = Math.max(leftColumnRight, bounds.right);
+            }
+            // Right column (right half of page)
+            if (bounds.right > width / 2) {
+                rightColumnLeft = Math.min(rightColumnLeft, bounds.left);
+                rightColumnRight = Math.max(rightColumnRight, bounds.right);
+            }
+        }
+
+        // The gap between columns
+        int gapStart = leftColumnRight;
+        int gapEnd = rightColumnLeft;
+        int gapWidth = gapEnd - gapStart;
+
+        // Scan from bottom of page upward
+        int scanHeight = (int) (height * 0.20); // Scan bottom 20% of page
+        int scanStart = Math.max(0, bodyBottom - scanHeight);
+
+        int footerTop = -1;
+        byte[] rowData = new byte[width];
+
+        // Strategy 1: Look for rows where content spans the full page width
+        // (content exists both in left margin area AND right margin area, or spans the gap)
+        int margin = (int) (width * 0.05); // 5% margin on each side
+
+        for (int y = bodyBottom - 1; y >= scanStart; y--) {
+            if (y < 0 || y >= binary.rows()) continue;
+
+            binary.get(y, 0, rowData);
+
+            // Check for content spanning full width
+            // A footer line typically starts near the left margin and extends significantly
+            int leftContentStart = -1;
+            int rightContentEnd = -1;
+
+            // Find leftmost content
+            for (int x = 0; x < width; x++) {
+                if ((rowData[x] & 0xFF) != 0) {
+                    leftContentStart = x;
+                    break;
+                }
+            }
+
+            // Find rightmost content
+            for (int x = width - 1; x >= 0; x--) {
+                if ((rowData[x] & 0xFF) != 0) {
+                    rightContentEnd = x;
+                    break;
+                }
+            }
+
+            // Check if this row has full-width content
+            // Full-width means: starts in left margin area AND ends in right margin area
+            // OR: content exists in the gap between columns
+            boolean isFullWidthLine = false;
+
+            if (leftContentStart >= 0 && rightContentEnd >= 0) {
+                int contentWidth = rightContentEnd - leftContentStart;
+
+                // Check if content spans more than 60% of page width (likely a footer)
+                if (contentWidth > width * 0.6) {
+                    isFullWidthLine = true;
+                }
+
+                // Also check if content exists in the gap area
+                if (gapWidth > width * 0.02) {
+                    int gapContentCount = 0;
+                    for (int x = gapStart; x < gapEnd && x < width; x++) {
+                        if ((rowData[x] & 0xFF) != 0) {
+                            gapContentCount++;
+                        }
+                    }
+                    if (gapContentCount > gapWidth * 0.05) {
+                        isFullWidthLine = true;
+                    }
+                }
+            }
+
+            if (isFullWidthLine) {
+                // Found content that spans full width - this is likely a footer line
+                footerTop = y;
+            } else if (footerTop > 0) {
+                // We found the top of the footer region (first row without full-width content)
+                // But we need to check if there's a gap between this row and the footer
+                // to avoid including column content
+
+                // Check if there's a significant vertical gap above the footer
+                int gapAboveFooter = 0;
+                for (int checkY = y; checkY >= Math.max(scanStart, y - 50); checkY--) {
+                    if (checkY < 0 || checkY >= binary.rows()) continue;
+                    binary.get(checkY, 0, rowData);
+
+                    int rowContent = 0;
+                    for (int x = 0; x < width; x++) {
+                        if ((rowData[x] & 0xFF) != 0) {
+                            rowContent++;
+                        }
+                    }
+
+                    if (rowContent < width * 0.01) {
+                        gapAboveFooter++;
+                    } else {
+                        break;
+                    }
+                }
+
+                // If there's a gap of at least 10 pixels, use the bottom of the gap as footer top
+                if (gapAboveFooter >= 10) {
+                    footerTop = y + 1;
+                }
+                break;
+            }
+        }
+
+        if (footerTop > 0 && footerTop < bodyBottom) {
+            int footerHeight = bodyBottom - footerTop;
+            int minFooterHeight = (int) (height * 0.01); // At least 1% of page height
+            int maxFooterHeight = (int) (height * 0.15); // At most 15% of page height
+
+            if (footerHeight >= minFooterHeight && footerHeight <= maxFooterHeight) {
+                // Verify there's actual content in this footer area
+                org.opencv.core.Rect footerRect = new org.opencv.core.Rect(0, footerTop, width, footerHeight);
+                Mat footerRegion = binary.submat(footerRect);
+                double density = calculateContentDensity(footerRegion);
+                footerRegion.release();
+
+                if (density > MIN_CONTENT_DENSITY && density < MAX_TEXT_DENSITY) {
+                    Rect bounds = new Rect(0, footerTop, width, bodyBottom);
+                    DocumentRegion footer = new DocumentRegion(bounds, DocumentRegion.Type.FOOTER);
+                    footer.setConfidence((float) Math.min(1.0, density * 10));
+                    Log.d(TAG, "detectFullWidthFooter: detected full-width footer at y=" + footerTop +
+                            " to " + bodyBottom + " (height=" + footerHeight + ")");
+                    return footer;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Detects a footer at the bottom of the page by looking for text lines
+     * that start at the left margin and extend beyond the left column boundary.
+     * This is useful for detecting footnotes in multi-column layouts.
+     *
+     * @param binary     binary image
+     * @param columns    detected columns
+     * @param width      image width
+     * @param height     image height
+     * @param bodyBottom bottom of the body area
+     * @return footer region or null if not detected
+     */
+    private DocumentRegion detectBottomFooter(Mat binary, List<DocumentRegion> columns,
+                                              int width, int height, int bodyBottom) {
+        if (columns.isEmpty() || columns.size() < 2) {
+            return null;
+        }
+
+        // Find the left column's right boundary (the gap starts here)
+        int leftColumnRight = 0;
+        for (DocumentRegion column : columns) {
+            Rect bounds = column.getBounds();
+            if (bounds.left < width / 2) {
+                leftColumnRight = Math.max(leftColumnRight, bounds.right);
+            }
+        }
+
+        // Scan the bottom 10% of the page
+        int scanHeight = (int) (height * 0.10);
+        int scanStart = Math.max(0, bodyBottom - scanHeight);
+        int leftMargin = (int) (width * 0.05); // 5% margin
+
+        byte[] rowData = new byte[width];
+        int footerTop = -1;
+        int consecutiveFooterRows = 0;
+        int requiredConsecutiveRows = 3; // Need at least 3 consecutive rows to confirm footer
+
+        // Scan from bottom upward looking for text that starts at left margin
+        // and extends into or beyond the column gap
+        for (int y = bodyBottom - 1; y >= scanStart; y--) {
+            if (y < 0 || y >= binary.rows()) continue;
+
+            binary.get(y, 0, rowData);
+
+            // Find leftmost and rightmost content in this row
+            int leftContent = -1;
+            int rightContent = -1;
+
+            for (int x = 0; x < width; x++) {
+                if ((rowData[x] & 0xFF) != 0) {
+                    if (leftContent < 0) leftContent = x;
+                    rightContent = x;
+                }
+            }
+
+            // Check if this row has content that:
+            // 1. Starts near the left margin (within 10% of page width)
+            // 2. Extends beyond the left column's right boundary (into the gap)
+            boolean isFooterLine = false;
+            if (leftContent >= 0 && rightContent >= 0) {
+                boolean startsAtLeftMargin = leftContent < (int) (width * 0.10);
+                boolean extendsBeyondLeftColumn = rightContent > leftColumnRight;
+                int contentWidth = rightContent - leftContent;
+                boolean hasSignificantWidth = contentWidth > width * 0.3; // At least 30% of page width
+
+                if (startsAtLeftMargin && extendsBeyondLeftColumn && hasSignificantWidth) {
+                    isFooterLine = true;
+                }
+            }
+
+            if (isFooterLine) {
+                consecutiveFooterRows++;
+                if (consecutiveFooterRows >= requiredConsecutiveRows) {
+                    footerTop = y;
+                }
+            } else if (consecutiveFooterRows >= requiredConsecutiveRows) {
+                // We found the top of the footer region
+                break;
+            } else {
+                // Reset if we haven't found enough consecutive rows yet
+                consecutiveFooterRows = 0;
+            }
+        }
+
+        if (footerTop > 0 && footerTop < bodyBottom) {
+            int footerHeight = bodyBottom - footerTop;
+            int minFooterHeight = (int) (height * 0.01); // At least 1% of page height
+            int maxFooterHeight = (int) (height * 0.12); // At most 12% of page height
+
+            if (footerHeight >= minFooterHeight && footerHeight <= maxFooterHeight) {
+                // Verify there's actual content in this footer area
+                org.opencv.core.Rect footerRect = new org.opencv.core.Rect(0, footerTop, width, footerHeight);
+                Mat footerRegion = binary.submat(footerRect);
+                double density = calculateContentDensity(footerRegion);
+                footerRegion.release();
+
+                if (density > MIN_CONTENT_DENSITY && density < MAX_TEXT_DENSITY) {
+                    Rect bounds = new Rect(0, footerTop, width, bodyBottom);
+                    DocumentRegion footer = new DocumentRegion(bounds, DocumentRegion.Type.FOOTER);
+                    footer.setConfidence((float) Math.min(1.0, density * 10));
+                    Log.d(TAG, "detectBottomFooter: detected footer at y=" + footerTop +
+                            " to " + bodyBottom + " (height=" + footerHeight + ")");
+                    return footer;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Finds the bottom-most y-coordinate with significant content in a region.
+     * Uses vertical projection to detect where text content ends.
+     *
+     * @param binary binary image
+     * @param bounds region bounds to analyze
+     * @return y-coordinate of the bottom of content
+     */
+    private int findContentBottom(Mat binary, Rect bounds) {
+        // Clamp bounds to image dimensions
+        int left = Math.max(0, bounds.left);
+        int top = Math.max(0, bounds.top);
+        int right = Math.min(binary.cols(), bounds.right);
+        int bottom = Math.min(binary.rows(), bounds.bottom);
+
+        if (right <= left || bottom <= top) {
+            return bounds.bottom;
+        }
+
+        org.opencv.core.Rect roi = new org.opencv.core.Rect(left, top, right - left, bottom - top);
+        Mat region = binary.submat(roi);
+
+        int regionHeight = region.rows();
+        int regionWidth = region.cols();
+
+        // Compute horizontal projection (sum of pixels per row)
+        int[] horizontalProjection = new int[regionHeight];
+        byte[] rowData = new byte[regionWidth];
+
+        for (int y = 0; y < regionHeight; y++) {
+            region.get(y, 0, rowData);
+            int sum = 0;
+            for (int x = 0; x < regionWidth; x++) {
+                if ((rowData[x] & 0xFF) != 0) {
+                    sum++;
+                }
+            }
+            horizontalProjection[y] = sum;
+        }
+        region.release();
+
+        // Find the last row with significant content (scanning from bottom)
+        int threshold = (int) (regionWidth * 0.01); // At least 1% of width should have content
+        int contentBottom = regionHeight;
+
+        // Look for a gap (multiple consecutive rows with low content) from the bottom
+        int gapCount = 0;
+        int requiredGap = (int) (regionHeight * 0.02); // 2% of region height as gap
+        if (requiredGap < 5) requiredGap = 5;
+
+        for (int y = regionHeight - 1; y >= 0; y--) {
+            if (horizontalProjection[y] < threshold) {
+                gapCount++;
+                if (gapCount >= requiredGap) {
+                    // Found a significant gap, content ends above this
+                    contentBottom = y + gapCount;
+                    break;
+                }
+            } else {
+                gapCount = 0;
+            }
+        }
+
+        return top + contentBottom;
     }
 
     /**
@@ -529,9 +993,9 @@ public class DocumentLayoutAnalyzer {
     }
 
     /**
-         * Result class containing analysis results with additional metadata.
-         */
-        public record AnalysisResult(List<DocumentRegion> regions, int columnCount, boolean hasTable, boolean hasHeader,
-                                     boolean hasFooter, ReadingOrderSorter.TextDirection textDirection) {
+     * Result class containing analysis results with additional metadata.
+     */
+    public record AnalysisResult(List<DocumentRegion> regions, int columnCount, boolean hasTable, boolean hasHeader,
+                                 boolean hasFooter, ReadingOrderSorter.TextDirection textDirection) {
     }
 }

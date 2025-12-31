@@ -204,10 +204,18 @@ public class OpenCVUtils {
         String manufacturer = Build.MANUFACTURER.toLowerCase();
         String model = Build.MODEL.toLowerCase();
         String device = Build.DEVICE.toLowerCase();
+        String fingerprint = Build.FINGERPRINT.toLowerCase();
+        String hardware = Build.HARDWARE.toLowerCase();
+        String product = Build.PRODUCT.toLowerCase();
         int sdk = Build.VERSION.SDK_INT;
 
         boolean isHighEnd = sdk >= 29 && !manufacturer.contains("mediatek") && !manufacturer.contains("spreadtrum") && !device.contains("generic") && !model.contains("emulator") && !device.contains("x86") && !device.contains("x86_64") && (manufacturer.contains("google") || manufacturer.contains("samsung") || manufacturer.contains("xiaomi"));
-        boolean isEmulator = device.contains("emu") || model.contains("sdk") || model.contains("emulator") || model.contains("virtual") || manufacturer.contains("genymotion") || model.contains("generator");
+        // Improved emulator detection: check fingerprint, hardware, and product for emulator patterns
+        // This catches arm64 emulators that don't have x86 in their device name
+        boolean isEmulator = device.contains("emu") || model.contains("sdk") || model.contains("emulator") || model.contains("virtual") || manufacturer.contains("genymotion") || model.contains("generator")
+                || fingerprint.contains("generic") || fingerprint.contains("sdk") || fingerprint.contains("emulator")
+                || hardware.contains("goldfish") || hardware.contains("ranchu")
+                || product.contains("sdk") || product.contains("emulator") || product.contains("google_sdk");
 
         USE_SAFE_MODE = !isHighEnd || isEmulator;
         USE_ADAPTIVE_THRESHOLD = isHighEnd;
@@ -1879,7 +1887,8 @@ public class OpenCVUtils {
             }
 
             // 2) Low-light handling (reuse existing utility)
-            if (isLowLight(gray)) {
+            // SAFE MODE: Skip preprocessLowLight which uses convertTo (can crash on emulators)
+            if (!isSafeMode() && isLowLight(gray)) {
                 Mat tmp = rgba.clone();
                 preprocessLowLight(tmp);                    // modifies in-place
                 Imgproc.cvtColor(tmp, gray, Imgproc.COLOR_RGBA2GRAY);
@@ -1888,23 +1897,30 @@ public class OpenCVUtils {
 
             // 3) Background normalization to suppress shadows/gradients (division by blurred background)
             //    Use floating-point math to avoid banding, then convert back to 8-bit in 'work'.
-            int k = Math.max(15, (int) (Math.min(gray.width(), gray.height()) * 0.03));
-            if (k % 2 == 0) k++;
-            Mat bg = new Mat();
-            Imgproc.GaussianBlur(gray, bg, new Size(k, k), 0);
-            Mat gf = new Mat(), bgf = new Mat(), norm = new Mat();
-            try {
-                gray.convertTo(gf, CvType.CV_32F);
-                bg.convertTo(bgf, CvType.CV_32F);
-                Core.max(bgf, new Scalar(1.0), bgf);          // prevent div-by-zero
-                Core.divide(gf, bgf, norm);                   // ~0..1
-                Core.multiply(norm, new Scalar(255.0), norm); // ~0..255
-                norm.convertTo(work, CvType.CV_8U);
-            } finally {
-                bg.release();
-                gf.release();
-                bgf.release();
-                norm.release();
+            //    SAFE MODE: Skip float conversion (convertTo) which can crash on some emulators due to
+            //    unsupported SIMD instructions. Use simple copy instead.
+            if (isSafeMode()) {
+                Log.d(TAG, "prepareForOCR: Safe mode - skipping float normalization");
+                gray.copyTo(work);
+            } else {
+                int k = Math.max(15, (int) (Math.min(gray.width(), gray.height()) * 0.03));
+                if (k % 2 == 0) k++;
+                Mat bg = new Mat();
+                Imgproc.GaussianBlur(gray, bg, new Size(k, k), 0);
+                Mat gf = new Mat(), bgf = new Mat(), norm = new Mat();
+                try {
+                    gray.convertTo(gf, CvType.CV_32F);
+                    bg.convertTo(bgf, CvType.CV_32F);
+                    Core.max(bgf, new Scalar(1.0), bgf);          // prevent div-by-zero
+                    Core.divide(gf, bgf, norm);                   // ~0..1
+                    Core.multiply(norm, new Scalar(255.0), norm); // ~0..255
+                    norm.convertTo(work, CvType.CV_8U);
+                } finally {
+                    bg.release();
+                    gf.release();
+                    bgf.release();
+                    norm.release();
+                }
             }
 
             // 4) Gentle denoise + CLAHE (very mild, avoids over-bleaching)
@@ -1925,10 +1941,13 @@ public class OpenCVUtils {
                 }
 
                 // 5b) Retinex-like normalization to flatten illumination
+                // SAFE MODE: Skip retinexNormalize which uses convertTo (can crash on emulators)
+                // if (!isSafeMode()) {
                 try {
                     retinexNormalize(work, /*sigma*/ Math.max(15, Math.min(work.width(), work.height()) / 20));
                 } catch (Throwable ignore) {
                 }
+                // }
 
                 // 5c) Edge-preserving denoise: prefer fastNlMeans (grayscale) then bilateral as fallback
                 try {
@@ -2333,6 +2352,13 @@ public class OpenCVUtils {
      */
     private static void sharpenForOCRAdaptive(Mat gray, double strength) {
         if (strength <= 0) return;
+
+        // SAFE MODE: Skip sharpening which uses convertTo (can crash on emulators due to
+        // unsupported SIMD instructions in OpenCV's parallel_for_ / Mat::convertTo)
+        if (isSafeMode()) {
+            Log.d(TAG, "sharpenForOCRAdaptive: Safe mode - skipping sharpening");
+            return;
+        }
 
         Mat blurred = new Mat();
         Mat sharpened = new Mat();

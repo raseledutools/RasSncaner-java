@@ -159,7 +159,7 @@ public class DocumentRegion {
             case MARGIN_NOTE:
                 return 6;  // PSM_SINGLE_BLOCK
             case COLUMN:
-                return 6;  // PSM_SINGLE_BLOCK - single column of text
+                return 4;  // PSM_SINGLE_COLUMN - better for isolated column regions
             default:
                 return 3;  // PSM_AUTO - fallback
         }

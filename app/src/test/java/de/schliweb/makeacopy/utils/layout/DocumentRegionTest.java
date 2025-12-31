@@ -1,7 +1,6 @@
 package de.schliweb.makeacopy.utils.layout;
 
 import android.graphics.Rect;
-
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -66,7 +65,7 @@ public class DocumentRegionTest {
         assertEquals(7, new DocumentRegion(null, DocumentRegion.Type.FOOTER).getOptimalPsm());
         assertEquals(11, new DocumentRegion(null, DocumentRegion.Type.TABLE).getOptimalPsm());
         assertEquals(7, new DocumentRegion(null, DocumentRegion.Type.CAPTION).getOptimalPsm());
-        assertEquals(6, new DocumentRegion(null, DocumentRegion.Type.COLUMN).getOptimalPsm());
+        assertEquals(4, new DocumentRegion(null, DocumentRegion.Type.COLUMN).getOptimalPsm());
         assertEquals(3, new DocumentRegion(null, DocumentRegion.Type.UNKNOWN).getOptimalPsm());
     }
 

@@ -31,6 +31,13 @@ public class OCRPostProcessor {
     private static final float LOW_CONFIDENCE_THRESHOLD = 70.0f;
 
     /**
+     * Confidence threshold above which words are trusted and no corrections are applied.
+     * Words with confidence >= this value are assumed to be correctly recognized by OCR.
+     * This prevents false corrections like "police" -> "pohce" when OCR is confident.
+     */
+    private static final float HIGH_CONFIDENCE_THRESHOLD = 85.0f;
+
+    /**
      * Minimum word length for applying pattern-based corrections.
      * Very short words are more prone to false corrections.
      */
@@ -188,15 +195,22 @@ public class OCRPostProcessor {
 
     /**
      * Corrects a single word based on its confidence and context.
+     * Words with high confidence (>= HIGH_CONFIDENCE_THRESHOLD) are trusted and not corrected.
      */
     private static String correctWord(String word, float confidence, String language) {
         if (word == null || word.isEmpty()) {
             return word;
         }
 
+        // Trust high-confidence words - don't apply any corrections
+        // This prevents false corrections like "police" -> "pohce" when OCR is confident
+        if (confidence >= HIGH_CONFIDENCE_THRESHOLD) {
+            return word;
+        }
+
         String result = word;
 
-        // Always apply ligature corrections (high confidence fixes)
+        // Apply ligature corrections for medium-confidence words
         result = applyLigatureCorrections(result);
 
         // For low-confidence words, apply more aggressive corrections
@@ -429,10 +443,20 @@ public class OCRPostProcessor {
 
         for (RecognizedWord word : words) {
             String originalText = word.getText();
+            float confidence = word.getConfidence();
+            Log.d(TAG, "Processing word: '" + originalText + "'" + " (conf=" + confidence + ")");
+
+            // Trust high-confidence words - skip all corrections
+            // This prevents false corrections like "police" -> "pohce" -> "ponce"
+            if (confidence >= HIGH_CONFIDENCE_THRESHOLD) {
+                Log.d(TAG, "High confidence (" + confidence + " >= " + HIGH_CONFIDENCE_THRESHOLD + "), skipping corrections");
+                result.add(word);
+                continue;
+            }
 
             // First apply standard corrections
-            String correctedText = correctWord(originalText, word.getConfidence(), language);
-
+            String correctedText = correctWord(originalText, confidence, language);
+            Log.d(TAG, "Standard correction: '" + originalText + "' -> '" + correctedText + "'");
             // Then try dictionary-based correction if word is not in dictionary
             String cleanWord = extractCleanWord(correctedText);
             if (!cleanWord.isEmpty() && cleanWord.length() >= 2 &&
@@ -450,7 +474,7 @@ public class OCRPostProcessor {
                 word.setText(correctedText);
                 correctionCount++;
                 Log.d(TAG, "Corrected: '" + originalText + "' -> '" + correctedText +
-                        "' (conf=" + word.getConfidence() + ")");
+                        "' (conf=" + confidence + ")");
             }
             result.add(word);
         }
@@ -461,80 +485,6 @@ public class OCRPostProcessor {
         }
 
         return result;
-    }
-
-    /**
-     * Processes the full OCR text with dictionary-based correction.
-     *
-     * @param text     The full OCR text
-     * @param language The language code
-     * @param context  Android context for accessing dictionary assets
-     * @return Corrected text
-     */
-    public static String processTextWithDictionary(String text, String language, Context context) {
-        if (text == null || text.isEmpty() || context == null) {
-            return processText(text, language);
-        }
-
-        // Skip dictionary correction for non-word-based languages
-        if (!DictionaryManager.isWordBasedLanguage(language)) {
-            return processText(text, language);
-        }
-
-        DictionaryManager dictManager = DictionaryManager.getInstance(context);
-        Set<String> dictionary = dictManager.getDictionary(language);
-
-        if (dictionary.isEmpty()) {
-            return processText(text, language);
-        }
-
-        // First apply standard corrections
-        String result = processText(text, language);
-
-        // Then apply dictionary-based word corrections
-        StringBuilder corrected = new StringBuilder();
-        StringBuilder currentWord = new StringBuilder();
-
-        for (int i = 0; i < result.length(); i++) {
-            char c = result.charAt(i);
-
-            if (Character.isLetterOrDigit(c) || c == '-' || c == '\'') {
-                currentWord.append(c);
-            } else {
-                if (currentWord.length() > 0) {
-                    String word = currentWord.toString();
-                    String cleanWord = extractCleanWord(word);
-
-                    if (!cleanWord.isEmpty() && cleanWord.length() >= 2 &&
-                            !dictionary.contains(cleanWord.toLowerCase())) {
-                        String dictCorrected = findDictionaryCorrection(word, dictionary);
-                        if (dictCorrected != null) {
-                            word = dictCorrected;
-                        }
-                    }
-                    corrected.append(word);
-                    currentWord.setLength(0);
-                }
-                corrected.append(c);
-            }
-        }
-
-        // Don't forget the last word
-        if (currentWord.length() > 0) {
-            String word = currentWord.toString();
-            String cleanWord = extractCleanWord(word);
-
-            if (!cleanWord.isEmpty() && cleanWord.length() >= 2 &&
-                    !dictionary.contains(cleanWord.toLowerCase())) {
-                String dictCorrected = findDictionaryCorrection(word, dictionary);
-                if (dictCorrected != null) {
-                    word = dictCorrected;
-                }
-            }
-            corrected.append(word);
-        }
-
-        return corrected.toString();
     }
 
     /**
@@ -707,6 +657,176 @@ public class OCRPostProcessor {
         }
 
         return target.toLowerCase();
+    }
+
+    /**
+     * Converts a list of recognized words to a single text string.
+     * Words are sorted by their vertical position (top to bottom) and then horizontal position (left to right),
+     * grouped into lines based on vertical proximity, and joined with spaces within lines and newlines between lines.
+     * Paragraphs are detected based on larger vertical gaps between lines.
+     * HTML entities in the text are decoded.
+     *
+     * @param words The list of recognized words to convert
+     * @return The extracted text with proper line breaks and paragraphs, or empty string if words is null or empty
+     */
+    public static String wordsToText(List<RecognizedWord> words) {
+        if (words == null || words.isEmpty()) {
+            return "";
+        }
+
+        // Sort words by position: primarily by Y (top), secondarily by X (left)
+        List<RecognizedWord> sorted = new ArrayList<>(words);
+        sorted.sort((a, b) -> {
+            float ay = a.getBoundingBox().top;
+            float by = b.getBoundingBox().top;
+            if (Math.abs(ay - by) > Math.min(a.height(), b.height()) * 0.5f) {
+                return Float.compare(ay, by);
+            }
+            return Float.compare(a.getBoundingBox().left, b.getBoundingBox().left);
+        });
+
+        // Group words into lines based on vertical proximity
+        List<List<RecognizedWord>> lines = new ArrayList<>();
+        List<RecognizedWord> currentLine = new ArrayList<>();
+        float lastMidY = Float.MIN_VALUE;
+        float lineThreshold = 0;
+
+        for (RecognizedWord word : sorted) {
+            float midY = word.midY();
+            float wordHeight = word.height();
+
+            if (currentLine.isEmpty()) {
+                currentLine.add(word);
+                lastMidY = midY;
+                lineThreshold = wordHeight * 0.6f;
+            } else if (Math.abs(midY - lastMidY) <= lineThreshold) {
+                // Same line
+                currentLine.add(word);
+                // Update threshold based on average height
+                lineThreshold = Math.max(lineThreshold, wordHeight * 0.6f);
+            } else {
+                // New line
+                lines.add(currentLine);
+                currentLine = new ArrayList<>();
+                currentLine.add(word);
+                lastMidY = midY;
+                lineThreshold = wordHeight * 0.6f;
+            }
+        }
+        if (!currentLine.isEmpty()) {
+            lines.add(currentLine);
+        }
+
+        // Calculate average line height for paragraph detection
+        float totalLineHeight = 0;
+        int lineCount = 0;
+        for (List<RecognizedWord> line : lines) {
+            for (RecognizedWord w : line) {
+                totalLineHeight += w.height();
+                lineCount++;
+            }
+        }
+        float avgWordHeight = lineCount > 0 ? totalLineHeight / lineCount : 20f;
+        // Paragraph threshold: gap larger than 1.5x average word height indicates new paragraph
+        float paragraphThreshold = avgWordHeight * 1.5f;
+
+        // Sort words within each line by X position and build text
+        StringBuilder result = new StringBuilder();
+        float lastLineBottomY = Float.MIN_VALUE;
+
+        for (int i = 0; i < lines.size(); i++) {
+            List<RecognizedWord> line = lines.get(i);
+            line.sort((a, b) -> Float.compare(a.getBoundingBox().left, b.getBoundingBox().left));
+
+            // Calculate line's top Y for paragraph detection
+            float lineTopY = Float.MAX_VALUE;
+            for (RecognizedWord w : line) {
+                lineTopY = Math.min(lineTopY, w.getBoundingBox().top);
+            }
+
+            // Check for paragraph break (large vertical gap)
+            if (i > 0 && lastLineBottomY != Float.MIN_VALUE) {
+                float gap = lineTopY - lastLineBottomY;
+                if (gap > paragraphThreshold) {
+                    // Insert extra newline for paragraph break
+                    result.append("\n");
+                }
+            }
+
+            for (int j = 0; j < line.size(); j++) {
+                if (j > 0) {
+                    result.append(" ");
+                }
+                // Decode HTML entities in the word text
+                result.append(decodeHtmlEntities(line.get(j).getText()));
+            }
+
+            if (i < lines.size() - 1) {
+                result.append("\n");
+            }
+
+            // Update last line bottom Y
+            float lineBottomY = Float.MIN_VALUE;
+            for (RecognizedWord w : line) {
+                lineBottomY = Math.max(lineBottomY, w.getBoundingBox().bottom);
+            }
+            lastLineBottomY = lineBottomY;
+        }
+
+        return result.toString();
+    }
+
+    /**
+     * Decodes common HTML entities in a string.
+     * Handles numeric entities (&#39;, &#34;, etc.) and named entities (&amp;, &lt;, &gt;, &quot;, &apos;).
+     *
+     * @param text The text containing HTML entities
+     * @return The decoded text with entities replaced by their character equivalents
+     */
+    private static String decodeHtmlEntities(String text) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+
+        String result = text;
+
+        // Decode numeric entities (decimal): &#39; -> '
+        java.util.regex.Matcher decimalMatcher = Pattern.compile("&#(\\d+);").matcher(result);
+        StringBuffer sb = new StringBuffer();
+        while (decimalMatcher.find()) {
+            try {
+                int codePoint = Integer.parseInt(decimalMatcher.group(1));
+                decimalMatcher.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(String.valueOf((char) codePoint)));
+            } catch (NumberFormatException e) {
+                // Keep original if parsing fails
+            }
+        }
+        decimalMatcher.appendTail(sb);
+        result = sb.toString();
+
+        // Decode numeric entities (hexadecimal): &#x27; -> '
+        java.util.regex.Matcher hexMatcher = Pattern.compile("&#[xX]([0-9a-fA-F]+);").matcher(result);
+        sb = new StringBuffer();
+        while (hexMatcher.find()) {
+            try {
+                int codePoint = Integer.parseInt(hexMatcher.group(1), 16);
+                hexMatcher.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(String.valueOf((char) codePoint)));
+            } catch (NumberFormatException e) {
+                // Keep original if parsing fails
+            }
+        }
+        hexMatcher.appendTail(sb);
+        result = sb.toString();
+
+        // Decode common named entities
+        result = result.replace("&amp;", "&");
+        result = result.replace("&lt;", "<");
+        result = result.replace("&gt;", ">");
+        result = result.replace("&quot;", "\"");
+        result = result.replace("&apos;", "'");
+        result = result.replace("&nbsp;", " ");
+
+        return result;
     }
 
     /**

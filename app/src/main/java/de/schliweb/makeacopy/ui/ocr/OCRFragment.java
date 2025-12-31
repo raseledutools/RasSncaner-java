@@ -1124,10 +1124,12 @@ public class OCRFragment extends Fragment {
                     }
                     if (postProcessingEnabled) {
                         try {
+                            // Process words with dictionary - this is the single source of truth
                             ocrWords = OCRPostProcessor.processWithDictionary(ocrWords, lang, requireContext());
-                            // Also correct the full text
-                            if (ocrText != null && !ocrText.equals(getString(R.string.ocr_results_will_appear_here))) {
-                                ocrText = OCRPostProcessor.processTextWithDictionary(ocrText, lang, requireContext());
+                            // Derive text from processed words instead of processing text separately
+                            ocrText = OCRPostProcessor.wordsToText(ocrWords);
+                            if (ocrText == null || ocrText.trim().isEmpty()) {
+                                ocrText = getString(R.string.ocr_results_will_appear_here);
                             }
                             // Log quality statistics
                             OCRPostProcessor.OcrQualityStats stats = OCRPostProcessor.analyzeQuality(ocrWords);
@@ -1137,6 +1139,11 @@ public class OCRFragment extends Fragment {
                         }
                     } else {
                         Log.d(TAG, LP + "OCR post-processing disabled by user preference");
+                        // Even without post-processing, derive text from words for consistency
+                        // ocrText = OCRPostProcessor.wordsToText(ocrWords); TODO
+                        if (ocrText == null || ocrText.trim().isEmpty()) {
+                            ocrText = getString(R.string.ocr_results_will_appear_here);
+                        }
                     }
 
                     // Create final variables for lambda

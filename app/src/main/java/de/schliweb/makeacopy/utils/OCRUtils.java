@@ -75,6 +75,10 @@ public class OCRUtils {
                 return "swe";
             } else if ("no".equalsIgnoreCase(sys) || "nb".equalsIgnoreCase(sys) || "nn".equalsIgnoreCase(sys)) {
                 return "nor";
+            } else if ("fa".equalsIgnoreCase(sys)) {
+                return "fas";
+            } else if ("ar".equalsIgnoreCase(sys)) {
+                return "ara";
             } else {
                 return "eng";
             }
@@ -112,6 +116,8 @@ public class OCRUtils {
             case "da" -> "dan";
             case "sv" -> "swe";
             case "no", "nb", "nn" -> "nor";
+            case "fa" -> "fas";
+            case "ar" -> "ara";
             case "zh" -> {
                 // Map Chinese to Simplified or Traditional based on region, default to Simplified
                 try {
@@ -133,10 +139,12 @@ public class OCRUtils {
      *
      * @return An array of strings representing the language codes supported for OCR.
      * The codes include "eng" (English), "deu" (German), "fra" (French),
-     * "ita" (Italian), "spa" (Spanish), "por" (Portuguese), "nld" (Dutch), "rus" (Russian), "tha" (Thai),
-     * "chi_sim" (Simplified Chinese), and "chi_tra" (Traditional Chinese).
+     * "ita" (Italian), "spa" (Spanish), "por" (Portuguese), "nld" (Dutch), "pol" (Polish),
+     * "ces" (Czech), "slk" (Slovak), "hun" (Hungarian), "ron" (Romanian), "dan" (Danish),
+     * "nor" (Norwegian), "swe" (Swedish), "rus" (Russian), "tha" (Thai), "fas" (Persian/Farsi),
+     * "ara" (Arabic), "chi_sim" (Simplified Chinese), and "chi_tra" (Traditional Chinese).
      */
     public static String[] getLanguages() {
-        return new String[]{"eng", "deu", "fra", "ita", "spa", "por", "nld", "pol", "ces", "slk", "hun", "ron", "dan", "nor", "swe", "rus", "tha", "chi_sim", "chi_tra"};
+        return new String[]{"eng", "deu", "fra", "ita", "spa", "por", "nld", "pol", "ces", "slk", "hun", "ron", "dan", "nor", "swe", "rus", "tha", "fas", "ara", "chi_sim", "chi_tra"};
     }
 }

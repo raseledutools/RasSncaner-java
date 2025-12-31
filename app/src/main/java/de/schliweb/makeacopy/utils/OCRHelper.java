@@ -548,7 +548,7 @@ public class OCRHelper {
             }
 
             Bitmap src = bitmap.getConfig() == Bitmap.Config.ARGB_8888 ? bitmap : bitmap.copy(Bitmap.Config.ARGB_8888, false);
-            Log.i(TAG, "runOcrWithWords: start OCR lang=" + language + ", psm=" + pageSegMode + ", dpi=" + DEFAULT_DPI + ", img=" + src.getWidth() + "x" + src.getHeight());
+            Log.i(TAG, "runOcrWithWords: start OCR lang=" + language + ", psm=" + pageSegMode + ", dpi=" + dpi + ", img=" + src.getWidth() + "x" + src.getHeight());
 
             tessBaseAPI.setImage(src);
             String text = tessBaseAPI.getUTF8Text();
@@ -725,9 +725,9 @@ public class OCRHelper {
     }
 
     /**
-         * Represents the OCR result for a single document region.
-         */
-        public record RegionOcrResult(DocumentRegion region, OcrResultWords ocrResult) {
+     * Represents the OCR result for a single document region.
+     */
+    public record RegionOcrResult(DocumentRegion region, OcrResultWords ocrResult) {
     }
 
     /**
@@ -786,13 +786,31 @@ public class OCRHelper {
                     continue;
                 }
 
+                // Apply preprocessing to improve OCR accuracy for this region
+                Bitmap preprocessedRegion = null;
+                try {
+                    // Use grayscale preprocessing for better detail preservation
+                    // Tables and columns benefit from non-binary output to preserve fine details
+                    // Binary output can introduce artifacts on clean PDF text
+                    boolean useBinary = region.getType() != DocumentRegion.Type.TABLE
+                            && region.getType() != DocumentRegion.Type.COLUMN
+                            && region.getType() != DocumentRegion.Type.HEADER;
+                    preprocessedRegion = OpenCVUtils.prepareForOCR(regionBitmap, useBinary);
+                    if (preprocessedRegion == null) {
+                        preprocessedRegion = regionBitmap;
+                    }
+                } catch (Exception e) {
+                    Log.w(TAG, "runOcrWithLayout: preprocessing failed for region, using original", e);
+                    preprocessedRegion = regionBitmap;
+                }
+
                 try {
                     // Set optimal PSM for this region type
                     int optimalPsm = region.getOptimalPsm();
                     setPageSegMode(optimalPsm);
 
-                    // Run OCR on region
-                    OcrResultWords result = runOcrWithWords(regionBitmap);
+                    // Run OCR on preprocessed region
+                    OcrResultWords result = runOcrWithWords(preprocessedRegion);
 
                     if (result != null && !result.text.isEmpty()) {
                         // Adjust word bounding boxes to absolute coordinates
@@ -817,7 +835,13 @@ public class OCRHelper {
                         }
                     }
                 } finally {
-                    if (regionBitmap != bitmap) {
+                    // Recycle preprocessed bitmap if it's different from regionBitmap
+                    if (preprocessedRegion != null && preprocessedRegion != regionBitmap
+                            && !preprocessedRegion.isRecycled()) {
+                        preprocessedRegion.recycle();
+                    }
+                    // Recycle region bitmap if it's different from source
+                    if (regionBitmap != bitmap && !regionBitmap.isRecycled()) {
                         regionBitmap.recycle();
                     }
                 }
