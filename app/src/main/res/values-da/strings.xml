@@ -383,4 +383,12 @@
     <string name="error_pdf_page_render_failed">Kunne ikke gengive siden</string>
     <string name="pdf_select_page">Vælg side</string>
     <string name="pdf_page_number">Side %1$d</string>
+
+    <!-- Multi-language OCR selection -->
+    <string name="select_ocr_languages">Vælg OCR-sprog</string>
+    <string name="ocr_max_languages_hint">Du kan vælge op til 2 sprog</string>
+    <string name="ocr_max_languages_warning">Der må maksimalt vælges 2 sprog</string>
+    <string name="ocr_no_language_selected">Vælg venligst mindst ét sprog</string>
+    <string name="ocr_languages_selected">%1$s</string>
+
 </resources>

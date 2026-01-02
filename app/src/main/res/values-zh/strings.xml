@@ -386,4 +386,11 @@
     <string name="pdf_select_page">选择页面</string>
     <string name="pdf_page_number">第 %1$d 页</string>
 
+    <!-- Multi-language OCR selection -->
+    <string name="select_ocr_languages">选择 OCR 语言</string>
+    <string name="ocr_max_languages_hint">最多可选择 2 种语言</string>
+    <string name="ocr_max_languages_warning">最多只能选择 2 种语言</string>
+    <string name="ocr_no_language_selected">请至少选择一种语言</string>
+    <string name="ocr_languages_selected">%1$s</string>
+
 </resources>

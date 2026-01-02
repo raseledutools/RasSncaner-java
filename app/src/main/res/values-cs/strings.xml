@@ -383,4 +383,12 @@
     <string name="error_pdf_page_render_failed">Stránku se nepodařilo vykreslit</string>
     <string name="pdf_select_page">Vybrat stránku</string>
     <string name="pdf_page_number">Stránka %1$d</string>
+
+    <!-- Multi-language OCR selection -->
+    <string name="select_ocr_languages">Vyberte jazyky OCR</string>
+    <string name="ocr_max_languages_hint">Lze vybrat maximálně 2 jazyky</string>
+    <string name="ocr_max_languages_warning">Jsou povoleny maximálně 2 jazyky</string>
+    <string name="ocr_no_language_selected">Vyberte prosím alespoň jeden jazyk</string>
+    <string name="ocr_languages_selected">%1$s</string>
+
 </resources>

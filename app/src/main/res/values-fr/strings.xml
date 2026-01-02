@@ -383,4 +383,12 @@
     <string name="error_pdf_page_render_failed">Impossible d’afficher la page</string>
     <string name="pdf_select_page">Sélectionner une page</string>
     <string name="pdf_page_number">Page %1$d</string>
+
+    <!-- Multi-language OCR selection -->
+    <string name="select_ocr_languages">Sélectionner les langues OCR</string>
+    <string name="ocr_max_languages_hint">Vous pouvez sélectionner jusqu’à 2 langues</string>
+    <string name="ocr_max_languages_warning">Maximum de 2 langues autorisées</string>
+    <string name="ocr_no_language_selected">Veuillez sélectionner au moins une langue</string>
+    <string name="ocr_languages_selected">%1$s</string>
+
 </resources>

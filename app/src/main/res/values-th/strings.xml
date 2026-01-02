@@ -387,4 +387,11 @@
     <string name="pdf_select_page">เลือกหน้า</string>
     <string name="pdf_page_number">หน้า %1$d</string>
 
+    <!-- Multi-language OCR selection -->
+    <string name="select_ocr_languages">เลือกภาษา OCR</string>
+    <string name="ocr_max_languages_hint">สามารถเลือกได้สูงสุด 2 ภาษา</string>
+    <string name="ocr_max_languages_warning">อนุญาตให้เลือกได้สูงสุด 2 ภาษา</string>
+    <string name="ocr_no_language_selected">โปรดเลือกอย่างน้อยหนึ่งภาษา</string>
+    <string name="ocr_languages_selected">%1$s</string>
+
 </resources>

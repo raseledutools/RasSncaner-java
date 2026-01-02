@@ -386,4 +386,11 @@
     <string name="pdf_select_page">Välj sida</string>
     <string name="pdf_page_number">Sida %1$d</string>
 
+    <!-- Multi-language OCR selection -->
+    <string name="select_ocr_languages">Välj OCR-språk</string>
+    <string name="ocr_max_languages_hint">Du kan välja upp till 2 språk</string>
+    <string name="ocr_max_languages_warning">Högst 2 språk är tillåtna</string>
+    <string name="ocr_no_language_selected">Välj minst ett språk</string>
+    <string name="ocr_languages_selected">%1$s</string>
+
 </resources>

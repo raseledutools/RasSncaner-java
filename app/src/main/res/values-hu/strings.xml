@@ -385,4 +385,12 @@
     <string name="error_pdf_page_render_failed">Az oldal megjelenítése nem sikerült</string>
     <string name="pdf_select_page">Oldal kiválasztása</string>
     <string name="pdf_page_number">%1$d. oldal</string>
+
+    <!-- Multi-language OCR selection -->
+    <string name="select_ocr_languages">OCR-nyelvek kiválasztása</string>
+    <string name="ocr_max_languages_hint">Legfeljebb 2 nyelv választható</string>
+    <string name="ocr_max_languages_warning">Legfeljebb 2 nyelv engedélyezett</string>
+    <string name="ocr_no_language_selected">Kérjük, válasszon ki legalább egy nyelvet</string>
+    <string name="ocr_languages_selected">%1$s</string>
+
 </resources>

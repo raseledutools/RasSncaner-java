@@ -378,7 +378,7 @@ public class OCRFragment extends Fragment {
             checkedItems[i] = selectedLanguageCodes.contains(codes[i]);
         }
 
-        new AlertDialog.Builder(requireContext())
+        AlertDialog dlg = new AlertDialog.Builder(requireContext())
                 .setTitle(R.string.select_ocr_languages)
                 .setMultiChoiceItems(displayNames, checkedItems, (dialog, which, isChecked) -> {
                     String code = codes[which];
@@ -437,7 +437,9 @@ public class OCRFragment extends Fragment {
                     }
                 })
                 .setNegativeButton(android.R.string.cancel, null)
-                .show();
+                .create();
+        dlg.setOnShowListener(d -> DialogUtils.improveAlertDialogButtonContrastForNight(dlg, requireContext()));
+        dlg.show();
     }
 
     /**
@@ -1218,7 +1220,7 @@ public class OCRFragment extends Fragment {
                     } else {
                         Log.d(TAG, LP + "OCR post-processing disabled by user preference");
                         // Even without post-processing, derive text from words for consistency
-                        // ocrText = OCRPostProcessor.wordsToText(ocrWords); TODO
+                        ocrText = OCRPostProcessor.wordsToText(ocrWords); // TODO
                         if (ocrText == null || ocrText.trim().isEmpty()) {
                             ocrText = getString(R.string.ocr_results_will_appear_here);
                         }

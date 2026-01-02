@@ -150,9 +150,14 @@ public class OCRPostProcessorDictionaryTest {
         assertFalse(DictionaryManager.isWordBasedLanguage("chi_tra"));
         assertFalse(DictionaryManager.isWordBasedLanguage("tha"));
 
-        // Multi-language spec should use primary language
+        // Multi-language spec: returns true if ANY language is word-based
         assertTrue(DictionaryManager.isWordBasedLanguage("deu+eng"));
-        assertFalse(DictionaryManager.isWordBasedLanguage("chi_sim+eng"));
+        assertTrue(DictionaryManager.isWordBasedLanguage("chi_sim+eng")); // eng is word-based
+        assertTrue(DictionaryManager.isWordBasedLanguage("fas+eng"));     // both are word-based
+        
+        // Multi-language spec with only non-word-based languages
+        assertFalse(DictionaryManager.isWordBasedLanguage("chi_sim+chi_tra"));
+        assertFalse(DictionaryManager.isWordBasedLanguage("chi_sim+tha"));
 
         // Null should return false
         assertFalse(DictionaryManager.isWordBasedLanguage(null));
@@ -578,4 +583,434 @@ public class OCRPostProcessorDictionaryTest {
         assertEquals("hello", method.invoke(null, "hell0", dictionary));
         assertEquals("mundo", method.invoke(null, "mund0", dictionary));
     }
+
+    // ==================== Combined Dictionary Tests (Multi-Language) ====================
+
+    /**
+     * Tests combined dictionary for Persian + English (fas+eng).
+     * Verifies that words from both languages are found in the combined dictionary.
+     */
+    @Test
+    public void testCombinedDictionary_PersianEnglish() throws Exception {
+        java.lang.reflect.Method method = OCRPostProcessor.class.getDeclaredMethod(
+                "findDictionaryCorrection", String.class, Set.class);
+        method.setAccessible(true);
+
+        // Simulate combined dictionary with Persian and English words
+        Set<String> combinedDictionary = new HashSet<>();
+        
+        // English words
+        combinedDictionary.add("hello");
+        combinedDictionary.add("world");
+        combinedDictionary.add("computer");
+        combinedDictionary.add("document");
+        combinedDictionary.add("scanner");
+        
+        // Persian words (Farsi)
+        combinedDictionary.add("سلام");      // hello
+        combinedDictionary.add("جهان");      // world
+        combinedDictionary.add("کامپیوتر");   // computer
+        combinedDictionary.add("سند");       // document
+        combinedDictionary.add("اسکنر");     // scanner
+        combinedDictionary.add("کتاب");      // book
+        combinedDictionary.add("خانه");      // house
+
+        // Test English word corrections in combined dictionary
+        // 0 -> o correction: "hell0" -> "hello"
+        assertEquals("hello", method.invoke(null, "hell0", combinedDictionary));
+        
+        // 0 -> o correction: "w0rld" -> "world"
+        assertEquals("world", method.invoke(null, "w0rld", combinedDictionary));
+        
+        // rn -> m correction: "cornputer" -> "computer"
+        assertEquals("computer", method.invoke(null, "cornputer", combinedDictionary));
+        
+        // 1 -> l correction: "wor1d" -> "world"
+        assertEquals("world", method.invoke(null, "wor1d", combinedDictionary));
+
+        // Verify Persian words are in dictionary (no OCR correction needed for exact matches)
+        assertTrue("Persian word 'سلام' should be in combined dictionary", 
+                combinedDictionary.contains("سلام"));
+        assertTrue("Persian word 'جهان' should be in combined dictionary", 
+                combinedDictionary.contains("جهان"));
+        assertTrue("Persian word 'کامپیوتر' should be in combined dictionary", 
+                combinedDictionary.contains("کامپیوتر"));
+    }
+
+    /**
+     * Tests combined dictionary for Arabic + French (ara+fra).
+     * Verifies that words from both languages are found in the combined dictionary.
+     */
+    @Test
+    public void testCombinedDictionary_ArabicFrench() throws Exception {
+        java.lang.reflect.Method method = OCRPostProcessor.class.getDeclaredMethod(
+                "findDictionaryCorrection", String.class, Set.class);
+        method.setAccessible(true);
+
+        // Simulate combined dictionary with Arabic and French words
+        Set<String> combinedDictionary = new HashSet<>();
+        
+        // French words
+        combinedDictionary.add("bonjour");   // hello
+        combinedDictionary.add("monde");     // world
+        combinedDictionary.add("document");  // document
+        combinedDictionary.add("ordinateur"); // computer
+        combinedDictionary.add("maison");    // house
+        combinedDictionary.add("été");       // summer
+        
+        // Arabic words
+        combinedDictionary.add("مرحبا");     // hello
+        combinedDictionary.add("عالم");      // world
+        combinedDictionary.add("وثيقة");     // document
+        combinedDictionary.add("حاسوب");     // computer
+        combinedDictionary.add("بيت");       // house
+        combinedDictionary.add("كتاب");      // book
+
+        // Test French word corrections in combined dictionary
+        // 0 -> o correction: "b0njour" -> "bonjour"
+        assertEquals("bonjour", method.invoke(null, "b0njour", combinedDictionary));
+        
+        // 0 -> o correction: "m0nde" -> "monde"
+        assertEquals("monde", method.invoke(null, "m0nde", combinedDictionary));
+        
+        // rn -> m correction: "docurnent" -> "document"
+        assertEquals("document", method.invoke(null, "docurnent", combinedDictionary));
+        
+        // rn -> m correction: "rnaison" -> "maison"
+        assertEquals("maison", method.invoke(null, "rnaison", combinedDictionary));
+
+        // Verify Arabic words are in dictionary
+        assertTrue("Arabic word 'مرحبا' should be in combined dictionary", 
+                combinedDictionary.contains("مرحبا"));
+        assertTrue("Arabic word 'عالم' should be in combined dictionary", 
+                combinedDictionary.contains("عالم"));
+        assertTrue("Arabic word 'وثيقة' should be in combined dictionary", 
+                combinedDictionary.contains("وثيقة"));
+    }
+
+    /**
+     * Tests that multi-language spec correctly identifies word-based languages.
+     * Both fas+eng and ara+fra should be word-based.
+     */
+    @Test
+    public void testMultiLanguageSpec_isWordBased() {
+        // Persian + English: both are word-based
+        assertTrue("fas+eng should be word-based", 
+                DictionaryManager.isWordBasedLanguage("fas+eng"));
+        
+        // Arabic + French: both are word-based
+        assertTrue("ara+fra should be word-based", 
+                DictionaryManager.isWordBasedLanguage("ara+fra"));
+        
+        // Arabic + English: both are word-based
+        assertTrue("ara+eng should be word-based", 
+                DictionaryManager.isWordBasedLanguage("ara+eng"));
+        
+        // Persian + French: both are word-based
+        assertTrue("fas+fra should be word-based", 
+                DictionaryManager.isWordBasedLanguage("fas+fra"));
+        
+        // Mixed with non-word-based: should still be true if one is word-based
+        assertTrue("chi_sim+eng should be word-based (eng is word-based)", 
+                DictionaryManager.isWordBasedLanguage("chi_sim+eng"));
+        assertTrue("fas+chi_sim should be word-based (fas is word-based)", 
+                DictionaryManager.isWordBasedLanguage("fas+chi_sim"));
+    }
+
+    /**
+     * Tests mixed content correction with Persian + English combined dictionary.
+     * Simulates a document with both Persian and English text.
+     */
+    @Test
+    public void testMixedContent_PersianEnglish() throws Exception {
+        java.lang.reflect.Method method = OCRPostProcessor.class.getDeclaredMethod(
+                "findDictionaryCorrection", String.class, Set.class);
+        method.setAccessible(true);
+
+        // Combined dictionary simulating fas+eng
+        Set<String> combinedDictionary = new HashSet<>();
+        
+        // Common English words
+        combinedDictionary.add("the");
+        combinedDictionary.add("and");
+        combinedDictionary.add("hello");
+        combinedDictionary.add("name");
+        combinedDictionary.add("email");
+        
+        // Common Persian words
+        combinedDictionary.add("و");         // and
+        combinedDictionary.add("است");       // is
+        combinedDictionary.add("نام");       // name
+        combinedDictionary.add("ایمیل");     // email
+
+        // English corrections should work
+        assertEquals("hello", method.invoke(null, "hell0", combinedDictionary));
+        assertEquals("name", method.invoke(null, "narne", combinedDictionary)); // rn -> m
+        assertEquals("email", method.invoke(null, "ernail", combinedDictionary)); // rn -> m
+
+        // Verify Persian words exist in combined dictionary
+        assertTrue(combinedDictionary.contains("و"));
+        assertTrue(combinedDictionary.contains("است"));
+        assertTrue(combinedDictionary.contains("نام"));
+        assertTrue(combinedDictionary.contains("ایمیل"));
+    }
+
+    /**
+     * Tests mixed content correction with Arabic + French combined dictionary.
+     * Simulates a document with both Arabic and French text.
+     */
+    @Test
+    public void testMixedContent_ArabicFrench() throws Exception {
+        java.lang.reflect.Method method = OCRPostProcessor.class.getDeclaredMethod(
+                "findDictionaryCorrection", String.class, Set.class);
+        method.setAccessible(true);
+
+        // Combined dictionary simulating ara+fra
+        Set<String> combinedDictionary = new HashSet<>();
+        
+        // Common French words
+        combinedDictionary.add("le");
+        combinedDictionary.add("la");
+        combinedDictionary.add("et");
+        combinedDictionary.add("nom");
+        combinedDictionary.add("adresse");
+        combinedDictionary.add("téléphone");
+        
+        // Common Arabic words
+        combinedDictionary.add("و");         // and
+        combinedDictionary.add("هو");        // he/it
+        combinedDictionary.add("اسم");       // name
+        combinedDictionary.add("عنوان");     // address
+        combinedDictionary.add("هاتف");      // phone
+
+        // French corrections should work
+        assertEquals("nom", method.invoke(null, "norn", combinedDictionary)); // rn -> m
+        assertEquals("adresse", method.invoke(null, "adresse", combinedDictionary)); // exact match returns null (no correction needed)
+        
+        // Test with OCR error
+        assertEquals("nom", method.invoke(null, "n0m", combinedDictionary)); // 0 -> o
+
+        // Verify Arabic words exist in combined dictionary
+        assertTrue(combinedDictionary.contains("و"));
+        assertTrue(combinedDictionary.contains("هو"));
+        assertTrue(combinedDictionary.contains("اسم"));
+        assertTrue(combinedDictionary.contains("عنوان"));
+        assertTrue(combinedDictionary.contains("هاتف"));
+    }
+
+    /**
+     * Tests that combined dictionary size is the union of both language dictionaries.
+     */
+    @Test
+    public void testCombinedDictionarySize() {
+        Set<String> persianDict = new HashSet<>();
+        persianDict.add("سلام");
+        persianDict.add("جهان");
+        persianDict.add("کتاب");
+        
+        Set<String> englishDict = new HashSet<>();
+        englishDict.add("hello");
+        englishDict.add("world");
+        englishDict.add("book");
+        
+        // Combine dictionaries (simulating DictionaryManager behavior)
+        Set<String> combined = new HashSet<>();
+        combined.addAll(persianDict);
+        combined.addAll(englishDict);
+        
+        // Combined should have all words from both
+        assertEquals("Combined dictionary should have 6 words", 6, combined.size());
+        
+        // All Persian words should be present
+        assertTrue(combined.contains("سلام"));
+        assertTrue(combined.contains("جهان"));
+        assertTrue(combined.contains("کتاب"));
+        
+        // All English words should be present
+        assertTrue(combined.contains("hello"));
+        assertTrue(combined.contains("world"));
+        assertTrue(combined.contains("book"));
+    }
+
+    /**
+     * Tests combined dictionary with overlapping words (transliterations).
+     * Some words may appear in both languages (e.g., borrowed words).
+     */
+    @Test
+    public void testCombinedDictionary_withOverlap() {
+        Set<String> arabicDict = new HashSet<>();
+        arabicDict.add("مرحبا");
+        arabicDict.add("email");  // Borrowed English word used in Arabic context
+        arabicDict.add("internet"); // Borrowed word
+        
+        Set<String> frenchDict = new HashSet<>();
+        frenchDict.add("bonjour");
+        frenchDict.add("email");  // Same word in French
+        frenchDict.add("internet"); // Same word in French
+        
+        // Combine dictionaries
+        Set<String> combined = new HashSet<>();
+        combined.addAll(arabicDict);
+        combined.addAll(frenchDict);
+        
+        // Combined should have 4 unique words (email and internet are duplicates)
+        assertEquals("Combined dictionary should have 4 unique words", 4, combined.size());
+        
+        // All unique words should be present
+        assertTrue(combined.contains("مرحبا"));
+        assertTrue(combined.contains("bonjour"));
+        assertTrue(combined.contains("email"));
+        assertTrue(combined.contains("internet"));
+    }
+
+    // ==================== RTL Line Detection Tests ====================
+
+    /**
+     * Tests that isLineRtl correctly identifies RTL lines with Persian text.
+     * Uses mock RecognizedWord objects to avoid Android dependencies.
+     */
+    @Test
+    public void testIsLineRtl_PersianText() throws Exception {
+        java.lang.reflect.Method method = OCRPostProcessor.class.getDeclaredMethod(
+                "isLineRtl", java.util.List.class);
+        method.setAccessible(true);
+
+        // Create a line with Persian words using mock objects
+        java.util.List<RecognizedWord> persianLine = new java.util.ArrayList<>();
+        persianLine.add(createMockWord("سلام"));  // "Hello" in Persian
+        persianLine.add(createMockWord("جهان"));   // "World" in Persian
+
+        boolean isRtl = (boolean) method.invoke(null, persianLine);
+        assertTrue("Persian line should be detected as RTL", isRtl);
+    }
+
+    /**
+     * Tests that isLineRtl correctly identifies RTL lines with Arabic text.
+     */
+    @Test
+    public void testIsLineRtl_ArabicText() throws Exception {
+        java.lang.reflect.Method method = OCRPostProcessor.class.getDeclaredMethod(
+                "isLineRtl", java.util.List.class);
+        method.setAccessible(true);
+
+        // Create a line with Arabic words
+        java.util.List<RecognizedWord> arabicLine = new java.util.ArrayList<>();
+        arabicLine.add(createMockWord("مرحبا"));  // "Hello" in Arabic
+        arabicLine.add(createMockWord("عالم"));    // "World" in Arabic
+
+        boolean isRtl = (boolean) method.invoke(null, arabicLine);
+        assertTrue("Arabic line should be detected as RTL", isRtl);
+    }
+
+    /**
+     * Tests that isLineRtl correctly identifies LTR lines with English text.
+     */
+    @Test
+    public void testIsLineRtl_EnglishText() throws Exception {
+        java.lang.reflect.Method method = OCRPostProcessor.class.getDeclaredMethod(
+                "isLineRtl", java.util.List.class);
+        method.setAccessible(true);
+
+        // Create a line with English words
+        java.util.List<RecognizedWord> englishLine = new java.util.ArrayList<>();
+        englishLine.add(createMockWord("Hello"));
+        englishLine.add(createMockWord("World"));
+
+        boolean isRtl = (boolean) method.invoke(null, englishLine);
+        assertFalse("English line should be detected as LTR", isRtl);
+    }
+
+    /**
+     * Tests that isLineRtl handles mixed content correctly.
+     * When RTL characters are the majority, the line should be RTL.
+     */
+    @Test
+    public void testIsLineRtl_MixedContent_MajorityRtl() throws Exception {
+        java.lang.reflect.Method method = OCRPostProcessor.class.getDeclaredMethod(
+                "isLineRtl", java.util.List.class);
+        method.setAccessible(true);
+
+        // Create a line with mostly Persian and some English
+        java.util.List<RecognizedWord> mixedLine = new java.util.ArrayList<>();
+        mixedLine.add(createMockWord("این"));      // "This" in Persian (3 RTL chars)
+        mixedLine.add(createMockWord("یک"));        // "One" in Persian (2 RTL chars)
+        mixedLine.add(createMockWord("test"));      // English (4 LTR chars)
+        mixedLine.add(createMockWord("است"));       // "Is" in Persian (3 RTL chars)
+
+        // 8 RTL chars vs 4 LTR chars -> should be RTL
+        boolean isRtl = (boolean) method.invoke(null, mixedLine);
+        assertTrue("Mixed line with majority RTL should be detected as RTL", isRtl);
+    }
+
+    /**
+     * Tests that isLineRtl handles mixed content correctly.
+     * When LTR characters are the majority, the line should be LTR.
+     */
+    @Test
+    public void testIsLineRtl_MixedContent_MajorityLtr() throws Exception {
+        java.lang.reflect.Method method = OCRPostProcessor.class.getDeclaredMethod(
+                "isLineRtl", java.util.List.class);
+        method.setAccessible(true);
+
+        // Create a line with mostly English and some Persian
+        java.util.List<RecognizedWord> mixedLine = new java.util.ArrayList<>();
+        mixedLine.add(createMockWord("This"));      // English (4 LTR chars)
+        mixedLine.add(createMockWord("is"));        // English (2 LTR chars)
+        mixedLine.add(createMockWord("a"));         // English (1 LTR char)
+        mixedLine.add(createMockWord("تست"));       // "Test" in Persian (3 RTL chars)
+
+        // 7 LTR chars vs 3 RTL chars -> should be LTR
+        boolean isRtl = (boolean) method.invoke(null, mixedLine);
+        assertFalse("Mixed line with majority LTR should be detected as LTR", isRtl);
+    }
+
+    /**
+     * Tests that isLineRtl handles empty lines correctly.
+     */
+    @Test
+    public void testIsLineRtl_EmptyLine() throws Exception {
+        java.lang.reflect.Method method = OCRPostProcessor.class.getDeclaredMethod(
+                "isLineRtl", java.util.List.class);
+        method.setAccessible(true);
+
+        java.util.List<RecognizedWord> emptyLine = new java.util.ArrayList<>();
+        boolean isRtl = (boolean) method.invoke(null, emptyLine);
+        assertFalse("Empty line should default to LTR", isRtl);
+    }
+
+    /**
+     * Tests that isLineRtl handles null correctly.
+     */
+    @Test
+    public void testIsLineRtl_NullLine() throws Exception {
+        java.lang.reflect.Method method = OCRPostProcessor.class.getDeclaredMethod(
+                "isLineRtl", java.util.List.class);
+        method.setAccessible(true);
+
+        boolean isRtl = (boolean) method.invoke(null, (Object) null);
+        assertFalse("Null line should default to LTR", isRtl);
+    }
+
+    /**
+     * Helper method to create a mock RecognizedWord with only text (no Android dependencies).
+     * Uses reflection to create the object without requiring android.graphics.RectF.
+     */
+    private RecognizedWord createMockWord(String text) {
+        try {
+            // Use reflection to create RecognizedWord with null bounding box
+            // The isLineRtl method only uses getText(), so bounding box can be null
+            java.lang.reflect.Constructor<RecognizedWord> constructor = 
+                RecognizedWord.class.getDeclaredConstructor(String.class, android.graphics.RectF.class, float.class);
+            constructor.setAccessible(true);
+            return constructor.newInstance(text, null, 90.0f);
+        } catch (Exception e) {
+            // Fallback: create a simple mock that just returns the text
+            return new RecognizedWord(text, null, 90.0f);
+        }
+    }
+
+    // ==================== wordsToText RTL Sorting Tests ====================
+    // NOTE: Tests for wordsToText() with bounding box coordinates require android.graphics.RectF
+    // and are located in androidTest: WordsToTextRtlSortingTest.java
+    // The isLineRtl tests above verify the RTL detection logic without Android dependencies.
 }

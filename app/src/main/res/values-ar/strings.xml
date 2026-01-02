@@ -383,4 +383,12 @@
     <string name="pdf_select_page">اختر صفحة</string>
     <string name="pdf_page_number">الصفحة %1$d</string>
 
+    <!-- Multi-language OCR selection -->
+    <string name="select_ocr_languages">اختر لغات التعرّف الضوئي على الحروف</string>
+    <string name="ocr_max_languages_hint">يمكنك اختيار لغتين كحد أقصى</string>
+    <string name="ocr_max_languages_warning">يُسمح بحد أقصى لغتين</string>
+    <string name="ocr_no_language_selected">يرجى اختيار لغة واحدة على الأقل</string>
+    <string name="ocr_languages_selected">%1$s</string>
+
+
 </resources>

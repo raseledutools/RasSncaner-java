@@ -385,4 +385,11 @@
     <string name="pdf_select_page">Vybrať stránku</string>
     <string name="pdf_page_number">Stránka %1$d</string>
 
+    <!-- Multi-language OCR selection -->
+    <string name="select_ocr_languages">Vyberte jazyky OCR</string>
+    <string name="ocr_max_languages_hint">Je možné vybrať najviac 2 jazyky</string>
+    <string name="ocr_max_languages_warning">Povolené sú najviac 2 jazyky</string>
+    <string name="ocr_no_language_selected">Vyberte aspoň jeden jazyk</string>
+    <string name="ocr_languages_selected">%1$s</string>
+
 </resources>

@@ -385,4 +385,11 @@
     <string name="error_pdf_page_render_failed">Seite konnte nicht gerendert werden</string>
     <string name="pdf_select_page">Seite auswählen</string>
     <string name="pdf_page_number">Seite %1$d</string>
+
+    <!-- Mehrsprachige OCR-Auswahl -->
+    <string name="select_ocr_languages">OCR-Sprachen auswählen</string>
+    <string name="ocr_max_languages_hint">Bis zu 2 Sprachen auswählen</string>
+    <string name="ocr_max_languages_warning">Maximal 2 Sprachen erlaubt</string>
+    <string name="ocr_no_language_selected">Bitte mindestens eine Sprache auswählen</string>
+    <string name="ocr_languages_selected">%1$s</string>
 </resources>

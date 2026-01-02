@@ -661,10 +661,13 @@ public class OCRPostProcessor {
 
     /**
      * Converts a list of recognized words to a single text string.
-     * Words are sorted by their vertical position (top to bottom) and then horizontal position (left to right),
+     * Words are sorted by their vertical position (top to bottom) and then horizontal position,
      * grouped into lines based on vertical proximity, and joined with spaces within lines and newlines between lines.
      * Paragraphs are detected based on larger vertical gaps between lines.
      * HTML entities in the text are decoded.
+     * <p>
+     * For RTL (right-to-left) scripts like Arabic and Persian, words within a line are sorted
+     * from right to left to preserve correct reading order.
      *
      * @param words The list of recognized words to convert
      * @return The extracted text with proper line breaks and paragraphs, or empty string if words is null or empty
@@ -736,7 +739,18 @@ public class OCRPostProcessor {
 
         for (int i = 0; i < lines.size(); i++) {
             List<RecognizedWord> line = lines.get(i);
-            line.sort((a, b) -> Float.compare(a.getBoundingBox().left, b.getBoundingBox().left));
+            
+            // Determine if this line is predominantly RTL based on Unicode directionality
+            boolean isRtlLine = isLineRtl(line);
+            
+            // Sort words within line: LTR = left to right, RTL = right to left
+            if (isRtlLine) {
+                // RTL: sort by X position descending (right to left)
+                line.sort((a, b) -> Float.compare(b.getBoundingBox().left, a.getBoundingBox().left));
+            } else {
+                // LTR: sort by X position ascending (left to right)
+                line.sort((a, b) -> Float.compare(a.getBoundingBox().left, b.getBoundingBox().left));
+            }
 
             // Calculate line's top Y for paragraph detection
             float lineTopY = Float.MAX_VALUE;
@@ -774,6 +788,50 @@ public class OCRPostProcessor {
         }
 
         return result.toString();
+    }
+    
+    /**
+     * Determines if a line of words is predominantly RTL (right-to-left) based on
+     * Unicode directionality analysis of the text content.
+     * <p>
+     * This method counts RTL and LTR characters in all words of the line and
+     * returns true if RTL characters are the majority.
+     *
+     * @param line The list of words in the line
+     * @return true if the line is predominantly RTL, false otherwise
+     */
+    private static boolean isLineRtl(List<RecognizedWord> line) {
+        if (line == null || line.isEmpty()) {
+            return false;
+        }
+        
+        int rtlCount = 0;
+        int ltrCount = 0;
+        
+        for (RecognizedWord word : line) {
+            String text = word.getText();
+            if (text == null) continue;
+            
+            for (int i = 0; i < text.length(); i++) {
+                char c = text.charAt(i);
+                byte directionality = Character.getDirectionality(c);
+                
+                if (directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT ||
+                    directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC ||
+                    directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT_EMBEDDING ||
+                    directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE) {
+                    rtlCount++;
+                } else if (directionality == Character.DIRECTIONALITY_LEFT_TO_RIGHT ||
+                           directionality == Character.DIRECTIONALITY_LEFT_TO_RIGHT_EMBEDDING ||
+                           directionality == Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE) {
+                    ltrCount++;
+                }
+                // Neutral characters (spaces, punctuation, digits) are not counted
+            }
+        }
+        
+        // Line is RTL if RTL characters are the majority
+        return rtlCount > ltrCount;
     }
 
     /**
