@@ -1,21 +1,13 @@
 package de.schliweb.makeacopy.ui.ocr.review.store;
 
 import android.util.Log;
-
+import de.schliweb.makeacopy.ui.ocr.review.model.OcrDoc;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-
-import de.schliweb.makeacopy.ui.ocr.review.model.OcrDoc;
 
 /**
  * Simple JSON store for the editable OCR document (schema 1).

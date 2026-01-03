@@ -1,7 +1,6 @@
 package de.schliweb.makeacopy.ui.ocr.review;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
@@ -23,8 +22,7 @@ import de.schliweb.makeacopy.ui.crop.CropViewModel;
 import de.schliweb.makeacopy.ui.ocr.review.model.OcrDoc;
 import de.schliweb.makeacopy.ui.ocr.review.view.MinimapView;
 import de.schliweb.makeacopy.ui.ocr.review.view.OcrOverlayView;
-
-import java.io.File;
+import de.schliweb.makeacopy.utils.UIUtils;
 
 /**
  * OcrReviewFragment is a subclass of Fragment that provides functionality
@@ -90,69 +88,40 @@ public class OcrReviewFragment extends Fragment {
     }
 
     /**
-     * Loads and sets a small thumbnail bitmap into the minimap from the current scan directory,
-     * preferring thumb.jpg and falling back to page.jpg. Decodes with downsampling to limit memory.
+     * Loads and sets a small thumbnail bitmap into the minimap from the CropViewModel.
+     * Decodes with downsampling to limit memory.
      */
     private void updateMinimapThumbnail(@NonNull MinimapView minimap) {
         try {
-            String id = null;
+            if (getContext() == null) return;
+            // Use in-memory bitmap from CropViewModel
             try {
-                id = viewModel != null ? viewModel.getTargetScanId() : null;
-            } catch (Throwable ignore) {
-            }
-            if (id == null || id.trim().isEmpty() || getContext() == null) return;
-            File dir = new File(requireContext().getFilesDir(), "scans/" + id);
-            File thumb = new File(dir, "thumb.jpg");
-            File page = new File(dir, "page.jpg");
-            File src = thumb.exists() ? thumb : (page.exists() ? page : null);
-            if (src == null) {
-                // Fallback: use in-memory bitmap from CropViewModel for brand-new scans (files not yet persisted)
-                try {
-                    CropViewModel cvm = new androidx.lifecycle.ViewModelProvider(requireActivity()).get(CropViewModel.class);
-                    Bitmap bm = cvm != null ? cvm.getImageBitmap().getValue() : null;
-                    if (bm != null && !bm.isRecycled()) {
-                        int w0 = bm.getWidth();
-                        int h0 = bm.getHeight();
-                        if (w0 > 0 && h0 > 0) {
-                            int maxDim0 = 512;
-                            int long0 = Math.max(w0, h0);
-                            float scale0 = long0 > maxDim0 ? (maxDim0 / (float) long0) : 1f;
-                            int tw = Math.max(1, Math.round(w0 * scale0));
-                            int th = Math.max(1, Math.round(h0 * scale0));
-                            Bitmap tiny = Bitmap.createScaledBitmap(bm, tw, th, true);
-                            if (tiny != null) {
-                                Bitmap prev = minimapBitmap;
-                                minimapBitmap = tiny;
-                                minimap.setThumbnail(tiny);
-                                if (prev != null && prev != tiny && !prev.isRecycled()) {
-                                    try {
-                                        prev.recycle();
-                                    } catch (Throwable ignore2) {
-                                    }
+                CropViewModel cvm = new androidx.lifecycle.ViewModelProvider(requireActivity()).get(CropViewModel.class);
+                Bitmap bm = cvm != null ? cvm.getImageBitmap().getValue() : null;
+                if (bm != null && !bm.isRecycled()) {
+                    int w0 = bm.getWidth();
+                    int h0 = bm.getHeight();
+                    if (w0 > 0 && h0 > 0) {
+                        int maxDim0 = 512;
+                        int long0 = Math.max(w0, h0);
+                        float scale0 = long0 > maxDim0 ? (maxDim0 / (float) long0) : 1f;
+                        int tw = Math.max(1, Math.round(w0 * scale0));
+                        int th = Math.max(1, Math.round(h0 * scale0));
+                        Bitmap tiny = Bitmap.createScaledBitmap(bm, tw, th, true);
+                        if (tiny != null) {
+                            Bitmap prev = minimapBitmap;
+                            minimapBitmap = tiny;
+                            minimap.setThumbnail(tiny);
+                            if (prev != null && prev != tiny && !prev.isRecycled()) {
+                                try {
+                                    prev.recycle();
+                                } catch (Throwable ignore2) {
                                 }
-                                return; // done via fallback
                             }
                         }
                     }
-                } catch (Throwable ignore2) {
                 }
-                return;
-            }
-
-            // Use centralized EXIF-neutral sampled decode for baked disk files
-            int maxDim = 512; // cap long edge
-            Bitmap bmp = de.schliweb.makeacopy.utils.ImageDecodeUtils.decodeSampled(src.getAbsolutePath(), maxDim, maxDim);
-            if (bmp == null) return;
-
-            // Swap and recycle previous
-            Bitmap prev = minimapBitmap;
-            minimapBitmap = bmp;
-            minimap.setThumbnail(bmp);
-            if (prev != null && prev != bmp && !prev.isRecycled()) {
-                try {
-                    prev.recycle();
-                } catch (Throwable ignore) {
-                }
+            } catch (Throwable ignore2) {
             }
         } catch (Throwable t) {
             dbgWarn("Loading minimap thumbnail failed", t);
@@ -249,61 +218,10 @@ public class OcrReviewFragment extends Fragment {
     private final android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
     // Editor write-back debounce handler (promoted to field for lifecycle cleanup)
     private final android.os.Handler editorHandler = new android.os.Handler(android.os.Looper.getMainLooper());
-    // Dedicated background executor for autosave IO to avoid blocking the UI thread
-    @Nullable
-    private java.util.concurrent.ExecutorService autosaveExecutor;
     // Toolbar chips (action view) bound lazily via toolbar.post
     private android.widget.TextView chipWords;
     private android.widget.TextView chipLow;
     private android.widget.TextView chipLang;
-    /**
-     * A {@code Runnable} tasked with periodically saving the current state of the view model
-     * to a file, ensuring data persistence and consistency. This is executed asynchronously
-     * through an {@code Executor}, with main-thread operations limited to resolving the file
-     * location.
-     * <p>
-     * The autosave process performs the following:
-     * - Validates required components such as the context, the autosave executor, and the view model.
-     * - Resolves the autosave file location safely on the main thread using the {@code resolveAutosaveFile}
-     * method.
-     * - Executes the file-saving logic on the background executor, creating required directories when
-     * necessary, and calling {@code viewModel.save} to perform file I/O operations to persist data.
-     * <p>
-     * Error handling includes:
-     * - Catching and logging exceptions during scheduling or execution through the {@code dbgWarn}
-     * method to ensure the task does not disrupt application flow.
-     * <p>
-     * Preconditions:
-     * - The context, {@code autosaveExecutor}, and {@code viewModel} must not be null.
-     * - The {@code autosaveExecutor} must not be shut down.
-     * <p>
-     * Postconditions:
-     * - If the file is resolved successfully and all prerequisites are met, the view model state
-     * is saved to the file. Any directory paths required are created if they do not exist.
-     * - Any exceptions encountered during execution or I/O operations are gracefully
-     * logged for debugging purposes.
-     */
-    private final Runnable autosaveRunnable = () -> {
-        try {
-            if (getContext() == null || viewModel == null || autosaveExecutor == null || autosaveExecutor.isShutdown())
-                return;
-            // Resolve file on main thread, then perform IO on background executor
-            final java.io.File file = resolveAutosaveFile();
-            if (file != null) {
-                autosaveExecutor.execute(() -> {
-                    try {
-                        java.io.File parent = file.getParentFile();
-                        if (parent != null && !parent.exists()) parent.mkdirs();
-                        viewModel.save(file);
-                    } catch (Throwable t) {
-                        dbgWarn("Autosave task error", t);
-                    }
-                });
-            }
-        } catch (Throwable t) {
-            dbgWarn("Scheduling autosave failed", t);
-        }
-    };
 
     /**
      * Inflates the view for the fragment and initializes its components and observers. This method
@@ -323,20 +241,22 @@ public class OcrReviewFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_ocr_review, container, false);
         viewModel = new ViewModelProvider(requireActivity()).get(OcrReviewViewModel.class);
-        // Initialize autosave executor for this view lifecycle
-        autosaveExecutor = java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
-            Thread t = new Thread(r, "OCRReview-Autosave");
-            t.setDaemon(true);
-            return t;
-        });
 
         // Top App Bar (chips live inside its action view)
         com.google.android.material.appbar.MaterialToolbar toolbar = root.findViewById(R.id.top_app_bar);
         if (toolbar != null) {
-            toolbar.setNavigationOnClickListener(v ->
-                    requireActivity().getOnBackPressedDispatcher().onBackPressed()
-            );
+            // Use handleBackAction() to show discard dialog if there are unsaved changes
+            toolbar.setNavigationOnClickListener(v -> handleBackAction());
         }
+
+        // Handle system back (gesture/hardware button) the same way as X button
+        androidx.activity.OnBackPressedCallback backCallback = new androidx.activity.OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                handleBackAction();
+            }
+        };
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), backCallback);
         OcrOverlayView overlay = root.findViewById(R.id.ocr_overlay);
         de.schliweb.makeacopy.ui.ocr.review.view.OcrTextLayerView textLayer = root.findViewById(R.id.ocr_text_layer);
         SeekBar zoomBar = null;
@@ -347,6 +267,12 @@ public class OcrReviewFragment extends Fragment {
         com.google.android.material.button.MaterialButton segLayout = root.findViewById(R.id.seg_layout);
         com.google.android.material.button.MaterialButton segText = root.findViewById(R.id.seg_text);
         com.google.android.material.chip.Chip chipZoom = root.findViewById(R.id.chip_zoom);
+
+        // Document mode views
+        View documentModeContainer = root.findViewById(R.id.document_mode_container);
+        android.widget.ImageView documentImage = root.findViewById(R.id.document_image);
+        OcrOverlayView documentOcrOverlay = root.findViewById(R.id.document_ocr_overlay);
+        com.google.android.material.chip.Chip chipZoomDocument = root.findViewById(R.id.chip_zoom_document);
         // Minimap inside card placeholder
         final android.view.ViewGroup minimapCard = root.findViewById(R.id.minimap_placeholder);
         final MinimapView minimap = new MinimapView(requireContext());
@@ -444,6 +370,8 @@ public class OcrReviewFragment extends Fragment {
         }
 
         final boolean[] updatingEditor = {false};
+        // Guard flag to prevent infinite recursion between overlay and documentOcrOverlay viewport listeners
+        final boolean[] syncingViewport = {false};
 
         viewModel.getDoc().observe(getViewLifecycleOwner(), doc -> {
             // Update minimap page size when document changes
@@ -522,56 +450,26 @@ public class OcrReviewFragment extends Fragment {
             }
         });
 
-        // Bottom actions toolbar menu wiring (Undo/Redo/Export)
-        com.google.android.material.appbar.MaterialToolbar bottomAppBar = root.findViewById(R.id.bottom_app_bar);
-        if (bottomAppBar != null) {
-            android.view.Menu menu = bottomAppBar.getMenu();
-            final android.view.MenuItem miUndo = menu != null ? menu.findItem(R.id.action_undo) : null;
-            final android.view.MenuItem miRedo = menu != null ? menu.findItem(R.id.action_redo) : null;
-            final android.view.MenuItem miExport = menu != null ? menu.findItem(R.id.action_export) : null;
+        // Bottom Button Container (BACK/SAVE) wiring
+        android.widget.Button buttonBack = root.findViewById(R.id.button_back);
+        android.widget.Button buttonSave = root.findViewById(R.id.button_save);
+        View buttonContainer = root.findViewById(R.id.button_container);
 
-            // Enable/disable based on ViewModel
-            if (miUndo != null) {
-                viewModel.getCanUndo().observe(getViewLifecycleOwner(), enabled -> {
-                    boolean e = Boolean.TRUE.equals(enabled);
-                    try {
-                        miUndo.setEnabled(e);
-                    } catch (Throwable t) {
-                        dbgWarn("Updating undo enabled failed", t);
-                    }
-                });
-            }
-            if (miRedo != null) {
-                viewModel.getCanRedo().observe(getViewLifecycleOwner(), enabled -> {
-                    boolean e = Boolean.TRUE.equals(enabled);
-                    try {
-                        miRedo.setEnabled(e);
-                    } catch (Throwable t) {
-                        dbgWarn("Updating redo enabled failed", t);
-                    }
-                });
-            }
-
-            bottomAppBar.setOnMenuItemClickListener(item -> {
-                int id = item.getItemId();
-                if (id == R.id.action_undo) {
-                    viewModel.undo();
-                    return true;
-                }
-                if (id == R.id.action_redo) {
-                    viewModel.redo();
-                    return true;
-                }
-                if (id == R.id.action_export) {
-                    try {
-                        android.widget.Toast.makeText(requireContext(), getString(R.string.title_export), android.widget.Toast.LENGTH_SHORT).show();
-                    } catch (Throwable t) {
-                        dbgWarn("Export toast failed", t);
-                    }
-                    return true;
-                }
-                return false;
+        // Adjust button container margin for system navigation bar (like other fragments)
+        if (buttonContainer != null) {
+            UIUtils.adjustMarginForSystemInsets(buttonContainer, 12);
+            androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(buttonContainer, (v, insets) -> {
+                UIUtils.adjustMarginForSystemInsets(buttonContainer, 12);
+                return insets;
             });
+        }
+
+        if (buttonBack != null) {
+            buttonBack.setOnClickListener(v -> handleBackAction());
+        }
+
+        if (buttonSave != null) {
+            buttonSave.setOnClickListener(v -> handleSaveAction());
         }
 
         // FAB for "Bearbeiten" (switch to Text mode)
@@ -600,15 +498,88 @@ public class OcrReviewFragment extends Fragment {
 
         final boolean[] updatingZoomBar = {false};
 
-        // Segmented control: toggle between Layout and Text modes
+        // Segmented control: toggle between Layout, Text, and Document modes
         if (segmented != null) {
             com.google.android.material.button.MaterialButtonToggleGroup.OnButtonCheckedListener toggle = (group, checkedId, isChecked) -> {
                 if (!isChecked) return; // react only when a button becomes checked
                 boolean showLayout = checkedId == R.id.seg_layout;
+                boolean showText = checkedId == R.id.seg_text;
+                boolean showDocument = checkedId == R.id.seg_document;
+
+                // Update container visibility for all three modes
                 if (overlayContainer != null) overlayContainer.setVisibility(showLayout ? View.VISIBLE : View.GONE);
-                if (textModeContainer != null) textModeContainer.setVisibility(showLayout ? View.GONE : View.VISIBLE);
-                if (!showLayout && textModeEditor != null) {
+                if (textModeContainer != null) textModeContainer.setVisibility(showText ? View.VISIBLE : View.GONE);
+                if (documentModeContainer != null)
+                    documentModeContainer.setVisibility(showDocument ? View.VISIBLE : View.GONE);
+
+                if (showLayout) {
+                    // Sync zoom and position from Document overlay to Layout overlay when switching back
+                    if (overlay != null && documentOcrOverlay != null) {
+                        overlay.setUserScale(documentOcrOverlay.getUserScale());
+                        overlay.setUserOffset(documentOcrOverlay.getUserOffsetX(), documentOcrOverlay.getUserOffsetY());
+                        if (textLayer != null) {
+                            textLayer.setUserScale(documentOcrOverlay.getUserScale());
+                            textLayer.setUserOffset(documentOcrOverlay.getUserOffsetX(), documentOcrOverlay.getUserOffsetY());
+                        }
+                        // Update zoom chip to match
+                        if (chipZoom != null) {
+                            int pct = Math.round(overlay.getUserScale() * 100f);
+                            chipZoom.setText(pct + "%");
+                        }
+                    }
+                }
+
+                if (showText && textModeEditor != null) {
+                    // Sync text editor with current document when switching to text mode
+                    try {
+                        OcrDoc doc = viewModel.getDoc().getValue();
+                        String text = buildFullText(doc);
+                        String current = textModeEditor.getText() == null ? "" : textModeEditor.getText().toString();
+                        if (!text.equals(current)) {
+                            updatingEditor[0] = true;
+                            textModeEditor.setText(text);
+                            textModeEditor.setSelection(textModeEditor.getText().length());
+                            updatingEditor[0] = false;
+                        }
+                    } catch (Throwable t) {
+                        dbgWarn("Syncing text editor on mode switch failed", t);
+                    }
                     textModeEditor.requestFocus();
+                }
+
+                if (showDocument) {
+                    // Load and display the original document image with OCR overlay
+                    try {
+                        CropViewModel cvm = new ViewModelProvider(requireActivity()).get(CropViewModel.class);
+                        Bitmap bmp = cvm != null ? cvm.getImageBitmap().getValue() : null;
+                        if (bmp != null && !bmp.isRecycled() && documentImage != null) {
+                            documentImage.setImageBitmap(bmp);
+                        }
+                        // Sync OCR overlay with document
+                        if (documentOcrOverlay != null) {
+                            OcrDoc doc = viewModel.getDoc().getValue();
+                            documentOcrOverlay.setDoc(doc);
+                            // In Document mode, show only boxes without text content
+                            documentOcrOverlay.setBoxesOnly(true);
+                            documentOcrOverlay.setOnWordTapListener(OcrReviewFragment.this::showInlineEditDialog);
+                            documentOcrOverlay.setOnWordLongPressListener(OcrReviewFragment.this::showContextMenu);
+                            // Sync zoom and position from Layout overlay to Document overlay
+                            if (overlay != null) {
+                                documentOcrOverlay.setUserScale(overlay.getUserScale());
+                                documentOcrOverlay.setUserOffset(overlay.getUserOffsetX(), overlay.getUserOffsetY());
+                            }
+                            // Update document image matrix to match the overlay transformation
+                            // Use post() to ensure the view has been laid out
+                            documentImage.post(() -> updateDocumentImageMatrix(documentImage, documentOcrOverlay));
+                            // Update document zoom chip to match
+                            if (chipZoomDocument != null) {
+                                int pct = Math.round(documentOcrOverlay.getUserScale() * 100f);
+                                chipZoomDocument.setText(pct + "%");
+                            }
+                        }
+                    } catch (Throwable t) {
+                        dbgWarn("Loading document image failed", t);
+                    }
                 }
             };
             segmented.addOnButtonCheckedListener(toggle);
@@ -633,7 +604,7 @@ public class OcrReviewFragment extends Fragment {
                 String[] tokens = trimmed.isEmpty() ? new String[0] : trimmed.split("\\s+");
                 int n = Math.min(doc.words.size(), tokens.length);
                 if (n == 0) return;
-                viewModel.snapshot();
+                viewModel.markModified();
                 for (int i = 0; i < n; i++) {
                     OcrDoc.Word w = doc.words.get(i);
                     if (w != null) {
@@ -645,7 +616,7 @@ public class OcrReviewFragment extends Fragment {
                     }
                 }
                 viewModel.setDoc(doc);
-                scheduleAutosave();
+                propagateAndAutosave();
             } catch (Throwable t) {
                 dbgWarn("Applying editor changes failed", t);
             }
@@ -674,41 +645,104 @@ public class OcrReviewFragment extends Fragment {
             overlay.setOnWordTapListener(this::showInlineEditDialog);
             overlay.setOnWordLongPressListener(this::showContextMenu);
             overlay.setOnViewportChangedListener((scale, ox, oy) -> {
-                // Update minimap viewport too (throttled via postOnAnimation)
-                if (minimapCard != null) {
-                    overlay.postOnAnimation(() -> {
-                        try {
-                            minimap.setViewport(scale, ox, oy, overlay.getWidth(), overlay.getHeight());
-                        } catch (Throwable t) {
-                            dbgWarn("Updating minimap viewport failed", t);
-                        }
-                    });
-                }
-                // Sync text layer and zoom bar when user pans/zooms via gestures
-                if (textLayer != null) {
-                    textLayer.setUserScale(scale);
-                    textLayer.setUserOffset(ox, oy);
-                }
-                if (zoomBar != null) {
-                    updatingZoomBar[0] = true;
-                    int prog = Math.round(scale * 50f); // inverse of mapping below (progress 50 -> 1.0x)
-                    if (prog < 25) prog = 25; // 0.5 min
-                    if (prog > 200) prog = 200; // 4.0 max
-                    zoomBar.setProgress(prog);
-                    updatingZoomBar[0] = false;
-                }
-                if (chipZoom != null) {
-                    try {
-                        int pct = Math.round(scale * 100f);
-                        chipZoom.setText(pct + "%");
-                        try {
-                            chipZoom.setContentDescription(getString(R.string.cd_zoom_chip_open_menu));
-                        } catch (Throwable t2) {
-                            dbgWarn("Updating zoom chip contentDescription failed", t2);
-                        }
-                    } catch (Throwable t) {
-                        dbgWarn("Updating zoom chip text failed", t);
+                // Guard against infinite recursion with documentOcrOverlay
+                if (syncingViewport[0]) return;
+                syncingViewport[0] = true;
+                try {
+                    // Update minimap viewport too (throttled via postOnAnimation)
+                    if (minimapCard != null) {
+                        overlay.postOnAnimation(() -> {
+                            try {
+                                minimap.setViewport(scale, ox, oy, overlay.getWidth(), overlay.getHeight());
+                            } catch (Throwable t) {
+                                dbgWarn("Updating minimap viewport failed", t);
+                            }
+                        });
                     }
+                    // Sync text layer and zoom bar when user pans/zooms via gestures
+                    if (textLayer != null) {
+                        textLayer.setUserScale(scale);
+                        textLayer.setUserOffset(ox, oy);
+                    }
+                    // Sync document overlay when user pans/zooms in layout mode
+                    if (documentOcrOverlay != null) {
+                        documentOcrOverlay.setUserScale(scale);
+                        documentOcrOverlay.setUserOffset(ox, oy);
+                    }
+                    if (zoomBar != null) {
+                        updatingZoomBar[0] = true;
+                        int prog = Math.round(scale * 50f); // inverse of mapping below (progress 50 -> 1.0x)
+                        if (prog < 25) prog = 25; // 0.5 min
+                        if (prog > 200) prog = 200; // 4.0 max
+                        zoomBar.setProgress(prog);
+                        updatingZoomBar[0] = false;
+                    }
+                    if (chipZoom != null) {
+                        try {
+                            int pct = Math.round(scale * 100f);
+                            chipZoom.setText(pct + "%");
+                            try {
+                                chipZoom.setContentDescription(getString(R.string.cd_zoom_chip_open_menu));
+                            } catch (Throwable t2) {
+                                dbgWarn("Updating zoom chip contentDescription failed", t2);
+                            }
+                        } catch (Throwable t) {
+                            dbgWarn("Updating zoom chip text failed", t);
+                        }
+                    }
+                    // Update document zoom chip too
+                    if (chipZoomDocument != null) {
+                        try {
+                            int pct = Math.round(scale * 100f);
+                            chipZoomDocument.setText(pct + "%");
+                        } catch (Throwable t) {
+                            dbgWarn("Updating document zoom chip text failed", t);
+                        }
+                    }
+                } finally {
+                    syncingViewport[0] = false;
+                }
+            });
+        }
+
+        // Document overlay viewport sync: when user pans/zooms in document mode, sync back to layout overlay
+        if (documentOcrOverlay != null) {
+            documentOcrOverlay.setOnViewportChangedListener((scale, ox, oy) -> {
+                // Guard against infinite recursion with overlay
+                if (syncingViewport[0]) return;
+                syncingViewport[0] = true;
+                try {
+                    // Sync layout overlay and text layer when user pans/zooms in document mode
+                    if (overlay != null) {
+                        overlay.setUserScale(scale);
+                        overlay.setUserOffset(ox, oy);
+                    }
+                    if (textLayer != null) {
+                        textLayer.setUserScale(scale);
+                        textLayer.setUserOffset(ox, oy);
+                    }
+                    // Update document image matrix to match the overlay transformation
+                    updateDocumentImageMatrix(documentImage, documentOcrOverlay);
+                    // Update layout zoom chip
+                    if (chipZoom != null) {
+                        try {
+                            int pct = Math.round(scale * 100f);
+                            chipZoom.setText(pct + "%");
+                        } catch (Throwable t) {
+                            dbgWarn("Updating layout zoom chip from document failed", t);
+                        }
+                    }
+                    // Update document zoom chip
+                    if (chipZoomDocument != null) {
+                        try {
+                            int pct = Math.round(scale * 100f);
+                            chipZoomDocument.setText(pct + "%");
+                        } catch (Throwable t) {
+                            dbgWarn("Updating document zoom chip failed", t);
+                        }
+                    }
+                } finally {
+                    syncingViewport[0] = false;
                 }
             });
         }
@@ -750,20 +784,26 @@ public class OcrReviewFragment extends Fragment {
             }
         }
 
-        // Zoom chip: show popover with only 100% and Fit actions, per spec
+        // Zoom chip: show popover with zoom levels and Fit actions
         if (chipZoom != null) {
             chipZoom.setOnClickListener(v -> {
                 androidx.appcompat.widget.PopupMenu pm = new androidx.appcompat.widget.PopupMenu(requireContext(), v);
                 android.view.Menu m = pm.getMenu();
-                final int ID_100 = 1, ID_FIT = 2, ID_TOGGLE_MINIMAP = 3;
+                final int ID_100 = 1, ID_200 = 2, ID_300 = 3, ID_400 = 4, ID_FIT = 5, ID_TOGGLE_MINIMAP = 6;
                 m.add(0, ID_100, 0, getString(R.string.zoom_100));
-                m.add(0, ID_FIT, 1, getString(R.string.zoom_fit));
+                m.add(0, ID_200, 1, getString(R.string.zoom_200));
+                m.add(0, ID_300, 2, getString(R.string.zoom_300));
+                m.add(0, ID_400, 3, getString(R.string.zoom_400));
+                m.add(0, ID_FIT, 4, getString(R.string.zoom_fit));
                 // Use simple English label if string resources are unavailable
-                m.add(0, ID_TOGGLE_MINIMAP, 2, (minimapVisible ? "Hide minimap" : "Show minimap"));
+                m.add(0, ID_TOGGLE_MINIMAP, 5, (minimapVisible ? "Hide minimap" : "Show minimap"));
                 pm.setOnMenuItemClickListener(item -> {
                     int id = item.getItemId();
                     float target = 1.0f;
                     if (id == ID_100) target = 1.0f;
+                    else if (id == ID_200) target = 2.0f;
+                    else if (id == ID_300) target = 3.0f;
+                    else if (id == ID_400) target = 4.0f;
                     else if (id == ID_FIT) {
                         // Compute real fit-to-screen user scale with small padding
                         OcrDoc d = null;
@@ -798,6 +838,80 @@ public class OcrReviewFragment extends Fragment {
                         }
                         return true;
                     }
+                    return true;
+                });
+                pm.show();
+            });
+        }
+
+        // Document mode zoom chip: show popover with zoom levels and Fit actions
+        if (chipZoomDocument != null) {
+            chipZoomDocument.setOnClickListener(v -> {
+                androidx.appcompat.widget.PopupMenu pm = new androidx.appcompat.widget.PopupMenu(requireContext(), v);
+                android.view.Menu m = pm.getMenu();
+                final int ID_100 = 1, ID_200 = 2, ID_300 = 3, ID_400 = 4, ID_FIT = 5;
+                m.add(0, ID_100, 0, getString(R.string.zoom_100));
+                m.add(0, ID_200, 1, getString(R.string.zoom_200));
+                m.add(0, ID_300, 2, getString(R.string.zoom_300));
+                m.add(0, ID_400, 3, getString(R.string.zoom_400));
+                m.add(0, ID_FIT, 4, getString(R.string.zoom_fit));
+                pm.setOnMenuItemClickListener(item -> {
+                    int id = item.getItemId();
+                    float target = 1.0f;
+                    if (id == ID_100) target = 1.0f;
+                    else if (id == ID_200) target = 2.0f;
+                    else if (id == ID_300) target = 3.0f;
+                    else if (id == ID_400) target = 4.0f;
+                    else if (id == ID_FIT) {
+                        // Compute real fit-to-screen user scale with small padding
+                        OcrDoc d = null;
+                        try {
+                            d = viewModel.getDoc().getValue();
+                        } catch (Throwable t) {
+                            dbgWarn("Getting doc for FIT (document mode) failed", t);
+                        }
+                        if (d != null && d.imageSize != null) {
+                            float padPx = dp(12f);
+                            float fit = computeFitScale(documentOcrOverlay, d.imageSize.w, d.imageSize.h, padPx);
+                            target = fit;
+                        } else {
+                            target = 1.0f;
+                        }
+                    }
+
+                    // Apply scale to document overlay
+                    if (documentOcrOverlay != null) {
+                        documentOcrOverlay.setUserScale(target);
+                        // Center viewport on FIT only
+                        if (id == ID_FIT) {
+                            documentOcrOverlay.setUserOffset(0f, 0f);
+                        }
+                        // Update document image matrix to match
+                        updateDocumentImageMatrix(documentImage, documentOcrOverlay);
+                    }
+
+                    // Update document zoom chip text
+                    int pct = Math.round(target * 100f);
+                    chipZoomDocument.setText(pct + "%");
+
+                    // Sync to layout overlay and text layer for consistency when switching modes
+                    if (overlay != null) {
+                        overlay.setUserScale(target);
+                        if (id == ID_FIT) {
+                            overlay.setUserOffset(0f, 0f);
+                        }
+                    }
+                    if (textLayer != null) {
+                        textLayer.setUserScale(target);
+                        if (id == ID_FIT) {
+                            textLayer.setUserOffset(0f, 0f);
+                        }
+                    }
+                    // Update layout zoom chip too
+                    if (chipZoom != null) {
+                        chipZoom.setText(pct + "%");
+                    }
+
                     return true;
                 });
                 pm.show();
@@ -850,53 +964,13 @@ public class OcrReviewFragment extends Fragment {
             });
         }
 
-        // Attempt to load existing autosave for this page (if any),
-        // but only if we don't already have a non-empty document in memory.
-        try {
-            OcrDoc existing = null;
-            try {
-                existing = viewModel.getDoc().getValue();
-            } catch (Throwable ignore2) {
-            }
-            boolean hasContent = existing != null && existing.words != null && !existing.words.isEmpty();
-            if (!hasContent) {
-                java.io.File f = resolveAutosaveFile();
-                if (f != null && f.exists()) {
-                    viewModel.load(f);
-                }
-            }
-        } catch (Throwable ignore) {
-        }
-
         return root;
     }
 
     /**
-     * Resolves and returns the appropriate autosave file based on the current context and target scan ID.
-     * If a valid scan ID is available, it constructs a file path specific to that scan ID.
-     * Otherwise, it falls back to using a default file within the app's persistent storage.
-     *
-     * @return The autosave file corresponding to the current context and scan ID.
-     * Returns null if the context is invalid or unavailable.
-     */
-    private java.io.File resolveAutosaveFile() {
-        String id = null;
-        try {
-            id = viewModel.getTargetScanId();
-        } catch (Throwable ignore) {
-        }
-        if (getContext() == null) return null;
-        if (id != null && !id.trim().isEmpty()) {
-            java.io.File dir = new java.io.File(requireContext().getFilesDir(), "scans/" + id);
-            return new java.io.File(dir, "page.ocr.json");
-        }
-        // Fallback to app files (persistent) if no id yet
-        return new java.io.File(requireContext().getFilesDir(), "review_autosave.json");
-    }
-
-    /**
      * Displays an inline edit dialog for modifying the properties of the given word.
-     * The dialog includes a text input field for editing the word, along with save and cancel buttons.
+     * The dialog includes a text input field for editing the word, dictionary-based suggestions,
+     * and save/cancel buttons.
      *
      * @param word the word object to be edited. Contains the current text and edit state to be updated by this dialog.
      */
@@ -939,6 +1013,17 @@ public class OcrReviewFragment extends Fragment {
         root.addView(til, new android.widget.LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
+        // Suggestions section (ChipGroup with dictionary suggestions)
+        com.google.android.material.chip.ChipGroup suggestionsGroup = new com.google.android.material.chip.ChipGroup(requireContext());
+        suggestionsGroup.setSingleLine(false);
+        android.widget.LinearLayout.LayoutParams suggestionsLp = new android.widget.LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        suggestionsLp.topMargin = (int) (8 * getResources().getDisplayMetrics().density);
+        root.addView(suggestionsGroup, suggestionsLp);
+
+        // Load suggestions asynchronously
+        loadSuggestionsAsync(word.t, suggestionsGroup, input);
+
         // Actions row
         android.widget.LinearLayout actions = new android.widget.LinearLayout(requireContext());
         actions.setOrientation(android.widget.LinearLayout.HORIZONTAL);
@@ -966,14 +1051,23 @@ public class OcrReviewFragment extends Fragment {
                 return;
             }
             til.setError(null);
-            viewModel.snapshot();
+            viewModel.markModified();
             word.t = newText;
             word.e = true;
+            // Re-set the document to trigger LiveData observers and refresh the overlay
+            OcrDoc doc = viewModel.getDocValue();
+            if (doc != null) {
+                viewModel.setDoc(doc);
+            }
             propagateAndAutosave();
             sheet.dismiss();
         });
 
-        actions.addView(btnCancel);
+        // Add buttons with spacing between them
+        android.widget.LinearLayout.LayoutParams cancelLp = new android.widget.LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        cancelLp.setMarginEnd((int) (16 * getResources().getDisplayMetrics().density));
+        actions.addView(btnCancel, cancelLp);
         actions.addView(btnSave);
 
         android.widget.LinearLayout.LayoutParams actionsLp = new android.widget.LinearLayout.LayoutParams(
@@ -994,6 +1088,68 @@ public class OcrReviewFragment extends Fragment {
     }
 
     /**
+     * Loads dictionary-based suggestions asynchronously and populates the ChipGroup.
+     *
+     * @param wordText         the word text to get suggestions for
+     * @param suggestionsGroup the ChipGroup to populate with suggestion chips
+     * @param input            the input field to update when a suggestion is clicked
+     */
+    private void loadSuggestionsAsync(String wordText,
+                                      com.google.android.material.chip.ChipGroup suggestionsGroup,
+                                      com.google.android.material.textfield.TextInputEditText input) {
+        if (getContext() == null || wordText == null || wordText.isEmpty()) {
+            return;
+        }
+
+        // Get current OCR language from OCRViewModel
+        String langSpec = null;
+        try {
+            de.schliweb.makeacopy.ui.ocr.OCRViewModel ocrViewModel =
+                    new ViewModelProvider(requireActivity()).get(de.schliweb.makeacopy.ui.ocr.OCRViewModel.class);
+            de.schliweb.makeacopy.ui.ocr.OCRViewModel.OcrUiState state = ocrViewModel.getState().getValue();
+            if (state != null) {
+                langSpec = state.language();
+            }
+        } catch (Throwable ignore) {
+        }
+
+        final String finalLangSpec = langSpec;
+        final android.content.Context ctx = requireContext().getApplicationContext();
+
+        // Run suggestion lookup on background thread
+        new Thread(() -> {
+            try {
+                de.schliweb.makeacopy.ui.ocr.review.suggest.DictionarySuggestProvider provider =
+                        new de.schliweb.makeacopy.ui.ocr.review.suggest.DictionarySuggestProvider(ctx, finalLangSpec);
+                java.util.List<de.schliweb.makeacopy.ui.ocr.review.suggest.DictionarySuggestProvider.Suggestion> suggestions =
+                        provider.getSuggestions(wordText);
+
+                // Update UI on main thread
+                if (getActivity() != null && !suggestions.isEmpty()) {
+                    getActivity().runOnUiThread(() -> {
+                        if (getContext() == null) return;
+                        for (de.schliweb.makeacopy.ui.ocr.review.suggest.DictionarySuggestProvider.Suggestion suggestion : suggestions) {
+                            com.google.android.material.chip.Chip chip = new com.google.android.material.chip.Chip(requireContext());
+                            chip.setText(suggestion.text());
+                            chip.setCheckable(false);
+                            chip.setClickable(true);
+                            chip.setOnClickListener(v -> {
+                                input.setText(suggestion.text());
+                                if (input.getText() != null) {
+                                    input.setSelection(input.getText().length());
+                                }
+                            });
+                            suggestionsGroup.addView(chip);
+                        }
+                    });
+                }
+            } catch (Throwable t) {
+                dbgWarn("Failed to load suggestions", t);
+            }
+        }).start();
+    }
+
+    /**
      * Displays a context menu for the specified word, allowing the user to perform various actions,
      * such as editing, merging, splitting, deleting, changing case, or modifying the language.
      *
@@ -1009,27 +1165,30 @@ public class OcrReviewFragment extends Fragment {
                 getString(R.string.cm_case),
                 getString(R.string.cm_lang)
         };
-        new AlertDialog.Builder(requireContext())
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
                 .setItems(items, (d, which) -> {
                     switch (which) {
                         case 0 -> showInlineEditDialog(word);
                         case 1 -> {
-                            viewModel.snapshot();
+                            viewModel.markModified();
                             mergeWithNext(word);
                         }
                         case 2 -> {
-                            viewModel.snapshot();
+                            viewModel.markModified();
                             splitWordMid(word);
                         }
                         case 3 -> {
-                            viewModel.snapshot();
+                            viewModel.markModified();
                             deleteWord(word);
                         }
                         case 4 -> showCaseMenu(word);
                         case 5 -> showLanguageDialog(word);
                     }
                 })
-                .show();
+                .create();
+        dialog.setOnShowListener(d ->
+                de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext()));
+        dialog.show();
     }
 
     /**
@@ -1046,11 +1205,11 @@ public class OcrReviewFragment extends Fragment {
                 getString(R.string.case_lower),
                 getString(R.string.case_title)
         };
-        new AlertDialog.Builder(requireContext())
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
                 .setTitle(R.string.cm_case)
                 .setItems(items, (d, which) -> {
                     String t = word.t == null ? "" : word.t;
-                    viewModel.snapshot();
+                    viewModel.markModified();
                     switch (which) {
                         case 0 -> word.t = t.toUpperCase(java.util.Locale.getDefault());
                         case 1 -> word.t = t.toLowerCase(java.util.Locale.getDefault());
@@ -1059,31 +1218,320 @@ public class OcrReviewFragment extends Fragment {
                     word.e = true;
                     propagateAndAutosave();
                 })
-                .show();
+                .create();
+        dialog.setOnShowListener(d ->
+                de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext()));
+        dialog.show();
     }
 
     /**
-     * Displays a dialog to allow the user to edit the language property of the given word.
+     * Displays a dialog to allow the user to select the language property of the given word
+     * from a list of available OCR languages.
+     * Includes an option to re-run OCR for this word with the selected language.
      *
      * @param word the {@link OcrDoc.Word} object whose language property will be edited
      */
     private void showLanguageDialog(OcrDoc.Word word) {
         if (getContext() == null) return;
-        final EditText input = new EditText(getContext());
-        input.setHint(R.string.dialog_language_hint);
-        input.setText(word.lang == null ? "" : word.lang);
-        new AlertDialog.Builder(requireContext())
+
+        // Get available languages
+        String[] codes = getAvailableLanguageCodes();
+        String[] displayNames = mapCodesToDisplayNames(codes);
+
+        // Find current selection index
+        int currentIndex = -1;
+        if (word.lang != null && !word.lang.isEmpty()) {
+            for (int i = 0; i < codes.length; i++) {
+                if (codes[i].equals(word.lang)) {
+                    currentIndex = i;
+                    break;
+                }
+            }
+        }
+
+        final int[] selectedIndex = {currentIndex};
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
                 .setTitle(R.string.dialog_language_title)
-                .setView(input)
+                .setSingleChoiceItems(displayNames, currentIndex, (dlg, which) -> {
+                    selectedIndex[0] = which;
+                })
                 .setNegativeButton(R.string.cancel, null)
-                .setPositiveButton(R.string.btn_save, (dlg, w) -> {
-                    String v = input.getText().toString().trim();
-                    viewModel.snapshot();
-                    word.lang = v.isEmpty() ? null : v;
+                .setNeutralButton(R.string.btn_reocr, (dlg, w) -> {
+                    if (selectedIndex[0] < 0 || selectedIndex[0] >= codes.length) {
+                        UIUtils.showToast(requireContext(), getString(R.string.reocr_no_language), android.widget.Toast.LENGTH_SHORT);
+                        return;
+                    }
+                    String newLang = codes[selectedIndex[0]];
+                    // Save the language first
+                    viewModel.markModified();
+                    word.lang = newLang;
                     word.e = true;
+
+                    // Update status chips
+                    OcrDoc currentDoc = viewModel.getDoc().getValue();
+                    updateStatusChips(currentDoc);
+
+                    // Run Re-OCR for this word
+                    reOcrWord(word, newLang);
+                })
+                .setPositiveButton(R.string.btn_save, (dlg, w) -> {
+                    viewModel.markModified();
+                    if (selectedIndex[0] >= 0 && selectedIndex[0] < codes.length) {
+                        word.lang = codes[selectedIndex[0]];
+                    } else {
+                        word.lang = null;
+                    }
+                    word.e = true;
+
+                    // Update status chips immediately to reflect the language change
+                    OcrDoc currentDoc = viewModel.getDoc().getValue();
+                    updateStatusChips(currentDoc);
+
                     propagateAndAutosave();
                 })
-                .show();
+                .create();
+        dialog.setOnShowListener(d ->
+                de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext()));
+        dialog.show();
+    }
+
+    /**
+     * Gets available OCR language codes.
+     *
+     * @return array of language codes (e.g., "eng", "deu", "fas")
+     */
+    private String[] getAvailableLanguageCodes() {
+        try {
+            de.schliweb.makeacopy.utils.OCRHelper helper = new de.schliweb.makeacopy.utils.OCRHelper(requireContext().getApplicationContext());
+            String[] langs = helper.getAvailableLanguages();
+            if (langs != null && langs.length > 0) return langs;
+        } catch (Throwable ignore) {
+        }
+        // Fallback to common languages
+        return de.schliweb.makeacopy.utils.OCRUtils.getLanguages();
+    }
+
+    /**
+     * Maps language codes to display names.
+     *
+     * @param codes array of language codes
+     * @return array of display names
+     */
+    private String[] mapCodesToDisplayNames(String[] codes) {
+        String[] out = new String[codes.length];
+        for (int i = 0; i < codes.length; i++) {
+            out[i] = codeToDisplayName(codes[i]);
+        }
+        return out;
+    }
+
+    /**
+     * Converts a language code to a human-readable display name.
+     *
+     * @param code the language code (e.g., "eng", "deu")
+     * @return the display name (e.g., "English", "German")
+     */
+    private String codeToDisplayName(String code) {
+        // Map common Tesseract 3-letter codes to 2-letter BCP-47 where possible
+        String two;
+        switch (code) {
+            case "eng":
+                two = "en";
+                break;
+            case "deu":
+                two = "de";
+                break;
+            case "fra":
+                two = "fr";
+                break;
+            case "ita":
+                two = "it";
+                break;
+            case "spa":
+                two = "es";
+                break;
+            case "por":
+                two = "pt";
+                break;
+            case "nld":
+                two = "nl";
+                break;
+            case "pol":
+                two = "pl";
+                break;
+            case "ces":
+                two = "cs";
+                break;
+            case "slk":
+                two = "sk";
+                break;
+            case "hun":
+                two = "hu";
+                break;
+            case "ron":
+                two = "ro";
+                break;
+            case "dan":
+                two = "da";
+                break;
+            case "nor":
+                two = "no";
+                break;
+            case "swe":
+                two = "sv";
+                break;
+            case "rus":
+                two = "ru";
+                break;
+            case "tha":
+                two = "th";
+                break;
+            case "fas":
+                two = "fa";
+                break;
+            case "ara":
+                two = "ar";
+                break;
+            case "chi_sim":
+                return "Chinese (Simplified)";
+            case "chi_tra":
+                return "Chinese (Traditional)";
+            default:
+                // Fallback: try first two letters
+                if (code != null && code.length() >= 2) {
+                    two = code.substring(0, 2);
+                } else {
+                    two = "en";
+                }
+        }
+        try {
+            java.util.Locale loc = java.util.Locale.forLanguageTag(two);
+            return loc.getDisplayLanguage(java.util.Locale.getDefault());
+        } catch (Throwable ignore) {
+            return code;
+        }
+    }
+
+    /**
+     * Re-runs OCR for a single word using the specified language.
+     * Extracts the word's bounding box region from the original image and performs OCR.
+     *
+     * @param word    the word to re-OCR
+     * @param newLang the language code to use for OCR (e.g., "eng", "deu", "fas")
+     */
+    private void reOcrWord(OcrDoc.Word word, String newLang) {
+        if (getContext() == null || word == null || word.b == null || word.b.length < 4) {
+            UIUtils.showToast(requireContext(), getString(R.string.reocr_failed), android.widget.Toast.LENGTH_SHORT);
+            return;
+        }
+
+        // Show processing indicator
+        UIUtils.showToast(requireContext(), getString(R.string.reocr_processing), android.widget.Toast.LENGTH_SHORT);
+
+        // Get the original image from CropViewModel
+        android.graphics.Bitmap sourceBitmap = null;
+        try {
+            CropViewModel cvm = new ViewModelProvider(requireActivity()).get(CropViewModel.class);
+            sourceBitmap = cvm != null ? cvm.getImageBitmap().getValue() : null;
+        } catch (Throwable t) {
+            dbgWarn("Failed to get source bitmap for re-OCR", t);
+        }
+
+        if (sourceBitmap == null || sourceBitmap.isRecycled()) {
+            UIUtils.showToast(requireContext(), getString(R.string.reocr_failed), android.widget.Toast.LENGTH_SHORT);
+            return;
+        }
+
+        // Extract word region with some padding for better OCR results
+        int x = Math.max(0, word.b[0] - 5);
+        int y = Math.max(0, word.b[1] - 5);
+        int w = Math.min(word.b[2] + 10, sourceBitmap.getWidth() - x);
+        int h = Math.min(word.b[3] + 10, sourceBitmap.getHeight() - y);
+
+        if (w <= 0 || h <= 0) {
+            UIUtils.showToast(requireContext(), getString(R.string.reocr_failed), android.widget.Toast.LENGTH_SHORT);
+            return;
+        }
+
+        final android.graphics.Bitmap wordBitmap;
+        try {
+            wordBitmap = android.graphics.Bitmap.createBitmap(sourceBitmap, x, y, w, h);
+        } catch (Throwable t) {
+            dbgWarn("Failed to extract word bitmap", t);
+            UIUtils.showToast(requireContext(), getString(R.string.reocr_failed), android.widget.Toast.LENGTH_SHORT);
+            return;
+        }
+
+        final android.content.Context ctx = requireContext().getApplicationContext();
+
+        // Run OCR on background thread
+        new Thread(() -> {
+            String newText = null;
+            Float newConfidence = null;
+            try {
+                de.schliweb.makeacopy.utils.OCRHelper ocrHelper = new de.schliweb.makeacopy.utils.OCRHelper(ctx);
+                ocrHelper.setLanguage(newLang);
+                // Use PSM_SINGLE_WORD for single word recognition
+                ocrHelper.setPageSegMode(com.googlecode.tesseract.android.TessBaseAPI.PageSegMode.PSM_SINGLE_WORD);
+
+                if (ocrHelper.initTesseract()) {
+                    de.schliweb.makeacopy.utils.OCRHelper.OcrResultWords result = ocrHelper.runOcrWithRetry(wordBitmap);
+                    if (result != null && result.text != null) {
+                        newText = result.text.trim();
+                        // Extract confidence: prefer word-level confidence, fallback to mean confidence
+                        if (result.words != null && !result.words.isEmpty()) {
+                            // Use confidence from first recognized word (most relevant for single-word OCR)
+                            float wordConf = result.words.get(0).getConfidence();
+                            // Normalize: Tesseract returns 0-100, we need 0-1
+                            newConfidence = (wordConf > 1.0f) ? (wordConf / 100f) : wordConf;
+                        } else if (result.meanConfidence != null) {
+                            // Fallback to mean confidence (0-100 -> 0-1)
+                            newConfidence = result.meanConfidence / 100f;
+                        }
+                    }
+                    ocrHelper.shutdown();
+                }
+            } catch (Throwable t) {
+                Log.w(TAG, "Re-OCR failed", t);
+            } finally {
+                try {
+                    if (wordBitmap != null && !wordBitmap.isRecycled()) {
+                        wordBitmap.recycle();
+                    }
+                } catch (Throwable ignore) {
+                }
+            }
+
+            final String finalText = newText;
+            final Float finalConfidence = newConfidence;
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (finalText != null && !finalText.isEmpty()) {
+                        // Update the word with new OCR result
+                        viewModel.markModified();
+                        word.t = finalText;
+                        word.e = true;
+
+                        // Update confidence if available (for color-coded display)
+                        if (finalConfidence != null) {
+                            word.c = Math.max(0f, Math.min(1f, finalConfidence)); // clamp to [0,1]
+                        }
+
+                        // Refresh the document view to update color-coded confidence display
+                        OcrDoc doc = viewModel.getDocValue();
+                        if (doc != null) {
+                            viewModel.setDoc(doc);
+                        }
+                        propagateAndAutosave();
+
+                        UIUtils.showToast(requireContext(), getString(R.string.reocr_success, finalText), android.widget.Toast.LENGTH_SHORT);
+                    } else {
+                        UIUtils.showToast(requireContext(), getString(R.string.reocr_failed), android.widget.Toast.LENGTH_SHORT);
+                    }
+                });
+            }
+        }).start();
     }
 
     /**
@@ -1129,7 +1577,7 @@ public class OcrReviewFragment extends Fragment {
         // remove next
         doc.words.remove(idx + 1);
         viewModel.setDoc(doc);
-        scheduleAutosave();
+        propagateAndAutosave();
     }
 
     /**
@@ -1178,7 +1626,7 @@ public class OcrReviewFragment extends Fragment {
         nw.lang = word.lang;
         doc.words.add(idx + 1, nw);
         viewModel.setDoc(doc);
-        scheduleAutosave();
+        propagateAndAutosave();
     }
 
     /**
@@ -1193,7 +1641,7 @@ public class OcrReviewFragment extends Fragment {
         if (idx < 0) return;
         doc.words.remove(idx);
         viewModel.setDoc(doc);
-        scheduleAutosave();
+        propagateAndAutosave();
     }
 
     /**
@@ -1243,29 +1691,58 @@ public class OcrReviewFragment extends Fragment {
     }
 
     /**
-     * Handles the propagation of the current document within the ViewModel
-     * and schedules an autosave operation if the current document is not null.
-     * <p>
-     * This method retrieves the current document from the ViewModel. If a document is
-     * present, it updates the ViewModel with the same document and invokes the
-     * method to schedule an autosave for it.
+     * Notifies the ViewModel that the document has been modified.
+     * This triggers dirty tracking and UI updates.
      */
     private void propagateAndAutosave() {
         OcrDoc current = viewModel.getDoc().getValue();
         if (current != null) {
-            viewModel.setDoc(current);
-            scheduleAutosave();
+            viewModel.markModified();
         }
     }
 
     /**
-     * Schedules an autosave task to be executed after a specified delay.
-     * If a previously scheduled autosave task exists, it is canceled before scheduling a new one.
-     * The delay is determined by the constant AUTOSAVE_DEBOUNCE_MS.
+     * Updates the document image matrix to match the overlay's transformation.
+     * This ensures the background image zooms and pans together with the OCR overlay.
+     *
+     * @param imageView   the ImageView displaying the document image
+     * @param overlayView the OcrOverlayView whose transformation should be applied
      */
-    private void scheduleAutosave() {
-        handler.removeCallbacks(autosaveRunnable);
-        handler.postDelayed(autosaveRunnable, AUTOSAVE_DEBOUNCE_MS);
+    private void updateDocumentImageMatrix(@Nullable android.widget.ImageView imageView,
+                                           @Nullable OcrOverlayView overlayView) {
+        if (imageView == null || overlayView == null) return;
+        android.graphics.drawable.Drawable drawable = imageView.getDrawable();
+        if (drawable == null) return;
+
+        int imgW = drawable.getIntrinsicWidth();
+        int imgH = drawable.getIntrinsicHeight();
+        int vw = imageView.getWidth();
+        int vh = imageView.getHeight();
+
+        if (imgW <= 0 || imgH <= 0 || vw <= 0 || vh <= 0) return;
+
+        // Get the overlay's transformation parameters
+        float userScale = overlayView.getUserScale();
+        float userOffsetX = overlayView.getUserOffsetX();
+        float userOffsetY = overlayView.getUserOffsetY();
+
+        // Calculate the same transformation as OcrOverlayView.computeTransform()
+        float sx = vw / (float) imgW;
+        float sy = vh / (float) imgH;
+        float base = Math.min(sx, sy);
+        float eff = base * Math.max(0.5f, Math.min(4.0f, userScale)); // clamp to [0.5, 4.0]
+        float contentW = imgW * eff;
+        float contentH = imgH * eff;
+        float baseOffsetX = (vw - contentW) * 0.5f;
+        float baseOffsetY = (vh - contentH) * 0.5f;
+        float offsetX = baseOffsetX + userOffsetX;
+        float offsetY = baseOffsetY + userOffsetY;
+
+        // Apply the transformation to the ImageView
+        android.graphics.Matrix matrix = new android.graphics.Matrix();
+        matrix.setScale(eff, eff);
+        matrix.postTranslate(offsetX, offsetY);
+        imageView.setImageMatrix(matrix);
     }
 
     /**
@@ -1377,17 +1854,119 @@ public class OcrReviewFragment extends Fragment {
     }
 
     /**
+     * Handles the BACK button action.
+     * If there are unsaved changes, shows a confirmation dialog.
+     * Otherwise, navigates back immediately.
+     */
+    private void handleBackAction() {
+        if (viewModel.hasUnsavedChanges()) {
+            // Show discard confirmation dialog
+            AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                    .setTitle(R.string.title_discard_changes)
+                    .setMessage(R.string.msg_discard_changes)
+                    .setPositiveButton(R.string.btn_discard, (dlg, which) -> {
+                        viewModel.resetToOriginal();
+                        navigateBack();
+                    })
+                    .setNegativeButton(R.string.cancel, null)
+                    .create();
+            dialog.setOnShowListener(d ->
+                    de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext()));
+            dialog.show();
+        } else {
+            navigateBack();
+        }
+    }
+
+    /**
+     * Navigates back using NavController to avoid infinite recursion with OnBackPressedCallback.
+     */
+    private void navigateBack() {
+        try {
+            androidx.navigation.NavController nav = androidx.navigation.Navigation.findNavController(requireView());
+            if (!nav.popBackStack()) {
+                // If popBackStack returns false, we're at the start destination
+                requireActivity().finish();
+            }
+        } catch (Throwable t) {
+            dbgWarn("navigateBack failed", t);
+            try {
+                requireActivity().finish();
+            } catch (Throwable ignore) {
+            }
+        }
+    }
+
+    /**
+     * Handles the SAVE button action.
+     * Validates and normalizes the document, then applies the review result
+     * to the OCRViewModel and navigates back.
+     */
+    private void handleSaveAction() {
+        OcrDoc doc = viewModel.getDocValue();
+        if (doc == null) {
+            navigateBack();
+            return;
+        }
+
+        // Normalize: trim word texts and remove empty words
+        if (doc.words != null) {
+            java.util.Iterator<OcrDoc.Word> it = doc.words.iterator();
+            while (it.hasNext()) {
+                OcrDoc.Word w = it.next();
+                if (w != null && w.t != null) {
+                    w.t = w.t.trim();
+                    if (w.t.isEmpty()) {
+                        it.remove();
+                    }
+                }
+            }
+        }
+
+        // Build reviewed text from document
+        String reviewedText = buildFullText(doc);
+
+        // Apply to OCRViewModel
+        try {
+            de.schliweb.makeacopy.ui.ocr.OCRViewModel ocrViewModel =
+                    new ViewModelProvider(requireActivity()).get(de.schliweb.makeacopy.ui.ocr.OCRViewModel.class);
+            // Convert OcrDoc.Word list to RecognizedWord list
+            java.util.List<de.schliweb.makeacopy.utils.RecognizedWord> reviewedWords = new java.util.ArrayList<>();
+            if (doc.words != null) {
+                for (OcrDoc.Word word : doc.words) {
+                    if (word != null && word.b != null && word.b.length >= 4) {
+                        // b[] is [x, y, width, height] - convert to RectF [left, top, right, bottom]
+                        android.graphics.RectF box = new android.graphics.RectF(
+                                word.b[0], word.b[1],
+                                word.b[0] + word.b[2], word.b[1] + word.b[3]);
+                        reviewedWords.add(new de.schliweb.makeacopy.utils.RecognizedWord(
+                                word.t != null ? word.t : "",
+                                box,
+                                word.c,
+                                word.lang
+                        ));
+                    }
+                }
+            }
+            ocrViewModel.applyReviewResult(reviewedText, reviewedWords);
+        } catch (Throwable t) {
+            dbgWarn("Failed to apply review result to OCRViewModel", t);
+        }
+
+        // Mark as saved and navigate back
+        viewModel.markSaved();
+        navigateBack();
+    }
+
+    /**
      * Called when the fragment's view is destroyed.
      * <p>
      * This method is part of the fragment lifecycle and is invoked to allow
      * cleanup of resources tied to the fragment's UI, such as removing callbacks
-     * and references from handlers, executors, and other UI components.
+     * and references from handlers and other UI components.
      * <p>
-     * - Removes pending callbacks from the handler and editorHandler to prevent
+     * - Removes pending callbacks from the editorHandler to prevent
      * memory leaks or undesired behavior after the view is destroyed.
-     * - Stops background autosave tasks safely by shutting down the executor,
-     * ensuring no new tasks are accepted and allowing ongoing tasks to complete
-     * within a specified timeout.
      * - Releases references to toolbar chips to avoid leaking UI components tied to the action view.
      * <p>
      * Always calls the superclass implementation to ensure proper cleanup
@@ -1396,20 +1975,7 @@ public class OcrReviewFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        handler.removeCallbacks(autosaveRunnable);
         editorHandler.removeCallbacksAndMessages(null);
-        // Stop background autosave tasks to avoid leaks without interrupting a running save
-        try {
-            if (autosaveExecutor != null) {
-                autosaveExecutor.shutdown(); // no new tasks
-                try {
-                    autosaveExecutor.awaitTermination(2, java.util.concurrent.TimeUnit.SECONDS);
-                } catch (InterruptedException ignored) {
-                }
-                autosaveExecutor = null;
-            }
-        } catch (Throwable ignore) {
-        }
         // Release toolbar chip references to avoid leaking the action view
         chipWords = null;
         chipLow = null;
@@ -1426,20 +1992,10 @@ public class OcrReviewFragment extends Fragment {
 
     /**
      * This lifecycle method is called when the activity is paused.
-     * It performs the following operations:
-     * 1. Removes any pending callbacks associated with the autosaveRunnable
-     * from the handler to ensure they are not executed when the activity is paused.
-     * 2. Posts the autosaveRunnable back to the handler, ensuring the autosave operation
-     * is scheduled immediately after removing any previous callbacks.
-     * <p>
-     * This ensures proper handling of the autosave functionality when transitioning
-     * between different lifecycle states of the activity.
      */
     @Override
     public void onPause() {
         super.onPause();
-        handler.removeCallbacks(autosaveRunnable);
-        handler.post(autosaveRunnable);
     }
 
     /**

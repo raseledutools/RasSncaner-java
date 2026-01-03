@@ -24,7 +24,7 @@ android {
         buildConfigField "String", "OPENCV_VERSION", "\"4.12.0\""
         // Feature flags
         buildConfigField "boolean", "FEATURE_SCAN_LIBRARY", "true"
-        buildConfigField "boolean", "FEATURE_REVIEW_OCR", "false"
+        buildConfigField "boolean", "FEATURE_REVIEW_OCR", "true"
         buildConfigField "boolean", "FEATURE_FRAMING_LOGGING", "false"
         buildConfigField "boolean", "FEATURE_A11Y_GUIDANCE", "true"
         buildConfigField "boolean", "FEATURE_LAYOUT_ANALYSIS", "false"

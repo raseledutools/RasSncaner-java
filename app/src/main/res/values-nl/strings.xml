@@ -215,10 +215,6 @@
     <!-- Labels -->
     <string name="label_language">Taal</string>
 
-    <!-- Segmented control labels -->
-    <string name="label_layout">Indeling</string>
-    <string name="label_text">Tekst</string>
-
     <!-- OCR Review: Status chips formatting -->
     <string name="words_count_suffix_format">%1$d W</string>
     <string name="low_percent_format">Laag %1$d%%</string>
@@ -237,12 +233,6 @@
     <string name="cd_undo">Laatste wijziging ongedaan maken</string>
     <string name="cd_redo">Laatste wijziging opnieuw uitvoeren</string>
     <string name="cd_export">Exporteren</string>
-
-    <!-- Zoom popover -->
-    <string name="zoom_in">Inzoomen</string>
-    <string name="zoom_out">Uitzoomen</string>
-    <string name="zoom_100">100%</string>
-    <string name="zoom_fit">Passend maken</string>
 
     <!-- A11y content descriptions for menu items -->
     <string name="cd_action_search">Zoeken</string>
@@ -388,5 +378,33 @@
     <string name="ocr_max_languages_warning">Maximaal 2 talen toegestaan</string>
     <string name="ocr_no_language_selected">Selecteer ten minste één taal</string>
     <string name="ocr_languages_selected">%1$s</string>
+
+    <!-- OCR Review: Discard changes dialog -->
+    <string name="title_discard_changes">Wijzigingen verwerpen?</string>
+    <string name="msg_discard_changes">Je hebt niet-opgeslagen wijzigingen. Wil je deze verwerpen?</string>
+    <string name="btn_discard">Verwerpen</string>
+
+    <string name="btn_reocr">OCR opnieuw uitvoeren</string>
+    <string name="reocr_confirm_title">OCR opnieuw uitvoeren?</string>
+    <string name="reocr_confirm_message">Wil je OCR opnieuw uitvoeren voor dit woord met de taal “%1$s”?</string>
+    <string name="reocr_processing">OCR opnieuw uitvoeren…</string>
+    <string name="reocr_success">Woord bijgewerkt: %1$s</string>
+    <string name="reocr_failed">OCR opnieuw uitvoeren mislukt</string>
+    <string name="reocr_no_language">Selecteer eerst een taal</string>
+
+    <!-- Zoom popover -->
+    <string name="zoom_in">Inzoomen</string>
+    <string name="zoom_out">Uitzoomen</string>
+    <string name="zoom_100">100 %</string>
+    <string name="zoom_200">200 %</string>
+    <string name="zoom_300">300 %</string>
+    <string name="zoom_400">400 %</string>
+    <string name="zoom_fit">Aanpassen</string>
+
+    <!-- Segmented control labels -->
+    <string name="label_layout">Indeling</string>
+    <string name="label_text">Tekst</string>
+    <string name="label_document">Document</string>
+
 
 </resources>

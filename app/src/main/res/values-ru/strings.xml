@@ -217,10 +217,6 @@
     <!-- Labels -->
     <string name="label_language">Язык</string>
 
-    <!-- Segmented control labels -->
-    <string name="label_layout">Макет</string>
-    <string name="label_text">Текст</string>
-
     <!-- OCR Review: Status chips formatting -->
     <string name="words_count_suffix_format">%1$d С</string>
     <string name="low_percent_format">Низкая %1$d%%</string>
@@ -239,12 +235,6 @@
     <string name="cd_undo">Отменить последнее изменение</string>
     <string name="cd_redo">Повторить последнее изменение</string>
     <string name="cd_export">Экспорт</string>
-
-    <!-- Zoom popover -->
-    <string name="zoom_in">Увеличить</string>
-    <string name="zoom_out">Уменьшить</string>
-    <string name="zoom_100">100%</string>
-    <string name="zoom_fit">По размеру</string>
 
     <!-- A11y content descriptions for menu items -->
     <string name="cd_action_search">Поиск</string>
@@ -392,5 +382,32 @@
     <string name="ocr_max_languages_warning">Разрешено не более 2 языков</string>
     <string name="ocr_no_language_selected">Пожалуйста, выберите хотя бы один язык</string>
     <string name="ocr_languages_selected">%1$s</string>
+
+    <!-- OCR Review: Discard changes dialog -->
+    <string name="title_discard_changes">Отменить изменения?</string>
+    <string name="msg_discard_changes">У тебя есть несохранённые изменения. Хочешь их отменить?</string>
+    <string name="btn_discard">Отменить</string>
+
+    <string name="btn_reocr">Запустить OCR заново</string>
+    <string name="reocr_confirm_title">Запустить OCR заново?</string>
+    <string name="reocr_confirm_message">Хочешь запустить OCR заново для этого слова с языком «%1$s»?</string>
+    <string name="reocr_processing">Повторный запуск OCR…</string>
+    <string name="reocr_success">Слово обновлено: %1$s</string>
+    <string name="reocr_failed">Повторный запуск OCR не удался</string>
+    <string name="reocr_no_language">Сначала выбери язык</string>
+
+    <!-- Zoom popover -->
+    <string name="zoom_in">Увеличить</string>
+    <string name="zoom_out">Уменьшить</string>
+    <string name="zoom_100">100 %</string>
+    <string name="zoom_200">200 %</string>
+    <string name="zoom_300">300 %</string>
+    <string name="zoom_400">400 %</string>
+    <string name="zoom_fit">По размеру</string>
+
+    <!-- Segmented control labels -->
+    <string name="label_layout">Макет</string>
+    <string name="label_text">Текст</string>
+    <string name="label_document">Документ</string>
 
 </resources>

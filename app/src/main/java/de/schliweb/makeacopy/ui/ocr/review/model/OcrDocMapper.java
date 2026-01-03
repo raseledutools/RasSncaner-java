@@ -1,18 +1,18 @@
 package de.schliweb.makeacopy.ui.ocr.review.model;
 
 import android.graphics.RectF;
-
-import java.util.List;
-
 import de.schliweb.makeacopy.ui.ocr.OCRViewModel;
 import de.schliweb.makeacopy.utils.RecognizedWord;
+
+import java.util.List;
 
 /**
  * Maps the current OCR UI state into the editable OCR JSON schema (OcrDoc, schema=1).
  * Boxes are expected to be in pixels of the OCR destination image (scaled bitmap).
  */
 public final class OcrDocMapper {
-    private OcrDocMapper() {}
+    private OcrDocMapper() {
+    }
 
     public static OcrDoc fromState(OCRViewModel.OcrUiState state) {
         OcrDoc doc = new OcrDoc();
@@ -22,7 +22,8 @@ public final class OcrDocMapper {
             doc.imageSize.w = tx.dstW();
             doc.imageSize.h = tx.dstH();
         }
-        List<RecognizedWord> words = state.words();
+        // Use effective words (reviewed if available, otherwise original OCR)
+        List<RecognizedWord> words = state.getEffectiveWords();
         if (words == null) return doc;
         int id = 1;
         for (RecognizedWord rw : words) {
@@ -37,15 +38,19 @@ public final class OcrDocMapper {
             int y = Math.max(0, Math.round(b.top));
             int width = Math.max(0, Math.round(b.right - b.left));
             int height = Math.max(0, Math.round(b.bottom - b.top));
-            w.b[0] = x; w.b[1] = y; w.b[2] = width; w.b[3] = height;
+            w.b[0] = x;
+            w.b[1] = y;
+            w.b[2] = width;
+            w.b[3] = height;
             float c = rw.getConfidence();
             if (c > 1.0f) c = c / 100f; // normalize tess 0..100 → 0..1
-            if (c < 0f) c = 0f; if (c > 1f) c = 1f;
+            if (c < 0f) c = 0f;
+            if (c > 1f) c = 1f;
             w.c = c;
             w.e = false; // not edited initially
             w.l = 0; // unknown line id for now (MVP stub)
             w.k = 0; // unknown block id for now (MVP stub)
-            w.lang = null; // optional
+            w.lang = rw.getLang(); // preserve language from reviewed words
             doc.words.add(w);
         }
         return doc;

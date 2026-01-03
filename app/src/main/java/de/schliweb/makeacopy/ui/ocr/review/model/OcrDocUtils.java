@@ -1,13 +1,13 @@
 package de.schliweb.makeacopy.ui.ocr.review.model;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Utilities for working with OcrDoc (deep copy for undo/redo).
  */
 public final class OcrDocUtils {
-    private OcrDocUtils() {}
+    private OcrDocUtils() {
+    }
 
     public static OcrDoc deepCopy(OcrDoc src) {
         if (src == null) return new OcrDoc();
@@ -21,7 +21,10 @@ public final class OcrDocUtils {
         if (src.words != null) {
             d.words = new ArrayList<>(src.words.size());
             for (OcrDoc.Word w : src.words) {
-                if (w == null) { d.words.add(null); continue; }
+                if (w == null) {
+                    d.words.add(null);
+                    continue;
+                }
                 OcrDoc.Word nw = new OcrDoc.Word();
                 nw.id = w.id;
                 nw.t = w.t;
@@ -38,7 +41,10 @@ public final class OcrDocUtils {
         if (src.lines != null) {
             d.lines = new ArrayList<>(src.lines.size());
             for (OcrDoc.Line ln : src.lines) {
-                if (ln == null) { d.lines.add(null); continue; }
+                if (ln == null) {
+                    d.lines.add(null);
+                    continue;
+                }
                 OcrDoc.Line nl = new OcrDoc.Line();
                 nl.id = ln.id;
                 if (ln.w != null) {
@@ -53,7 +59,10 @@ public final class OcrDocUtils {
         if (src.blocks != null) {
             d.blocks = new ArrayList<>(src.blocks.size());
             for (OcrDoc.Block bl : src.blocks) {
-                if (bl == null) { d.blocks.add(null); continue; }
+                if (bl == null) {
+                    d.blocks.add(null);
+                    continue;
+                }
                 OcrDoc.Block nb = new OcrDoc.Block();
                 nb.id = bl.id;
                 if (bl.l != null) {

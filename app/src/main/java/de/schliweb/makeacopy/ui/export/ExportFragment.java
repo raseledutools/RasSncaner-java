@@ -1763,33 +1763,31 @@ public class ExportFragment extends Fragment {
     }
 
     /**
-     * Retrieves the OCR (Optical Character Recognition) text from the current state
-     * managed by the `ocrViewModel`.
+     * Retrieves the effective OCR text from the current state managed by the `ocrViewModel`.
      * <p>
-     * This method accesses the `OcrUiState` from the `ocrViewModel`, and if the state
-     * is not null, it extracts and returns the available OCR text. If the state or
-     * OCR text is null, it will return null.
+     * This method returns the reviewed text if available, otherwise the original OCR text.
+     * This ensures that any edits made in the Review screen are used for export.
      *
-     * @return The extracted OCR text from the current state, or null if the state
-     * or OCR text is unavailable.
+     * @return The effective OCR text (reviewed if available, otherwise original),
+     * or null if the state is unavailable.
      */
     private String getOcrTextFromState() {
         OCRViewModel.OcrUiState s = ocrViewModel.getState().getValue();
-        return (s != null) ? s.ocrText() : null;
+        return (s != null) ? s.getEffectiveText() : null;
     }
 
     /**
-     * Retrieves a list of recognized words from the current OCR (Optical Character Recognition)
-     * state managed by the `ocrViewModel`.
+     * Retrieves the effective list of recognized words from the current OCR state.
      * <p>
-     * This method accesses the `OcrUiState` from the `ocrViewModel` and extracts the recognized
-     * words if the state is not null. If the state is null, it returns null.
+     * This method returns the reviewed words if available, otherwise the original OCR words.
+     * This ensures that any edits made in the Review screen are used for export.
      *
-     * @return A list of recognized words from the current OCR state, or null if the state is unavailable.
+     * @return The effective list of recognized words (reviewed if available, otherwise original),
+     * or null if the state is unavailable.
      */
     private List<RecognizedWord> getOcrWordsFromState() {
         OCRViewModel.OcrUiState s = ocrViewModel.getState().getValue();
-        return (s != null) ? s.words() : null;
+        return (s != null) ? s.getEffectiveWords() : null;
     }
 
     private void indexScanLibraryAsync(String title, int pageCount, Uri exportUri) {

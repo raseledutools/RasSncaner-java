@@ -8,9 +8,7 @@ import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
-
 import androidx.annotation.Nullable;
-
 import de.schliweb.makeacopy.ui.ocr.review.model.OcrDoc;
 import lombok.Getter;
 import lombok.Setter;
@@ -44,10 +42,21 @@ public class OcrOverlayView extends View {
 
     private int selectedWordId = -1;
     private float lowConfThreshold = 0.60f;
+    @Setter
+    private boolean boxesOnly = false; // When true, only draw boxes without text content
 
-    public interface OnWordTapListener { void onWordTapped(OcrDoc.Word w); }
-    public interface OnWordLongPressListener { void onWordLongPressed(OcrDoc.Word w); }
-    public interface OnViewportChangedListener { void onViewportChanged(float scale, float offsetX, float offsetY); }
+    public interface OnWordTapListener {
+        void onWordTapped(OcrDoc.Word w);
+    }
+
+    public interface OnWordLongPressListener {
+        void onWordLongPressed(OcrDoc.Word w);
+    }
+
+    public interface OnViewportChangedListener {
+        void onViewportChanged(float scale, float offsetX, float offsetY);
+    }
+
     @Setter
     private OnWordTapListener onWordTapListener;
     @Setter
@@ -60,9 +69,20 @@ public class OcrOverlayView extends View {
 
     private boolean isPanningOrZooming = false;
 
-    public OcrOverlayView(Context ctx) { super(ctx); init(); }
-    public OcrOverlayView(Context ctx, @Nullable AttributeSet attrs) { super(ctx, attrs); init(); }
-    public OcrOverlayView(Context ctx, @Nullable AttributeSet attrs, int defStyle) { super(ctx, attrs, defStyle); init(); }
+    public OcrOverlayView(Context ctx) {
+        super(ctx);
+        init();
+    }
+
+    public OcrOverlayView(Context ctx, @Nullable AttributeSet attrs) {
+        super(ctx, attrs);
+        init();
+    }
+
+    public OcrOverlayView(Context ctx, @Nullable AttributeSet attrs, int defStyle) {
+        super(ctx, attrs, defStyle);
+        init();
+    }
 
     private void init() {
         boxPaint.setStyle(Paint.Style.STROKE);
@@ -91,17 +111,20 @@ public class OcrOverlayView extends View {
                 // Required to ensure we get subsequent events
                 return true;
             }
+
             @Override
             public boolean onSingleTapUp(MotionEvent e) {
                 if (isPanningOrZooming) return true;
                 handleTap(e.getX(), e.getY());
                 return true;
             }
+
             @Override
             public void onLongPress(MotionEvent e) {
                 if (isPanningOrZooming) return; // don't trigger while navigating
                 handleLongPress(e.getX(), e.getY());
             }
+
             @Override
             public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
                 if (doc == null) return false;
@@ -113,6 +136,7 @@ public class OcrOverlayView extends View {
                 invalidate();
                 return true;
             }
+
             @Override
             public boolean onDoubleTap(MotionEvent e) {
                 // Zoom into the tap location (toggle between 1.0 and 1.6)
@@ -156,7 +180,10 @@ public class OcrOverlayView extends View {
         invalidate();
     }
 
-    public void setLowConfThreshold(float t) { this.lowConfThreshold = t; invalidate(); }
+    public void setLowConfThreshold(float t) {
+        this.lowConfThreshold = t;
+        invalidate();
+    }
 
     public void setUserScale(float s) {
         float clamped = clamp(s, MIN_SCALE, MAX_SCALE);
@@ -194,7 +221,8 @@ public class OcrOverlayView extends View {
             if (w.id == selectedWordId) {
                 canvas.drawRect(tmp, selectedPaint);
             }
-            if (w.t != null && !w.t.isEmpty()) {
+            // Only draw text content if boxesOnly is false
+            if (!boxesOnly && w.t != null && !w.t.isEmpty()) {
                 float h = tmp.height();
                 if (h > dp(8f)) {
                     float size = Math.max(dp(8f), h * 0.8f);
@@ -216,7 +244,9 @@ public class OcrOverlayView extends View {
         int vw = getWidth() - getPaddingLeft() - getPaddingRight();
         int vh = getHeight() - getPaddingTop() - getPaddingBottom();
         if (vw <= 0 || vh <= 0 || imgW <= 0 || imgH <= 0) {
-            scale = 1f; offsetX = offsetY = 0f; return;
+            scale = 1f;
+            offsetX = offsetY = 0f;
+            return;
         }
         float sx = vw / (float) imgW;
         float sy = vh / (float) imgH;

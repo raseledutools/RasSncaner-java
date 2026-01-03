@@ -7,9 +7,7 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.View;
-
 import androidx.annotation.Nullable;
-
 import de.schliweb.makeacopy.ui.ocr.review.model.OcrDoc;
 
 /**
@@ -31,9 +29,20 @@ public class OcrTextLayerView extends View {
     private static final float MIN_SCALE = 0.5f;
     private static final float MAX_SCALE = 4.0f;
 
-    public OcrTextLayerView(Context ctx) { super(ctx); init(); }
-    public OcrTextLayerView(Context ctx, @Nullable AttributeSet attrs) { super(ctx, attrs); init(); }
-    public OcrTextLayerView(Context ctx, @Nullable AttributeSet attrs, int defStyle) { super(ctx, attrs, defStyle); init(); }
+    public OcrTextLayerView(Context ctx) {
+        super(ctx);
+        init();
+    }
+
+    public OcrTextLayerView(Context ctx, @Nullable AttributeSet attrs) {
+        super(ctx, attrs);
+        init();
+    }
+
+    public OcrTextLayerView(Context ctx, @Nullable AttributeSet attrs, int defStyle) {
+        super(ctx, attrs, defStyle);
+        init();
+    }
 
     private void init() {
         setWillNotDraw(false);
@@ -96,7 +105,9 @@ public class OcrTextLayerView extends View {
         int vw = getWidth() - getPaddingLeft() - getPaddingRight();
         int vh = getHeight() - getPaddingTop() - getPaddingBottom();
         if (vw <= 0 || vh <= 0 || imgW <= 0 || imgH <= 0) {
-            scale = 1f; offsetX = offsetY = 0f; return;
+            scale = 1f;
+            offsetX = offsetY = 0f;
+            return;
         }
         float sx = vw / (float) imgW;
         float sy = vh / (float) imgH;

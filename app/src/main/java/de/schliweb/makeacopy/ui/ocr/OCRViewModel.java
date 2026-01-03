@@ -39,10 +39,14 @@ public class OCRViewModel extends ViewModel {
      * @param durationMs     optional
      * @param meanConfidence optional (0..100)
      * @param transform      optional
+     * @param reviewedText   text after review (null if not reviewed)
+     * @param reviewedWords  words after review (null if not reviewed)
+     * @param hasReviewEdits true if review has been applied
      */ // UI-State
     public record OcrUiState(boolean processing, boolean imageProcessed, String language, String ocrText,
                              List<RecognizedWord> words, Long durationMs, Integer meanConfidence,
-                             OcrTransform transform) {
+                             OcrTransform transform, String reviewedText, List<RecognizedWord> reviewedWords,
+                             boolean hasReviewEdits) {
         /**
          * Creates a new OcrUiState.
          */
@@ -50,35 +54,61 @@ public class OCRViewModel extends ViewModel {
         }
 
         public OcrUiState withProcessing(boolean p) {
-            return new OcrUiState(p, imageProcessed, language, ocrText, words, durationMs, meanConfidence, transform);
+            return new OcrUiState(p, imageProcessed, language, ocrText, words, durationMs, meanConfidence, transform, reviewedText, reviewedWords, hasReviewEdits);
         }
 
         public OcrUiState withImageProcessed(boolean ip) {
-            return new OcrUiState(processing, ip, language, ocrText, words, durationMs, meanConfidence, transform);
+            return new OcrUiState(processing, ip, language, ocrText, words, durationMs, meanConfidence, transform, reviewedText, reviewedWords, hasReviewEdits);
         }
 
         public OcrUiState withText(String t) {
-            return new OcrUiState(processing, imageProcessed, language, t, words, durationMs, meanConfidence, transform);
+            return new OcrUiState(processing, imageProcessed, language, t, words, durationMs, meanConfidence, transform, reviewedText, reviewedWords, hasReviewEdits);
         }
 
         public OcrUiState withWords(List<RecognizedWord> w) {
-            return new OcrUiState(processing, imageProcessed, language, ocrText, w, durationMs, meanConfidence, transform);
+            return new OcrUiState(processing, imageProcessed, language, ocrText, w, durationMs, meanConfidence, transform, reviewedText, reviewedWords, hasReviewEdits);
         }
 
         public OcrUiState withLanguage(String lang) {
-            return new OcrUiState(processing, imageProcessed, lang, ocrText, words, durationMs, meanConfidence, transform);
+            return new OcrUiState(processing, imageProcessed, lang, ocrText, words, durationMs, meanConfidence, transform, reviewedText, reviewedWords, hasReviewEdits);
         }
 
         public OcrUiState withDuration(Long ms) {
-            return new OcrUiState(processing, imageProcessed, language, ocrText, words, ms, meanConfidence, transform);
+            return new OcrUiState(processing, imageProcessed, language, ocrText, words, ms, meanConfidence, transform, reviewedText, reviewedWords, hasReviewEdits);
         }
 
         public OcrUiState withMeanConfidence(Integer mc) {
-            return new OcrUiState(processing, imageProcessed, language, ocrText, words, durationMs, mc, transform);
+            return new OcrUiState(processing, imageProcessed, language, ocrText, words, durationMs, mc, transform, reviewedText, reviewedWords, hasReviewEdits);
         }
 
         public OcrUiState withTransform(OcrTransform tx) {
-            return new OcrUiState(processing, imageProcessed, language, ocrText, words, durationMs, meanConfidence, tx);
+            return new OcrUiState(processing, imageProcessed, language, ocrText, words, durationMs, meanConfidence, tx, reviewedText, reviewedWords, hasReviewEdits);
+        }
+
+        public OcrUiState withReviewedText(String rt) {
+            return new OcrUiState(processing, imageProcessed, language, ocrText, words, durationMs, meanConfidence, transform, rt, reviewedWords, hasReviewEdits);
+        }
+
+        public OcrUiState withReviewedWords(List<RecognizedWord> rw) {
+            return new OcrUiState(processing, imageProcessed, language, ocrText, words, durationMs, meanConfidence, transform, reviewedText, rw, hasReviewEdits);
+        }
+
+        public OcrUiState withHasReviewEdits(boolean hre) {
+            return new OcrUiState(processing, imageProcessed, language, ocrText, words, durationMs, meanConfidence, transform, reviewedText, reviewedWords, hre);
+        }
+
+        /**
+         * Returns the effective text for display/export: reviewed text if available, otherwise OCR text.
+         */
+        public String getEffectiveText() {
+            return (reviewedText != null && hasReviewEdits) ? reviewedText : ocrText;
+        }
+
+        /**
+         * Returns the effective words for display/export: reviewed words if available, otherwise OCR words.
+         */
+        public List<RecognizedWord> getEffectiveWords() {
+            return (reviewedWords != null && hasReviewEdits) ? reviewedWords : words;
         }
     }
 
@@ -105,7 +135,7 @@ public class OCRViewModel extends ViewModel {
     }
 
     private final MutableLiveData<OcrUiState> mState = new MutableLiveData<>(
-            new OcrUiState(false, false, "eng", "", new ArrayList<>(), null, null, null)
+            new OcrUiState(false, false, "eng", "", new ArrayList<>(), null, null, null, null, null, false)
     );
     private final MutableLiveData<Event<String>> mErrorEvents = new MutableLiveData<>();
     private final MutableLiveData<Event<Void>> mNavigateToExport = new MutableLiveData<>();
@@ -123,12 +153,12 @@ public class OCRViewModel extends ViewModel {
     }
 
     /**
-     * Resets the UI-State for a new image.
+     * Resets the UI-State for a new image. Also clears any review edits.
      */
     public void resetForNewImage() {
         OcrUiState s = mState.getValue();
         if (s == null) return;
-        mState.setValue(new OcrUiState(false, false, s.language, "", new ArrayList<>(), null, null, null));
+        mState.setValue(new OcrUiState(false, false, s.language, "", new ArrayList<>(), null, null, null, null, null, false));
         Log.d(TAG, "resetForNewImage");
     }
 
@@ -143,23 +173,23 @@ public class OCRViewModel extends ViewModel {
     }
 
     /**
-     * Starts processing.
+     * Starts processing. Clears any previous review edits.
      */
     public void startProcessing() {
         OcrUiState s = mState.getValue();
         if (s == null) return;
-        mState.setValue(new OcrUiState(true, false, s.language, "", new ArrayList<>(), null, null, s.transform));
+        mState.setValue(new OcrUiState(true, false, s.language, "", new ArrayList<>(), null, null, s.transform, null, null, false));
         Log.d(TAG, "startProcessing");
     }
 
     /**
-     * Sets the OCR text and stops processing.
+     * Sets the OCR text and stops processing. Clears any previous review edits.
      */
     public void finishSuccess(String text, List<RecognizedWord> words, long durationMs, Integer meanConf, OcrTransform tx) {
         OcrUiState s = mState.getValue();
         if (s == null) return;
         if (words == null) words = new ArrayList<>();
-        mState.setValue(new OcrUiState(false, true, s.language, text != null ? text : "", words, durationMs, meanConf, tx != null ? tx : s.transform));
+        mState.setValue(new OcrUiState(false, true, s.language, text != null ? text : "", words, durationMs, meanConf, tx != null ? tx : s.transform, null, null, false));
         Log.d(TAG, "finishSuccess: " + (text != null ? Math.min(text.length(), 100) : 0) + " chars, words=" + words.size() + ", ms=" + durationMs + ", conf=" + meanConf);
     }
 
@@ -194,5 +224,31 @@ public class OCRViewModel extends ViewModel {
         OcrUiState s = mState.getValue();
         if (s == null) return;
         mState.setValue(s.withWords(words != null ? words : new ArrayList<>()));
+    }
+
+    /**
+     * Applies the result from the OCR Review screen.
+     * This sets the reviewed text and words, marking that review edits have been applied.
+     *
+     * @param reviewedText  the text after review
+     * @param reviewedWords the words after review (may be null)
+     */
+    public void applyReviewResult(String reviewedText, List<RecognizedWord> reviewedWords) {
+        OcrUiState s = mState.getValue();
+        if (s == null) return;
+        mState.setValue(s.withReviewedText(reviewedText)
+                .withReviewedWords(reviewedWords != null ? reviewedWords : new ArrayList<>())
+                .withHasReviewEdits(true));
+        Log.d(TAG, "applyReviewResult: " + (reviewedText != null ? Math.min(reviewedText.length(), 100) : 0) + " chars");
+    }
+
+    /**
+     * Clears any review edits, reverting to the original OCR result.
+     */
+    public void clearReviewEdits() {
+        OcrUiState s = mState.getValue();
+        if (s == null) return;
+        mState.setValue(s.withReviewedText(null).withReviewedWords(null).withHasReviewEdits(false));
+        Log.d(TAG, "clearReviewEdits");
     }
 }

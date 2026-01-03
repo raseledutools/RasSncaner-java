@@ -4,18 +4,13 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.RectF;
+import android.graphics.*;
+import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.accessibility.AccessibilityNodeInfo;
-import android.os.Bundle;
-
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
@@ -29,7 +24,7 @@ import java.util.List;
  * - Drag viewport rectangle to pan
  * - Double-tap toggles zoom (fit / 100%) via callback
  * - Long-press opens a mini menu to toggle optional layers (e.g., OCR boxes)
- *
+ * <p>
  * The minimap does not fetch/generate thumbnails; caller must supply them via setThumbnail().
  */
 public class MinimapView extends View {
@@ -64,22 +59,35 @@ public class MinimapView extends View {
 
     // Optional layer: confidence heatmap (binned grid). Values are 0..1 representing low-confidence ratio per bin.
     private int heatCols = 0, heatRows = 0;
-    @Nullable private float[] heatVals; // size = heatCols * heatRows
+    @Nullable
+    private float[] heatVals; // size = heatCols * heatRows
     private boolean showHeatmap = false;
 
     public interface OnNavigateListener {
         // Request centering the main viewport at document coords (px) or view-based center
         // We pass desired content center in image coordinates
         void onCenterRequested(float contentCenterX, float contentCenterY);
+
         // Toggle zoom action (fit or 1.0)
         void onToggleZoomRequested();
     }
 
     private OnNavigateListener onNavigateListener;
 
-    public MinimapView(Context context) { super(context); init(); }
-    public MinimapView(Context context, @Nullable AttributeSet attrs) { super(context, attrs); init(); }
-    public MinimapView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) { super(context, attrs, defStyleAttr); init(); }
+    public MinimapView(Context context) {
+        super(context);
+        init();
+    }
+
+    public MinimapView(Context context, @Nullable AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
+
+    public MinimapView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        init();
+    }
 
     private void init() {
         setWillNotDraw(false);
@@ -99,7 +107,8 @@ public class MinimapView extends View {
             if (getContentDescription() == null || getContentDescription().length() == 0) {
                 setContentDescription("Minimap, tap to navigate, double-tap to toggle zoom");
             }
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) {
+        }
 
         gestureDetector = new GestureDetector(getContext(), new GestureDetector.SimpleOnGestureListener() {
             @Override
@@ -138,7 +147,9 @@ public class MinimapView extends View {
         setAlpha(1f);
     }
 
-    public void setOnNavigateListener(OnNavigateListener l) { this.onNavigateListener = l; }
+    public void setOnNavigateListener(OnNavigateListener l) {
+        this.onNavigateListener = l;
+    }
 
     public void setThumbnail(@Nullable Bitmap bmp) {
         this.thumbnail = bmp;
@@ -146,7 +157,8 @@ public class MinimapView extends View {
     }
 
     public void setPageSize(int w, int h) {
-        this.pageW = w; this.pageH = h;
+        this.pageW = w;
+        this.pageH = h;
         invalidateOnNextFrame();
     }
 
@@ -164,7 +176,9 @@ public class MinimapView extends View {
         invalidateOnNextFrame();
     }
 
-    /** Provide/update heatmap data as a grid of size cols x rows; values in [0..1] (low-confidence ratio). */
+    /**
+     * Provide/update heatmap data as a grid of size cols x rows; values in [0..1] (low-confidence ratio).
+     */
     public void setHeatmap(int cols, int rows, @Nullable float[] values) {
         if (cols <= 0 || rows <= 0 || values == null || values.length != cols * rows) {
             this.heatCols = this.heatRows = 0;
@@ -177,28 +191,37 @@ public class MinimapView extends View {
         invalidateOnNextFrame();
     }
 
-    /** Toggle whether OCR boxes layer is visible. */
+    /**
+     * Toggle whether OCR boxes layer is visible.
+     */
     public void setShowOcrBoxes(boolean show) {
         this.showOcrBoxes = show;
         invalidateOnNextFrame();
     }
 
-    public boolean isShowOcrBoxes() { return showOcrBoxes; }
+    public boolean isShowOcrBoxes() {
+        return showOcrBoxes;
+    }
 
-    /** Toggle whether Heatmap layer is visible. */
+    /**
+     * Toggle whether Heatmap layer is visible.
+     */
     public void setShowHeatmap(boolean show) {
         this.showHeatmap = show;
         invalidateOnNextFrame();
     }
 
-    public boolean isShowHeatmap() { return showHeatmap; }
+    public boolean isShowHeatmap() {
+        return showHeatmap;
+    }
 
     /**
      * Update minimap with latest overlay viewport info. Call from OcrOverlayView listener.
-     * @param userScale overlay user scale
-     * @param userOffsetX overlay user pan X (px)
-     * @param userOffsetY overlay user pan Y (px)
-     * @param overlayWidth overlay view width (px)
+     *
+     * @param userScale     overlay user scale
+     * @param userOffsetX   overlay user pan X (px)
+     * @param userOffsetY   overlay user pan Y (px)
+     * @param overlayWidth  overlay view width (px)
      * @param overlayHeight overlay view height (px)
      */
     public void setViewport(float userScale, float userOffsetX, float userOffsetY, int overlayWidth, int overlayHeight) {
@@ -384,7 +407,8 @@ public class MinimapView extends View {
                 return false;
             });
             pm.show();
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) {
+        }
     }
 
     private void invalidateOnNextFrame() {
@@ -403,7 +427,10 @@ public class MinimapView extends View {
         autoHideAnimator.setDuration(300);
         autoHideAnimator.addUpdateListener(a -> setAlpha((float) a.getAnimatedValue()));
         autoHideAnimator.addListener(new AnimatorListenerAdapter() {
-            @Override public void onAnimationEnd(Animator animation) { autoHidden = true; }
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                autoHidden = true;
+            }
         });
         autoHideAnimator.start();
     }
@@ -417,8 +444,13 @@ public class MinimapView extends View {
         setAlpha(1f);
     }
 
-    private float clamp(float v, float min, float max) { return Math.max(min, Math.min(max, v)); }
-    private float dp(float v) { return v * getResources().getDisplayMetrics().density; }
+    private float clamp(float v, float min, float max) {
+        return Math.max(min, Math.min(max, v));
+    }
+
+    private float dp(float v) {
+        return v * getResources().getDisplayMetrics().density;
+    }
 
     @Override
     public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
@@ -428,7 +460,8 @@ public class MinimapView extends View {
             AccessibilityNodeInfo.AccessibilityAction click = new AccessibilityNodeInfo.AccessibilityAction(
                     AccessibilityNodeInfo.ACTION_CLICK, "Toggle zoom");
             info.addAction(click);
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) {
+        }
     }
 
     @Override

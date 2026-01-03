@@ -217,10 +217,6 @@
     <!-- Labels -->
     <string name="label_language">Nyelv</string>
 
-    <!-- Segmented control labels -->
-    <string name="label_layout">Elrendezés</string>
-    <string name="label_text">Szöveg</string>
-
     <!-- OCR Review: Status chips formatting -->
     <string name="words_count_suffix_format">%1$d S</string>
     <string name="low_percent_format">Alacsony %1$d%%</string>
@@ -239,12 +235,6 @@
     <string name="cd_undo">Utolsó módosítás visszavonása</string>
     <string name="cd_redo">Utolsó módosítás megismétlése</string>
     <string name="cd_export">Exportálás</string>
-
-    <!-- Zoom popover -->
-    <string name="zoom_in">Nagyítás</string>
-    <string name="zoom_out">Kicsinyítés</string>
-    <string name="zoom_100">100%</string>
-    <string name="zoom_fit">Illesztés</string>
 
     <!-- A11y content descriptions for menu items -->
     <string name="cd_action_search">Keresés</string>
@@ -392,5 +382,32 @@
     <string name="ocr_max_languages_warning">Legfeljebb 2 nyelv engedélyezett</string>
     <string name="ocr_no_language_selected">Kérjük, válasszon ki legalább egy nyelvet</string>
     <string name="ocr_languages_selected">%1$s</string>
+
+    <!-- OCR Review: Discard changes dialog -->
+    <string name="title_discard_changes">Elveted a módosításokat?</string>
+    <string name="msg_discard_changes">Vannak nem mentett módosításaid. Szeretnéd elvetni őket?</string>
+    <string name="btn_discard">Elvetés</string>
+
+    <string name="btn_reocr">OCR újrafuttatása</string>
+    <string name="reocr_confirm_title">Újrafuttatod az OCR-t?</string>
+    <string name="reocr_confirm_message">Szeretnéd újrafuttatni az OCR-t erre a szóra a(z) „%1$s” nyelvvel?</string>
+    <string name="reocr_processing">OCR újrafuttatása folyamatban…</string>
+    <string name="reocr_success">A szó frissítve: %1$s</string>
+    <string name="reocr_failed">Az OCR újrafuttatása sikertelen</string>
+    <string name="reocr_no_language">Először válassz nyelvet</string>
+
+    <!-- Zoom popover -->
+    <string name="zoom_in">Nagyítás</string>
+    <string name="zoom_out">Kicsinyítés</string>
+    <string name="zoom_100">100 %</string>
+    <string name="zoom_200">200 %</string>
+    <string name="zoom_300">300 %</string>
+    <string name="zoom_400">400 %</string>
+    <string name="zoom_fit">Igazítás</string>
+
+    <!-- Segmented control labels -->
+    <string name="label_layout">Elrendezés</string>
+    <string name="label_text">Szöveg</string>
+    <string name="label_document">Dokumentum</string>
 
 </resources>

@@ -219,10 +219,6 @@
     <!-- Labels -->
     <string name="label_language">ภาษา</string>
 
-    <!-- Segmented control labels -->
-    <string name="label_layout">เลย์เอาต์</string>
-    <string name="label_text">ข้อความ</string>
-
     <!-- OCR Review: Status chips formatting -->
     <string name="words_count_suffix_format">%1$d คำ</string>
     <string name="low_percent_format">ความมั่นใจต่ำ %1$d%%</string>
@@ -241,12 +237,6 @@
     <string name="cd_undo">ยกเลิกการเปลี่ยนแปลงล่าสุด</string>
     <string name="cd_redo">ทำซ้ำการเปลี่ยนแปลงล่าสุด</string>
     <string name="cd_export">ส่งออก</string>
-
-    <!-- Zoom popover -->
-    <string name="zoom_in">ขยาย</string>
-    <string name="zoom_out">ย่อ</string>
-    <string name="zoom_100">100%</string>
-    <string name="zoom_fit">พอดีหน้าจอ</string>
 
     <!-- A11y content descriptions for menu items -->
     <string name="cd_action_search">ค้นหา</string>
@@ -393,5 +383,32 @@
     <string name="ocr_max_languages_warning">อนุญาตให้เลือกได้สูงสุด 2 ภาษา</string>
     <string name="ocr_no_language_selected">โปรดเลือกอย่างน้อยหนึ่งภาษา</string>
     <string name="ocr_languages_selected">%1$s</string>
+
+    <!-- OCR Review: Discard changes dialog -->
+    <string name="title_discard_changes">ยกเลิกการเปลี่ยนแปลง?</string>
+    <string name="msg_discard_changes">คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก ต้องการยกเลิกหรือไม่?</string>
+    <string name="btn_discard">ยกเลิก</string>
+
+    <string name="btn_reocr">รัน OCR อีกครั้ง</string>
+    <string name="reocr_confirm_title">รัน OCR อีกครั้ง?</string>
+    <string name="reocr_confirm_message">ต้องการรัน OCR สำหรับคำนี้อีกครั้งด้วยภาษา “%1$s” หรือไม่?</string>
+    <string name="reocr_processing">กำลังรัน OCR อีกครั้ง…</string>
+    <string name="reocr_success">อัปเดตคำแล้ว: %1$s</string>
+    <string name="reocr_failed">การรัน OCR ล้มเหลว</string>
+    <string name="reocr_no_language">โปรดเลือกภาษาก่อน</string>
+
+    <!-- Zoom popover -->
+    <string name="zoom_in">ซูมเข้า</string>
+    <string name="zoom_out">ซูมออก</string>
+    <string name="zoom_100">100%</string>
+    <string name="zoom_200">200%</string>
+    <string name="zoom_300">300%</string>
+    <string name="zoom_400">400%</string>
+    <string name="zoom_fit">พอดี</string>
+
+    <!-- Segmented control labels -->
+    <string name="label_layout">เค้าโครง</string>
+    <string name="label_text">ข้อความ</string>
+    <string name="label_document">เอกสาร</string>
 
 </resources>

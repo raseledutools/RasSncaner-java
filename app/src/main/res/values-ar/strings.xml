@@ -215,11 +215,6 @@
     <!-- Labels -->
     <string name="label_language">اللغة</string>
 
-
-    <!-- Segmented control labels -->
-    <string name="label_layout">التخطيط</string>
-    <string name="label_text">النص</string>
-
     <!-- OCR Review: Status chips formatting -->
     <string name="words_count_suffix_format">%1$d ك</string>
     <string name="low_percent_format">منخفض %1$d%%</string>
@@ -238,12 +233,6 @@
     <string name="cd_undo">تراجع عن آخر تغيير</string>
     <string name="cd_redo">إعادة آخر تغيير</string>
     <string name="cd_export">تصدير</string>
-
-    <!-- Zoom popover -->
-    <string name="zoom_in">تكبير</string>
-    <string name="zoom_out">تصغير</string>
-    <string name="zoom_100">100%</string>
-    <string name="zoom_fit">ملاءمة</string>
 
     <!-- A11y content descriptions for menu items -->
     <string name="cd_action_search">بحث</string>
@@ -390,5 +379,31 @@
     <string name="ocr_no_language_selected">يرجى اختيار لغة واحدة على الأقل</string>
     <string name="ocr_languages_selected">%1$s</string>
 
+    <!-- OCR Review: Discard changes dialog -->
+    <string name="title_discard_changes">تجاهل التغييرات؟</string>
+    <string name="msg_discard_changes">لديك تغييرات غير محفوظة. هل تريد تجاهلها؟</string>
+    <string name="btn_discard">تجاهل</string>
+
+    <string name="btn_reocr">إعادة التعرف الضوئي</string>
+    <string name="reocr_confirm_title">إعادة تشغيل التعرف الضوئي؟</string>
+    <string name="reocr_confirm_message">هل تريد إعادة تشغيل التعرف الضوئي على هذه الكلمة باستخدام اللغة «%1$s»؟</string>
+    <string name="reocr_processing">جارٍ إعادة تشغيل التعرف الضوئي…</string>
+    <string name="reocr_success">تم تحديث الكلمة: %1$s</string>
+    <string name="reocr_failed">فشل إعادة التعرف الضوئي</string>
+    <string name="reocr_no_language">يرجى تحديد لغة أولاً</string>
+
+    <!-- Zoom popover -->
+    <string name="zoom_in">تكبير</string>
+    <string name="zoom_out">تصغير</string>
+    <string name="zoom_100">٪100</string>
+    <string name="zoom_200">٪200</string>
+    <string name="zoom_300">٪300</string>
+    <string name="zoom_400">٪400</string>
+    <string name="zoom_fit">ملاءمة</string>
+
+    <!-- Segmented control labels -->
+    <string name="label_layout">التخطيط</string>
+    <string name="label_text">نص</string>
+    <string name="label_document">مستند</string>
 
 </resources>

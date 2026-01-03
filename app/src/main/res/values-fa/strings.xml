@@ -213,11 +213,6 @@
     <!-- Labels -->
     <string name="label_language">زبان</string>
 
-
-    <!-- Segmented control labels -->
-    <string name="label_layout">چیدمان</string>
-    <string name="label_text">متن</string>
-
     <!-- OCR Review: Status chips formatting -->
     <string name="words_count_suffix_format">%1$d ک</string>
     <string name="low_percent_format">کم %1$d%%</string>
@@ -236,12 +231,6 @@
     <string name="cd_undo">واگرد آخرین تغییر</string>
     <string name="cd_redo">بازگردانی آخرین تغییر</string>
     <string name="cd_export">خروجی</string>
-
-    <!-- Zoom popover -->
-    <string name="zoom_in">بزرگ‌نمایی</string>
-    <string name="zoom_out">کوچک‌نمایی</string>
-    <string name="zoom_100">100%</string>
-    <string name="zoom_fit">جا دادن</string>
 
     <!-- A11y content descriptions for menu items -->
     <string name="cd_action_search">جستجو</string>
@@ -387,5 +376,33 @@
     <string name="ocr_max_languages_warning">حداکثر ۲ زبان مجاز است</string>
     <string name="ocr_no_language_selected">لطفاً حداقل یک زبان انتخاب کنید</string>
     <string name="ocr_languages_selected">%1$s</string>
+
+    <!-- OCR Review: Discard changes dialog -->
+    <string name="title_discard_changes">تغییرات حذف شوند؟</string>
+    <string name="msg_discard_changes">تغییرات ذخیره‌نشده‌ای داری. آیا می‌خواهی آن‌ها را حذف کنی؟</string>
+    <string name="btn_discard">حذف</string>
+
+    <string name="btn_reocr">اجرای مجدد OCR</string>
+    <string name="reocr_confirm_title">اجرای مجدد OCR؟</string>
+    <string name="reocr_confirm_message">آیا می‌خواهی OCR را برای این واژه با زبان «%1$s» دوباره اجرا کنی؟</string>
+    <string name="reocr_processing">در حال اجرای مجدد OCR…</string>
+    <string name="reocr_success">واژه به‌روزرسانی شد: %1$s</string>
+    <string name="reocr_failed">اجرای مجدد OCR ناموفق بود</string>
+    <string name="reocr_no_language">لطفاً ابتدا یک زبان انتخاب کن</string>
+
+    <!-- Zoom popover -->
+    <string name="zoom_in">بزرگ‌نمایی</string>
+    <string name="zoom_out">کوچک‌نمایی</string>
+    <string name="zoom_100">۱۰۰٪</string>
+    <string name="zoom_200">۲۰۰٪</string>
+    <string name="zoom_300">۳۰۰٪</string>
+    <string name="zoom_400">۴۰۰٪</string>
+    <string name="zoom_fit">برازش</string>
+
+    <!-- Segmented control labels -->
+    <string name="label_layout">چیدمان</string>
+    <string name="label_text">متن</string>
+    <string name="label_document">سند</string>
+
 
 </resources>

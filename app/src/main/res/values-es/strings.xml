@@ -217,10 +217,6 @@
     <!-- Labels -->
     <string name="label_language">Idioma</string>
 
-    <!-- Segmented control labels -->
-    <string name="label_layout">Diseño</string>
-    <string name="label_text">Texto</string>
-
     <!-- OCR Review: Status chips formatting -->
     <string name="words_count_suffix_format">%1$d P</string>
     <string name="low_percent_format">Bajo %1$d%%</string>
@@ -239,12 +235,6 @@
     <string name="cd_undo">Deshacer último cambio</string>
     <string name="cd_redo">Rehacer último cambio</string>
     <string name="cd_export">Exportar</string>
-
-    <!-- Zoom popover -->
-    <string name="zoom_in">Acercar</string>
-    <string name="zoom_out">Alejar</string>
-    <string name="zoom_100">100%</string>
-    <string name="zoom_fit">Ajustar</string>
 
     <!-- A11y content descriptions for menu items -->
     <string name="cd_action_search">Buscar</string>
@@ -391,5 +381,33 @@
     <string name="ocr_max_languages_warning">Se permite un máximo de 2 idiomas</string>
     <string name="ocr_no_language_selected">Seleccione al menos un idioma</string>
     <string name="ocr_languages_selected">%1$s</string>
+
+    <!-- OCR Review: Discard changes dialog -->
+    <string name="title_discard_changes">¿Descartar cambios?</string>
+    <string name="msg_discard_changes">Tienes cambios sin guardar. ¿Quieres descartarlos?</string>
+    <string name="btn_discard">Descartar</string>
+
+    <string name="btn_reocr">Volver a ejecutar OCR</string>
+    <string name="reocr_confirm_title">¿Volver a ejecutar OCR?</string>
+    <string name="reocr_confirm_message">¿Quieres volver a ejecutar el OCR para esta palabra con el idioma «%1$s»?</string>
+    <string name="reocr_processing">Volviendo a ejecutar el OCR…</string>
+    <string name="reocr_success">Palabra actualizada: %1$s</string>
+    <string name="reocr_failed">Error al volver a ejecutar el OCR</string>
+    <string name="reocr_no_language">Selecciona primero un idioma</string>
+
+    <!-- Zoom popover -->
+    <string name="zoom_in">Acercar</string>
+    <string name="zoom_out">Alejar</string>
+    <string name="zoom_100">100 %</string>
+    <string name="zoom_200">200 %</string>
+    <string name="zoom_300">300 %</string>
+    <string name="zoom_400">400 %</string>
+    <string name="zoom_fit">Ajustar</string>
+
+    <!-- Segmented control labels -->
+    <string name="label_layout">Diseño</string>
+    <string name="label_text">Texto</string>
+    <string name="label_document">Documento</string>
+
 
 </resources>

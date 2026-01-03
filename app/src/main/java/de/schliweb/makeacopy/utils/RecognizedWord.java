@@ -41,6 +41,13 @@ public class RecognizedWord {
     private final float confidence;
 
     /**
+     * Optional language code for this word (e.g., "eng", "deu").
+     * May be null if not specified.
+     */
+    @Setter
+    private String lang;
+
+    /**
      * Constructs a new {@code RecognizedWord} instance with the given text, bounding box,
      * and confidence score.
      *
@@ -53,6 +60,24 @@ public class RecognizedWord {
         this.text = text;
         this.boundingBox = normalize(boundingBox); // defensive copy + normalize
         this.confidence = confidence;
+        this.lang = null;
+    }
+
+    /**
+     * Constructs a new {@code RecognizedWord} instance with the given text, bounding box,
+     * confidence score, and language code.
+     *
+     * @param text        The recognized text. Cannot be null.
+     * @param boundingBox The bounding box of the recognized text, represented as a {@code RectF}.
+     *                    The box is normalized within this constructor to ensure consistency.
+     * @param confidence  The confidence score of the recognition, in 0..100 (x_wconf).
+     * @param lang        The language code for this word (e.g., "eng", "deu"). May be null.
+     */
+    public RecognizedWord(String text, RectF boundingBox, float confidence, String lang) {
+        this.text = text;
+        this.boundingBox = normalize(boundingBox); // defensive copy + normalize
+        this.confidence = confidence;
+        this.lang = lang;
     }
 
     /**

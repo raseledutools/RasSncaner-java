@@ -1,7 +1,5 @@
 package de.schliweb.makeacopy.ui.ocr.review.model;
 
-import android.util.Size;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,8 +18,13 @@ public class OcrDoc {
         public int w;
         public int h;
 
-        public ImageSize() {}
-        public ImageSize(int w, int h) { this.w = w; this.h = h; }
+        public ImageSize() {
+        }
+
+        public ImageSize(int w, int h) {
+            this.w = w;
+            this.h = h;
+        }
     }
 
     public static class Word {

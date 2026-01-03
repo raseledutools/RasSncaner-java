@@ -92,12 +92,18 @@ public class OCRFragment extends Fragment {
         } catch (Throwable ignore) {
         }
 
-        // On first entry, if we have an image, clear any stale OCR results and remember this image
+        // On first entry, if we have an image and no OCR results yet, remember this image
+        // Do NOT reset if we already have OCR results (e.g., returning from Review screen)
         try {
             Bitmap cur = cropViewModel.getImageBitmap().getValue();
             if (cur != null) {
                 lastObservedBitmap = cur;
-                ocrViewModel.resetForNewImage();
+                // Only reset if no OCR has been performed yet for this image
+                OCRViewModel.OcrUiState currentState = ocrViewModel.getState().getValue();
+                boolean hasOcrResults = currentState != null && currentState.imageProcessed();
+                if (!hasOcrResults) {
+                    ocrViewModel.resetForNewImage();
+                }
             }
         } catch (Throwable ignore) {
         }
@@ -133,9 +139,11 @@ public class OCRFragment extends Fragment {
                     ? getString(R.string.ocr_processing_complete_tap_the_button_to_proceed_to_export)
                     : getString(R.string.no_image_processed_crop_an_image_first)));
 
-            binding.ocrResultText.setText((state.ocrText() == null || state.ocrText().isEmpty())
+            // Use effective text (reviewed if available, otherwise original OCR)
+            String effectiveText = state.getEffectiveText();
+            binding.ocrResultText.setText((effectiveText == null || effectiveText.isEmpty())
                     ? getString(R.string.ocr_results_will_appear_here)
-                    : state.ocrText());
+                    : effectiveText);
 
             // Enable review button only when OCR finished and we have words (and feature enabled)
             if (!FeatureFlags.isOcrReviewEnabled()) {
@@ -255,34 +263,11 @@ public class OCRFragment extends Fragment {
         } else {
             binding.buttonOcrReview.setVisibility(View.VISIBLE);
             binding.buttonOcrReview.setOnClickListener(v -> {
-                // Prefer loading last edits from autosave if present; otherwise fall back to current OCR state
+                // Build OcrDoc from current OCR state and pass to Review VM
                 de.schliweb.makeacopy.ui.ocr.review.OcrReviewViewModel rv = new ViewModelProvider(requireActivity()).get(de.schliweb.makeacopy.ui.ocr.review.OcrReviewViewModel.class);
-                java.io.File autosave = null;
-                try {
-                    String id = SessionIds.getOrCreateCurrentScanId(requireContext().getApplicationContext());
-                    rv.setTargetScanId(id);
-                    java.io.File dir = new java.io.File(requireContext().getFilesDir(), "scans/" + id);
-                    autosave = new java.io.File(dir, "page.ocr.json");
-                } catch (Throwable ignore) {
-                    try {
-                        autosave = new java.io.File(requireContext().getFilesDir(), "review_autosave.json");
-                    } catch (Throwable ignore2) {
-                    }
-                }
-                boolean loaded = false;
-                if (autosave != null && autosave.exists()) {
-                    try {
-                        rv.load(autosave);
-                        loaded = true;
-                    } catch (Throwable ignore) {
-                    }
-                }
-                if (!loaded) {
-                    // Build OcrDoc from current OCR state and pass to Review VM as fallback
-                    OCRViewModel.OcrUiState s = ocrViewModel.getState().getValue();
-                    de.schliweb.makeacopy.ui.ocr.review.model.OcrDoc doc = de.schliweb.makeacopy.ui.ocr.review.model.OcrDocMapper.fromState(s);
-                    rv.setDoc(doc);
-                }
+                OCRViewModel.OcrUiState s = ocrViewModel.getState().getValue();
+                de.schliweb.makeacopy.ui.ocr.review.model.OcrDoc doc = de.schliweb.makeacopy.ui.ocr.review.model.OcrDocMapper.fromState(s);
+                rv.setDoc(doc);
                 Navigation.findNavController(requireView()).navigate(R.id.navigation_review);
             });
         }

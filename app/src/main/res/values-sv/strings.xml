@@ -217,10 +217,6 @@
     <!-- Labels -->
     <string name="label_language">Språk</string>
 
-    <!-- Segmented control labels -->
-    <string name="label_layout">Layout</string>
-    <string name="label_text">Text</string>
-
     <!-- OCR Review: Status chips formatting -->
     <string name="words_count_suffix_format">%1$d O</string>
     <string name="low_percent_format">Låg %1$d%%</string>
@@ -239,12 +235,6 @@
     <string name="cd_undo">Ångra senaste ändring</string>
     <string name="cd_redo">Gör om senaste ändring</string>
     <string name="cd_export">Exportera</string>
-
-    <!-- Zoom popover -->
-    <string name="zoom_in">Zooma in</string>
-    <string name="zoom_out">Zooma ut</string>
-    <string name="zoom_100">100%</string>
-    <string name="zoom_fit">Anpassa</string>
 
     <!-- A11y content descriptions for menu items -->
     <string name="cd_action_search">Sök</string>
@@ -392,5 +382,32 @@
     <string name="ocr_max_languages_warning">Högst 2 språk är tillåtna</string>
     <string name="ocr_no_language_selected">Välj minst ett språk</string>
     <string name="ocr_languages_selected">%1$s</string>
+
+    <!-- OCR Review: Discard changes dialog -->
+    <string name="title_discard_changes">Kasta ändringar?</string>
+    <string name="msg_discard_changes">Du har osparade ändringar. Vill du kasta dem?</string>
+    <string name="btn_discard">Kasta</string>
+
+    <string name="btn_reocr">Kör OCR igen</string>
+    <string name="reocr_confirm_title">Köra OCR igen?</string>
+    <string name="reocr_confirm_message">Vill du köra OCR igen för detta ord med språket ”%1$s”?</string>
+    <string name="reocr_processing">Kör OCR igen…</string>
+    <string name="reocr_success">Ordet uppdaterades: %1$s</string>
+    <string name="reocr_failed">OCR misslyckades</string>
+    <string name="reocr_no_language">Välj först ett språk</string>
+
+    <!-- Zoom popover -->
+    <string name="zoom_in">Zooma in</string>
+    <string name="zoom_out">Zooma ut</string>
+    <string name="zoom_100">100 %</string>
+    <string name="zoom_200">200 %</string>
+    <string name="zoom_300">300 %</string>
+    <string name="zoom_400">400 %</string>
+    <string name="zoom_fit">Anpassa</string>
+
+    <!-- Segmented control labels -->
+    <string name="label_layout">Layout</string>
+    <string name="label_text">Text</string>
+    <string name="label_document">Dokument</string>
 
 </resources>

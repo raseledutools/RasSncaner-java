@@ -218,10 +218,6 @@
     <!-- Labels -->
     <string name="label_language">Limbă</string>
 
-    <!-- Segmented control labels -->
-    <string name="label_layout">Aspect</string>
-    <string name="label_text">Text</string>
-
     <!-- OCR Review: Status chips formatting -->
     <string name="words_count_suffix_format">%1$d C</string>
     <string name="low_percent_format">Scăzut %1$d%%</string>
@@ -240,12 +236,6 @@
     <string name="cd_undo">Anulează ultima modificare</string>
     <string name="cd_redo">Refă ultima modificare</string>
     <string name="cd_export">Exportă</string>
-
-    <!-- Zoom popover -->
-    <string name="zoom_in">Mărește</string>
-    <string name="zoom_out">Micșorează</string>
-    <string name="zoom_100">100%</string>
-    <string name="zoom_fit">Potrivește</string>
 
     <!-- A11y content descriptions for menu items -->
     <string name="cd_action_search">Caută</string>
@@ -392,5 +382,32 @@
     <string name="ocr_max_languages_warning">Sunt permise maximum 2 limbi</string>
     <string name="ocr_no_language_selected">Selectați cel puțin o limbă</string>
     <string name="ocr_languages_selected">%1$s</string>
+
+    <!-- OCR Review: Discard changes dialog -->
+    <string name="title_discard_changes">Renunți la modificări?</string>
+    <string name="msg_discard_changes">Ai modificări nesalvate. Vrei să le renunți?</string>
+    <string name="btn_discard">Renunță</string>
+
+    <string name="btn_reocr">Rulează OCR din nou</string>
+    <string name="reocr_confirm_title">Rulezi OCR din nou?</string>
+    <string name="reocr_confirm_message">Vrei să rulezi OCR din nou pentru acest cuvânt cu limba „%1$s”?</string>
+    <string name="reocr_processing">Se rulează OCR din nou…</string>
+    <string name="reocr_success">Cuvânt actualizat: %1$s</string>
+    <string name="reocr_failed">Reluarea OCR a eșuat</string>
+    <string name="reocr_no_language">Selectează mai întâi o limbă</string>
+
+    <!-- Zoom popover -->
+    <string name="zoom_in">Mărește</string>
+    <string name="zoom_out">Micșorează</string>
+    <string name="zoom_100">100 %</string>
+    <string name="zoom_200">200 %</string>
+    <string name="zoom_300">300 %</string>
+    <string name="zoom_400">400 %</string>
+    <string name="zoom_fit">Potrivește</string>
+
+    <!-- Segmented control labels -->
+    <string name="label_layout">Aspect</string>
+    <string name="label_text">Text</string>
+    <string name="label_document">Document</string>
 
 </resources>

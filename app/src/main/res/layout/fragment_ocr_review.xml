@@ -48,6 +48,18 @@
                 app:iconPadding="8dp" />
 
         <com.google.android.material.button.MaterialButton
+                android:id="@+id/seg_document"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="48dp"
+                android:minHeight="48dp"
+                android:text="@string/label_document"
+                app:icon="@drawable/ic_document"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp" />
+
+        <com.google.android.material.button.MaterialButton
                 android:id="@+id/seg_text"
                 style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="wrap_content"
@@ -60,18 +72,56 @@
                 app:iconPadding="8dp" />
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
-    <!-- Bottom actions toolbar at bottom (replaces BottomAppBar to avoid CoordinatorLayout requirement) -->
-    <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/bottom_app_bar"
-            style="@style/Widget.Material3.Toolbar"
-            android:layout_width="0dp"
+    <!-- Bottom Button Container (BACK/SAVE) -->
+    <LinearLayout
+            android:id="@+id/button_container"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:menu="@menu/menu_ocr_review_bottom"
-            android:background="?attr/colorSurface"
-            app:paddingBottomSystemWindowInsets="true"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:background="@color/button_container_background"
+            android:padding="12dp"
+            android:elevation="8dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent">
+
+        <Button
+                android:id="@+id/button_back"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="12dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:background="@drawable/rounded_bg_light"
+                android:text="@string/back"
+                android:maxLines="1"
+                android:ellipsize="end"
+                app:autoSizeTextType="uniform"
+                app:autoSizeMinTextSize="10sp"
+                app:autoSizeMaxTextSize="16sp"
+                app:autoSizeStepGranularity="1sp"/>
+
+        <Button
+                android:id="@+id/button_save"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:background="@drawable/rounded_bg_light"
+                android:text="@string/btn_save"
+                android:maxLines="1"
+                android:ellipsize="end"
+                app:autoSizeTextType="uniform"
+                app:autoSizeMinTextSize="10sp"
+                app:autoSizeMaxTextSize="16sp"
+                app:autoSizeStepGranularity="1sp"/>
+    </LinearLayout>
 
     <!-- Layout-Mode: Canvas -->
     <FrameLayout
@@ -80,7 +130,7 @@
             android:layout_height="0dp"
             android:background="?attr/colorSurfaceVariant"
             app:layout_constraintTop_toBottomOf="@id/segmented_group"
-            app:layout_constraintBottom_toTopOf="@id/bottom_app_bar"
+            app:layout_constraintBottom_toTopOf="@id/button_container"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 
@@ -133,7 +183,7 @@
             android:layout_height="0dp"
             android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/segmented_group"
-            app:layout_constraintBottom_toTopOf="@id/bottom_app_bar"
+            app:layout_constraintBottom_toTopOf="@id/button_container"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 
@@ -152,6 +202,51 @@
                 android:imeOptions="flagNoEnterAction|flagNoFullscreen"
                 android:importantForAutofill="noExcludeDescendants"
                 android:tooltipText="@string/tip_text_mode_editing" />
+    </FrameLayout>
+
+    <!-- Document-Mode: Original image with OCR overlay -->
+    <FrameLayout
+            android:id="@+id/document_mode_container"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/segmented_group"
+            app:layout_constraintBottom_toTopOf="@id/button_container"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Original document image -->
+        <ImageView
+                android:id="@+id/document_image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="matrix"
+                android:contentDescription="@string/document_preview" />
+
+        <!-- OCR overlay on top of the document -->
+        <de.schliweb.makeacopy.ui.ocr.review.view.OcrOverlayView
+                android:id="@+id/document_ocr_overlay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        <!-- Zoom-Chip for document mode -->
+        <com.google.android.material.chip.Chip
+                android:id="@+id/chip_zoom_document"
+                style="@style/Widget.Material3.Chip.Assist"
+                android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|end"
+                android:layout_margin="12dp"
+                android:minWidth="48dp"
+                android:minHeight="48dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:text="100%"
+                android:contentDescription="@string/cd_zoom_chip_open_menu"
+                app:chipIcon="@drawable/ic_zoom_24"
+                app:chipIconVisible="true"
+                app:rippleColor="?attr/colorPrimary" />
     </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

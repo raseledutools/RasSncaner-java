@@ -217,10 +217,6 @@
     <!-- Labels -->
     <string name="label_language">Jazyk</string>
 
-    <!-- Segmented control labels -->
-    <string name="label_layout">Rozloženie</string>
-    <string name="label_text">Text</string>
-
     <!-- OCR Review: Status chips formatting -->
     <string name="words_count_suffix_format">%1$d S</string>
     <string name="low_percent_format">Nízka %1$d%%</string>
@@ -239,12 +235,6 @@
     <string name="cd_undo">Vrátiť poslednú zmenu</string>
     <string name="cd_redo">Zopakovať poslednú zmenu</string>
     <string name="cd_export">Exportovať</string>
-
-    <!-- Zoom popover -->
-    <string name="zoom_in">Priblížiť</string>
-    <string name="zoom_out">Oddialiť</string>
-    <string name="zoom_100">100%</string>
-    <string name="zoom_fit">Prispôsobiť</string>
 
     <!-- A11y content descriptions for menu items -->
     <string name="cd_action_search">Hľadať</string>
@@ -391,5 +381,32 @@
     <string name="ocr_max_languages_warning">Povolené sú najviac 2 jazyky</string>
     <string name="ocr_no_language_selected">Vyberte aspoň jeden jazyk</string>
     <string name="ocr_languages_selected">%1$s</string>
+
+    <!-- OCR Review: Discard changes dialog -->
+    <string name="title_discard_changes">Zahodiť zmeny?</string>
+    <string name="msg_discard_changes">Máš neuložené zmeny. Chceš ich zahodiť?</string>
+    <string name="btn_discard">Zahodiť</string>
+
+    <string name="btn_reocr">Znova spustiť OCR</string>
+    <string name="reocr_confirm_title">Znova spustiť OCR?</string>
+    <string name="reocr_confirm_message">Chceš znova spustiť OCR pre toto slovo s jazykom „%1$s“?</string>
+    <string name="reocr_processing">Prebieha opätovné spustenie OCR…</string>
+    <string name="reocr_success">Slovo aktualizované: %1$s</string>
+    <string name="reocr_failed">Opätovné spustenie OCR zlyhalo</string>
+    <string name="reocr_no_language">Najprv vyber jazyk</string>
+
+    <!-- Zoom popover -->
+    <string name="zoom_in">Priblížiť</string>
+    <string name="zoom_out">Oddialiť</string>
+    <string name="zoom_100">100 %</string>
+    <string name="zoom_200">200 %</string>
+    <string name="zoom_300">300 %</string>
+    <string name="zoom_400">400 %</string>
+    <string name="zoom_fit">Prispôsobiť</string>
+
+    <!-- Segmented control labels -->
+    <string name="label_layout">Rozloženie</string>
+    <string name="label_text">Text</string>
+    <string name="label_document">Dokument</string>
 
 </resources>

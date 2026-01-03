@@ -215,10 +215,6 @@
     <!-- Labels -->
     <string name="label_language">Sprache</string>
 
-    <!-- Segmented control labels -->
-    <string name="label_layout">Layout</string>
-    <string name="label_text">Text</string>
-
     <!-- OCR Review: Status chips formatting -->
     <string name="words_count_suffix_format">%1$d W</string>
     <string name="low_percent_format">Niedrig %1$d%%</string>
@@ -237,12 +233,6 @@
     <string name="cd_undo">Letzte Änderung rückgängig machen</string>
     <string name="cd_redo">Letzte Änderung wiederholen</string>
     <string name="cd_export">Exportieren</string>
-
-    <!-- Zoom popover -->
-    <string name="zoom_in">Vergrößern</string>
-    <string name="zoom_out">Verkleinern</string>
-    <string name="zoom_100">100%</string>
-    <string name="zoom_fit">Anpassen</string>
 
     <!-- A11y content descriptions for menu items -->
     <string name="cd_action_search">Suchen</string>
@@ -392,4 +382,32 @@
     <string name="ocr_max_languages_warning">Maximal 2 Sprachen erlaubt</string>
     <string name="ocr_no_language_selected">Bitte mindestens eine Sprache auswählen</string>
     <string name="ocr_languages_selected">%1$s</string>
+
+    <!-- OCR Review: Discard changes dialog -->
+    <string name="title_discard_changes">Änderungen verwerfen?</string>
+    <string name="msg_discard_changes">Du hast ungespeicherte Änderungen. Möchtest du diese verwerfen?</string>
+    <string name="btn_discard">Verwerfen</string>
+
+    <string name="btn_reocr">OCR erneut ausführen</string>
+    <string name="reocr_confirm_title">OCR erneut ausführen?</string>
+    <string name="reocr_confirm_message">OCR für dieses Wort mit der Sprache „%1$s“ erneut ausführen?</string>
+    <string name="reocr_processing">OCR wird erneut ausgeführt…</string>
+    <string name="reocr_success">Wort aktualisiert: %1$s</string>
+    <string name="reocr_failed">OCR erneut ausführen fehlgeschlagen</string>
+    <string name="reocr_no_language">Bitte zuerst eine Sprache festlegen</string>
+
+    <!-- Zoom popover -->
+    <string name="zoom_in">Vergrößern</string>
+    <string name="zoom_out">Verkleinern</string>
+    <string name="zoom_100">100 %</string>
+    <string name="zoom_200">200 %</string>
+    <string name="zoom_300">300 %</string>
+    <string name="zoom_400">400 %</string>
+    <string name="zoom_fit">Anpassen</string>
+
+    <!-- Segmented control labels -->
+    <string name="label_layout">Layout</string>
+    <string name="label_text">Text</string>
+    <string name="label_document">Dokument</string>
+
 </resources>
