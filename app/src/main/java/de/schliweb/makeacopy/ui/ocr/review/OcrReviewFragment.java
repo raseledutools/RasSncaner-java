@@ -1599,8 +1599,44 @@ public class OcrReviewFragment extends Fragment {
     }
 
     /**
+     * Checks if a text string contains predominantly RTL (Right-to-Left) characters.
+     * Used to determine text direction for proper word splitting in RTL languages like Persian and Arabic.
+     *
+     * @param text the text to check
+     * @return true if the text contains predominantly RTL characters, false otherwise
+     */
+    private boolean isRtlText(String text) {
+        if (text == null || text.isEmpty()) return false;
+
+        int rtlCount = 0;
+        int ltrCount = 0;
+
+        for (int i = 0; i < text.length(); ) {
+            int cp = text.codePointAt(i);
+            byte directionality = Character.getDirectionality(cp);
+
+            if (directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT ||
+                    directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC ||
+                    directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT_EMBEDDING ||
+                    directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE) {
+                rtlCount++;
+            } else if (directionality == Character.DIRECTIONALITY_LEFT_TO_RIGHT ||
+                    directionality == Character.DIRECTIONALITY_LEFT_TO_RIGHT_EMBEDDING ||
+                    directionality == Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE) {
+                ltrCount++;
+            }
+
+            i += Character.charCount(cp);
+        }
+
+        return rtlCount > ltrCount;
+    }
+
+    /**
      * Splits a given word at its approximate midpoint or nearest whitespace, creating two separate words
      * while adjusting their bounding boxes proportionally based on content distribution.
+     * For LTR text: first part goes to left box, second part to right box.
+     * For RTL text: first part goes to right box, second part to left box (because RTL reads right-to-left).
      *
      * @param word the word to be split. Its bounding box, text, and related data will be updated to reflect the split,
      *             and a new word object will be created and added to the document immediately after the original word.
@@ -1620,6 +1656,7 @@ public class OcrReviewFragment extends Fragment {
         String a = t.substring(0, splitAt).trim();
         String b = t.substring(splitAt).trim();
         if (a.isEmpty() || b.isEmpty()) return;
+
         // bbox split by x mid, proportionally by code point counts for robustness with multi-codepoint chars
         int x = word.b[0];
         int y = word.b[1];
@@ -1630,19 +1667,44 @@ public class OcrReviewFragment extends Fragment {
         int totalLen = Math.max(1, lenA + lenB);
         int w1 = Math.max(1, Math.round(w * (lenA / (float) totalLen)));
         int w2 = Math.max(1, w - w1);
-        word.t = a;
-        word.b[2] = w1;
-        word.e = true;
-        OcrDoc.Word nw = new OcrDoc.Word();
-        nw.id = nextId(doc);
-        nw.t = b;
-        nw.b = new int[]{x + w1, y, w2, h};
-        nw.c = word.c;
-        nw.e = true;
-        nw.l = word.l;
-        nw.k = word.k;
-        nw.lang = word.lang;
-        doc.words.add(idx + 1, nw);
+
+        boolean isRtl = isRtlText(t);
+
+        // For RTL: first part (a) goes to RIGHT box, second part (b) goes to LEFT box
+        // For LTR: first part (a) goes to LEFT box, second part (b) goes to RIGHT box
+        // The word order in doc.words stays the same (a first, b second) for correct text concatenation
+        if (isRtl) {
+            // RTL: original word gets RIGHT box with first part, new word gets LEFT box with second part
+            word.t = a;
+            word.b[0] = x + w2; // move to right side
+            word.b[2] = w1;
+            word.e = true;
+            OcrDoc.Word nw = new OcrDoc.Word();
+            nw.id = nextId(doc);
+            nw.t = b;
+            nw.b = new int[]{x, y, w2, h}; // left side
+            nw.c = word.c;
+            nw.e = true;
+            nw.l = word.l;
+            nw.k = word.k;
+            nw.lang = word.lang;
+            doc.words.add(idx + 1, nw);
+        } else {
+            // LTR: original word gets LEFT box with first part, new word gets RIGHT box with second part
+            word.t = a;
+            word.b[2] = w1;
+            word.e = true;
+            OcrDoc.Word nw = new OcrDoc.Word();
+            nw.id = nextId(doc);
+            nw.t = b;
+            nw.b = new int[]{x + w1, y, w2, h};
+            nw.c = word.c;
+            nw.e = true;
+            nw.l = word.l;
+            nw.k = word.k;
+            nw.lang = word.lang;
+            doc.words.add(idx + 1, nw);
+        }
         viewModel.setDoc(doc);
         propagateAndAutosave();
     }
@@ -2061,25 +2123,6 @@ public class OcrReviewFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        // Apply edge-to-edge insets for the AppBar without using legacy fitsSystemWindows
-        /*try {
-            androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
-                int top = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.statusBars()).top;
-                // Apply top inset to the Toolbar only to avoid increasing AppBarLayout's measured height
-                View toolbar = v.findViewById(R.id.top_app_bar);
-                if (toolbar != null && toolbar.getPaddingTop() != top) {
-                    toolbar.setPadding(toolbar.getPaddingLeft(), top, toolbar.getPaddingRight(), toolbar.getPaddingBottom());
-                }
-                // Ensure AppBar itself has no extra top padding so it stays flush at the top
-                View appBar = v.findViewById(R.id.app_bar);
-                if (appBar != null && appBar.getPaddingTop() != 0) {
-                    appBar.setPadding(appBar.getPaddingLeft(), 0, appBar.getPaddingRight(), appBar.getPaddingBottom());
-                }
-                return insets;
-            });
-            androidx.core.view.ViewCompat.requestApplyInsets(view);
-        } catch (Throwable ignore) {
-        }`*/
         if (savedInstanceState == null) return;
         try {
             com.google.android.material.button.MaterialButtonToggleGroup segmented = view.findViewById(R.id.segmented_group);
