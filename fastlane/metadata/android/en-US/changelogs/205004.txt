@@ -1,0 +1,26 @@
+MakeACopy 2.5.0 (Release Candidate)
+
+What’s new
+
+- Replaced the previous corner-detection approach with a custom on-device ML model
+(fully offline, no network access).
+- Improved document edge detection and perspective correction, especially for
+distorted or angled pages.
+- Reduced external dependencies and improved long-term maintainability.
+- Faster image capture: reduced focus timeout and paused live analysis during
+capture for improved responsiveness.
+
+Bug fixes
+
+- Fixed connected components analysis for OCR preprocessing (was incorrectly
+analyzing background instead of text).
+- Fixed memory leak in border noise clearing (SubMat resources now properly released).
+- Fixed inconsistent angle validation in ONNX corner detection.
+- Improved resource management for OpenCV contour processing.
+
+Technical notes
+
+- The new corner detection model is a lightweight ONNX model trained specifically
+for document geometry.
+- Inference runs fully on-device via ONNX Runtime (NNAPI / XNNPACK).
+- No cloud services, telemetry, or data upload involved.

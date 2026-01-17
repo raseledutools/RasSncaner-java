@@ -14,7 +14,7 @@ MakeACopy is a privacy‑first, offline document scanning application for Androi
 Core technology choices include:
 - CameraX/Camera2 for capture.
 - OpenCV for image processing (edge detection, perspective warp, filters).
-- ONNX Runtime with a DocAligner model for ML‑assisted corner detection (required).
+- ONNX Runtime for optional on-device ML-assisted corner detection (custom model).
 - Tesseract (via tess-two) for offline OCR.
 - pdfbox-android for constructing PDFs, including a precisely aligned invisible text layer.
 
@@ -77,7 +77,7 @@ This layered approach simplifies testing and reuse:
   - RecognizedWord: OCR word text and bounding box in image coordinates; methods for transforms and clipping.
 
 - External Libraries:
-  - CameraX/Camera2 (AndroidX), OpenCV, ONNX Runtime, DocAligner model, tess-two, pdfbox-android, Material Components.
+  - CameraX/Camera2 (AndroidX), OpenCV, ONNX Runtime, tess-two, pdfbox-android, Material Components.
 
 ### 3.3 Data Flow Overview
 
@@ -124,7 +124,6 @@ Conventions:
 - AndroidX CameraX and Camera2 interop.
 - OpenCV for image processing (Apache 2.0).
 - ONNX Runtime for Android (MIT), built CPU‑only with Java bindings; required for the edge detection pipeline.
-- DocAligner model (Apache 2.0), shipped as an asset and loaded at runtime (see OpenCVUtils MODEL_ASSET_PATH).
 - tess-two (Apache 2.0) to access Tesseract OCR.
 - pdfbox-android (Apache 2.0) for PDF authoring.
 - Material Components for UI.
@@ -190,7 +189,7 @@ Common pitfalls handled:
 
 OpenCVUtils provides methods to:
 - Initialize OpenCV native support (System.loadLibrary("opencv_java4")) and configure safe modes.
-- Initialize an ONNX Runtime session and load the DocAligner model from assets (required). The path is set by MODEL_ASSET_PATH and copied to cache via the app’s AssetManager.
+- Initialize an ONNX Runtime session and load the model from assets (required). The path is set by MODEL_ASSET_PATH and copied to cache via the app’s AssetManager.
 - Detect corners through classical CV and ML assistance via the ONNX model to improve robustness on challenging backgrounds or lighting (ONNX required).
 - Compute perspective transforms and warp the image to a top‑down view.
 
@@ -285,7 +284,7 @@ Resource management:
 
 Responsibilities:
 - Initialize OpenCV and configure safe mode.
-- Initialize ONNX Runtime and load the DocAligner ONNX model from assets to cache, creating a native session with optimized options and thread settings.
+- Initialize ONNX Runtime and load the ONNX model from assets to cache, creating a native session with optimized options and thread settings.
 - Provide image processing utilities used across the app: 
   - Corner detection (classical and ML‑assisted).
   - Perspective transform computation and warp.
@@ -302,7 +301,7 @@ ONNX Runtime specifics:
 - OrtSession is created with optimization level ALL and a conservative number of threads (roughly half of available CPUs) to balance performance and thermals.
 - The model file is stored in the app’s cache directory; copyAssetToCache handles idempotent copying from the APK assets.
 
-Model pre/post‑processing (typical for DocAligner‑like detectors):
+Model pre/post‑processing (for the custom corner detector):
 - Preprocess: resize input to model’s expected size (e.g., 256px), normalize pixel values, channel ordering.
 - Inference: run session; obtain heatmaps or corner coordinates.
 - Postprocess: threshold/smooth predictions, refine to precise corners using subpixel methods or local maxima; merge with classical contours.
@@ -579,7 +578,6 @@ Supply chain steps:
 - App code: Apache 2.0.
 - OpenCV: Apache 2.0.
 - ONNX Runtime: MIT.
-- DocAligner model: Apache 2.0.
 - tess-two: Apache 2.0.
 - pdfbox-android: Apache 2.0.
 
@@ -655,7 +653,6 @@ Roadmap considerations:
 - ONNX Runtime for mobile
 - tess-two (Tesseract on Android)
 - pdfbox-android library
-- DocAligner model description
 - Android FileProvider documentation
 
 
