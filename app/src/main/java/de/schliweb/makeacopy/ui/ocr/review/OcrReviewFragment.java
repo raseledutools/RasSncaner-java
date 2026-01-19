@@ -1,6 +1,7 @@
 package de.schliweb.makeacopy.ui.ocr.review;
 
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
@@ -89,7 +90,7 @@ public class OcrReviewFragment extends Fragment {
 
     /**
      * Loads and sets a small thumbnail bitmap into the minimap from the CropViewModel.
-     * Decodes with downsampling to limit memory.
+     * Decodes with downsampling to limit memory. Applies user rotation if set.
      */
     private void updateMinimapThumbnail(@NonNull MinimapView minimap) {
         try {
@@ -99,15 +100,26 @@ public class OcrReviewFragment extends Fragment {
                 CropViewModel cvm = new androidx.lifecycle.ViewModelProvider(requireActivity()).get(CropViewModel.class);
                 Bitmap bm = cvm != null ? cvm.getImageBitmap().getValue() : null;
                 if (bm != null && !bm.isRecycled()) {
-                    int w0 = bm.getWidth();
-                    int h0 = bm.getHeight();
+                    // Apply user rotation if set
+                    Integer userRotDeg = cvm.getUserRotationDegrees().getValue();
+                    int rotDeg = (userRotDeg != null) ? userRotDeg : 0;
+                    Bitmap rotatedBm = (rotDeg != 0) ? rotateBitmap(bm, rotDeg) : bm;
+                    int w0 = rotatedBm.getWidth();
+                    int h0 = rotatedBm.getHeight();
                     if (w0 > 0 && h0 > 0) {
                         int maxDim0 = 512;
                         int long0 = Math.max(w0, h0);
                         float scale0 = long0 > maxDim0 ? (maxDim0 / (float) long0) : 1f;
                         int tw = Math.max(1, Math.round(w0 * scale0));
                         int th = Math.max(1, Math.round(h0 * scale0));
-                        Bitmap tiny = Bitmap.createScaledBitmap(bm, tw, th, true);
+                        Bitmap tiny = Bitmap.createScaledBitmap(rotatedBm, tw, th, true);
+                        // Recycle intermediate rotated bitmap if it was created
+                        if (rotDeg != 0 && rotatedBm != bm && !rotatedBm.isRecycled()) {
+                            try {
+                                rotatedBm.recycle();
+                            } catch (Throwable ignore3) {
+                            }
+                        }
                         if (tiny != null) {
                             Bitmap prev = minimapBitmap;
                             minimapBitmap = tiny;
@@ -553,7 +565,11 @@ public class OcrReviewFragment extends Fragment {
                         CropViewModel cvm = new ViewModelProvider(requireActivity()).get(CropViewModel.class);
                         Bitmap bmp = cvm != null ? cvm.getImageBitmap().getValue() : null;
                         if (bmp != null && !bmp.isRecycled() && documentImage != null) {
-                            documentImage.setImageBitmap(bmp);
+                            // Apply user rotation if set
+                            Integer userRotDeg = cvm.getUserRotationDegrees().getValue();
+                            int rotDeg = (userRotDeg != null) ? userRotDeg : 0;
+                            Bitmap displayBmp = (rotDeg != 0) ? rotateBitmap(bmp, rotDeg) : bmp;
+                            documentImage.setImageBitmap(displayBmp);
                         }
                         // Sync OCR overlay with document
                         if (documentOcrOverlay != null) {
@@ -2158,5 +2174,22 @@ public class OcrReviewFragment extends Fragment {
             }
         } catch (Throwable ignore) {
         }
+    }
+
+    /**
+     * Rotates the given Bitmap by the specified degree in a clockwise direction.
+     * If the degrees are a multiple of 360, the original Bitmap is returned unchanged.
+     *
+     * @param src       The Bitmap to be rotated. Must not be null.
+     * @param degreesCW The number of degrees to rotate the Bitmap clockwise.
+     *                  Values outside the range [0, 360) will be normalized.
+     * @return A new rotated Bitmap object, or the original Bitmap if no rotation is applied.
+     */
+    private static Bitmap rotateBitmap(Bitmap src, int degreesCW) {
+        int deg = ((degreesCW % 360) + 360) % 360;
+        if (deg == 0) return src;
+        Matrix m = new Matrix();
+        m.postRotate(deg);
+        return Bitmap.createBitmap(src, 0, 0, src.getWidth(), src.getHeight(), m, true);
     }
 }

@@ -25,15 +25,17 @@
     <!-- Segmented control -->
     <com.google.android.material.button.MaterialButtonToggleGroup
             android:id="@+id/segmented_group"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
             android:layout_marginTop="12dp"
             app:singleSelection="true"
             app:selectionRequired="true"
             app:checkedButton="@id/seg_layout"
             app:layout_constraintTop_toBottomOf="@id/top_app_bar"
-            app:layout_constraintStart_toStartOf="parent">
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
         <com.google.android.material.button.MaterialButton
                 android:id="@+id/seg_layout"
@@ -42,6 +44,7 @@
                 android:layout_height="wrap_content"
                 android:minWidth="48dp"
                 android:minHeight="48dp"
+                android:textSize="12sp"
                 android:text="@string/label_layout"
                 app:icon="@drawable/ic_image"
                 app:iconGravity="textStart"
@@ -54,6 +57,7 @@
                 android:layout_height="wrap_content"
                 android:minWidth="48dp"
                 android:minHeight="48dp"
+                android:textSize="12sp"
                 android:text="@string/label_document"
                 app:icon="@drawable/ic_document"
                 app:iconGravity="textStart"
@@ -66,6 +70,7 @@
                 android:layout_height="wrap_content"
                 android:minWidth="48dp"
                 android:minHeight="48dp"
+                android:textSize="12sp"
                 android:text="@string/label_text"
                 app:icon="@drawable/ic_edit"
                 app:iconGravity="textStart"

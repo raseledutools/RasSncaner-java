@@ -38,9 +38,71 @@ public class OpenCVUtils {
     private static boolean USE_ADAPTIVE_THRESHOLD = false;
     private static final boolean USE_DEBUG_IMAGES = false;
 
+    /**
+     * When set to true, OpenCV-based corner detection is disabled and only the ONNX model is used.
+     * This is useful for testing the ONNX model's performance in isolation.
+     */
+    private static boolean DISABLE_OPENCV_DETECTION = false;
+
+    /**
+     * When set to true, ONNX-based corner detection is disabled and only OpenCV is used.
+     * This is useful for testing the OpenCV detection pipeline in isolation.
+     */
+    private static boolean DISABLE_ONNX_DETECTION = false;
+
+    /**
+     * Enables or disables ONNX-based corner detection.
+     * When disabled, only OpenCV-based detection is used.
+     *
+     * @param disable true to disable ONNX detection, false to enable it
+     */
+    public static void setDisableOnnxDetection(boolean disable) {
+        DISABLE_ONNX_DETECTION = disable;
+        Log.i(TAG, "ONNX detection " + (disable ? "disabled" : "enabled"));
+    }
+
+    /**
+     * Returns whether ONNX-based corner detection is currently disabled.
+     *
+     * @return true if ONNX detection is disabled, false otherwise
+     */
+    public static boolean isOnnxDetectionDisabled() {
+        return DISABLE_ONNX_DETECTION;
+    }
+
+    /**
+     * Enables or disables OpenCV-based corner detection.
+     * When disabled, only ONNX-based detection is used.
+     *
+     * @param disable true to disable OpenCV detection, false to enable it
+     */
+    public static void setDisableOpenCVDetection(boolean disable) {
+        DISABLE_OPENCV_DETECTION = disable;
+        Log.i(TAG, "OpenCV detection " + (disable ? "disabled" : "enabled"));
+    }
+
+    /**
+     * Returns whether OpenCV-based corner detection is currently disabled.
+     *
+     * @return true if OpenCV detection is disabled, false otherwise
+     */
+    public static boolean isOpenCVDetectionDisabled() {
+        return DISABLE_OPENCV_DETECTION;
+    }
+
     // ONNX model settings
     private static final String MODEL_ASSET_PATH = "docaligner/fastvit_t8_h_e_bifpn_256_fp32.onnx";
     private static volatile OrtEnvironment ortEnv;
+    /**
+     * Maximum edge size (in pixels) for corner detection preprocessing.
+     * <p>
+     * This value MUST be used consistently across all corner detection calls
+     * (live preview in CameraFragment and final detection in TrapezoidSelectionView)
+     * to ensure identical results. Using different values leads to inconsistent
+     * corner positions due to varying interpolation artifacts during scaling.
+     * <p>
+     */
+    public static final int DETECTION_MAX_EDGE = 720;
     private static volatile OrtSession ortSession;
 
     // ---- thresholds (tuned) ----
@@ -462,7 +524,7 @@ public class OpenCVUtils {
 
         Mat rgba = new Mat();
         Mat gray = new Mat();
-        Mat work = new Mat();
+        Mat work = null;  // Don't create empty Mat - will be assigned below
         Mat bw = new Mat();
         CLAHE clahe = null;
 
@@ -479,6 +541,7 @@ public class OpenCVUtils {
 
                 // Use floating-point arithmetic to avoid quantization artifacts
                 Mat gf = new Mat(), bgf = new Mat(), norm = new Mat();
+                work = new Mat();  // Create work Mat only when needed
                 gray.convertTo(gf, CvType.CV_32F);
                 bg.convertTo(bgf, CvType.CV_32F);
                 Core.max(bgf, new Scalar(1.0), bgf);          // Prevent division by 0
@@ -491,7 +554,7 @@ public class OpenCVUtils {
                 bgf.release();
                 norm.release();
             } else {
-                work = gray;
+                work = gray;  // work points to gray, no separate Mat needed
             }
 
             // --- 2) very gentle CLAHE (or leave opt.useClahe=false) ---
@@ -719,28 +782,30 @@ public class OpenCVUtils {
         int marginY = Math.max(8, (int) (h * 0.015)); // 1.5% of height, min 8px
 
         // Use submat and setTo for efficient border clearing
+        // Note: SubMats are views but must still be released to avoid memory leaks
+        Mat top = null, bottom = null, left = null, right = null;
         try {
             // Clear top border region
             if (marginY > 0 && marginY < h) {
-                Mat top = bw.submat(0, marginY, 0, w);
+                top = bw.submat(0, marginY, 0, w);
                 top.setTo(new Scalar(255));
             }
 
             // Clear bottom border region
             if (marginY > 0 && h - marginY > 0) {
-                Mat bottom = bw.submat(h - marginY, h, 0, w);
+                bottom = bw.submat(h - marginY, h, 0, w);
                 bottom.setTo(new Scalar(255));
             }
 
             // Clear left border region
             if (marginX > 0 && marginX < w) {
-                Mat left = bw.submat(0, h, 0, marginX);
+                left = bw.submat(0, h, 0, marginX);
                 left.setTo(new Scalar(255));
             }
 
             // Clear right border region
             if (marginX > 0 && w - marginX > 0) {
-                Mat right = bw.submat(0, h, w - marginX, w);
+                right = bw.submat(0, h, w - marginX, w);
                 right.setTo(new Scalar(255));
             }
         } catch (Throwable ignore) {
@@ -769,6 +834,12 @@ public class OpenCVUtils {
                     }
                 }
             }
+        } finally {
+            // Release SubMats to avoid memory leaks
+            if (top != null) top.release();
+            if (bottom != null) bottom.release();
+            if (left != null) left.release();
+            if (right != null) right.release();
         }
     }
 
@@ -1135,11 +1206,21 @@ public class OpenCVUtils {
             Imgproc.threshold(gray, threshold, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU);
             saveDebugImage(context, threshold, "debug_threshold.png");
 
-            kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(15, 15));
+            // Dynamic kernel size based on image dimensions (improves detection for various document sizes)
+            int shortSide = Math.min(rgba.width(), rgba.height());
+            int kernelSize = Math.max(5, shortSide / 50);
+            if (kernelSize % 2 == 0) kernelSize++; // Ensure odd size
+            Log.d(TAG, "Using dynamic kernel size: " + kernelSize + " for image " + rgba.width() + "x" + rgba.height());
+            kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(kernelSize, kernelSize));
             Imgproc.morphologyEx(threshold, morph, Imgproc.MORPH_CLOSE, kernel);
             saveDebugImage(context, morph, "debug_morph.png");
 
-            Imgproc.Canny(morph, edges, 50, 150);
+            // Adaptive Canny thresholds based on image statistics (better for varying contrast)
+            double median = Core.mean(gray).val[0];
+            double cannyLower = Math.max(0, 0.66 * median);
+            double cannyUpper = Math.min(255, 1.33 * median);
+            Log.d(TAG, String.format(Locale.US, "Adaptive Canny thresholds: lower=%.1f, upper=%.1f (median=%.1f)", cannyLower, cannyUpper, median));
+            Imgproc.Canny(morph, edges, cannyLower, cannyUpper);
 
             // Always compute adaptive edges from the (pre-smoothed) grayscale image and merge them.
             Mat edgesAuto = new Mat();
@@ -1200,65 +1281,80 @@ public class OpenCVUtils {
             Point[] bestQuad = null;
 
             for (MatOfPoint contour : contours) {
+                double area = Imgproc.contourArea(contour);
+                if (area < imgArea * 0.08) continue; // previously 0.20
+
+                MatOfPoint2f curve = new MatOfPoint2f(contour.toArray());
+                MatOfPoint2f approx = new MatOfPoint2f();
+                MatOfPoint approxAsPoints = null;
                 try {
-                    double area = Imgproc.contourArea(contour);
-                    if (area < imgArea * 0.08) continue; // previously 0.20
+                    // slightly finer approximation
+                    Imgproc.approxPolyDP(curve, approx, Imgproc.arcLength(curve, true) * 0.015, true);
+                    approxAsPoints = new MatOfPoint(approx.toArray());
+                    boolean isConvex = Imgproc.isContourConvex(approxAsPoints);
 
-                    MatOfPoint2f curve = new MatOfPoint2f(contour.toArray());
-                    MatOfPoint2f approx = new MatOfPoint2f();
-                    MatOfPoint approxAsPoints = null;
-                    try {
-                        // slightly finer approximation
-                        Imgproc.approxPolyDP(curve, approx, Imgproc.arcLength(curve, true) * 0.015, true);
-                        approxAsPoints = new MatOfPoint(approx.toArray());
-                        boolean isConvex = Imgproc.isContourConvex(approxAsPoints);
+                    if (approx.total() == 4 && isConvex) {
+                        Point[] quad = approx.toArray();
+                        quad = sortPointsRobust(quad);
 
-                        if (approx.total() == 4 && isConvex) {
-                            Point[] quad = approx.toArray();
-                            quad = sortPointsRobust(quad);
+                        double w1 = distance(quad[0], quad[1]);
+                        double w2 = distance(quad[2], quad[3]);
+                        double h1 = distance(quad[1], quad[2]);
+                        double h2 = distance(quad[3], quad[0]);
+                        double avgWidth = (w1 + w2) / 2.0;
+                        double avgHeight = (h1 + h2) / 2.0;
+                        double aspectRatio = avgHeight / (avgWidth + 1e-9);
 
-                            double w1 = distance(quad[0], quad[1]);
-                            double w2 = distance(quad[2], quad[3]);
-                            double h1 = distance(quad[1], quad[2]);
-                            double h2 = distance(quad[3], quad[0]);
-                            double avgWidth = (w1 + w2) / 2.0;
-                            double avgHeight = (h1 + h2) / 2.0;
-                            double aspectRatio = avgHeight / (avgWidth + 1e-9);
+                        double areaNorm = area / imgArea;
 
-                            double areaNorm = area / imgArea;
-
-                            // First obtain the raw score; -1 means “geometrically implausible”
-                            double rectRaw = rectScore(quad);
-                            if (rectRaw < 0.0) {
-                                // at least one corner <60° or >120° → sharp/bent-in → skip this candidate
-                                continue;
-                            }
-
-                            double rect = rectRaw / 120.0;
-                            double score = 0.6 * areaNorm + 0.4 * rect;
-
-                            if (aspectRatio > 0.5 && aspectRatio < 2.5 && score > bestScore) {
-                                bestScore = score;
-                                bestQuad = quad;
-                            }
-
+                        // First obtain the raw score; -1 means "geometrically implausible"
+                        double rectRaw = rectScore(quad);
+                        if (rectRaw < 0.0) {
+                            // at least one corner <60° or >120° → sharp/bent-in → skip this candidate
+                            continue;
                         }
-                    } finally {
-                        release(approxAsPoints);
-                        release(curve, approx);
+
+                        double rect = rectRaw / 120.0;
+                        double score = 0.6 * areaNorm + 0.4 * rect;
+
+                        if (aspectRatio > 0.5 && aspectRatio < 2.5 && score > bestScore) {
+                            bestScore = score;
+                            bestQuad = quad;
+                        }
+
                     }
                 } finally {
-                    release(contour);
+                    release(approxAsPoints);
+                    release(curve, approx);
                 }
             }
 
             if (bestQuad != null) {
-                Log.i(TAG, "Document contour found");
+                Log.i(TAG, "Document contour found via approxPolyDP");
                 return bestQuad;
             }
+
+            // Fallback: Try Hough lines detection when contour-based detection fails
+            Log.d(TAG, "Contour detection failed, trying Hough lines fallback...");
+            Point[] houghQuad = detectQuadFromHoughLines(edges, rgba.width(), rgba.height());
+            if (houghQuad != null) {
+                Log.i(TAG, "Document quad found via Hough lines");
+                return houghQuad;
+            }
+
             Log.w(TAG, "No suitable document contour found (OpenCV) → returning null");
             return null;
         } finally {
+            // Release all contours at once instead of in the loop to avoid accessing released Mats
+            for (MatOfPoint c : contours) {
+                if (c != null) {
+                    try {
+                        c.release();
+                    } catch (Throwable ignore) {
+                    }
+                }
+            }
+            contours.clear();
             release(rgba, gray, threshold, morph, kernel, edges, edgesCopy, hierarchy, debug);
         }
     }
@@ -1309,6 +1405,150 @@ public class OpenCVUtils {
     }
 
     /**
+     * Detects a quadrilateral from edge image using Hough line detection.
+     * This is a fallback method when contour-based detection fails, particularly useful
+     * for documents with broken or incomplete edges.
+     *
+     * @param edges The edge-detected image (CV_8U binary).
+     * @param imgW  The width of the original image.
+     * @param imgH  The height of the original image.
+     * @return An array of 4 Points representing the document corners, or null if detection fails.
+     */
+    private static Point[] detectQuadFromHoughLines(Mat edges, int imgW, int imgH) {
+        Mat lines = new Mat();
+        try {
+            // Detect lines using probabilistic Hough transform
+            // Parameters: rho=1px, theta=PI/180, threshold=80, minLineLength=50, maxLineGap=10
+            int minLineLength = Math.max(30, Math.min(imgW, imgH) / 10);
+            int threshold = Math.max(50, minLineLength / 2);
+            Imgproc.HoughLinesP(edges, lines, 1, Math.PI / 180, threshold, minLineLength, 10);
+
+            if (lines.rows() < 4) {
+                Log.d(TAG, "Hough: Not enough lines detected (" + lines.rows() + ")");
+                return null;
+            }
+            Log.d(TAG, "Hough: Detected " + lines.rows() + " lines");
+
+            // Classify lines into horizontal and vertical based on angle
+            List<double[]> horizontalLines = new ArrayList<>();
+            List<double[]> verticalLines = new ArrayList<>();
+
+            for (int i = 0; i < lines.rows(); i++) {
+                double[] line = lines.get(i, 0);
+                double x1 = line[0], y1 = line[1], x2 = line[2], y2 = line[3];
+                double angle = Math.toDegrees(Math.atan2(y2 - y1, x2 - x1));
+                angle = ((angle % 180) + 180) % 180; // Normalize to [0, 180)
+
+                // Horizontal: angle near 0° or 180°
+                // Vertical: angle near 90°
+                if (angle < 30 || angle > 150) {
+                    horizontalLines.add(line);
+                } else if (angle > 60 && angle < 120) {
+                    verticalLines.add(line);
+                }
+            }
+
+            Log.d(TAG, "Hough: " + horizontalLines.size() + " horizontal, " + verticalLines.size() + " vertical lines");
+
+            if (horizontalLines.size() < 2 || verticalLines.size() < 2) {
+                Log.d(TAG, "Hough: Not enough horizontal/vertical lines");
+                return null;
+            }
+
+            // Sort horizontal lines by Y position (top to bottom)
+            horizontalLines.sort((a, b) -> Double.compare((a[1] + a[3]) / 2, (b[1] + b[3]) / 2));
+            // Sort vertical lines by X position (left to right)
+            verticalLines.sort((a, b) -> Double.compare((a[0] + a[2]) / 2, (b[0] + b[2]) / 2));
+
+            // Take the outermost lines (first and last after sorting)
+            double[] topLine = horizontalLines.get(0);
+            double[] bottomLine = horizontalLines.get(horizontalLines.size() - 1);
+            double[] leftLine = verticalLines.get(0);
+            double[] rightLine = verticalLines.get(verticalLines.size() - 1);
+
+            // Find intersection points of the four lines
+            Point tl = lineIntersection(topLine, leftLine);
+            Point tr = lineIntersection(topLine, rightLine);
+            Point br = lineIntersection(bottomLine, rightLine);
+            Point bl = lineIntersection(bottomLine, leftLine);
+
+            if (tl == null || tr == null || br == null || bl == null) {
+                Log.d(TAG, "Hough: Could not find all intersection points");
+                return null;
+            }
+
+            // Clamp points to image bounds
+            tl = clampPoint(tl, imgW, imgH);
+            tr = clampPoint(tr, imgW, imgH);
+            br = clampPoint(br, imgW, imgH);
+            bl = clampPoint(bl, imgW, imgH);
+
+            Point[] quad = new Point[]{tl, tr, br, bl};
+            quad = sortPointsRobust(quad);
+
+            // Validate the quad
+            double area = quadArea(quad);
+            double imgArea = imgW * (double) imgH;
+            if (area < imgArea * 0.05) { // At least 5% of image area
+                Log.d(TAG, "Hough: Quad too small (area=" + area + ", min=" + (imgArea * 0.05) + ")");
+                return null;
+            }
+
+            if (hasAcuteOrReflexAngles(quad)) {
+                Log.d(TAG, "Hough: Quad has invalid angles");
+                return null;
+            }
+
+            Log.d(TAG, "Hough: Valid quad found with area=" + area);
+            return quad;
+
+        } catch (Throwable t) {
+            Log.w(TAG, "Hough line detection failed", t);
+            return null;
+        } finally {
+            lines.release();
+        }
+    }
+
+    /**
+     * Calculates the intersection point of two lines defined by their endpoints.
+     *
+     * @param line1 First line as [x1, y1, x2, y2]
+     * @param line2 Second line as [x1, y1, x2, y2]
+     * @return The intersection point, or null if lines are parallel
+     */
+    private static Point lineIntersection(double[] line1, double[] line2) {
+        double x1 = line1[0], y1 = line1[1], x2 = line1[2], y2 = line1[3];
+        double x3 = line2[0], y3 = line2[1], x4 = line2[2], y4 = line2[3];
+
+        double denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+        if (Math.abs(denom) < 1e-10) {
+            return null; // Lines are parallel
+        }
+
+        double t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denom;
+        double px = x1 + t * (x2 - x1);
+        double py = y1 + t * (y2 - y1);
+
+        return new Point(px, py);
+    }
+
+    /**
+     * Clamps a point to be within image bounds.
+     *
+     * @param p    The point to clamp
+     * @param imgW Image width
+     * @param imgH Image height
+     * @return A new point clamped to [0, imgW-1] x [0, imgH-1]
+     */
+    private static Point clampPoint(Point p, int imgW, int imgH) {
+        return new Point(
+                Math.max(0, Math.min(p.x, imgW - 1)),
+                Math.max(0, Math.min(p.y, imgH - 1))
+        );
+    }
+
+    /**
      * Detects the corners of a document present in the given bitmap image.
      * This method uses multiple techniques internally to identify the
      * best possible corner points of the document in the image.
@@ -1318,10 +1558,26 @@ public class OpenCVUtils {
      * @return an array of Point objects representing the detected corners of the document
      */
     public static Point[] detectDocumentCorners(Context context, Bitmap bitmap) {
-        Log.i(TAG, "Starting detectDocumentCorners()");
-        Point[] onnx = detectDocumentCornersWithOnnx(bitmap);
-        Point[] cv = detectDocumentCornersWithOpenCV(context, bitmap);
-        Point[] best = getBestCorners(onnx, cv, bitmap.getWidth(), bitmap.getHeight());
+        Log.i(TAG, "Starting detectDocumentCorners() [ONNX=" + (DISABLE_ONNX_DETECTION ? "OFF" : "ON") + ", OpenCV=" + (DISABLE_OPENCV_DETECTION ? "OFF" : "ON") + "]");
+
+        // Detect low-light condition for context-aware fusion
+        boolean lowLight = false;
+        try {
+            Mat gray = new Mat();
+            Mat rgba = new Mat();
+            Utils.bitmapToMat(bitmap, rgba);
+            Imgproc.cvtColor(rgba, gray, Imgproc.COLOR_RGBA2GRAY);
+            lowLight = isLowLight(gray);
+            gray.release();
+            rgba.release();
+            Log.d(TAG, "Low-light detection: " + lowLight);
+        } catch (Throwable t) {
+            Log.w(TAG, "Low-light detection failed", t);
+        }
+
+        Point[] onnx = DISABLE_ONNX_DETECTION ? null : detectDocumentCornersWithOnnx(bitmap);
+        Point[] cv = DISABLE_OPENCV_DETECTION ? null : detectDocumentCornersWithOpenCV(context, bitmap);
+        Point[] best = getBestCorners(onnx, cv, bitmap.getWidth(), bitmap.getHeight(), lowLight);
         if (best == null) {
             // Only apply fallback if BOTH detectors failed
             best = getFallbackRectangle(bitmap.getWidth(), bitmap.getHeight());
@@ -1370,8 +1626,9 @@ public class OpenCVUtils {
 
     /**
      * Selects the best set of corner points between two provided sets of corners,
-     * one detected by ONNX and the other by OpenCV, based on confidence and robustness.
-     * The fallback option is triggered if neither of the sets is valid.
+     * one detected by ONNX and the other by OpenCV, based on confidence, consensus, and context.
+     * Uses consensus-based fusion when both detectors agree, and applies a low-light bonus
+     * for OpenCV when the image is detected as low-light.
      *
      * @param cornersOnnx   An array of points representing the corners detected by the ONNX model.
      *                      The array must contain exactly 4 points to be considered valid.
@@ -1379,11 +1636,12 @@ public class OpenCVUtils {
      *                      The array must contain exactly 4 points to be considered valid.
      * @param w             The width of the rectangle or frame.
      * @param h             The height of the rectangle or frame.
+     * @param isLowLight    Whether the image was detected as low-light (dark background).
      * @return An array of 4 points representing the selected best corners.
-     * This could be from ONNX or OpenCV, or a fallback rectangle if both inputs are invalid.
+     * This could be from ONNX, OpenCV, averaged corners, or null if both inputs are invalid.
      */
-    private static Point[] getBestCorners(Point[] cornersOnnx, Point[] cornersOpenCV, int w, int h) {
-        Log.i(TAG, "getBestCorners()");
+    private static Point[] getBestCorners(Point[] cornersOnnx, Point[] cornersOpenCV, int w, int h, boolean isLowLight) {
+        Log.i(TAG, "getBestCorners() [lowLight=" + isLowLight + "]");
         if ((cornersOnnx == null || cornersOnnx.length != 4) && (cornersOpenCV == null || cornersOpenCV.length != 4)) {
             Log.i(TAG, "Chosen source=none");
             return null;
@@ -1405,10 +1663,31 @@ public class OpenCVUtils {
         cornersOnnx = sortPointsRobust(cornersOnnx);
         cornersOpenCV = sortPointsRobust(cornersOpenCV);
 
+        // CONSENSUS CHECK: If both detectors agree (corners are close), average them for better precision
+        double avgDist = averageCornerDistance(cornersOnnx, cornersOpenCV);
+        double diag = Math.sqrt(w * (double) w + h * (double) h);
+        double consensusThreshold = diag * 0.03; // 3% of image diagonal
+        if (avgDist < consensusThreshold) {
+            Point[] averaged = averageCorners(cornersOnnx, cornersOpenCV);
+            // Validate the averaged result
+            if (averaged != null && !hasAcuteOrReflexAngles(averaged)) {
+                Log.i(TAG, String.format(java.util.Locale.US,
+                        "Chosen source=CONSENSUS (avgDist=%.1f < threshold=%.1f)", avgDist, consensusThreshold));
+                return averaged;
+            }
+        }
+
         double cOnnx = quadConfidence(cornersOnnx, w, h);
         double cCv = quadConfidence(cornersOpenCV, w, h);
 
-        // Wenn ONNX ein sehr großes Dokument (>40% des Bildes) sieht, leicht bevorzugen
+        // LOW-LIGHT BONUS: OpenCV performs better on dark backgrounds
+        if (isLowLight) {
+            cCv *= 1.15; // +15% bonus for OpenCV in low-light conditions
+            Log.d(TAG, String.format(java.util.Locale.US,
+                    "Low-light bonus applied: OpenCV conf %.3f → %.3f", cCv / 1.15, cCv));
+        }
+
+        // LARGE DOCUMENT BONUS: Wenn ONNX ein sehr großes Dokument (>40% des Bildes) sieht, leicht bevorzugen
         double areaFracOnnx = quadArea(cornersOnnx) / (w * (double) h);
         if (areaFracOnnx > 0.4) {
             cOnnx *= 1.05; // leichter Bias Richtung ONNX
@@ -1416,7 +1695,6 @@ public class OpenCVUtils {
 
         Point[] chosen;
         boolean chosenIsOnnx = cOnnx >= cCv;
-
 
         if (chosenIsOnnx) {
             Log.i(TAG, String.format(java.util.Locale.US,
@@ -1438,6 +1716,47 @@ public class OpenCVUtils {
             }
         }
         return chosen;
+    }
+
+    /**
+     * Calculates the average distance between corresponding corners of two quadrilaterals.
+     * Both arrays must be sorted in the same order (e.g., TL, TR, BR, BL).
+     *
+     * @param q1 First quadrilateral corners (4 points)
+     * @param q2 Second quadrilateral corners (4 points)
+     * @return Average Euclidean distance between corresponding corners, or Double.MAX_VALUE if invalid
+     */
+    private static double averageCornerDistance(Point[] q1, Point[] q2) {
+        if (q1 == null || q2 == null || q1.length != 4 || q2.length != 4) {
+            return Double.MAX_VALUE;
+        }
+        double sum = 0;
+        for (int i = 0; i < 4; i++) {
+            sum += distance(q1[i], q2[i]);
+        }
+        return sum / 4.0;
+    }
+
+    /**
+     * Computes the average of two quadrilaterals by averaging corresponding corner positions.
+     * Both arrays must be sorted in the same order (e.g., TL, TR, BR, BL).
+     *
+     * @param q1 First quadrilateral corners (4 points)
+     * @param q2 Second quadrilateral corners (4 points)
+     * @return A new array of 4 points representing the averaged quadrilateral
+     */
+    private static Point[] averageCorners(Point[] q1, Point[] q2) {
+        if (q1 == null || q2 == null || q1.length != 4 || q2.length != 4) {
+            return q1 != null ? q1 : q2;
+        }
+        Point[] avg = new Point[4];
+        for (int i = 0; i < 4; i++) {
+            avg[i] = new Point(
+                    (q1[i].x + q2[i].x) / 2.0,
+                    (q1[i].y + q2[i].y) / 2.0
+            );
+        }
+        return avg;
     }
 
     /**
@@ -1876,14 +2195,14 @@ public class OpenCVUtils {
             // 1b) Inversion detection: if image is predominantly dark (inverted/negative),
             //     flip it so text becomes dark-on-light (required for OCR)
             try {
-                double medianVal = Core.mean(gray).val[0];
-                if (medianVal < 128) {
+                double meanVal = Core.mean(gray).val[0];
+                if (meanVal < 128) {
                     // Image is inverted (white text on black background) - invert it
                     Core.bitwise_not(gray, gray);
-                    Log.d(TAG, "prepareForOCR: detected inverted image (mean=" + medianVal + "), auto-inverting");
+                    Log.d(TAG, "prepareForOCR: detected inverted image (mean=" + meanVal + "), auto-inverting");
                 }
             } catch (Throwable ignore) {
-                // If median calculation fails, continue without inversion
+                // If mean calculation fails, continue without inversion
             }
 
             // 2) Low-light handling (reuse existing utility)
@@ -2397,8 +2716,14 @@ public class OpenCVUtils {
 
     /**
      * Scores a binarized image: lower is better. Penalizes excessive white coverage and many tiny blobs.
+     * Note: Binary images have text=0 (black) and background=255 (white).
+     * connectedComponentsWithStats treats non-zero pixels as foreground, so we must invert first.
      */
-    private static double scoreBwQuality(Mat bw /* CV_8UC1 0/255 */) {
+    private static double scoreBwQuality(Mat bw /* CV_8UC1 0/255, text=0, bg=255 */) {
+        Mat inv = new Mat();
+        Mat labels = new Mat();
+        Mat stats = new Mat();
+        Mat centroids = new Mat();
         try {
             int rows = bw.rows(), cols = bw.cols();
             if (rows <= 0 || cols <= 0) return Double.POSITIVE_INFINITY;
@@ -2406,10 +2731,9 @@ public class OpenCVUtils {
             int white = Core.countNonZero(bw);
             double whiteFrac = Math.min(1.0, Math.max(0.0, white / (double) area));
 
-            Mat labels = new Mat();
-            Mat stats = new Mat();
-            Mat centroids = new Mat();
-            int n = Imgproc.connectedComponentsWithStats(bw, labels, stats, centroids, 8, CvType.CV_32S);
+            // Invert so text becomes white (foreground) for connectedComponents
+            Core.bitwise_not(bw, inv);
+            int n = Imgproc.connectedComponentsWithStats(inv, labels, stats, centroids, 8, CvType.CV_32S);
             int comp = Math.max(0, n - 1);
             int small = 0;
             int minArea = Math.max(12, area / 12000);
@@ -2420,35 +2744,43 @@ public class OpenCVUtils {
             }
             double smallRatio = (comp > 0) ? (double) small / comp : 1.0;
             double emptyPenalty = (comp == 0) ? 0.5 : 0.0;
-            labels.release();
-            stats.release();
-            centroids.release();
             return smallRatio + whiteFrac * 0.6 + emptyPenalty;
         } catch (Throwable t) {
             return Double.POSITIVE_INFINITY;
+        } finally {
+            inv.release();
+            labels.release();
+            stats.release();
+            centroids.release();
         }
     }
 
     /**
      * Removes connected components below given size/height thresholds (keeps punctuation by using tiny limits).
+     * Note: Binary images have text=0 (black) and background=255 (white).
+     * connectedComponentsWithStats treats non-zero pixels as foreground, so we must invert first.
      */
-    private static void removeSmallComponents(Mat bw /* CV_8UC1 0/255 */, int minArea, int minHeight) {
+    private static void removeSmallComponents(Mat bw /* CV_8UC1 0/255, text=0, bg=255 */, int minArea, int minHeight) {
+        Mat inv = new Mat();
         Mat labels = new Mat();
         Mat stats = new Mat();
         Mat centroids = new Mat();
         Mat mask = new Mat();
         try {
-            int n = Imgproc.connectedComponentsWithStats(bw, labels, stats, centroids, 8, CvType.CV_32S);
+            // Invert so text becomes white (foreground) for connectedComponents
+            Core.bitwise_not(bw, inv);
+            int n = Imgproc.connectedComponentsWithStats(inv, labels, stats, centroids, 8, CvType.CV_32S);
             for (int i = 1; i < n; i++) {
                 int ai = (int) stats.get(i, Imgproc.CC_STAT_AREA)[0];
                 int hi = (int) stats.get(i, Imgproc.CC_STAT_HEIGHT)[0];
                 if (ai < minArea || hi < minHeight) {
                     Core.compare(labels, new Scalar(i), mask, Core.CMP_EQ);
-                    bw.setTo(new Scalar(0), mask); // set to background
+                    bw.setTo(new Scalar(255), mask); // set to background (white)
                 }
             }
         } catch (Throwable ignore) {
         } finally {
+            inv.release();
             labels.release();
             stats.release();
             centroids.release();
@@ -2458,13 +2790,18 @@ public class OpenCVUtils {
 
     /**
      * Estimates median height of text components to guide scaling; returns -1 if not available.
+     * Note: Binary images have text=0 (black) and background=255 (white).
+     * connectedComponentsWithStats treats non-zero pixels as foreground, so we must invert first.
      */
-    private static int estimateMedianComponentHeight(Mat bw /* CV_8UC1 0/255 */) {
+    private static int estimateMedianComponentHeight(Mat bw /* CV_8UC1 0/255, text=0, bg=255 */) {
+        Mat inv = new Mat();
         Mat labels = new Mat();
         Mat stats = new Mat();
         Mat centroids = new Mat();
         try {
-            int n = Imgproc.connectedComponentsWithStats(bw, labels, stats, centroids, 8, CvType.CV_32S);
+            // Invert so text becomes white (foreground) for connectedComponents
+            Core.bitwise_not(bw, inv);
+            int n = Imgproc.connectedComponentsWithStats(inv, labels, stats, centroids, 8, CvType.CV_32S);
             if (n <= 1) return -1;
             int rows = bw.rows(), cols = bw.cols();
             int imgArea = rows * cols;
@@ -2486,6 +2823,7 @@ public class OpenCVUtils {
         } catch (Throwable t) {
             return -1;
         } finally {
+            inv.release();
             labels.release();
             stats.release();
             centroids.release();

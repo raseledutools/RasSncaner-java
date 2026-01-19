@@ -19,4 +19,13 @@ local.properties
 /app/src/main/jniLibs/
 /build-android/
 /opencv/build/
+
+.idea/
+*.iml
 /langpack-latin-best/build/
+/server/build/
+/venv/
+/training/checkpoints/
+/training/data/
+/training/labels/
+/training/dataset/
