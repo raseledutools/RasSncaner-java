@@ -44,7 +44,7 @@ apksigner verify --print-certs MakeACopy-vX.Y.Z.apk
 ## Features
 
 - **Camera Scanning**: Capture documents using the device camera
-- **Edge Detection**: Automatic document edge detection using OpenCV, enhanced with a lightweight, custom-trained on-device machine learning model (ONNX)
+- **Edge Detection**: Automatic document edge detection using OpenCV, enhanced with a machine learning model ([ONNX, from DocAligner](https://github.com/DocsaidLab/DocAligner) – Apache 2.0)
 - **Perspective Correction**: Adjust and crop documents with manual or automatic perspective correction
 - **Image Enhancement**: Apply filters (grayscale, contrast, sharpening)
 - **OCR**: Offline text recognition with Tesseract (fast models included, optional best models via Language-Pack APKs)
@@ -151,46 +151,12 @@ MakeACopy follows the Single-Activity + Multi-Fragment pattern with MVVM archite
 - **OCR Fragment**: Tesseract-based recognition
 - **Export Fragment**: PDF/text export
 
-## Machine Learning Model
-
-MakeACopy uses a custom-trained, lightweight ONNX model for document corner detection and perspective estimation.
-
-### Model Characteristics
-
-- Fully on-device inference (no network access)
-- Optimized for mobile CPUs (NNAPI / XNNPACK via ONNX Runtime)
-- Small footprint, fast inference
-- Designed specifically for scanned document geometry
-
-### Training Data
-
-The model was trained by the MakeACopy author using a combination of:
-
-- Synthetic document images
-- Perspective-distorted document samples
-- Publicly available academic datasets used **for training only**
-
-In particular, parts of the training data were derived from the **UVDoc dataset** published by ETH Zürich as part of the research project  
-“UVDoc: Neural Grid-based Document Unwarping” (SIGGRAPH Asia 2023).
-
-- Dataset project page: https://igl.ethz.ch/projects/uvdoc/
-- Academic reference: Verhoeven et al., "UVDoc: Neural Grid-based Document Unwarping",
-  SIGGRAPH Asia 2023
-- Dataset repository: https://github.com/tanguymagne/UVDoc-Dataset
-
-### Licensing Clarification
-
-- The UVDoc dataset itself is **not redistributed** by MakeACopy.
-- No images, annotations, or raw data from UVDoc are included in this repository or in the app.
-- The trained model is an independent work resulting from a training process.
-- The resulting ONNX model is licensed under **Apache License 2.0** as part of the MakeACopy project.
-
 ## Libraries Used
 
 | Purpose | Library / Model | License |
 |--------|-----------------|---------|
 | Image Processing | OpenCV for Android | Apache 2.0 |
-| Document Corner Detection | Custom ONNX corner detection model (trained for MakeACopy) | Apache 2.0 |
+| Document Corner Detection | [DocAligner ONNX model](https://github.com/DocsaidLab/DocAligner) | Apache 2.0 |
 | OCR | tess-two (Tesseract JNI) | Apache 2.0 |
 | PDF | Android PdfDocument, pdfbox-android | Apache 2.0 |
 | UI | Material Components | Apache 2.0 |

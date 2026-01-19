@@ -38,25 +38,9 @@ public class OpenCVUtils {
     private static boolean USE_ADAPTIVE_THRESHOLD = false;
     private static final boolean USE_DEBUG_IMAGES = false;
 
-    /**
-     * When set to true, OpenCV-based corner detection is disabled and only the ONNX model is used.
-     * This is useful for testing the ONNX model's performance in isolation.
-     */
-    private static boolean DISABLE_OPENCV_DETECTION = true;
-
     // ONNX model settings
-    private static final String MODEL_ASSET_PATH = "model/corner_model.onnx";
+    private static final String MODEL_ASSET_PATH = "docaligner/fastvit_t8_h_e_bifpn_256_fp32.onnx";
     private static volatile OrtEnvironment ortEnv;
-    /**
-     * Maximum edge size (in pixels) for corner detection preprocessing.
-     * <p>
-     * This value MUST be used consistently across all corner detection calls
-     * (live preview in CameraFragment and final detection in TrapezoidSelectionView)
-     * to ensure identical results. Using different values leads to inconsistent
-     * corner positions due to varying interpolation artifacts during scaling.
-     * <p>
-     */
-    public static final int DETECTION_MAX_EDGE = 720;
     private static volatile OrtSession ortSession;
 
     // ---- thresholds (tuned) ----
@@ -478,7 +462,7 @@ public class OpenCVUtils {
 
         Mat rgba = new Mat();
         Mat gray = new Mat();
-        Mat work = null;  // Don't create empty Mat - will be assigned below
+        Mat work = new Mat();
         Mat bw = new Mat();
         CLAHE clahe = null;
 
@@ -495,7 +479,6 @@ public class OpenCVUtils {
 
                 // Use floating-point arithmetic to avoid quantization artifacts
                 Mat gf = new Mat(), bgf = new Mat(), norm = new Mat();
-                work = new Mat();  // Create work Mat only when needed
                 gray.convertTo(gf, CvType.CV_32F);
                 bg.convertTo(bgf, CvType.CV_32F);
                 Core.max(bgf, new Scalar(1.0), bgf);          // Prevent division by 0
@@ -508,7 +491,7 @@ public class OpenCVUtils {
                 bgf.release();
                 norm.release();
             } else {
-                work = gray;  // work points to gray, no separate Mat needed
+                work = gray;
             }
 
             // --- 2) very gentle CLAHE (or leave opt.useClahe=false) ---
@@ -736,30 +719,28 @@ public class OpenCVUtils {
         int marginY = Math.max(8, (int) (h * 0.015)); // 1.5% of height, min 8px
 
         // Use submat and setTo for efficient border clearing
-        // Note: SubMats are views but must still be released to avoid memory leaks
-        Mat top = null, bottom = null, left = null, right = null;
         try {
             // Clear top border region
             if (marginY > 0 && marginY < h) {
-                top = bw.submat(0, marginY, 0, w);
+                Mat top = bw.submat(0, marginY, 0, w);
                 top.setTo(new Scalar(255));
             }
 
             // Clear bottom border region
             if (marginY > 0 && h - marginY > 0) {
-                bottom = bw.submat(h - marginY, h, 0, w);
+                Mat bottom = bw.submat(h - marginY, h, 0, w);
                 bottom.setTo(new Scalar(255));
             }
 
             // Clear left border region
             if (marginX > 0 && marginX < w) {
-                left = bw.submat(0, h, 0, marginX);
+                Mat left = bw.submat(0, h, 0, marginX);
                 left.setTo(new Scalar(255));
             }
 
             // Clear right border region
             if (marginX > 0 && w - marginX > 0) {
-                right = bw.submat(0, h, w - marginX, w);
+                Mat right = bw.submat(0, h, w - marginX, w);
                 right.setTo(new Scalar(255));
             }
         } catch (Throwable ignore) {
@@ -788,12 +769,6 @@ public class OpenCVUtils {
                     }
                 }
             }
-        } finally {
-            // Release SubMats to avoid memory leaks
-            if (top != null) top.release();
-            if (bottom != null) bottom.release();
-            if (left != null) left.release();
-            if (right != null) right.release();
         }
     }
 
@@ -1039,7 +1014,7 @@ public class OpenCVUtils {
         // --- corner angle sanity check ---
         if (hasAcuteOrReflexAngles(pts)) {
             Log.w(TAG, "predictionToPoints: rejected due to acute/obtuse corner angle");
-            return null;
+            // return null;
         }
         return pts;
     }
@@ -1225,51 +1200,55 @@ public class OpenCVUtils {
             Point[] bestQuad = null;
 
             for (MatOfPoint contour : contours) {
-                double area = Imgproc.contourArea(contour);
-                if (area < imgArea * 0.08) continue; // previously 0.20
-
-                MatOfPoint2f curve = new MatOfPoint2f(contour.toArray());
-                MatOfPoint2f approx = new MatOfPoint2f();
-                MatOfPoint approxAsPoints = null;
                 try {
-                    // slightly finer approximation
-                    Imgproc.approxPolyDP(curve, approx, Imgproc.arcLength(curve, true) * 0.015, true);
-                    approxAsPoints = new MatOfPoint(approx.toArray());
-                    boolean isConvex = Imgproc.isContourConvex(approxAsPoints);
+                    double area = Imgproc.contourArea(contour);
+                    if (area < imgArea * 0.08) continue; // previously 0.20
 
-                    if (approx.total() == 4 && isConvex) {
-                        Point[] quad = approx.toArray();
-                        quad = sortPointsRobust(quad);
+                    MatOfPoint2f curve = new MatOfPoint2f(contour.toArray());
+                    MatOfPoint2f approx = new MatOfPoint2f();
+                    MatOfPoint approxAsPoints = null;
+                    try {
+                        // slightly finer approximation
+                        Imgproc.approxPolyDP(curve, approx, Imgproc.arcLength(curve, true) * 0.015, true);
+                        approxAsPoints = new MatOfPoint(approx.toArray());
+                        boolean isConvex = Imgproc.isContourConvex(approxAsPoints);
 
-                        double w1 = distance(quad[0], quad[1]);
-                        double w2 = distance(quad[2], quad[3]);
-                        double h1 = distance(quad[1], quad[2]);
-                        double h2 = distance(quad[3], quad[0]);
-                        double avgWidth = (w1 + w2) / 2.0;
-                        double avgHeight = (h1 + h2) / 2.0;
-                        double aspectRatio = avgHeight / (avgWidth + 1e-9);
+                        if (approx.total() == 4 && isConvex) {
+                            Point[] quad = approx.toArray();
+                            quad = sortPointsRobust(quad);
 
-                        double areaNorm = area / imgArea;
+                            double w1 = distance(quad[0], quad[1]);
+                            double w2 = distance(quad[2], quad[3]);
+                            double h1 = distance(quad[1], quad[2]);
+                            double h2 = distance(quad[3], quad[0]);
+                            double avgWidth = (w1 + w2) / 2.0;
+                            double avgHeight = (h1 + h2) / 2.0;
+                            double aspectRatio = avgHeight / (avgWidth + 1e-9);
 
-                        // First obtain the raw score; -1 means "geometrically implausible"
-                        double rectRaw = rectScore(quad);
-                        if (rectRaw < 0.0) {
-                            // at least one corner <60° or >120° → sharp/bent-in → skip this candidate
-                            continue;
+                            double areaNorm = area / imgArea;
+
+                            // First obtain the raw score; -1 means “geometrically implausible”
+                            double rectRaw = rectScore(quad);
+                            if (rectRaw < 0.0) {
+                                // at least one corner <60° or >120° → sharp/bent-in → skip this candidate
+                                continue;
+                            }
+
+                            double rect = rectRaw / 120.0;
+                            double score = 0.6 * areaNorm + 0.4 * rect;
+
+                            if (aspectRatio > 0.5 && aspectRatio < 2.5 && score > bestScore) {
+                                bestScore = score;
+                                bestQuad = quad;
+                            }
+
                         }
-
-                        double rect = rectRaw / 120.0;
-                        double score = 0.6 * areaNorm + 0.4 * rect;
-
-                        if (aspectRatio > 0.5 && aspectRatio < 2.5 && score > bestScore) {
-                            bestScore = score;
-                            bestQuad = quad;
-                        }
-
+                    } finally {
+                        release(approxAsPoints);
+                        release(curve, approx);
                     }
                 } finally {
-                    release(approxAsPoints);
-                    release(curve, approx);
+                    release(contour);
                 }
             }
 
@@ -1280,13 +1259,6 @@ public class OpenCVUtils {
             Log.w(TAG, "No suitable document contour found (OpenCV) → returning null");
             return null;
         } finally {
-            // Release all contours at once instead of in the loop to avoid accessing released Mats
-            for (MatOfPoint c : contours) {
-                if (c != null) {
-                    try { c.release(); } catch (Throwable ignore) {}
-                }
-            }
-            contours.clear();
             release(rgba, gray, threshold, morph, kernel, edges, edgesCopy, hierarchy, debug);
         }
     }
@@ -1348,7 +1320,7 @@ public class OpenCVUtils {
     public static Point[] detectDocumentCorners(Context context, Bitmap bitmap) {
         Log.i(TAG, "Starting detectDocumentCorners()");
         Point[] onnx = detectDocumentCornersWithOnnx(bitmap);
-        Point[] cv = DISABLE_OPENCV_DETECTION ? null : detectDocumentCornersWithOpenCV(context, bitmap);
+        Point[] cv = detectDocumentCornersWithOpenCV(context, bitmap);
         Point[] best = getBestCorners(onnx, cv, bitmap.getWidth(), bitmap.getHeight());
         if (best == null) {
             // Only apply fallback if BOTH detectors failed
@@ -1904,14 +1876,14 @@ public class OpenCVUtils {
             // 1b) Inversion detection: if image is predominantly dark (inverted/negative),
             //     flip it so text becomes dark-on-light (required for OCR)
             try {
-                double meanVal = Core.mean(gray).val[0];
-                if (meanVal < 128) {
+                double medianVal = Core.mean(gray).val[0];
+                if (medianVal < 128) {
                     // Image is inverted (white text on black background) - invert it
                     Core.bitwise_not(gray, gray);
-                    Log.d(TAG, "prepareForOCR: detected inverted image (mean=" + meanVal + "), auto-inverting");
+                    Log.d(TAG, "prepareForOCR: detected inverted image (mean=" + medianVal + "), auto-inverting");
                 }
             } catch (Throwable ignore) {
-                // If mean calculation fails, continue without inversion
+                // If median calculation fails, continue without inversion
             }
 
             // 2) Low-light handling (reuse existing utility)
@@ -2425,14 +2397,8 @@ public class OpenCVUtils {
 
     /**
      * Scores a binarized image: lower is better. Penalizes excessive white coverage and many tiny blobs.
-     * Note: Binary images have text=0 (black) and background=255 (white).
-     * connectedComponentsWithStats treats non-zero pixels as foreground, so we must invert first.
      */
-    private static double scoreBwQuality(Mat bw /* CV_8UC1 0/255, text=0, bg=255 */) {
-        Mat inv = new Mat();
-        Mat labels = new Mat();
-        Mat stats = new Mat();
-        Mat centroids = new Mat();
+    private static double scoreBwQuality(Mat bw /* CV_8UC1 0/255 */) {
         try {
             int rows = bw.rows(), cols = bw.cols();
             if (rows <= 0 || cols <= 0) return Double.POSITIVE_INFINITY;
@@ -2440,9 +2406,10 @@ public class OpenCVUtils {
             int white = Core.countNonZero(bw);
             double whiteFrac = Math.min(1.0, Math.max(0.0, white / (double) area));
 
-            // Invert so text becomes white (foreground) for connectedComponents
-            Core.bitwise_not(bw, inv);
-            int n = Imgproc.connectedComponentsWithStats(inv, labels, stats, centroids, 8, CvType.CV_32S);
+            Mat labels = new Mat();
+            Mat stats = new Mat();
+            Mat centroids = new Mat();
+            int n = Imgproc.connectedComponentsWithStats(bw, labels, stats, centroids, 8, CvType.CV_32S);
             int comp = Math.max(0, n - 1);
             int small = 0;
             int minArea = Math.max(12, area / 12000);
@@ -2453,43 +2420,35 @@ public class OpenCVUtils {
             }
             double smallRatio = (comp > 0) ? (double) small / comp : 1.0;
             double emptyPenalty = (comp == 0) ? 0.5 : 0.0;
-            return smallRatio + whiteFrac * 0.6 + emptyPenalty;
-        } catch (Throwable t) {
-            return Double.POSITIVE_INFINITY;
-        } finally {
-            inv.release();
             labels.release();
             stats.release();
             centroids.release();
+            return smallRatio + whiteFrac * 0.6 + emptyPenalty;
+        } catch (Throwable t) {
+            return Double.POSITIVE_INFINITY;
         }
     }
 
     /**
      * Removes connected components below given size/height thresholds (keeps punctuation by using tiny limits).
-     * Note: Binary images have text=0 (black) and background=255 (white).
-     * connectedComponentsWithStats treats non-zero pixels as foreground, so we must invert first.
      */
-    private static void removeSmallComponents(Mat bw /* CV_8UC1 0/255, text=0, bg=255 */, int minArea, int minHeight) {
-        Mat inv = new Mat();
+    private static void removeSmallComponents(Mat bw /* CV_8UC1 0/255 */, int minArea, int minHeight) {
         Mat labels = new Mat();
         Mat stats = new Mat();
         Mat centroids = new Mat();
         Mat mask = new Mat();
         try {
-            // Invert so text becomes white (foreground) for connectedComponents
-            Core.bitwise_not(bw, inv);
-            int n = Imgproc.connectedComponentsWithStats(inv, labels, stats, centroids, 8, CvType.CV_32S);
+            int n = Imgproc.connectedComponentsWithStats(bw, labels, stats, centroids, 8, CvType.CV_32S);
             for (int i = 1; i < n; i++) {
                 int ai = (int) stats.get(i, Imgproc.CC_STAT_AREA)[0];
                 int hi = (int) stats.get(i, Imgproc.CC_STAT_HEIGHT)[0];
                 if (ai < minArea || hi < minHeight) {
                     Core.compare(labels, new Scalar(i), mask, Core.CMP_EQ);
-                    bw.setTo(new Scalar(255), mask); // set to background (white)
+                    bw.setTo(new Scalar(0), mask); // set to background
                 }
             }
         } catch (Throwable ignore) {
         } finally {
-            inv.release();
             labels.release();
             stats.release();
             centroids.release();
@@ -2499,18 +2458,13 @@ public class OpenCVUtils {
 
     /**
      * Estimates median height of text components to guide scaling; returns -1 if not available.
-     * Note: Binary images have text=0 (black) and background=255 (white).
-     * connectedComponentsWithStats treats non-zero pixels as foreground, so we must invert first.
      */
-    private static int estimateMedianComponentHeight(Mat bw /* CV_8UC1 0/255, text=0, bg=255 */) {
-        Mat inv = new Mat();
+    private static int estimateMedianComponentHeight(Mat bw /* CV_8UC1 0/255 */) {
         Mat labels = new Mat();
         Mat stats = new Mat();
         Mat centroids = new Mat();
         try {
-            // Invert so text becomes white (foreground) for connectedComponents
-            Core.bitwise_not(bw, inv);
-            int n = Imgproc.connectedComponentsWithStats(inv, labels, stats, centroids, 8, CvType.CV_32S);
+            int n = Imgproc.connectedComponentsWithStats(bw, labels, stats, centroids, 8, CvType.CV_32S);
             if (n <= 1) return -1;
             int rows = bw.rows(), cols = bw.cols();
             int imgArea = rows * cols;
@@ -2532,7 +2486,6 @@ public class OpenCVUtils {
         } catch (Throwable t) {
             return -1;
         } finally {
-            inv.release();
             labels.release();
             stats.release();
             centroids.release();

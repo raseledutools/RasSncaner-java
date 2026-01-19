@@ -578,9 +578,8 @@ public class TrapezoidSelectionView extends View {
 
                 if (bmp != null && OpenCVUtils.isInitialized()) {
                     // cheap pre-scale for detection
-                    // Use central constant to match live preview detection resolution for consistent results
                     Bitmap work = bmp;
-                    int maxEdge = OpenCVUtils.DETECTION_MAX_EDGE;
+                    int maxEdge = 1280; // budget-friendly
                     int bw = bmp.getWidth(), bh = bmp.getHeight();
                     float s = Math.min(1f, maxEdge / (float) Math.max(bw, bh));
                     if (s < 1f) {

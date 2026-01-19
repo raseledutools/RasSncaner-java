@@ -831,10 +831,6 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
         try {
             setProcessing(true);
-            // Pause live analysis during capture to free CPU resources
-            if (imageAnalysis != null) {
-                imageAnalysis.clearAnalyzer();
-            }
             binding.textCamera.setText(R.string.processing_image);
 
             // PATCH A: robust target directory (externalFilesDir can be null; SD card / vendor-specific devices)
@@ -869,11 +865,10 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             MeteringPointFactory mpf = binding.viewFinder.getMeteringPointFactory();
             MeteringPoint center = mpf.createPoint(binding.viewFinder.getWidth() / 2f, binding.viewFinder.getHeight() / 2f);
 
-            // Reduced timeout from 3s to 1s for faster capture response
             FocusMeteringAction fma = new FocusMeteringAction.Builder(
                     center,
                     FocusMeteringAction.FLAG_AF | FocusMeteringAction.FLAG_AE
-            ).setAutoCancelDuration(1, TimeUnit.SECONDS).build();
+            ).setAutoCancelDuration(3, TimeUnit.SECONDS).build();
 
             com.google.common.util.concurrent.ListenableFuture<FocusMeteringResult> fut =
                     camera.getCameraControl().startFocusAndMetering(fma);
@@ -976,10 +971,6 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         UIUtils.showToast(requireContext(), getString(R.string.error_image_capture_failed, exception.getMessage()), Toast.LENGTH_SHORT);
         binding.textCamera.setText(R.string.camera_ready_tap_the_button_to_scan_a_document);
         setProcessing(false);
-        // Re-enable live analysis after capture error
-        boolean analysisPref = requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE)
-                .getBoolean("analysis_enabled", false);
-        setLiveAnalysisEnabled(analysisPref);
         // Accessibility: speak failure
         if (isAccessibilityModeEnabled()) {
             announce(R.string.a11y_capture_failed);
@@ -1510,7 +1501,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             // Consequently, directional guidance (left/right/up/down) refers to the physical
             // sides of the phone as currently held.
             int imgRotDeg = image.getImageInfo().getRotationDegrees();
-            Bitmap bmp = yuvToBitmapUprightSmall(image, de.schliweb.makeacopy.utils.OpenCVUtils.DETECTION_MAX_EDGE); // use central constant for consistent corner detection
+            Bitmap bmp = yuvToBitmapUprightSmall(image, 720); // cap longest side ~720px
             if (BuildConfig.DEBUG) {
                 int dispRot = getViewFinderRotation();
                 Log.d(TAG, "[A11Y_DIR] displayRot=" + dispRot + ", imgRotDeg=" + imgRotDeg
