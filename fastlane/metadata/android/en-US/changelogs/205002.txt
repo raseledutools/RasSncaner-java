@@ -18,3 +18,5 @@ analyzing background instead of text).
 - Fixed memory leak in border noise clearing (SubMat resources now properly released).
 - Fixed inconsistent angle validation in ONNX corner detection.
 - Improved resource management for OpenCV contour processing.
+- Fixed HTML entity encoding in OCR text display (e.g., &#39; now correctly shows
+as apostrophe in OCR Review and PDF export).

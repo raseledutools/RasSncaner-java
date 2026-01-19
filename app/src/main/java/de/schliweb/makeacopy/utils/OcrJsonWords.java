@@ -1,6 +1,8 @@
 package de.schliweb.makeacopy.utils;
 
 import android.graphics.RectF;
+import de.schliweb.makeacopy.ui.ocr.review.model.OcrDoc;
+import de.schliweb.makeacopy.ui.ocr.review.store.OcrJsonStore;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -8,15 +10,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import de.schliweb.makeacopy.ui.ocr.review.model.OcrDoc;
-import de.schliweb.makeacopy.ui.ocr.review.store.OcrJsonStore;
-
 /**
  * Utility to read editable OCR JSON (schema 1) and convert it to RecognizedWord list
  * consumable by PdfCreator.
  */
 public final class OcrJsonWords {
-    private OcrJsonWords() {}
+    private OcrJsonWords() {
+    }
 
     /**
      * Parses the given file as schema-1 ocr.json and converts words to RecognizedWord list.
@@ -33,6 +33,8 @@ public final class OcrJsonWords {
             for (OcrDoc.Word w : doc.words) {
                 if (w == null) continue;
                 String text = (w.t != null) ? w.t.trim() : "";
+                // Decode any numeric HTML entities (e.g., &#39; for apostrophe)
+                text = OCRHelper.decodeNumericEntities(text);
                 if (text.isEmpty()) continue; // skip empty/whitespace-only words
                 float left = w.b != null && w.b.length >= 4 ? w.b[0] : 0f;
                 float top = w.b != null && w.b.length >= 4 ? w.b[1] : 0f;

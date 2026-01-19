@@ -117,8 +117,9 @@ public class OCRHelper {
     }
 
     /**
-     * Cleans an HTML text string by removing HTML tags, resolving basic HTML entities,
-     * trimming whitespace, and normalizing multiple consecutive spaces into a single space.
+     * Cleans an HTML text string by removing HTML tags, resolving HTML entities
+     * (both named and numeric), trimming whitespace, and normalizing multiple
+     * consecutive spaces into a single space.
      *
      * @param html the HTML text string to be cleaned; can be null
      * @return the cleaned plain text string; returns an empty string if the input is null
@@ -134,11 +135,53 @@ public class OCRHelper {
                 .replace("&gt;", ">")
                 .replace("&quot;", "\"")
                 .replace("&apos;", "'");
+        // Numerische HTML-Entities auflösen (z.B. &#39; für Apostroph, &#x27; für hex)
+        t = decodeNumericEntities(t);
         // trim & normalisieren
         t = t.trim();
         // Mehrfach-Leerzeichen → eins
         t = t.replaceAll("\\s{2,}", " ");
         return t;
+    }
+
+    /**
+     * Decodes numeric HTML entities (both decimal like &#39; and hexadecimal like &#x27;)
+     * into their corresponding Unicode characters.
+     *
+     * @param text the text containing numeric HTML entities
+     * @return the text with numeric entities replaced by their Unicode characters
+     */
+    public static String decodeNumericEntities(String text) {
+        if (text == null || text.isEmpty()) return text;
+        // Decimal entities: &#123;
+        java.util.regex.Matcher decMatcher = Pattern.compile("&#(\\d+);").matcher(text);
+        StringBuffer sb = new StringBuffer();
+        while (decMatcher.find()) {
+            try {
+                int codePoint = Integer.parseInt(decMatcher.group(1));
+                String replacement = new String(Character.toChars(codePoint));
+                decMatcher.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(replacement));
+            } catch (Throwable ignore) {
+                // Keep original if parsing fails
+            }
+        }
+        decMatcher.appendTail(sb);
+        text = sb.toString();
+
+        // Hexadecimal entities: &#x1F; or &#X1F;
+        java.util.regex.Matcher hexMatcher = Pattern.compile("&#[xX]([0-9a-fA-F]+);").matcher(text);
+        sb = new StringBuffer();
+        while (hexMatcher.find()) {
+            try {
+                int codePoint = Integer.parseInt(hexMatcher.group(1), 16);
+                String replacement = new String(Character.toChars(codePoint));
+                hexMatcher.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(replacement));
+            } catch (Throwable ignore) {
+                // Keep original if parsing fails
+            }
+        }
+        hexMatcher.appendTail(sb);
+        return sb.toString();
     }
 
     /**

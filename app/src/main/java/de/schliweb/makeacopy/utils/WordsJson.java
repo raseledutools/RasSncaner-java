@@ -1,7 +1,9 @@
 package de.schliweb.makeacopy.utils;
 
 import android.graphics.RectF;
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -55,6 +57,8 @@ public final class WordsJson {
                 if (el == null || !el.isJsonObject()) continue;
                 JsonObject o = el.getAsJsonObject();
                 String text = optString(o, "text", "");
+                // Decode any numeric HTML entities (e.g., &#39; for apostrophe)
+                text = OCRHelper.decodeNumericEntities(text);
                 float conf = normalizeConfidence(optNumber(o, "confidence", null));
 
                 RectF rect = extractRect(o);
