@@ -1,4 +1,4 @@
-MakeACopy 2.5.0 (Release Candidate)
+MakeACopy 2.5.0 (Release)
 
 What’s new
 
