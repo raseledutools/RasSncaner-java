@@ -1,4 +1,4 @@
-MakeACopy 2.6.0 (Release Candidate)
+MakeACopy 2.6.0 (Release)
 
 * Switched OCR engine to tesseract4android-openmp for better performance.
 * Fixed OCR edge case where high confidence was reported with no detected text.
