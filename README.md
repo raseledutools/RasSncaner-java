@@ -221,6 +221,14 @@ Only the **exported ONNX inference model** is distributed with the application.
 No training datasets, images, labels, or intermediate checkpoints are included
 or redistributed.
 
+### Training documentation
+
+Details about the model architecture, training pipeline, datasets used for
+pretraining and fine-tuning, evaluation methodology, and reproducibility
+considerations are documented separately.
+
+See: [Training README](training/README.md)
+
 ### Datasets used during training (not redistributed)
 
 The following publicly available datasets were used **internally** for training
