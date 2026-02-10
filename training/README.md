@@ -56,7 +56,6 @@ UVDoc Pretrain → V1 Fine-tune (SmartDoc + DTD + UVDoc tail) → [Optional] V2 
 ### UVDoc (Pretraining)
 
 - Project: https://github.com/tanguymagne/UVDoc-Dataset
-- Download: https://igl.ethz.ch/projects/uvdoc/UVDoc_final.zip
 - Expected path: `training/data/UVDoc_final-dataset`
 
 ### SmartDoc 2015 (Fine-tuning)
