@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.RectF;
+import android.util.Log;
 import de.schliweb.makeacopy.ml.docquad.DocQuadLetterbox;
 import de.schliweb.makeacopy.ml.docquad.DocQuadOrtRunner;
 import de.schliweb.makeacopy.ml.docquad.DocQuadPostprocessor;
@@ -12,6 +13,8 @@ import de.schliweb.makeacopy.ml.docquad.DocQuadPostprocessor;
  * Produktiver Adapter für DocQuadNet-256.
  */
 public final class DocQuadDetector implements CornerDetector {
+
+    private static final String TAG = "DocQuadDetector";
 
     // Release-Asset (F-Droid kompatibel, kein Download)
     public static final String DEFAULT_MODEL_ASSET_PATH = "docquad/docquadnet256_trained_opset17.onnx";
@@ -37,6 +40,7 @@ public final class DocQuadDetector implements CornerDetector {
     }
 
     private DocQuadDetector(String modelAssetPath, DocQuadOrtRunner injectedRunner) {
+        Log.d(TAG, "DocQuadDetector created with modelAssetPath=" + modelAssetPath);
         this.modelAssetPath = modelAssetPath;
         this.injectedRunner = injectedRunner;
     }
@@ -59,9 +63,9 @@ public final class DocQuadDetector implements CornerDetector {
             if (injectedRunner != null) {
                 outputs = injectedRunner.run(input);
             } else {
-                try (DocQuadOrtRunner runner = new DocQuadOrtRunner(ctx, modelAssetPath)) {
-                    outputs = runner.run(input);
-                }
+                // Performant solution: use cached singleton instead of re-loading every time.
+                DocQuadOrtRunner runner = DocQuadOrtRunner.getInstance(ctx, modelAssetPath);
+                outputs = runner.run(input);
             }
 
             DocQuadPostprocessor.Result r = DocQuadPostprocessor.postprocess(outputs, lb, DocQuadPostprocessor.PeakMode.REFINE_3X3);

@@ -2,12 +2,11 @@ package de.schliweb.makeacopy.ml.docquad;
 
 import ai.onnxruntime.*;
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.util.Log;
 import de.schliweb.makeacopy.BuildConfig;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.FloatBuffer;
 import java.util.Collections;
 import java.util.Map;
@@ -50,9 +49,11 @@ public final class DocQuadOrtRunner implements AutoCloseable {
     private final OrtEnvironment env;
     private final OrtSession session;
 
-    public DocQuadOrtRunner(Context context, String modelAssetPath) throws Exception {
+    private DocQuadOrtRunner(Context context, String modelAssetPath) throws Exception {
         this.env = OrtEnvironment.getEnvironment();
-        byte[] modelBytes = readAssetFully(context, modelAssetPath);
+
+        // Optimized model loading: copy to cache and use file path for mmap support.
+        File modelFile = copyAssetToCache(context, modelAssetPath);
 
         try (OrtSession.SessionOptions opts = new OrtSession.SessionOptions()) {
             opts.setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT);
@@ -65,45 +66,16 @@ public final class DocQuadOrtRunner implements AutoCloseable {
                 Log.i(TAG, "NNAPI not available: " + t.getMessage());
             }
             try {
-                opts.addXnnpack(java.util.Collections.emptyMap());
+                opts.addXnnpack(Collections.emptyMap());
                 Log.i(TAG, "XNNPACK EP enabled");
             } catch (Throwable t) {
                 Log.i(TAG, "XNNPACK not available: " + t.getMessage());
             }
-            this.session = env.createSession(modelBytes, opts);
+            this.session = env.createSession(modelFile.getAbsolutePath(), opts);
         }
+        Log.d(TAG, "Model loaded from " + modelFile.getAbsolutePath());
     }
 
-    /**
-     * Alternative construction from an already loaded ONNX byte array.
-     * <p>
-     * Used for debug/telemetry when the model is not available as an APK asset.
-     */
-    public DocQuadOrtRunner(byte[] modelBytes) throws Exception {
-        if (modelBytes == null || modelBytes.length == 0) {
-            throw new IllegalArgumentException("modelBytes must not be null/empty");
-        }
-        this.env = OrtEnvironment.getEnvironment();
-
-        try (OrtSession.SessionOptions opts = new OrtSession.SessionOptions()) {
-            opts.setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT);
-            opts.setIntraOpNumThreads(Math.max(1, Runtime.getRuntime().availableProcessors() / 2));
-            // Try NNAPI, then XNNPACK (both optional, fall back to CPU)
-            try {
-                opts.addNnapi();
-                Log.i(TAG, "NNAPI EP enabled");
-            } catch (Throwable t) {
-                Log.i(TAG, "NNAPI not available: " + t.getMessage());
-            }
-            try {
-                opts.addXnnpack(java.util.Collections.emptyMap());
-                Log.i(TAG, "XNNPACK EP enabled");
-            } catch (Throwable t) {
-                Log.i(TAG, "XNNPACK not available: " + t.getMessage());
-            }
-            this.session = env.createSession(modelBytes, opts);
-        }
-    }
 
     /**
      * Returns a singleton instance of {@code DocQuadOrtRunner}, creating it if necessary.
@@ -216,20 +188,40 @@ public final class DocQuadOrtRunner implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        session.close();
+        if (session != null) {
+            session.close();
+        }
         // OrtEnvironment is global/shared; not closed.
     }
 
-    private static byte[] readAssetFully(Context context, String assetPath) throws IOException {
-        try (InputStream is = context.getAssets().open(assetPath);
-             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            byte[] buf = new byte[16 * 1024];
-            int n;
-            while ((n = is.read(buf)) >= 0) {
-                if (n > 0) baos.write(buf, 0, n);
+    /**
+     * Copies an asset from the app's assets folder to the application's cache directory.
+     * If the asset already exists in the cache, it will not be copied again.
+     * <p>
+     * Loading from a file on disk allows the ONNX Runtime to use Memory Mapping (mmap),
+     * which is significantly more performant and memory-efficient than loading from
+     * a byte array or stream.
+     *
+     * @param context   the application context used to access the assets and cache directory
+     * @param assetPath the path of the asset file to be copied, relative to the assets directory
+     * @return a File object pointing to the copied asset in the cache directory
+     * @throws IOException if an I/O error occurs during file copy
+     */
+    private static File copyAssetToCache(Context context, String assetPath) throws IOException {
+        AssetManager am = context.getAssets();
+        File outFile = new File(context.getCacheDir(), new File(assetPath).getName());
+        if (!outFile.exists()) {
+            Log.i(TAG, "Copying asset " + assetPath + " to cache...");
+            try (InputStream is = am.open(assetPath);
+                 FileOutputStream fos = new FileOutputStream(outFile)) {
+                byte[] buffer = new byte[256 * 1024];
+                int len;
+                while ((len = is.read(buffer)) != -1) {
+                    fos.write(buffer, 0, len);
+                }
             }
-            return baos.toByteArray();
         }
+        return outFile;
     }
 
     private static float[][][][] getRequiredFloat4d(OrtSession.Result results, String outputName) throws OrtException {

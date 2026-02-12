@@ -6,7 +6,7 @@ import android.os.SystemClock;
 
 import androidx.annotation.NonNull;
 
-import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.InputStream;
 
 import de.schliweb.makeacopy.ml.docquad.DocQuadOrtRunner;
@@ -36,6 +36,7 @@ final class ThrottledDocQuadLiveDetector implements CornerDetector {
     private final Object lock = new Object();
 
     private volatile DocQuadOrtRunner runner; // created lazily
+    private volatile DocQuadDetector cachedDetector; // reuse across frames
     private volatile long lastRunMs = 0L;
     private volatile DetectionResult lastResult = null;
 
@@ -57,7 +58,12 @@ final class ThrottledDocQuadLiveDetector implements CornerDetector {
                 @Override
                 public DetectionResult run(Bitmap src, Context ctx) throws Exception {
                     DocQuadOrtRunner r = ensureRunner();
-                    return new DocQuadDetector(r).detect(src, ctx);
+                    DocQuadDetector det = cachedDetector;
+                    if (det == null) {
+                        det = new DocQuadDetector(r);
+                        cachedDetector = det;
+                    }
+                    return det.detect(src, ctx);
                 }
             };
         }
@@ -91,21 +97,10 @@ final class ThrottledDocQuadLiveDetector implements CornerDetector {
         if (existing != null) return existing;
         synchronized (lock) {
             if (runner != null) return runner;
-            byte[] modelBytes = readAssetFully(appCtx, DocQuadDetector.DEFAULT_MODEL_ASSET_PATH);
-            runner = new DocQuadOrtRunner(modelBytes);
+            // Production default: use the centralized singleton which supports cache-loading and mmap.
+            runner = DocQuadOrtRunner.getInstance(appCtx, DocQuadDetector.DEFAULT_MODEL_ASSET_PATH);
             return runner;
         }
     }
 
-    private static byte[] readAssetFully(Context context, String assetPath) throws Exception {
-        try (InputStream is = context.getAssets().open(assetPath);
-             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            byte[] buf = new byte[16 * 1024];
-            int n;
-            while ((n = is.read(buf)) >= 0) {
-                if (n > 0) baos.write(buf, 0, n);
-            }
-            return baos.toByteArray();
-        }
-    }
 }

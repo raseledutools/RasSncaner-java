@@ -256,16 +256,22 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         logEnvironment();
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.buttonContainer, (v, insets) -> {
-            de.schliweb.makeacopy.utils.UIUtils.adjustMarginForSystemInsets(binding.buttonContainer, 8);
+            UIUtils.adjustMarginForSystemInsets(binding.buttonContainer, 8);
             return insets;
         });
         ViewCompat.setOnApplyWindowInsetsListener(binding.scanButtonContainer, (v, insets) -> {
-            de.schliweb.makeacopy.utils.UIUtils.adjustMarginForSystemInsets(binding.scanButtonContainer, 8);
+            UIUtils.adjustMarginForSystemInsets(binding.scanButtonContainer, 8);
             return insets;
         });
 
         // Init UI visibility
         showCameraMode();
+
+        // Proactive ML loading: start loading DocQuad runner in background.
+        // This makes the first analysis frame much faster by ensuring model is in memory/cache early.
+        de.schliweb.makeacopy.ml.docquad.DocQuadOrtRunner.getInstanceAsync(
+                requireContext().getApplicationContext(),
+                de.schliweb.makeacopy.ml.corners.DocQuadDetector.DEFAULT_MODEL_ASSET_PATH);
 
 
         final TextView textView = binding.textCamera;
@@ -337,9 +343,9 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         root.requestFocus();
         root.setOnKeyListener((v, keyCode, event) -> {
             if (!isAccessibilityModeEnabled()) return false;
-            if (keyCode != android.view.KeyEvent.KEYCODE_VOLUME_UP && keyCode != android.view.KeyEvent.KEYCODE_VOLUME_DOWN)
+            if (keyCode != KeyEvent.KEYCODE_VOLUME_UP && keyCode != KeyEvent.KEYCODE_VOLUME_DOWN)
                 return false;
-            if (event.getAction() != android.view.KeyEvent.ACTION_DOWN)
+            if (event.getAction() != KeyEvent.ACTION_DOWN)
                 return true; // consume UP as well by returning true on DOWN
 
             long now = System.currentTimeMillis();
@@ -569,7 +575,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         lastTier = tier;
 
         // ImplMode
-        boolean isSony = "sony".equalsIgnoreCase(android.os.Build.MANUFACTURER);
+        boolean isSony = "sony".equalsIgnoreCase(Build.MANUFACTURER);
         PreviewView.ImplementationMode implMode = isSony ? PreviewView.ImplementationMode.COMPATIBLE
                 : (tier == BindTier.PERF ? PreviewView.ImplementationMode.PERFORMANCE
                 : PreviewView.ImplementationMode.COMPATIBLE);
@@ -581,35 +587,35 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         Log.i(TAG, "bindWithTier: tier=" + tier + ", rotation=" + toDegrees(rotation));
 
         // Preview selector
-        androidx.camera.core.resolutionselector.ResolutionSelector.Builder rsPrev =
-                new androidx.camera.core.resolutionselector.ResolutionSelector.Builder()
-                        .setAspectRatioStrategy(new androidx.camera.core.resolutionselector.AspectRatioStrategy(
+        ResolutionSelector.Builder rsPrev =
+                new ResolutionSelector.Builder()
+                        .setAspectRatioStrategy(new AspectRatioStrategy(
                                 AspectRatio.RATIO_4_3,
-                                androidx.camera.core.resolutionselector.AspectRatioStrategy.FALLBACK_RULE_AUTO
+                                AspectRatioStrategy.FALLBACK_RULE_AUTO
                         ));
 
         if (tier == BindTier.COMPAT_LOWRES) {
             android.util.Size preferredPreview = new android.util.Size(1280, 960);
             rsPrev.setResolutionStrategy(
-                    new androidx.camera.core.resolutionselector.ResolutionStrategy(
+                    new ResolutionStrategy(
                             preferredPreview,
-                            androidx.camera.core.resolutionselector.ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER
+                            ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER
                     )
             );
         }
 
         // Capture selector (prefer high resolution)
-        androidx.camera.core.resolutionselector.ResolutionSelector.Builder rsCap =
-                new androidx.camera.core.resolutionselector.ResolutionSelector.Builder()
-                        .setAspectRatioStrategy(new androidx.camera.core.resolutionselector.AspectRatioStrategy(
+        ResolutionSelector.Builder rsCap =
+                new ResolutionSelector.Builder()
+                        .setAspectRatioStrategy(new AspectRatioStrategy(
                                 AspectRatio.RATIO_4_3,
-                                androidx.camera.core.resolutionselector.AspectRatioStrategy.FALLBACK_RULE_AUTO
+                                AspectRatioStrategy.FALLBACK_RULE_AUTO
                         ));
         android.util.Size preferredHigh = new android.util.Size(4032, 3024);
         rsCap.setResolutionStrategy(
-                new androidx.camera.core.resolutionselector.ResolutionStrategy(
+                new ResolutionStrategy(
                         preferredHigh,
-                        androidx.camera.core.resolutionselector.ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER
+                        ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER
                 )
         );
 
@@ -893,7 +899,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                     FocusMeteringAction.FLAG_AF | FocusMeteringAction.FLAG_AE
             ).setAutoCancelDuration(1, TimeUnit.SECONDS).build();
 
-            com.google.common.util.concurrent.ListenableFuture<FocusMeteringResult> fut =
+            ListenableFuture<FocusMeteringResult> fut =
                     camera.getCameraControl().startFocusAndMetering(fma);
 
             fut.addListener(() -> {
@@ -1293,7 +1299,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
             float lux = event.values[0];
-            if (de.schliweb.makeacopy.BuildConfig.DEBUG || android.util.Log.isLoggable(TAG, android.util.Log.DEBUG)) {
+            if (BuildConfig.DEBUG || Log.isLoggable(TAG, Log.DEBUG)) {
                 Log.d(TAG, "Light level: " + lux + " lux");
             }
             if (lux < LOW_LIGHT_THRESHOLD
@@ -1315,7 +1321,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
         if (sensor.getType() == Sensor.TYPE_LIGHT) {
-            if (de.schliweb.makeacopy.BuildConfig.DEBUG || android.util.Log.isLoggable(TAG, android.util.Log.DEBUG)) {
+            if (BuildConfig.DEBUG || Log.isLoggable(TAG, Log.DEBUG)) {
                 Log.d(TAG, "Light sensor accuracy: " + accuracy);
             }
         }
@@ -1326,16 +1332,16 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     // Verbose environment logging to help diagnose device-specific issues
     private void logEnvironment() {
         String versionName = BuildConfig.VERSION_NAME;
-        int versionCode = de.schliweb.makeacopy.BuildConfig.VERSION_CODE;
+        int versionCode = BuildConfig.VERSION_CODE;
         String abis = Build.SUPPORTED_ABIS != null ? java.util.Arrays.toString(Build.SUPPORTED_ABIS) : "unknown";
-        java.util.Locale loc = java.util.Locale.getDefault();
+        Locale loc = Locale.getDefault();
         boolean analysisPref = false;
         Context ctx = getContext();
         if (ctx != null) {
             android.content.SharedPreferences prefs = ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE);
             analysisPref = prefs.getBoolean("analysis_enabled", false);
         }
-        String secPatch = android.os.Build.VERSION.SECURITY_PATCH;
+        String secPatch = Build.VERSION.SECURITY_PATCH;
         Log.i(TAG,
                 "Env: app=" + versionName + " (" + versionCode + ")" +
                         ", sdk=" + Build.VERSION.SDK_INT + " (release=" + Build.VERSION.RELEASE + ", incremental=" + Build.VERSION.INCREMENTAL + ", secPatch=" + (secPatch != null ? secPatch : "-") + ")" +
@@ -1478,7 +1484,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 }
             }
             // Initialize Accessibility Guidance controller when active and flagged
-            if (de.schliweb.makeacopy.utils.FeatureFlags.isA11yGuidanceEnabled() && a11y) {
+            if (FeatureFlags.isA11yGuidanceEnabled() && a11y) {
                 initA11yGuidanceController();
             } else {
                 clearA11yGuidanceController();
@@ -1606,8 +1612,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             android.graphics.PointF[] viewPts = hasValid ? mapToOverlayPoints(pts, bmpW, bmpH) : null;
 
             // Optional: Evaluate FramingEngine (logging and/or accessibility guidance)
-            boolean wantFraming = de.schliweb.makeacopy.utils.FeatureFlags.isFramingLoggingEnabled()
-                    || (de.schliweb.makeacopy.utils.FeatureFlags.isA11yGuidanceEnabled() && isAccessibilityModeEnabled());
+            boolean wantFraming = FeatureFlags.isFramingLoggingEnabled()
+                    || (FeatureFlags.isA11yGuidanceEnabled() && isAccessibilityModeEnabled());
             FramingResult fr = null;
             android.graphics.RectF fbRectForOverlay = null;
             if (wantFraming) {
@@ -1628,8 +1634,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                     );
                     fr = new FramingEngine().evaluate(feIn);
                     fbRectForOverlay = fbRect;
-                    if (de.schliweb.makeacopy.utils.FeatureFlags.isFramingLoggingEnabled()) {
-                        android.util.Log.d("Framing", "FramingResult=" + fr);
+                    if (FeatureFlags.isFramingLoggingEnabled()) {
+                        Log.d("Framing", "FramingResult=" + fr);
                     }
                     // Estimate orientation once (shared for A11y & overlay)
                     try {
@@ -1766,7 +1772,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 }
 
                 // Dev overlay: modelRect + metrics when logging flag is active
-                if (de.schliweb.makeacopy.utils.FeatureFlags.isFramingLoggingEnabled() && frUi != null && fbRectUi != null) {
+                if (FeatureFlags.isFramingLoggingEnabled() && frUi != null && fbRectUi != null) {
                     android.graphics.RectF viewRect = mapToOverlayRect(fbRectUi, bmpW, bmpH);
                     binding.cornerOverlay.setModelRect(viewRect);
                     // Compact debug text in percentages, 1 decimal place
@@ -1774,7 +1780,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                     // IMPORTANT: Overlay hint must follow the same rhythm as the screen reader.
                     // Therefore, we display the last hint emitted by the AccessibilityGuidanceController.
                     GuidanceHint hintToShow = lastGuidanceEventHint;
-                    String dbg = String.format(java.util.Locale.US,
+                    String dbg = String.format(Locale.US,
                             "q=%.2f\nΔx=%.2f Δy=%.2f\nscale=%.2f\ntiltH=%.2f tiltV=%.2f\nori=%s conf=%s\nhint=%s",
                             frUi.quality,
                             frUi.dxNorm,
@@ -1783,7 +1789,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                             frUi.tiltHorizontal,
                             frUi.tiltVertical,
                             (orientBucketForUi >= 0 ? (orientBucketForUi + "°") : "-"),
-                            (orientConfForUi >= 0 ? String.format(java.util.Locale.US, "%.2f", orientConfForUi) : "-"),
+                            (orientConfForUi >= 0 ? String.format(Locale.US, "%.2f", orientConfForUi) : "-"),
                             hintToShow != null ? hintToShow.name() : "-");
                     binding.cornerOverlay.setDebugText(dbg);
                 } else {
@@ -2058,7 +2064,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         Context ctx = getContext();
         if (ctx == null) return false;
         android.content.SharedPreferences prefs = ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE);
-        return prefs.getBoolean(de.schliweb.makeacopy.ui.camera.CameraOptionsDialogFragment.BUNDLE_ACCESSIBILITY_MODE, false);
+        return prefs.getBoolean(CameraOptionsDialogFragment.BUNDLE_ACCESSIBILITY_MODE, false);
     }
 
     private boolean isStableFor(int frames, double threshold) {
@@ -2266,7 +2272,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
      */
     private void handlePdfImport(Uri pdfUri) {
         new Thread(() -> {
-            android.os.ParcelFileDescriptor pfd = null;
+            ParcelFileDescriptor pfd = null;
             android.graphics.pdf.PdfRenderer renderer = null;
             try {
                 Context ctx = getContext();
@@ -2372,7 +2378,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             dialog.dismiss();
             // Render selected page in full resolution in background
             new Thread(() -> {
-                android.os.ParcelFileDescriptor pfd = null;
+                ParcelFileDescriptor pfd = null;
                 android.graphics.pdf.PdfRenderer renderer = null;
                 try {
                     Context ctx = getContext();
@@ -2403,7 +2409,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
         // Load thumbnails in background
         new Thread(() -> {
-            android.os.ParcelFileDescriptor pfd = null;
+            ParcelFileDescriptor pfd = null;
             android.graphics.pdf.PdfRenderer renderer = null;
             try {
                 Context ctx = getContext();
@@ -2529,8 +2535,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
         class ViewHolder extends androidx.recyclerview.widget.RecyclerView.ViewHolder {
             final android.widget.ImageView thumbnail;
-            final android.widget.TextView pageLabel;
-            final android.widget.TextView pageNumberBadge;
+            final TextView pageLabel;
+            final TextView pageNumberBadge;
             final View loadingIndicator;
 
             ViewHolder(@NonNull View itemView) {
