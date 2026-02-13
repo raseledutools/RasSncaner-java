@@ -26,7 +26,7 @@ export TZ=UTC
 # Repo/paths
 # ===============================
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-ORT_DIR_ORIG="$REPO_DIR/external/onnxruntime"   # submodule (e.g., v1.22.1)
+ORT_DIR_ORIG="$REPO_DIR/external/onnxruntime"   # submodule (e.g., v1.24.1)
 ORT_DIR="/tmp/onnxruntime-src"
 JNI_LIBS_BASE="$REPO_DIR/app/src/main/jniLibs"
 APP_LIBS="$REPO_DIR/app/libs"
@@ -323,7 +323,7 @@ for ABI in $ABIS; do
   fi
 
   # Copy Java JAR once
-  if [ ! -f "$APP_LIBS/onnxruntime-1.22.1.jar" ]; then
+  if [ ! -f "$APP_LIBS/onnxruntime-1.24.1.jar" ]; then
     JAR_PATH="$(find "$ORT_DIR/java/build/libs" -type f -name 'onnxruntime-*.jar' \
       ! -name '*sources*.jar' ! -name '*javadoc*.jar' -print -quit || true)"
     [ -n "$JAR_PATH" ] || { echo "ERROR: onnxruntime JAR not found."; exit 1; }
@@ -332,12 +332,12 @@ for ABI in $ABIS; do
       exit 1
     fi
     mkdir -p "$APP_LIBS"
-    cp -f "$JAR_PATH" "$APP_LIBS/onnxruntime-1.22.1.jar"
+    cp -f "$JAR_PATH" "$APP_LIBS/onnxruntime-1.24.1.jar"
   fi
 done
 
 info "Done."
-info "JAR: $APP_LIBS/onnxruntime-1.22.1.jar"
+info "JAR: $APP_LIBS/onnxruntime-1.24.1.jar"
 for ABI in $ABIS; do
   info "SOs ($ABI): $JNI_LIBS_BASE/$ABI/libonnxruntime.so, libonnxruntime4j_jni.so"
 done
