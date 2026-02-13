@@ -9,6 +9,13 @@ import org.opencv.core.Mat;
 public class ImageValidator {
 
     /**
+     * Private constructor to prevent instantiation of this utility class.
+     */
+    private ImageValidator() {
+        throw new UnsupportedOperationException("Utility class - do not instantiate");
+    }
+
+    /**
      * Validates that an image is not null, not empty, and meets minimum size requirements.
      *
      * @param image      the Mat image to validate

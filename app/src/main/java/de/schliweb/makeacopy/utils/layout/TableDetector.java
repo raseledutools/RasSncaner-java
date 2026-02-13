@@ -56,12 +56,18 @@ public class TableDetector {
     public List<DocumentRegion> detectTables(Mat binaryImage) {
         List<DocumentRegion> tableRegions = new ArrayList<>();
 
-        if (!ImageValidator.validateImage(binaryImage, TAG, "detectTables")) {
+        if (binaryImage == null || binaryImage.empty()) {
+            Log.w(TAG, "detectTables: empty or null image");
             return tableRegions;
         }
 
         int width = binaryImage.cols();
         int height = binaryImage.rows();
+
+        if (width < 100 || height < 100) {
+            Log.d(TAG, "detectTables: image too small for table detection");
+            return tableRegions;
+        }
 
         try {
             // Detect tables using line-based approach
