@@ -104,4 +104,80 @@ public class FileUtils {
         Log.d(TAG, "getDisplayNameFromUri: Final result: " + result);
         return result;
     }
+
+    /**
+     * Checks if a URI is readable without actually reading its content.
+     * This is a lightweight check that attempts to open the URI for reading and immediately closes it.
+     *
+     * @param context The application context used to access the content resolver.
+     * @param uri The URI to check for readability.
+     * @return true if the URI can be opened for reading, false otherwise.
+     */
+    public static boolean isUriReadable(Context context, Uri uri) {
+        if (context == null || uri == null) return false;
+        try {
+            ContentResolver cr = context.getContentResolver();
+            try (android.os.ParcelFileDescriptor pfd = cr.openFileDescriptor(uri, "r")) {
+                if (pfd != null) return true;
+            } catch (Throwable ignore) {
+                // fallback to stream
+                try (java.io.InputStream is = cr.openInputStream(uri)) {
+                    return is != null;
+                }
+            }
+        } catch (Throwable ignore) {
+        }
+        return false;
+    }
+
+    /**
+     * Checks if a URI string is readable without actually reading its content.
+     * This is a lightweight check that attempts to open the URI for reading and immediately closes it.
+     *
+     * @param context The application context used to access the content resolver.
+     * @param uriString The URI string to check for readability.
+     * @return true if the URI can be opened for reading, false otherwise.
+     */
+    public static boolean isUriReadable(Context context, String uriString) {
+        if (context == null || uriString == null || uriString.isEmpty()) return false;
+        try {
+            Uri uri = Uri.parse(uriString);
+            return isUriReadable(context, uri);
+        } catch (Throwable ignore) {
+        }
+        return false;
+    }
+
+    /**
+     * Extracts the first URI string from a simple JSON array representation.
+     * This is a lightweight parser for arrays like ["content://..."] or ["file://..."]
+     * without requiring a full JSON library dependency.
+     *
+     * @param json The JSON string to parse, expected to be a JSON array containing URI strings.
+     * @return The first URI string found in the array, or null if none is found or if the input is invalid.
+     */
+    public static String firstUriFromJson(String json) {
+        if (json == null) return null;
+        try {
+            // Very small, dependency-free parser: find first quoted string in a JSON array
+            int i = json.indexOf('"');
+            while (i >= 0 && i + 1 < json.length()) {
+                if (i > 0 && json.charAt(i - 1) == '\\') { // skip escaped quotes
+                    i = json.indexOf('"', i + 1);
+                    continue;
+                }
+                int j = json.indexOf('"', i + 1);
+                while (j > i && json.charAt(j - 1) == '\\') {
+                    j = json.indexOf('"', j + 1);
+                }
+                if (j > i) {
+                    return json.substring(i + 1, j);
+                } else {
+                    break;
+                }
+            }
+        } catch (Throwable ignore) {
+        }
+        return null;
+    }
 }

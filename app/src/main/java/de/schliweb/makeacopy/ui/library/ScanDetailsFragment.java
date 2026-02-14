@@ -13,6 +13,8 @@ import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.data.library.LibraryServiceLocator;
 import de.schliweb.makeacopy.data.library.ScanEntity;
 import de.schliweb.makeacopy.utils.FeatureFlags;
+import de.schliweb.makeacopy.utils.FileUtils;
+import de.schliweb.makeacopy.utils.ImageDecodeUtils;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -121,7 +123,7 @@ public class ScanDetailsFragment extends Fragment {
                     final String json = makeSingleUriArrayJson(uri);
                     String pickedName = null;
                     try {
-                        pickedName = de.schliweb.makeacopy.utils.FileUtils.getDisplayNameFromUri(requireContext(), uri);
+                        pickedName = FileUtils.getDisplayNameFromUri(requireContext(), uri);
                     } catch (Throwable ignore) {
                     }
                     final String finalPickedBase;
@@ -351,7 +353,7 @@ public class ScanDetailsFragment extends Fragment {
 
         // Check export URI readability to decide action enablement and hint
         android.net.Uri exportUri = getPrimaryExportUri();
-        boolean canOpen = exportUri != null && isUriReadable(exportUri);
+        boolean canOpen = exportUri != null && FileUtils.isUriReadable(requireContext(), exportUri);
         // Derive a human-friendly folder/location of the primary export for metadata display
         String folder = deriveParentFolderDisplay(exportUri);
         StringBuilder subtitle = new StringBuilder();
@@ -364,7 +366,7 @@ public class ScanDetailsFragment extends Fragment {
             String fileName = null;
             if (exportUri != null) {
                 try {
-                    fileName = de.schliweb.makeacopy.utils.FileUtils.getDisplayNameFromUri(requireContext(), exportUri);
+                    fileName = FileUtils.getDisplayNameFromUri(requireContext(), exportUri);
                 } catch (Throwable ignore) {
                 }
                 if (fileName == null || fileName.trim().isEmpty()) {
@@ -421,12 +423,12 @@ public class ScanDetailsFragment extends Fragment {
             isCompletedScanEntry = false;
         }
         if (isCompletedScanEntry) {
-            source = firstUriFromJson(e.exportPathsJson);
+            source = FileUtils.firstUriFromJson(e.exportPathsJson);
             if (source == null || source.isEmpty()) {
                 source = e.coverPath; // fallback if no export/original available
             }
         } else {
-            source = (e.coverPath != null && !e.coverPath.isEmpty()) ? e.coverPath : firstUriFromJson(e.exportPathsJson);
+            source = (e.coverPath != null && !e.coverPath.isEmpty()) ? e.coverPath : FileUtils.firstUriFromJson(e.exportPathsJson);
         }
         android.net.Uri primaryUri = getPrimaryExportUri();
         boolean showPdfPager = false;
@@ -453,51 +455,6 @@ public class ScanDetailsFragment extends Fragment {
         showLoading(false);
     }
 
-    /**
-     * Performs a lightweight check to see if a content/file Uri can be opened for reading.
-     * This avoids heavy IO: we just try to obtain a read FD or stream and immediately close it.
-     */
-    private boolean isUriReadable(@NonNull android.net.Uri uri) {
-        try {
-            android.content.ContentResolver cr = requireContext().getContentResolver();
-            try (android.os.ParcelFileDescriptor pfd = cr.openFileDescriptor(uri, "r")) {
-                if (pfd != null) return true;
-            } catch (Throwable ignored) {
-                // fallback to stream
-                try (java.io.InputStream is = cr.openInputStream(uri)) {
-                    return is != null;
-                }
-            }
-        } catch (Throwable ignore) {
-        }
-        return false;
-    }
-
-    // Extract first URI string from a simple JSON array like ["content://..."]
-    private static String firstUriFromJson(String json) {
-        if (json == null) return null;
-        try {
-            int i = json.indexOf('"');
-            while (i >= 0 && i + 1 < json.length()) {
-                if (i > 0 && json.charAt(i - 1) == '\\') { // skip escaped
-                    i = json.indexOf('"', i + 1);
-                    continue;
-                }
-                int j = json.indexOf('"', i + 1);
-                while (j > i && json.charAt(j - 1) == '\\') {
-                    j = json.indexOf('"', j + 1);
-                }
-                if (j > i) {
-                    return json.substring(i + 1, j);
-                } else {
-                    break;
-                }
-            }
-        } catch (Throwable ignore) {
-        }
-        return null;
-    }
-
     private String makeSingleUriArrayJson(@NonNull android.net.Uri uri) {
         try {
             String s = uri.toString();
@@ -521,7 +478,7 @@ public class ScanDetailsFragment extends Fragment {
                 // Try as file path first
                 java.io.File f = new java.io.File(pathOrUri);
                 if (f.exists() && f.isFile()) {
-                    bmp = decodeSampledBitmapFromFile(pathOrUri, 1080, 1080);
+                    bmp = ImageDecodeUtils.decodeSampled(pathOrUri, 1080, 1080);
                 } else {
                     // Try as content URI
                     android.net.Uri uri = android.net.Uri.parse(pathOrUri);
@@ -563,28 +520,7 @@ public class ScanDetailsFragment extends Fragment {
         }).start();
     }
 
-    private static android.graphics.Bitmap decodeSampledBitmapFromFile(String path, int reqWidth, int reqHeight) {
-        // Use centralized EXIF-neutral decoder for baked disk files
-        try {
-            return de.schliweb.makeacopy.utils.ImageDecodeUtils.decodeSampled(path, Math.max(1, reqWidth), Math.max(1, reqHeight));
-        } catch (Throwable t) {
-            return null;
-        }
-    }
 
-    private static int calculateInSampleSize(android.graphics.BitmapFactory.Options options, int reqWidth, int reqHeight) {
-        int height = options.outHeight;
-        int width = options.outWidth;
-        int inSampleSize = 1;
-        if (height > reqHeight || width > reqWidth) {
-            final int halfHeight = Math.max(1, height / 2);
-            final int halfWidth = Math.max(1, width / 2);
-            while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
-                inSampleSize *= 2;
-            }
-        }
-        return inSampleSize;
-    }
 
     private boolean isLikelyPdfUri(@NonNull android.net.Uri uri) {
         try {
@@ -666,7 +602,7 @@ public class ScanDetailsFragment extends Fragment {
         // Derive from file name or path segment
         String name = null;
         try {
-            name = de.schliweb.makeacopy.utils.FileUtils.getDisplayNameFromUri(requireContext(), uri);
+            name = FileUtils.getDisplayNameFromUri(requireContext(), uri);
         } catch (Throwable ignore) {
         }
         if (name == null) {
@@ -693,7 +629,7 @@ public class ScanDetailsFragment extends Fragment {
             android.net.Uri uri = getPrimaryExportUri();
             if (uri == null) return;
             // Determine current display name to preserve extension
-            String curName = de.schliweb.makeacopy.utils.FileUtils.getDisplayNameFromUri(requireContext(), uri);
+            String curName = FileUtils.getDisplayNameFromUri(requireContext(), uri);
             String ext = extractExtension(curName);
             String target = (ext != null && !ext.isEmpty()) ? (newBaseName + "." + ext) : newBaseName;
             android.content.ContentResolver cr = requireContext().getContentResolver();
@@ -884,7 +820,7 @@ public class ScanDetailsFragment extends Fragment {
             return;
         }
         try {
-            String name = de.schliweb.makeacopy.utils.FileUtils.getDisplayNameFromUri(requireContext(), uri);
+            String name = FileUtils.getDisplayNameFromUri(requireContext(), uri);
             de.schliweb.makeacopy.utils.ShareIntentHelper.shareDocument(this, uri, null, name);
         } catch (Throwable t) {
             // Fallback to a plain ACTION_SEND if helper fails
@@ -957,7 +893,7 @@ public class ScanDetailsFragment extends Fragment {
                 if (!isAdded()) return;
                 requireActivity().runOnUiThread(() -> {
                     if (previewNavRow != null) previewNavRow.setVisibility(View.GONE);
-                    String fallback = (entity != null && entity.coverPath != null && !entity.coverPath.isEmpty()) ? entity.coverPath : firstUriFromJson(entity != null ? entity.exportPathsJson : null);
+                    String fallback = (entity != null && entity.coverPath != null && !entity.coverPath.isEmpty()) ? entity.coverPath : FileUtils.firstUriFromJson(entity != null ? entity.exportPathsJson : null);
                     loadPreviewAsync(fallback);
                 });
             }
