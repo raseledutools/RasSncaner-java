@@ -3,12 +3,7 @@ package de.schliweb.makeacopy.ml.corners;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.SystemClock;
-
 import androidx.annotation.NonNull;
-
-import java.io.File;
-import java.io.InputStream;
-
 import de.schliweb.makeacopy.ml.docquad.DocQuadOrtRunner;
 
 /**
@@ -46,8 +41,8 @@ final class ThrottledDocQuadLiveDetector implements CornerDetector {
 
     // Package-private ctor for tests.
     ThrottledDocQuadLiveDetector(@NonNull Context appCtx,
-                                @NonNull TimeSource timeSource,
-                                @NonNull Inference inference) {
+                                 @NonNull TimeSource timeSource,
+                                 @NonNull Inference inference) {
         this.appCtx = appCtx;
         this.timeSource = timeSource;
         if (inference != null) {

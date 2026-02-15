@@ -32,6 +32,12 @@
         android:layout_height="wrap_content"
         android:text="@string/accessibility_mode_label" />
 
+    <CheckBox
+        android:id="@+id/dialog_checkbox_exposure_compensation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/exposure_compensation_option" />
+
     <!-- Share logs button placed directly under the options (de-emphasized) -->
     <Button
         android:id="@+id/button_share_logs"

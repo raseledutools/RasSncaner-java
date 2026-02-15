@@ -6,7 +6,10 @@ import android.content.res.AssetManager;
 import android.util.Log;
 import de.schliweb.makeacopy.BuildConfig;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.FloatBuffer;
 import java.util.Collections;
 import java.util.Map;
@@ -58,18 +61,14 @@ public final class DocQuadOrtRunner implements AutoCloseable {
         try (OrtSession.SessionOptions opts = new OrtSession.SessionOptions()) {
             opts.setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT);
             opts.setIntraOpNumThreads(Math.max(1, Runtime.getRuntime().availableProcessors() / 2));
-            // Try NNAPI, then XNNPACK (both optional, fall back to CPU)
+            // Try NNAPI (optional, fall back to CPU).
+            // XNNPACK is intentionally not used: it produces incorrect results
+            // with FP16-quantized models on ONNX Runtime 1.24.1.
             try {
                 opts.addNnapi();
                 Log.i(TAG, "NNAPI EP enabled");
             } catch (Throwable t) {
                 Log.i(TAG, "NNAPI not available: " + t.getMessage());
-            }
-            try {
-                opts.addXnnpack(Collections.emptyMap());
-                Log.i(TAG, "XNNPACK EP enabled");
-            } catch (Throwable t) {
-                Log.i(TAG, "XNNPACK not available: " + t.getMessage());
             }
             this.session = env.createSession(modelFile.getAbsolutePath(), opts);
         }
@@ -196,7 +195,9 @@ public final class DocQuadOrtRunner implements AutoCloseable {
 
     /**
      * Copies an asset from the app's assets folder to the application's cache directory.
-     * If the asset already exists in the cache, it will not be copied again.
+     * The cached file is versioned by the app's version code (obtained via PackageManager
+     * to preserve reproducible-build compatibility). After a successful copy, stale cached
+     * copies from previous versions are deleted.
      * <p>
      * Loading from a file on disk allows the ONNX Runtime to use Memory Mapping (mmap),
      * which is significantly more performant and memory-efficient than loading from
@@ -209,9 +210,19 @@ public final class DocQuadOrtRunner implements AutoCloseable {
      */
     private static File copyAssetToCache(Context context, String assetPath) throws IOException {
         AssetManager am = context.getAssets();
-        File outFile = new File(context.getCacheDir(), new File(assetPath).getName());
+        String baseName = new File(assetPath).getName();
+        long versionCode;
+        try {
+            android.content.pm.PackageInfo pi =
+                    context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+            versionCode = pi.getLongVersionCode();
+        } catch (Exception e) {
+            versionCode = -1L;
+        }
+        String versionedName = versionCode + "_" + baseName;
+        File outFile = new File(context.getCacheDir(), versionedName);
         if (!outFile.exists()) {
-            Log.i(TAG, "Copying asset " + assetPath + " to cache...");
+            Log.i(TAG, "Copying asset " + assetPath + " to cache as " + versionedName + "...");
             try (InputStream is = am.open(assetPath);
                  FileOutputStream fos = new FileOutputStream(outFile)) {
                 byte[] buffer = new byte[256 * 1024];
@@ -220,8 +231,31 @@ public final class DocQuadOrtRunner implements AutoCloseable {
                     fos.write(buffer, 0, len);
                 }
             }
+            // Clean up stale cached copies from previous versions.
+            deleteStaleModelFiles(context.getCacheDir(), baseName, versionedName);
         }
         return outFile;
+    }
+
+    /**
+     * Deletes cached model files from previous app versions.
+     *
+     * @param cacheDir    the cache directory
+     * @param baseName    the base asset file name (e.g. "model.onnx")
+     * @param currentName the current versioned file name to keep
+     */
+    private static void deleteStaleModelFiles(File cacheDir, String baseName, String currentName) {
+        File[] staleFiles = cacheDir.listFiles((dir, name) ->
+                name.endsWith("_" + baseName) && !name.equals(currentName));
+        if (staleFiles != null) {
+            for (File stale : staleFiles) {
+                if (stale.delete()) {
+                    Log.i(TAG, "Deleted stale cached model: " + stale.getName());
+                } else {
+                    Log.w(TAG, "Failed to delete stale cached model: " + stale.getName());
+                }
+            }
+        }
     }
 
     private static float[][][][] getRequiredFloat4d(OrtSession.Result results, String outputName) throws OrtException {

@@ -45,7 +45,7 @@
             android:clickable="false"
             android:importantForAccessibility="no"
             app:layout_constraintTop_toBottomOf="@id/text_camera"
-            app:layout_constraintBottom_toTopOf="@id/camera_actions_row"
+            app:layout_constraintBottom_toTopOf="@id/exposure_control"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
 
@@ -58,7 +58,7 @@
             android:clickable="false"
             android:focusable="false"
             app:layout_constraintTop_toBottomOf="@id/text_camera"
-            app:layout_constraintBottom_toTopOf="@id/camera_actions_row"
+            app:layout_constraintBottom_toTopOf="@id/exposure_control"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
@@ -72,9 +72,41 @@
             android:contentDescription="@string/captured_image"
             android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/text_camera"
-            app:layout_constraintBottom_toTopOf="@id/camera_actions_row"
+            app:layout_constraintBottom_toTopOf="@id/exposure_control"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Exposure compensation control -->
+    <LinearLayout
+            android:id="@+id/exposure_control"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="8dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@id/camera_actions_row"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+                android:id="@+id/exposure_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/exposure_compensation_cd"
+                android:textSize="12sp"
+                android:minWidth="56dp"
+                android:gravity="center"/>
+
+        <SeekBar
+                android:id="@+id/exposure_slider"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:contentDescription="@string/exposure_compensation_cd"/>
+
+    </LinearLayout>
 
     <!-- Actions row: settings icon above the button bar (analog zu OCRFragment) -->
     <LinearLayout

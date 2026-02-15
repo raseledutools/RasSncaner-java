@@ -3,6 +3,8 @@ plugins {
 }
 
 def enableAbiSplits = (project.findProperty("enableAbiSplits") ?: "true").toBoolean()
+def edition = (project.findProperty("edition") ?: "full")
+def isLight = edition == "light"
 
 android {
     namespace = 'de.schliweb.makeacopy'
@@ -28,6 +30,12 @@ android {
         buildConfigField "boolean", "FEATURE_FRAMING_LOGGING", "false"
         buildConfigField "boolean", "FEATURE_A11Y_GUIDANCE", "true"
         buildConfigField "boolean", "FEATURE_LAYOUT_ANALYSIS", "false"
+        buildConfigField "boolean", "IS_LIGHT", isLight ? "true" : "false"
+
+        if (isLight) {
+            applicationIdSuffix ".light"
+            versionNameSuffix "-light"
+        }
     }
 
     dependenciesInfo {
@@ -95,6 +103,10 @@ android {
         }
     }
 
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
@@ -114,6 +126,7 @@ android {
         main {
             assets.srcDirs = [
                     'src/main/assets',
+                    isLight ? 'src/light/assets' : 'src/full/assets',
                     layout.buildDirectory.dir("generated/assets/licenses").get().asFile
             ]
             jniLibs.srcDirs = ['src/main/jniLibs']
@@ -288,6 +301,21 @@ tasks.withType(JavaCompile).configureEach {
             '-Xlint:unchecked'
     ]
 }
+// Exclude CJK CMap files from light edition after asset merge (saves ~3 MB, not needed without CJK OCR support)
+if (isLight) {
+    tasks.whenTaskAdded { task ->
+        if (task.name.matches("merge(Debug|Release)Assets")) {
+            task.doLast {
+                def cmapDir = new File(task.outputDir.get().asFile, "com/tom_roush/fontbox/resources/cmap")
+                if (cmapDir.exists()) {
+                    def deleted = cmapDir.deleteDir()
+                    println "Deleted CJK CMap assets from light edition: ${deleted}"
+                }
+            }
+        }
+    }
+}
+
 // Disable ArtProfile / baseline-prof generation for deterministic builds.
 // This only affects build artefacts (no functional change for users).
 tasks.whenTaskAdded { task ->

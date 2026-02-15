@@ -364,7 +364,64 @@ python -m training.docquad_m3.export_onnx \
 
 ---
 
-## 11) Integration into MakeACopy
+## 11) FP16 Quantization
+
+The exported FP32 ONNX model (13.3 MB, large) can be converted to FP16 to reduce size by 50% with practically no quality loss.
+
+### Why FP16?
+
+| | FP32 | FP16 |
+|---|---|---|
+| **Model size** | 13.3 MB | 6.7 MB |
+| **Corner error Δ** | — | ±0.03 px |
+| **Max output diff** | — | 0.24 |
+| **NNAPI/GPU support** | ✅ | ✅ (native) |
+
+The deviation is far below one pixel and has no measurable impact on document detection quality. FP16 is safe for both the Full and Light app variants.
+
+### Important: ONNX Runtime Version Alignment
+
+The Python ONNX Runtime version used for quantization **must match** the ONNX Runtime version used in the Android app (currently v1.24.1). Version mismatches can produce models that load incorrectly or produce wrong results on-device:
+
+- `onnxruntime.transformers.float16` may generate duplicate node names or value_info entries that older/newer ORT versions handle differently.
+- XNNPACK execution provider in ORT 1.24.1 does not correctly handle FP16-quantized models — the app uses NNAPI + CPU fallback instead.
+
+Check versions:
+```bash
+# Python
+python3 -c "import onnxruntime; print(onnxruntime.__version__)"
+# App (see build.gradle or libs/)
+ls app/libs/onnxruntime-*.jar
+```
+
+### Convert and Compare
+
+```bash
+python3 training/scripts/quantize_fp16_compare.py \
+  --model app/src/main/assets/docquad/docquadnet256_trained_opset17.onnx \
+  --dataset training/data/my_data_trainable \
+  --out /tmp/docquadnet256_fp16.onnx
+```
+
+The script:
+1. Converts the FP32 model to FP16 using `onnxruntime.transformers.float16`
+2. Runs inference on all images in the dataset with both models
+3. Reports output deviations, mean corner error comparison, and inference times
+
+### Apply FP16 Model
+
+After verifying acceptable quality:
+
+```bash
+cp /tmp/docquadnet256_fp16.onnx \
+  app/src/main/assets/docquad/docquadnet256_trained_opset17.onnx
+```
+
+The filename stays the same — no code changes required in `DocQuadOrtRunner`.
+
+---
+
+## 12) Integration into MakeACopy
 
 ```bash
 cp training/runs/docquad_v1_smartdoc_bg_uvtail_from_uvdoc_small/checkpoints/best.onnx \
@@ -381,7 +438,7 @@ shasum -a 256 \
 
 ---
 
-## 12) Available Scripts Reference
+## 13) Available Scripts Reference
 
 | Script | Purpose |
 |--------|---------|
@@ -400,10 +457,11 @@ shasum -a 256 \
 | `augmentation.py` | Data augmentation for own images |
 | `analyze_cord_receipts.py` | Analyze CORD receipt aspect ratios |
 | `synthesize_receipt_on_background.py` | Place receipts on DTD backgrounds with perspective |
+| `quantize_fp16_compare.py` | FP16 quantization with quality comparison |
 
 ---
 
-## 13) Fine-tuning on Own Images
+## 14) Fine-tuning on Own Images
 
 ### Step 1: Prepare Images
 
@@ -439,7 +497,7 @@ Follow the standard conversion pipeline (convert_to_docquad → make_trainable �
 
 ---
 
-## 14) Narrow Documents (Receipts) Training
+## 15) Narrow Documents (Receipts) Training
 
 The model may struggle with narrow documents (receipts, tickets) because training data (SmartDoc, UVDoc) contains mostly A4/Letter documents. This section describes how to add narrow document support.
 
@@ -552,7 +610,7 @@ python3 training/scripts/train_docquad_heatmap.py \
 
 ---
 
-## 15) Practical Checklist (Updated)
+## 16) Practical Checklist (Updated)
 
 | # | Step | Command/Action |
 |---|------|----------------|
@@ -566,11 +624,12 @@ python3 training/scripts/train_docquad_heatmap.py \
 | 8 | Evaluate on val/test | `evaluate_docquad_models.py` |
 | 9 | (Optional) V2 hard-focus | Repeat mix + train with HARD emphasis |
 | 10 | Export ONNX | `export_onnx` module |
-| 11 | Integrate into app | Copy to `app/src/main/assets/docquad/` |
+| 11 | FP16 quantization | `quantize_fp16_compare.py` |
+| 12 | Integrate into app | Copy to `app/src/main/assets/docquad/` |
 
 ---
 
-## 16) Notes
+## 17) Notes
 
 ### Few Own Images
 

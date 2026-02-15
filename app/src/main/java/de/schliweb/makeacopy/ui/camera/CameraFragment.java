@@ -18,6 +18,7 @@ import android.net.Uri;
 import android.os.*;
 import android.util.Log;
 import android.view.*;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
@@ -46,12 +47,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import de.schliweb.makeacopy.BuildConfig;
 import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.databinding.FragmentCameraBinding;
-import de.schliweb.makeacopy.framing.A11yStateMachine;
-import de.schliweb.makeacopy.framing.AccessibilityGuidanceController;
-import de.schliweb.makeacopy.framing.FramingEngine;
-import de.schliweb.makeacopy.framing.FramingResult;
-import de.schliweb.makeacopy.framing.GuidanceHint;
-import de.schliweb.makeacopy.framing.QuadPlausibility;
+import de.schliweb.makeacopy.framing.*;
 import de.schliweb.makeacopy.ui.crop.CropViewModel;
 import de.schliweb.makeacopy.ui.ocr.OCRViewModel;
 import de.schliweb.makeacopy.utils.FeatureFlags;
@@ -95,6 +91,7 @@ import java.util.concurrent.TimeUnit;
 public class CameraFragment extends Fragment implements SensorEventListener {
 
     private static final String TAG = "CameraFragment";
+    private static final String PREF_EXPOSURE_INDEX = "exposure_compensation_index";
 
     // Live corner detection: cache detector instance to make DocQuad caching/throttle effective.
     // Important: we must NOT instantiate any DocQuad/ORT objects when the prod flag is OFF.
@@ -307,6 +304,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 boolean skip = bundle.getBoolean(CameraOptionsDialogFragment.BUNDLE_SKIP_OCR, false);
                 boolean analysisPref = bundle.getBoolean(CameraOptionsDialogFragment.BUNDLE_ANALYSIS_ENABLED, true);
                 boolean a11yPref = bundle.getBoolean(CameraOptionsDialogFragment.BUNDLE_ACCESSIBILITY_MODE, false);
+                boolean exposurePref = bundle.getBoolean(CameraOptionsDialogFragment.BUNDLE_EXPOSURE_COMPENSATION, false);
                 Context ctx = getContext();
                 if (ctx != null) {
                     android.content.SharedPreferences prefs = ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE);
@@ -321,6 +319,15 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 // Apply analysis toggle immediately if we are in camera mode
                 if (binding != null && binding.viewFinder.getVisibility() == View.VISIBLE) {
                     setLiveAnalysisEnabled(analysisPref);
+                    // Apply exposure compensation toggle immediately
+                    if (exposurePref) {
+                        setupExposureCompensation();
+                    } else {
+                        binding.exposureControl.setVisibility(View.GONE);
+                        // Reset EV to 0 when feature is disabled
+                        applyExposureCompensation(0);
+                        persistExposureIndex(0);
+                    }
                     // Re-assert focus so volume keys are captured again after closing dialog
                     binding.getRoot().setFocusableInTouchMode(true);
                     binding.getRoot().requestFocus();
@@ -509,12 +516,28 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                     return;
                 }
                 bindWithTier(BindTier.PERF);
+                if (camera == null) {
+                    Log.e(TAG, "initializeCamera: camera is null after bindWithTier, cannot proceed");
+                    binding.textCamera.setText(R.string.camera_ready_tap_the_button_to_scan_a_document);
+                    if (!reinitScheduled) {
+                        reinitScheduled = true;
+                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                            reinitScheduled = false;
+                            if (isAdded() && cameraViewModel != null &&
+                                    Boolean.TRUE.equals(cameraViewModel.isCameraPermissionGranted().getValue())) {
+                                initializeCamera();
+                            }
+                        }, 3000);
+                    }
+                    return;
+                }
                 hasFlash = camera.getCameraInfo().hasFlashUnit();
                 binding.buttonFlash.setVisibility(hasFlash ? View.VISIBLE : View.GONE);
                 isFlashlightOn = false;
                 binding.buttonFlash.setImageResource(R.drawable.ic_flash_off);
                 binding.textCamera.setText(R.string.camera_ready_tap_the_button_to_scan_a_document);
                 logCameraCapabilities();
+                setupExposureCompensation();
 
                 // Touch to focus
                 binding.viewFinder.setOnTouchListener((v, event) -> {
@@ -1357,6 +1380,104 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                         ", abis=" + abis +
                         ", locale=" + (loc != null ? loc.toLanguageTag() : "-") +
                         ", analysisPref=" + analysisPref);
+    }
+
+    // --------- Exposure Compensation ---------
+
+    private void setupExposureCompensation() {
+        if (camera == null || binding == null || !isAdded()) return;
+
+        // Only show if the user enabled the feature in settings
+        Context ctxEc = getContext();
+        if (ctxEc != null) {
+            android.content.SharedPreferences prefsEc = ctxEc.getSharedPreferences("export_options", Context.MODE_PRIVATE);
+            if (!prefsEc.getBoolean(CameraOptionsDialogFragment.BUNDLE_EXPOSURE_COMPENSATION, false)) {
+                binding.exposureControl.setVisibility(View.GONE);
+                // Reset EV to 0 when feature is disabled
+                applyExposureCompensation(0);
+                persistExposureIndex(0);
+                return;
+            }
+        }
+
+        ExposureState es = camera.getCameraInfo().getExposureState();
+        if (es == null || !es.isExposureCompensationSupported()) {
+            binding.exposureControl.setVisibility(View.GONE);
+            Log.i(TAG, "Exposure compensation not supported – hiding control");
+            return;
+        }
+
+        android.util.Range<Integer> range = es.getExposureCompensationRange();
+        float step = es.getExposureCompensationStep() != null ? es.getExposureCompensationStep().floatValue() : 0f;
+        int lower = ExposureCompensationHelper.clampRangeLower(range.getLower(), step);
+        int upper = ExposureCompensationHelper.clampRangeUpper(range.getUpper(), step);
+
+        if (lower >= upper || step <= 0f) {
+            binding.exposureControl.setVisibility(View.GONE);
+            Log.i(TAG, "Exposure compensation range invalid (" + lower + ".." + upper + " step=" + step + ") – hiding control");
+            return;
+        }
+
+        Log.i(TAG, "Exposure compensation: range=" + lower + ".." + upper + " step=" + step);
+
+        // SeekBar: 0..max maps to lower..upper
+        int seekMax = upper - lower;
+        binding.exposureSlider.setMax(seekMax);
+
+        // Restore persisted index, clamped to current device range
+        android.content.SharedPreferences prefs = requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE);
+        int savedIndex = prefs.getInt(PREF_EXPOSURE_INDEX, 0);
+        int clampedIndex = ExposureCompensationHelper.clampIndex(savedIndex, lower, upper);
+
+        binding.exposureSlider.setProgress(ExposureCompensationHelper.indexToProgress(clampedIndex, lower));
+        updateExposureLabel(clampedIndex, step);
+        applyExposureCompensation(clampedIndex);
+
+        binding.exposureSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (!fromUser) return;
+                int index = ExposureCompensationHelper.progressToIndex(progress, lower);
+                updateExposureLabel(index, step);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                int index = ExposureCompensationHelper.progressToIndex(seekBar.getProgress(), lower);
+                applyExposureCompensation(index);
+                persistExposureIndex(index);
+            }
+        });
+
+        binding.exposureControl.setVisibility(View.VISIBLE);
+    }
+
+    private void updateExposureLabel(int index, float step) {
+        if (binding == null) return;
+        float ev = ExposureCompensationHelper.indexToEv(index, step);
+        String formatted = ExposureCompensationHelper.formatEv(ev);
+        binding.exposureLabel.setText(getString(R.string.exposure_compensation_label, formatted));
+    }
+
+    private void applyExposureCompensation(int index) {
+        if (camera == null) return;
+        ExposureState es = camera.getCameraInfo().getExposureState();
+        if (es == null || !es.isExposureCompensationSupported()) return;
+        android.util.Range<Integer> range = es.getExposureCompensationRange();
+        int clamped = ExposureCompensationHelper.clampIndex(index, range.getLower(), range.getUpper());
+        Log.d(TAG, "Applying exposure compensation index=" + clamped);
+        camera.getCameraControl().setExposureCompensationIndex(clamped);
+    }
+
+    private void persistExposureIndex(int index) {
+        Context ctx = getContext();
+        if (ctx == null) return;
+        ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE)
+                .edit().putInt(PREF_EXPOSURE_INDEX, index).apply();
     }
 
     private void logCameraCapabilities() {

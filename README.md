@@ -15,6 +15,20 @@ This significantly increases the app size, but avoids any cloud dependencies or 
 
 **100 MB are not a sign of excess, but of consistency.**
 
+### Editions
+
+MakeACopy is available in two editions:
+
+| Edition | OCR Languages | Fonts | APK Size (arm64-v8a) |
+|---------|--------------|-------|---------------------|
+| **Full** | 21 languages (incl. CJK, Arabic, Thai) | 4 fonts (incl. CJK) | ~106 MB |
+| **Light** | English + German | 1 font (NotoSans) | ~67 MB |
+
+Both editions include the same ML-based document detection (ONNX model), OpenCV image processing, and full offline functionality. The Light edition simply ships fewer OCR language models, fonts, and dictionaries.
+
+The Full edition is available on F-Droid and Google Play. The Light edition is available exclusively via [GitHub Releases](https://github.com/egdels/makeacopy/releases).
+
+
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
 alt="Get it on F-Droid"
 height="80">](https://f-droid.org/packages/de.schliweb.makeacopy/)
@@ -110,7 +124,9 @@ All automated builds are handled by a single GitHub Actions workflow:
 - Workflow: .github/workflows/build-release.yml
 - Triggers: on push to main, pull_request to main, and tags starting with v*
 
-What the workflow does on every run (aligned with CI):
+The workflow contains two parallel jobs:
+
+**Full build** (`build`):
 - Sets up JDK 17 (Temurin) and installs Android NDK 28.0.13004108
 - Pins CMake 3.31.6 and Python 3.11.2 for deterministic native builds
 - Checks out submodules (external/opencv and external/onnxruntime)
@@ -118,19 +134,25 @@ What the workflow does on every run (aligned with CI):
 - Collects reproducibility evidence for native builds (scripts/collect_repro_evidence.sh)
 - Integrates OpenCV artifacts into the app via scripts/prepare_opencv.sh
 - Builds ONNX Runtime for Android (XNNPACK and NNAPI, Java bindings) via scripts/build_onnxruntime_android.sh
-- Builds the Android app with Gradle (AAB and ABI-split APKs)
+- Builds the Full edition Android app with Gradle (AAB and ABI-split APKs)
+
+**Light build** (`build-light`):
+- Depends on the Full build job and downloads the native libraries (jniLibs and JARs) built from source
+- Sets up JDK 17 only (no native build scripts needed)
+- Builds the Light edition: `./gradlew :app:assembleRelease -Pedition=light`
+- Produces per-ABI APKs named `MakeACopy-Light-vX.Y.Z-<abi>-release.apk`
 
 Behavior by event type:
 - Push/PR to main (non-tag):
-  - Builds unsigned artifacts (Release AAB and per-ABI Release APKs)
+  - Builds unsigned artifacts (Full: Release AAB and per-ABI Release APKs; Light: per-ABI Release APKs)
   - Uploads all artifacts for download from the workflow run
 - Tag (refs/tags/vX.Y.Z):
   - Optionally decodes a keystore from repository secrets and signs the builds
   - Verifies APK signatures using apksigner
-  - Renames artifacts to MakeACopy-vX.Y.Z-<abi>-release.apk and MakeACopy-vX.Y.Z-release.aab
+  - Renames artifacts to MakeACopy-vX.Y.Z-<abi>-release.apk, MakeACopy-Light-vX.Y.Z-<abi>-release.apk, and MakeACopy-vX.Y.Z-release.aab
   - Generates SHA-256 checksum files for each artifact
   - Loads release notes from fastlane/metadata/android/en-US/changelogs/<versionCode>.txt
-  - Creates a GitHub Release and attaches all APKs, the AAB, and their .sha256 files
+  - Creates a GitHub Release and attaches all Full and Light APKs, the AAB, and their .sha256 files
   - Uploads artifacts to the workflow as well
 
 How to trigger a release build:
@@ -140,7 +162,17 @@ How to trigger a release build:
 
 Notes:
 - All native components are built from source to stay F-Droid compatible; no prebuilt binaries are stored in the repo.
+- The Light edition reuses the native libraries built by the Full build job (downloaded as CI artifacts), so it skips the time-consuming OpenCV and ONNX Runtime source builds entirely.
+- The edition is controlled via the Gradle property `edition` (default: `full`). F-Droid builds use the default and require no special configuration.
 - A look at .github/workflows/build-release.yml shows you how the build process works and how you can reproduce it in your own development environment.
+
+#### Building the Light Edition
+
+```bash
+./gradlew :app:assembleRelease -Pedition=light -PenableAbiSplits=true
+```
+
+The Light edition uses `applicationIdSuffix ".light"` (`de.schliweb.makeacopy.light`) and includes only English and German OCR models, the NotoSans-Regular font, and English/German dictionaries.
 
 ## Architecture
 

@@ -112,7 +112,7 @@ public final class DocQuadDetector implements CornerDetector {
                 float g = ((c >> 8) & 0xFF) / 255.0f;
                 float b = (c & 0xFF) / 255.0f;
                 int idx = y * w + x;
-                out[0 + idx] = r;
+                out[idx] = r;
                 out[hw + idx] = g;
                 out[2 * hw + idx] = b;
             }

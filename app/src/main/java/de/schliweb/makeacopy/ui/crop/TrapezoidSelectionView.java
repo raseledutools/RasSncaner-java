@@ -983,13 +983,13 @@ public class TrapezoidSelectionView extends View {
             }
         }
 
-        // Check if the quadrilateral has reasonable area (at least 10% of view)
+        // Check if the quadrilateral has reasonable area (at least 2% of view)
         double area = Math.abs((coordinates[0].x * (coordinates[1].y - coordinates[3].y) + coordinates[1].x * (coordinates[2].y - coordinates[0].y) + coordinates[2].x * (coordinates[3].y - coordinates[1].y) + coordinates[3].x * (coordinates[0].y - coordinates[2].y)) / 2.0);
 
         double viewArea = viewWidth * viewHeight;
         double areaRatio = area / viewArea;
 
-        if (areaRatio < 0.1) {
+        if (areaRatio < 0.02) {
             Log.w(TAG, "Quadrilateral area too small: " + areaRatio + " of view area");
             return false;
         }

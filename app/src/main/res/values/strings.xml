@@ -78,6 +78,12 @@
     <string name="flashlight_off">Flashlight off</string>
     <string name="flashlight_not_available">Flashlight not available on this device</string>
     <string name="low_light_detected">Low light detected. Turn on flashlight?</string>
+
+    <!-- Exposure compensation -->
+    <string name="exposure_compensation_label">EV %1$s</string>
+    <string name="exposure_compensation_cd">Exposure compensation slider</string>
+    <string name="exposure_reset_cd">Reset exposure to zero</string>
+    <string name="exposure_compensation_option">Exposure compensation</string>
     <!-- JPEG mode labels -->
     <string name="jpeg_mode_none">No enhancement (JPEG)</string>
     <string name="jpeg_mode_auto">Auto enhance (JPEG)</string>

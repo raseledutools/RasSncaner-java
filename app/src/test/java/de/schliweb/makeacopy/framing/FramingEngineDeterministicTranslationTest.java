@@ -3,7 +3,6 @@ package de.schliweb.makeacopy.framing;
 import android.graphics.PointF;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.Ignore;
 
 /**
  * Deterministic translation-only tests for FramingEngine using the
@@ -11,7 +10,6 @@ import org.junit.Ignore;
  * These tests ensure translation hints are selected when exceeding
  * the SHIFT_OK threshold with zero tilt and neutral scale.
  */
-@Ignore("Disabled for now: translation sign alignment vs. engine normalization requires refinement; keeping CI green")
 public class FramingEngineDeterministicTranslationTest {
 
     private static final int W = 1000;
@@ -23,13 +21,20 @@ public class FramingEngineDeterministicTranslationTest {
         return new FramingEngine.Input(W, H, quad, null, modelH);
     }
 
+    private static PointF pt(float x, float y) {
+        PointF p = new PointF();
+        p.x = x;
+        p.y = y;
+        return p;
+    }
+
     private static PointF[] rectQuad(float left, float top, float right, float bottom) {
         // Clockwise TL, TR, BR, BL
         return new PointF[]{
-                new PointF(left, top),
-                new PointF(right, top),
-                new PointF(right, bottom),
-                new PointF(left, bottom)
+                pt(left, top),
+                pt(right, top),
+                pt(right, bottom),
+                pt(left, bottom)
         };
     }
 
