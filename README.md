@@ -329,7 +329,6 @@ Contributions welcome!
 ## Future Enhancements
 
 - Add more languages to OCR detection
-- Further ML-based scan enhancements (quality and speed)
 
 ## 🙌 Community Hall of Fame
 
