@@ -406,9 +406,10 @@ public class OpenCVUtils {
             Utils.bitmapToMat(src, rgba);
             Imgproc.cvtColor(rgba, gray, Imgproc.COLOR_RGBA2GRAY);
 
-            // --- 1) Shadow correction: gentle division-based normalization ---
+            // --- 1) Shadow correction: division-based normalization ---
             if (opt.removeShadows && !isSafeMode()) {
-                int k = Math.max(15, (int) (Math.min(gray.width(), gray.height()) * 0.03));
+                // Larger kernel captures broader illumination gradients for better shadow removal
+                int k = Math.max(51, (int) (Math.min(gray.width(), gray.height()) * 0.08));
                 if (k % 2 == 0) k++;
                 Mat bg = new Mat();
                 Imgproc.GaussianBlur(gray, bg, new Size(k, k), 0);
@@ -431,10 +432,10 @@ public class OpenCVUtils {
                 work = gray;  // work points to gray, no separate Mat needed
             }
 
-            // --- 2) very gentle CLAHE (or leave opt.useClahe=false) ---
+            // --- 2) CLAHE for local contrast enhancement ---
             if (opt.useClahe) {
                 clahe = Imgproc.createCLAHE();
-                clahe.setClipLimit(1.1);
+                clahe.setClipLimit(2.0);
                 clahe.setTilesGridSize(new Size(8, 8));
                 clahe.apply(work, work);
             }
@@ -444,22 +445,38 @@ public class OpenCVUtils {
 
             boolean ok = false;
 
-            // --- 4) Adaptive only on real devices (Emulator => Otsu) and less aggressive ---
+            // --- 4) Adaptive threshold: Gaussian weighted for better document binarization ---
+            // Detect low-resolution images (e.g. from autoscan) and use gentler parameters
+            int longSide = Math.max(work.width(), work.height());
+            boolean lowRes = longSide < 1500;
+
             if (opt.mode == BwOptions.Mode.AUTO_ADAPTIVE && !isSafeMode()) {
                 int bs;
                 if (opt.blockSize > 0) {
                     bs = (opt.blockSize % 2 == 1) ? opt.blockSize : opt.blockSize + 1;
+                } else if (lowRes) {
+                    // For low-res images use a larger relative block size to avoid
+                    // over-aggressive binarization that destroys text readability
+                    bs = Math.max(31, (Math.min(work.width(), work.height()) / 10) | 1);
+                    if (bs % 2 == 0) bs++;
                 } else {
-                    // moderately large, guaranteed odd
-                    bs = Math.max(41, (Math.min(work.width(), work.height()) / 40) | 1);
+                    // Larger block size captures broader context for threshold calculation
+                    bs = Math.max(51, (Math.min(work.width(), work.height()) / 30) | 1);
                     if (bs % 2 == 0) bs++;
                 }
-                int C = Math.max(2, Math.min(6, opt.C)); // smaller C reduces bleaching/fading
+                // Higher C keeps text strokes darker and more readable
+                // For low-res images use a lower C to preserve thin strokes
+                int C;
+                if (lowRes) {
+                    C = Math.max(4, Math.min(8, opt.C > 0 ? opt.C : 5));
+                } else {
+                    C = Math.max(8, Math.min(15, opt.C > 5 ? opt.C : 10));
+                }
 
                 try {
                     Imgproc.adaptiveThreshold(
                             work, bw, 255,
-                            Imgproc.ADAPTIVE_THRESH_MEAN_C,
+                            Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
                             Imgproc.THRESH_BINARY,
                             bs, C
                     );
@@ -469,20 +486,39 @@ public class OpenCVUtils {
                 }
             }
 
-            // --- 5) Fallback: Otsu (emulator or error) ---
+            // --- 5) Fallback / OTSU_ONLY mode ---
+            // For low-res OTSU_ONLY (s/w klassisch): use adaptive threshold instead of
+            // global Otsu, because Otsu is too aggressive on low-res autoscan images
+            // and destroys text readability.
+            if (!ok && lowRes && !isSafeMode()) {
+                int bs = Math.max(31, (Math.min(work.width(), work.height()) / 10) | 1);
+                if (bs % 2 == 0) bs++;
+                int C = Math.max(3, Math.min(6, opt.C > 0 ? opt.C : 4));
+                try {
+                    Imgproc.adaptiveThreshold(
+                            work, bw, 255,
+                            Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
+                            Imgproc.THRESH_BINARY,
+                            bs, C
+                    );
+                    ok = true;
+                } catch (Throwable ignore) {
+                    ok = false;
+                }
+            }
             if (!ok) {
                 Imgproc.threshold(work, bw, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
             }
 
             // Despeckle after bw is guaranteed to be filled
-            // Skip for gentle mode (Arabic/Persian/Hebrew scripts with fine strokes and diacritics)
-            if (!opt.gentleMode) {
+            // Skip for gentle mode and low-res images to preserve text readability
+            if (!opt.gentleMode && !lowRes) {
                 despeckleFast(bw, opt.targetDpi);
             }
 
             // --- 6) very gentle closing stabilizes characters ---
-            // Skip for gentle mode to preserve fine character details
-            if (!opt.gentleMode) {
+            // Skip for gentle mode and low-res images to preserve fine character details
+            if (!opt.gentleMode && !lowRes) {
                 try {
                     Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(2, 2));
                     Imgproc.morphologyEx(bw, bw, Imgproc.MORPH_CLOSE, kernel);
@@ -1673,10 +1709,15 @@ public class OpenCVUtils {
                 }
                 // }
 
+                // Detect low-resolution images (e.g. from autoscan) and use gentler parameters
+                int ocrLongSide = Math.max(work.width(), work.height());
+                boolean ocrLowRes = ocrLongSide < 1500;
+
                 // 5c) Edge-preserving denoise: prefer fastNlMeans (grayscale) then bilateral as fallback
+                //     For low-res images use lower h to preserve fine text strokes
                 try {
-                    // h tuned to keep strokes (unit ~ pixel intensity)
-                    Photo.fastNlMeansDenoising(work, work, /*h*/ 10, /*templateWindowSize*/ 7, /*searchWindowSize*/ 21);
+                    int denoiseH = ocrLowRes ? 5 : 10;
+                    Photo.fastNlMeansDenoising(work, work, /*h*/ denoiseH, /*templateWindowSize*/ 7, /*searchWindowSize*/ 21);
                 } catch (Throwable tNl) {
                     try {
                         int longSide = Math.max(work.width(), work.height());
@@ -1694,7 +1735,8 @@ public class OpenCVUtils {
                 try {
                     // Candidate A/B/C: Sauvola with varying k and window sizes (real devices only)
                     if (!isSafeMode()) {
-                        int baseWin = Math.max(31, ((Math.min(work.width(), work.height()) / 24) | 1));
+                        // For low-res images use larger relative window (min/10) for broader context
+                        int baseWin = Math.max(31, ((Math.min(work.width(), work.height()) / (ocrLowRes ? 10 : 24)) | 1));
                         if (baseWin % 2 == 0) baseWin++;
                         int[] wins = new int[]{baseWin, Math.max(31, baseWin + 8), Math.max(31, baseWin - 8)};
                         double[] ks = new double[]{0.30, 0.34, 0.40};
@@ -1722,9 +1764,10 @@ public class OpenCVUtils {
                     if (!isSafeMode()) {
                         try {
                             Mat m = new Mat();
-                            int bs = Math.max(31, ((Math.min(work.width(), work.height()) / 32) | 1));
+                            int bs = Math.max(31, ((Math.min(work.width(), work.height()) / (ocrLowRes ? 10 : 32)) | 1));
                             if (bs % 2 == 0) bs++;
-                            Imgproc.adaptiveThreshold(work, m, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, bs, 5);
+                            int adaptC = ocrLowRes ? 3 : 5;
+                            Imgproc.adaptiveThreshold(work, m, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, bs, adaptC);
                             candidates.add(m);
                             candNames.add("AdaptiveMean");
                         } catch (Throwable ignore) {
@@ -1732,7 +1775,7 @@ public class OpenCVUtils {
                     }
                     // Candidate F: Wolf binarization (better for uneven illumination, device only)
                     if (!isSafeMode()) {
-                        int wolfWin = Math.max(31, ((Math.min(work.width(), work.height()) / 24) | 1));
+                        int wolfWin = Math.max(31, ((Math.min(work.width(), work.height()) / (ocrLowRes ? 10 : 24)) | 1));
                         if (wolfWin % 2 == 0) wolfWin++;
                         double[] wolfKs = new double[]{0.25, 0.35, 0.45};
                         for (double kv : wolfKs) {
@@ -1747,7 +1790,7 @@ public class OpenCVUtils {
                     }
                     // Candidate G: NICK binarization (better for low contrast, device only)
                     if (!isSafeMode()) {
-                        int nickWin = Math.max(31, ((Math.min(work.width(), work.height()) / 24) | 1));
+                        int nickWin = Math.max(31, ((Math.min(work.width(), work.height()) / (ocrLowRes ? 10 : 24)) | 1));
                         if (nickWin % 2 == 0) nickWin++;
                         double[] nickKs = new double[]{-0.10, -0.14, -0.20};
                         for (double kv : nickKs) {
@@ -1791,22 +1834,25 @@ public class OpenCVUtils {
                 //     - despeckle small salt/pepper
                 //     - micro closing to reconnect thin strokes
                 //     - connected components cleanup with dynamic thresholds
-                try {
-                    despeckleFast(bw, 0); // Use default DPI (300) for OCR preparation
-                } catch (Throwable ignore) {
-                }
-                try {
-                    Mat kClose = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(2, 2));
-                    Imgproc.morphologyEx(bw, bw, Imgproc.MORPH_CLOSE, kClose);
-                    kClose.release();
-                } catch (Throwable ignore) {
-                }
-                try {
-                    int area = bw.rows() * bw.cols();
-                    int minArea = Math.max(10, area / 15000);
-                    int minHeight = Math.max(3, Math.min(10, Math.max(bw.rows(), bw.cols()) / 170));
-                    removeSmallComponents(bw, minArea, minHeight);
-                } catch (Throwable ignore) {
+                //     Skip all post-processing for low-res images to preserve text readability
+                if (!ocrLowRes) {
+                    try {
+                        despeckleFast(bw, 0); // Use default DPI (300) for OCR preparation
+                    } catch (Throwable ignore) {
+                    }
+                    try {
+                        Mat kClose = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(2, 2));
+                        Imgproc.morphologyEx(bw, bw, Imgproc.MORPH_CLOSE, kClose);
+                        kClose.release();
+                    } catch (Throwable ignore) {
+                    }
+                    try {
+                        int area = bw.rows() * bw.cols();
+                        int minArea = Math.max(10, area / 15000);
+                        int minHeight = Math.max(3, Math.min(10, Math.max(bw.rows(), bw.cols()) / 170));
+                        removeSmallComponents(bw, minArea, minHeight);
+                    } catch (Throwable ignore) {
+                    }
                 }
 
                 // 5f) Super-resolution scaling for small text (~24-32 px target glyph height)

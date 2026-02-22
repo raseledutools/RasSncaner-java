@@ -643,10 +643,12 @@ public class PdfCreator {
                 opt.targetDpi = targetDpi > 0 ? targetDpi : 300;
                 viaCv = OpenCVUtils.toBw(base, opt);
             } else {
+                // CLASSIC: use Otsu thresholding but with shadow removal and CLAHE
+                // to avoid heavy shadows and improve text contrast
                 OpenCVUtils.BwOptions opt = new OpenCVUtils.BwOptions();
                 opt.mode = OpenCVUtils.BwOptions.Mode.OTSU_ONLY;
-                opt.useClahe = false;
-                opt.removeShadows = false;
+                opt.useClahe = true;
+                opt.removeShadows = true;
                 opt.gentleMode = gentleMode;
                 opt.targetDpi = targetDpi > 0 ? targetDpi : 300;
                 viaCv = OpenCVUtils.toBw(base, opt);
