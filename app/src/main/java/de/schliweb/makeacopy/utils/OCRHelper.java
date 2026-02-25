@@ -270,6 +270,7 @@ public class OCRHelper {
       try {
         tessBaseAPI.recycle();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       tessBaseAPI = null;
     }
@@ -384,7 +385,7 @@ public class OCRHelper {
   public void applyDefaultsForLanguage(String langSpec) {
     if (!isInitialized) return;
 
-    String ls = (langSpec == null) ? "" : langSpec.toLowerCase();
+    String ls = (langSpec == null) ? "" : langSpec.toLowerCase(java.util.Locale.ROOT);
     boolean isCjkOrThai = ls.contains("chi_") || ls.contains("tha");
     boolean isRtlArabic = ls.contains("ara") || ls.contains("fas");
 
@@ -458,7 +459,7 @@ public class OCRHelper {
    * @throws IOException If an I/O error occurs while ensuring the language data files are present.
    */
   private void ensureLanguageDataPresent(String langSpec) throws IOException {
-    for (String part : langSpec.split("\\+")) {
+    for (String part : langSpec.split("\\+", -1)) {
       String lang = part.trim();
       if (!lang.isEmpty()) copyLanguageDataFileSingle(lang);
     }
@@ -787,6 +788,7 @@ public class OCRHelper {
           try {
             conf = Float.parseFloat(confM.group(1));
           } catch (Throwable ignore) {
+            // Best-effort; failure is non-critical
           }
         }
 
