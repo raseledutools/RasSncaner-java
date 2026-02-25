@@ -123,6 +123,7 @@ public class OcrReviewFragment extends Fragment {
               try {
                 rotatedBm.recycle();
               } catch (Throwable ignore3) {
+                // Best-effort; failure is non-critical
               }
             }
             if (tiny != null) {
@@ -133,12 +134,14 @@ public class OcrReviewFragment extends Fragment {
                 try {
                   prev.recycle();
                 } catch (Throwable ignore2) {
+                  // Best-effort; failure is non-critical
                 }
               }
             }
           }
         }
       } catch (Throwable ignore2) {
+        // Best-effort; failure is non-critical
       }
     } catch (Throwable t) {
       dbgWarn("Loading minimap thumbnail failed", t);
@@ -185,31 +188,6 @@ public class OcrReviewFragment extends Fragment {
   }
 
   /**
-   * Converts a user-defined scale factor (userScale) into an absolute scale factor, represented as
-   * view pixels per image pixels, based on the dimensions of the provided container and the page
-   * size.
-   *
-   * @param container The container view used for calculating the scaling. If null or has invalid
-   *     dimensions, the userScale value is returned as is.
-   * @param pageW The width of the page or content being scaled, in pixels. Must be greater than 0.
-   * @param pageH The height of the page or content being scaled, in pixels. Must be greater than 0.
-   * @param userScale The scale factor set by the user, typically used to determine the zoom level
-   *     or fit.
-   * @return The computed absolute scale factor as a float, representing view pixels per image
-   *     pixels. If any parameters are invalid, the userScale is returned unchanged.
-   */
-  // Converts a userScale to absolute scale (view px per image px) for the given container and page
-  // size.
-  private float toAbsoluteScale(View container, int pageW, int pageH, float userScale) {
-    if (container == null || pageW <= 0 || pageH <= 0) return userScale;
-    int cw = container.getWidth();
-    int ch = container.getHeight();
-    if (cw <= 0 || ch <= 0) return userScale;
-    float base = Math.min(cw / Math.max(1f, (float) pageW), ch / Math.max(1f, (float) pageH));
-    return userScale * base;
-  }
-
-  /**
    * Centers the viewport by resetting user offsets to (0,0), which corresponds to centered content
    * because userOffset is interpreted as a delta from base centering in our views.
    *
@@ -234,15 +212,12 @@ public class OcrReviewFragment extends Fragment {
     if (textLayer != null) textLayer.setUserOffset(0f, 0f);
   }
 
-  private static final long AUTOSAVE_DEBOUNCE_MS = 500L;
   private static final String STATE_MODE = "ocr_mode";
   private static final String STATE_SCALE = "ocr_scale";
   private static final String STATE_OFF_X = "ocr_off_x";
   private static final String STATE_OFF_Y = "ocr_off_y";
   private static final String STATE_MINIMAP_VISIBLE = "ocr_minimap_visible";
   private OcrReviewViewModel viewModel;
-  private final android.os.Handler handler =
-      new android.os.Handler(android.os.Looper.getMainLooper());
   // Editor write-back debounce handler (promoted to field for lifecycle cleanup)
   private final android.os.Handler editorHandler =
       new android.os.Handler(android.os.Looper.getMainLooper());
@@ -304,7 +279,6 @@ public class OcrReviewFragment extends Fragment {
         root.findViewById(R.id.segmented_group);
     com.google.android.material.button.MaterialButton segLayout =
         root.findViewById(R.id.seg_layout);
-    com.google.android.material.button.MaterialButton segText = root.findViewById(R.id.seg_text);
     com.google.android.material.chip.Chip chipZoom = root.findViewById(R.id.chip_zoom);
 
     // Document mode views
@@ -326,6 +300,7 @@ public class OcrReviewFragment extends Fragment {
       try {
         minimap.setContentDescription(getString(R.string.cd_minimap));
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       minimapCard.setClickable(true);
       if (minimapCard instanceof android.widget.FrameLayout) {
@@ -348,6 +323,7 @@ public class OcrReviewFragment extends Fragment {
               try {
                 d = viewModel.getDoc().getValue();
               } catch (Throwable ignore) {
+                // Best-effort; failure is non-critical
               }
               if (d == null || d.imageSize == null) return;
               int vw2 = overlay.getWidth();
@@ -374,6 +350,7 @@ public class OcrReviewFragment extends Fragment {
               try {
                 d = viewModel.getDoc().getValue();
               } catch (Throwable ignore) {
+                // Best-effort; failure is non-critical
               }
               if (d != null && d.imageSize != null) {
                 float padPx = dp(12f);
@@ -531,38 +508,6 @@ public class OcrReviewFragment extends Fragment {
 
     if (buttonSave != null) {
       buttonSave.setOnClickListener(v -> handleSaveAction());
-    }
-
-    // FAB for "Bearbeiten" (switch to Text mode)
-    com.google.android.material.floatingactionbutton.FloatingActionButton fab = null;
-    if (fab != null) {
-      fab.setOnClickListener(
-          v -> {
-            com.google.android.material.button.MaterialButtonToggleGroup segmentedTmp =
-                root.findViewById(R.id.segmented_group);
-            if (segmentedTmp != null) {
-              segmentedTmp.check(R.id.seg_text);
-            }
-            EditText editor = root.findViewById(R.id.text_mode_editor);
-            if (editor != null) {
-              editor.requestFocus();
-              editor.postDelayed(
-                  () -> {
-                    try {
-                      android.view.inputmethod.InputMethodManager imm =
-                          (android.view.inputmethod.InputMethodManager)
-                              requireContext()
-                                  .getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
-                      if (imm != null)
-                        imm.showSoftInput(
-                            editor, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
-                    } catch (Throwable t) {
-                      dbgWarn("Showing IME failed", t);
-                    }
-                  },
-                  50);
-            }
-          });
     }
 
     final boolean[] updatingZoomBar = {false};
@@ -843,6 +788,7 @@ public class OcrReviewFragment extends Fragment {
     if (zoomBar != null) {
       SeekBar.OnSeekBarChangeListener listener =
           new SeekBar.OnSeekBarChangeListener() {
+            @SuppressWarnings("UnusedVariable") // fromUser required by SeekBar API
             private void apply(int progress, boolean fromUser) {
               if (updatingZoomBar[0]) return;
               float s = progress / 50f; // 50 -> 1.0, 200 -> 4.0, 0 -> 0.0 (clamped below)
@@ -867,7 +813,6 @@ public class OcrReviewFragment extends Fragment {
       listener.onProgressChanged(zoomBar, zoomBar.getProgress(), false);
       if (chipZoom != null) {
         try {
-          int pct = Math.round((zoomBar.getProgress() / 50f) * 100f);
           chipZoom.setContentDescription(getString(R.string.cd_zoom_chip_open_menu));
         } catch (Throwable t) {
           dbgWarn("Updating zoom chip contentDescription (init) failed", t);
@@ -938,6 +883,7 @@ public class OcrReviewFragment extends Fragment {
                       if (card != null)
                         card.setVisibility(minimapVisible ? View.VISIBLE : View.GONE);
                     } catch (Throwable ignore) {
+                      // Best-effort; failure is non-critical
                     }
                     return true;
                   }
@@ -1237,6 +1183,7 @@ public class OcrReviewFragment extends Fragment {
         langSpec = state.language();
       }
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
 
     final String finalLangSpec = langSpec;
@@ -1474,6 +1421,7 @@ public class OcrReviewFragment extends Fragment {
             if (btnNegative != null) btnNegative.setPadding(smallPadding, 0, smallPadding, 0);
             if (btnNeutral != null) btnNeutral.setPadding(smallPadding, 0, smallPadding, 0);
           } catch (Throwable ignore) {
+            // Best-effort; failure is non-critical
           }
         });
     dialog.show();
@@ -1491,6 +1439,7 @@ public class OcrReviewFragment extends Fragment {
       String[] langs = helper.getAvailableLanguages();
       if (langs != null && langs.length > 0) return langs;
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
     // Fallback to common languages
     return de.schliweb.makeacopy.utils.OCRUtils.getLanguages();
@@ -1695,6 +1644,7 @@ public class OcrReviewFragment extends Fragment {
                     wordBitmap.recycle();
                   }
                 } catch (Throwable ignore) {
+                  // Best-effort; failure is non-critical
                 }
               }
 
@@ -1952,7 +1902,7 @@ public class OcrReviewFragment extends Fragment {
    */
   private String toTitleCase(String s) {
     if (s == null || s.isEmpty()) return "";
-    String[] parts = s.toLowerCase(java.util.Locale.getDefault()).split("\\s+");
+    String[] parts = s.toLowerCase(java.util.Locale.getDefault()).split("\\s+", -1);
     StringBuilder sb = new StringBuilder();
     for (String p : parts) {
       if (p.isEmpty()) continue;
@@ -2048,6 +1998,7 @@ public class OcrReviewFragment extends Fragment {
         try {
           chipWords.setText(getString(R.string.words_count_suffix_format, total));
         } catch (Throwable ignore) {
+          // Best-effort; failure is non-critical
         }
       if (chipLow != null)
         try {
@@ -2058,6 +2009,7 @@ public class OcrReviewFragment extends Fragment {
                   : getString(R.string.low_placeholder);
           chipLow.setText(txt);
         } catch (Throwable ignore) {
+          // Best-effort; failure is non-critical
         }
       if (chipLang != null) {
         String bestLang = null;
@@ -2072,9 +2024,11 @@ public class OcrReviewFragment extends Fragment {
         try {
           chipLang.setText(bestLang.toUpperCase(java.util.Locale.ROOT));
         } catch (Throwable ignore) {
+          // Best-effort; failure is non-critical
         }
       }
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
   }
 
@@ -2176,6 +2130,7 @@ public class OcrReviewFragment extends Fragment {
       try {
         requireActivity().finish();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
     }
   }
@@ -2267,6 +2222,7 @@ public class OcrReviewFragment extends Fragment {
         minimapBitmap.recycle();
       }
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
     minimapBitmap = null;
   }
@@ -2348,6 +2304,7 @@ public class OcrReviewFragment extends Fragment {
         View card = view.findViewById(R.id.minimap_placeholder);
         if (card != null) card.setVisibility(minimapVisible ? View.VISIBLE : View.GONE);
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       if (!Float.isNaN(s)) {
         // Prevent the one-time auto-fit from overriding restored state
@@ -2359,6 +2316,7 @@ public class OcrReviewFragment extends Fragment {
         if (textLayer != null) textLayer.setUserOffset(ox, oy);
       }
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
   }
 
