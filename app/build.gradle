@@ -1,5 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.spotless)
+    alias(libs.plugins.errorprone)
+    id 'jacoco'
 }
 
 def enableAbiSplits = (project.findProperty("enableAbiSplits") ?: "true").toBoolean()
@@ -16,8 +19,8 @@ android {
         applicationId "de.schliweb.makeacopy"
         minSdk = 29
         targetSdk = 36
-        versionCode 30201
-        versionName "3.2.1"
+        versionCode 30300
+        versionName "3.3.0"
 
         // Use default AndroidX test runner
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -75,6 +78,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            enableUnitTestCoverage = true
+        }
         release {
             minifyEnabled = true
             shrinkResources = true
@@ -207,6 +213,12 @@ dependencies {
     // Align Hamcrest to a single modern version to avoid duplicate classes
     androidTestImplementation libs.hamcrest
     androidTestImplementation libs.awaitility
+
+    // Error Prone
+    errorprone libs.errorprone.core
+    annotationProcessor libs.errorprone.core
+    testAnnotationProcessor libs.errorprone.core
+    androidTestAnnotationProcessor libs.errorprone.core
     // Espresso Accessibility Test Framework for automated accessibility checks
     androidTestImplementation (libs.accessibility.test.framework) {
         exclude group: 'org.hamcrest', module: 'hamcrest-core'
@@ -305,6 +317,12 @@ tasks.withType(JavaCompile).configureEach {
             '-Xlint:deprecation',
             '-Xlint:unchecked'
     ]
+    options.errorprone {
+        enabled = true
+        disableWarningsInGeneratedCode = true
+        allErrorsAsWarnings = true
+        excludedPaths = ".*/org/opencv/.*"
+    }
 }
 // Exclude CJK CMap files from light edition after asset merge (saves ~3 MB, not needed without CJK OCR support)
 if (isLight) {
@@ -319,6 +337,32 @@ if (isLight) {
             }
         }
     }
+}
+
+spotless {
+    java {
+        target("src/*/java/**/*.java")
+        googleJavaFormat("1.17.0")
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
+tasks.register("jacocoTestReport", JacocoReport) {
+    dependsOn "testDebugUnitTest"
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+    def mainSrc = "$projectDir/src/main/java"
+    sourceDirectories.setFrom(mainSrc)
+    classDirectories.setFrom(
+            fileTree("$buildDir/intermediates/javac/debug") {
+                exclude("**/R.class", "**/R\$*.class", "**/BuildConfig.class")
+            }
+    )
+    executionData.setFrom("$buildDir/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
 }
 
 // Disable ArtProfile / baseline-prof generation for deterministic builds.

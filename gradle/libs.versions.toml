@@ -12,15 +12,15 @@ material = "1.13.0"
 constraintlayout = "2.2.1"
 lifecycleLivedataKtx = "2.10.0"
 lifecycleViewmodelKtx = "2.10.0"
-navigationFragment = "2.9.6"
-navigationUi = "2.9.6"
+navigationFragment = "2.9.7"
+navigationUi = "2.9.7"
 # Added for MakeACopy
-camerax = "1.5.2"
+camerax = "1.5.3"
 roomRuntime = "2.8.4"
 tesseract = "4.9.0"
 lombok = "1.18.42"
 pdfbox = "2.0.27.0"
-activity = "1.12.1"
+activity = "1.12.4"
 exifinterface = "1.4.2"
 gson="2.13.2"
 # Android test libs (aligned set)
@@ -31,6 +31,9 @@ fragmentTesting = "1.8.9"
 awaitility = "4.3.0"
 
 accessibilityTestFramework = "4.1.1"
+spotless = "6.25.0"
+errorprone = "4.1.0"
+errorproneCore = "2.31.0"
 
 [libraries]
 accessibility-test-framework = { module = "com.google.android.apps.common.testing.accessibility.framework:accessibility-test-framework", version.ref = "accessibilityTestFramework" }
@@ -77,6 +80,11 @@ androidx-test-runner = { group = "androidx.test", name = "runner", version.ref =
 fragment-testing = { group = "androidx.fragment", name = "fragment-testing", version.ref = "fragmentTesting" }
 awaitility = { group = "org.awaitility", name = "awaitility", version.ref = "awaitility" }
 
+# Error Prone
+errorprone-core = { group = "com.google.errorprone", name = "error_prone_core", version.ref = "errorproneCore" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+errorprone = { id = "net.ltgt.errorprone", version.ref = "errorprone" }
 

@@ -311,6 +311,66 @@ The app uses `BuildConfig` booleans to gate features:
 
 When adding new features, prefer **default-off** for risky or experimental changes.
 
+## 9. Code Quality
+
+The project uses three code-quality plugins. Run them regularly before pushing changes.
+
+### Spotless (Code Formatting)
+
+Spotless enforces [Google Java Format](https://github.com/google/google-java-format) on all Java sources.
+
+```bash
+# Check formatting (fails if code is not formatted)
+./gradlew :app:spotlessCheck
+
+# Auto-format all Java sources
+./gradlew :app:spotlessApply
+```
+
+> **Tip:** Run `spotlessApply` before every commit to avoid CI failures.
+
+### JaCoCo (Test Coverage)
+
+JaCoCo generates a coverage report from the debug unit tests.
+
+```bash
+./gradlew :app:jacocoTestReport
+```
+
+Reports are generated at:
+- **HTML:** `app/build/reports/jacoco/jacocoTestReport/html/index.html`
+- **XML:** `app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml`
+
+### Error Prone (Static Analysis)
+
+Error Prone runs automatically during every Java compilation — no separate command needed. All findings are reported as **warnings** in the compiler output.
+
+```bash
+./gradlew :app:compileDebugJavaWithJavac
+```
+
+> **Note:** Error Prone only analyses Java sources (not Kotlin). OpenCV sources under `org.opencv` are excluded from analysis.
+
+### Android Lint (Static Analysis)
+
+Android Lint checks for accessibility issues, unused resources, performance problems, and more.
+
+```bash
+./gradlew :app:lintDebug
+```
+
+The HTML report is generated at `app/build/reports/lint-results-debug.html`.
+
+> **Note:** Intentional suppressions are documented in `app/lint.xml` with explanations for each ignored check.
+
+### Run All Quality Checks Together
+
+```bash
+./gradlew :app:spotlessCheck :app:lintDebug :app:jacocoTestReport
+```
+
+This checks formatting (Spotless), runs Android Lint, compiles the code (Error Prone runs automatically), executes unit tests, and generates the coverage report (JaCoCo).
+
 ## Tips
 
 - **ABI splits**: Enabled by default. Use `-PenableAbiSplits=false` for a single universal APK during development.
