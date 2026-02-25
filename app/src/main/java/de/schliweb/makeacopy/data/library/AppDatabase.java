@@ -54,8 +54,8 @@ public abstract class AppDatabase extends RoomDatabase {
           INSTANCE =
               Room.databaseBuilder(
                       context.getApplicationContext(), AppDatabase.class, "scan_library.db")
-                  .fallbackToDestructiveMigration() // safe for MVP; will be replaced with proper
-                  // migrations later
+                  .fallbackToDestructiveMigration(false) // safe for MVP; will be replaced with
+                  // proper migrations later
                   .build();
         }
       }
