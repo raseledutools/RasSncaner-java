@@ -86,6 +86,7 @@ import java.util.concurrent.TimeUnit;
  * image analysis, and real-time updates to enhance the camera user experience in dynamic
  * application scenarios.
  */
+@SuppressWarnings("FutureReturnValueIgnored") // camera control futures are fire-and-forget
 public class CameraFragment extends Fragment implements SensorEventListener {
 
   private static final String TAG = "CameraFragment";
@@ -98,7 +99,10 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
   // Live-analysis allocation guardrails (avoid per-frame large allocations on analyzer thread)
   // ThreadLocal because CameraX analyzer runs on a dedicated background thread.
+  @SuppressWarnings("ThreadLocalUsage") // intentional: reuse buffers on CameraX analyzer thread
   private final ThreadLocal<byte[]> nv21ReuseBuffer = new ThreadLocal<>();
+
+  @SuppressWarnings("ThreadLocalUsage") // intentional: reuse stream on CameraX analyzer thread
   private final ThreadLocal<java.io.ByteArrayOutputStream> jpegReuseStream = new ThreadLocal<>();
 
   // Light sensor constants
@@ -114,7 +118,6 @@ public class CameraFragment extends Fragment implements SensorEventListener {
   // Threshold for the live score below which an explicit "No document detected" hint is announced
   // (A11y).
   // Score range: 0..1
-  private static final double NO_DOC_SCORE_THRESHOLD = 0.20;
   private FragmentCameraBinding binding;
   private CameraViewModel cameraViewModel;
   private CropViewModel cropViewModel;
@@ -167,10 +170,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
   // Model-free distance estimation via autofocus (Camera2 API)
   // Value in diopters (1/meters). 0 or negative means unavailable.
+  @SuppressWarnings("UnusedVariable") // explicit init required for volatile field
   private volatile float lastFocusDistanceDiopters = 0f;
-  // Threshold: if focus distance < this value (in diopters), object is too far
-  // 2.0 diopters = 0.5m, 1.0 diopters = 1.0m, 0.5 diopters = 2.0m
-  private static final float TOO_FAR_FOCUS_THRESHOLD_DIOPTERS = 1.0f; // ~1 meter
 
   /**
    * Converts a given surface rotation value to its corresponding degree representation.
@@ -295,7 +296,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     binding.buttonScan.setOnClickListener(
         v -> {
           if (cameraViewModel != null
-              && cameraViewModel.isCameraPermissionGranted().getValue() == Boolean.TRUE) {
+              && cameraViewModel.isCameraPermissionGranted().getValue().equals(Boolean.TRUE)) {
             captureImage();
           } else {
             checkCameraPermission();
@@ -475,6 +476,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
           try {
             Navigation.findNavController(requireView()).navigate(dest);
           } catch (IllegalArgumentException | IllegalStateException ignored) {
+            // Best-effort; failure is non-critical
           }
         });
 
@@ -1174,6 +1176,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
               try {
                 Navigation.findNavController(requireView()).navigate(dest);
               } catch (IllegalArgumentException | IllegalStateException ignored) {
+                // Best-effort; failure is non-critical
               }
             }
           }
@@ -1481,6 +1484,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
               .setPositiveButton(
                   R.string.flashlight_on,
                   new DialogInterface.OnClickListener() {
+                    @Override
                     public void onClick(DialogInterface dialog, int id) {
                       if (!isFlashlightOn && hasFlash) toggleFlashlight();
                     }
@@ -1981,7 +1985,6 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         cachedLiveCornerDetectorFlag = true;
       }
 
-      de.schliweb.makeacopy.utils.OpenCVUtils.DetectionResult det;
       org.opencv.core.Point[] pts;
       boolean hasValid;
 
@@ -2003,7 +2006,6 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         hasValid = false;
       }
       // Live-DocQuad liefert aktuell keinen Score (Determinismus/Performance).
-      det = new de.schliweb.makeacopy.utils.OpenCVUtils.DetectionResult(pts, 0.0);
 
       // Map bitmap coords to overlay coords (PreviewView with FIT_CENTER) when valid
       android.graphics.PointF[] viewPts = hasValid ? mapToOverlayPoints(pts, bmpW, bmpH) : null;
@@ -2125,6 +2127,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 });
           }
         } catch (Exception ignored) {
+          // Best-effort; failure is non-critical
         }
       }
 
@@ -2243,6 +2246,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       try {
         if (bmp != null && !bmp.isRecycled()) bmp.recycle();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       image.close();
     }
@@ -2355,76 +2359,6 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     return 0;
   }
 
-  private EffectiveFraming computeEffectiveFraming(FramingResult base, double rawScore) {
-    try {
-      // If no base result is available, return neutral defaults
-      if (base == null) {
-        FramingResult neutral = new FramingResult(0f, 0f, 0f, 1f, 0f, 0f, GuidanceHint.OK, false);
-        // For low score, also treat as "no document"
-        if (rawScore < NO_DOC_SCORE_THRESHOLD) {
-          neutral =
-              new FramingResult(
-                  neutral.quality,
-                  neutral.dxNorm,
-                  neutral.dyNorm,
-                  neutral.scaleRatio,
-                  neutral.tiltHorizontal,
-                  neutral.tiltVertical,
-                  GuidanceHint.NO_DOCUMENT_DETECTED,
-                  false);
-        }
-        return new EffectiveFraming(neutral, !neutral.hasDocument);
-      }
-
-      // Low score → explicit hint and hasDocument=false
-      if (rawScore < NO_DOC_SCORE_THRESHOLD) {
-        FramingResult adjusted =
-            new FramingResult(
-                base.quality,
-                base.dxNorm,
-                base.dyNorm,
-                base.scaleRatio,
-                base.tiltHorizontal,
-                base.tiltVertical,
-                GuidanceHint.NO_DOCUMENT_DETECTED,
-                false);
-        return new EffectiveFraming(adjusted, true);
-      }
-
-      // Otherwise unchanged; suppression only when there is no document anyway
-      boolean suppress = !base.hasDocument;
-      return new EffectiveFraming(base, suppress);
-    } catch (Exception ignored) {
-    }
-    // Very conservative fallback
-    return new EffectiveFraming(base, base == null || !base.hasDocument);
-  }
-
-  // --- Orientation guidance: consolidated decision as optional GuidanceHint ---
-  // Returns one of the ORIENTATION_* hints when confidence is sufficient and context
-  // (no plausible document) suggests it; otherwise null.
-  private GuidanceHint computeEffectiveOrientation(
-      int bucketDeg, double confidence, EffectiveFraming eff) {
-    try {
-      final double ORI_CONF_THRESHOLD = 0.30; // as used before
-      if (confidence < ORI_CONF_THRESHOLD) return null;
-
-      // Context: prioritize orientation help when (effectively) no document is present
-      if (eff != null && eff.result != null) {
-        if (eff.result.hasDocument && eff.result.hint != GuidanceHint.NO_DOCUMENT_DETECTED) {
-          // Document present → do not distract with orientation hints
-          return null;
-        }
-      }
-
-      return (bucketDeg == 90)
-          ? GuidanceHint.ORIENTATION_LANDSCAPE_TIP
-          : GuidanceHint.ORIENTATION_PORTRAIT_TIP;
-    } catch (Exception ignored) {
-    }
-    return null;
-  }
-
   // Optional, very subtle haptics for central hints – only in A11y mode
   // and strictly coupled to the emission cadence of the AccessibilityGuidanceController.
   // No haptics for movement/tilt hints to avoid sensory overload.
@@ -2526,16 +2460,6 @@ public class CameraFragment extends Fragment implements SensorEventListener {
           if (binding == null || !isAdded()) return;
           View root = binding.getRoot();
           CharSequence text = getString(resId);
-          root.setContentDescription(text);
-          de.schliweb.makeacopy.utils.A11yUtils.announce(root, text);
-        });
-  }
-
-  private void announceText(@NonNull CharSequence text) {
-    runOnUiThreadSafe(
-        () -> {
-          if (binding == null || !isAdded()) return;
-          View root = binding.getRoot();
           root.setContentDescription(text);
           de.schliweb.makeacopy.utils.A11yUtils.announce(root, text);
         });
@@ -2651,7 +2575,6 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
   // --- Consolidated guidance decision for A11y & debug overlay ---
   // Encapsulates logic: score threshold → NO_DOCUMENT_DETECTED and dampen distance hints
-  private record EffectiveFraming(FramingResult result, boolean suppressDistance) {}
 
   // ==================== PDF Import Support ====================
 
@@ -2691,6 +2614,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         try {
           Navigation.findNavController(requireView()).navigate(dest);
         } catch (IllegalArgumentException | IllegalStateException ignored) {
+          // Best-effort; failure is non-critical
         }
       }
     }
@@ -2749,6 +2673,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                   if (renderer != null) renderer.close();
                   if (pfd != null) pfd.close();
                 } catch (java.io.IOException ignored) {
+                  // Best-effort; failure is non-critical
                 }
               }
             })
@@ -2852,6 +2777,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                             if (renderer != null) renderer.close();
                             if (pfd != null) pfd.close();
                           } catch (java.io.IOException ignored) {
+                            // Best-effort; failure is non-critical
                           }
                         }
                       })
@@ -2894,6 +2820,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                   if (renderer != null) renderer.close();
                   if (pfd != null) pfd.close();
                 } catch (java.io.IOException ignored) {
+                  // Best-effort; failure is non-critical
                 }
               }
             })
@@ -2933,7 +2860,6 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       extends androidx.recyclerview.widget.RecyclerView.Adapter<
           PdfPageThumbnailAdapter.ViewHolder> {
     private final int pageCount;
-    private final Uri pdfUri;
     private final Bitmap[] thumbnails;
     private final OnPageSelectedListener listener;
 
@@ -2941,9 +2867,9 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       void onPageSelected(int pageIndex);
     }
 
+    @SuppressWarnings("UnusedVariable") // pdfUri kept for future thumbnail loading from PDF
     PdfPageThumbnailAdapter(int pageCount, Uri pdfUri, OnPageSelectedListener listener) {
       this.pageCount = pageCount;
-      this.pdfUri = pdfUri;
       this.thumbnails = new Bitmap[pageCount];
       this.listener = listener;
     }
@@ -2990,7 +2916,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       return pageCount;
     }
 
-    class ViewHolder extends androidx.recyclerview.widget.RecyclerView.ViewHolder {
+    static class ViewHolder extends androidx.recyclerview.widget.RecyclerView.ViewHolder {
       final android.widget.ImageView thumbnail;
       final TextView pageLabel;
       final TextView pageNumberBadge;
@@ -3048,6 +2974,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     try {
       Navigation.findNavController(requireView()).navigate(dest);
     } catch (IllegalArgumentException | IllegalStateException ignored) {
+      // Best-effort; failure is non-critical
     }
   }
 }
