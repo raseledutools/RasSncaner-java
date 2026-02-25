@@ -24,6 +24,7 @@ public class DictionarySuggestProvider {
   // Pattern to strip punctuation from word boundaries
   private static final Pattern PUNCT_PATTERN =
       Pattern.compile("^[.,;:!?\"'()\\[\\]{}]+|[.,;:!?\"'()\\[\\]{}]+$");
+  private static final Pattern PLUS_SPLITTER = Pattern.compile("\\+");
 
   private final DictionaryManager dictionaryManager;
   private final List<String> languages;
@@ -45,7 +46,7 @@ public class DictionarySuggestProvider {
     if (langSpec == null || langSpec.isEmpty()) {
       return result;
     }
-    String[] parts = langSpec.split("\\+");
+    String[] parts = PLUS_SPLITTER.split(langSpec, -1);
     for (String part : parts) {
       String trimmed = part.trim();
       if (!trimmed.isEmpty() && result.size() < 2) {
@@ -64,12 +65,12 @@ public class DictionarySuggestProvider {
   @NonNull
   public List<Suggestion> getSuggestions(@Nullable String word) {
     if (word == null || word.isEmpty() || languages.isEmpty()) {
-      return Collections.emptyList();
+      return new ArrayList<>();
     }
 
     String normalized = normalize(word);
     if (normalized.isEmpty()) {
-      return Collections.emptyList();
+      return new ArrayList<>();
     }
 
     int wordLen = normalized.length();
@@ -117,7 +118,7 @@ public class DictionarySuggestProvider {
 
     // Return top K
     if (candidates.size() > MAX_SUGGESTIONS) {
-      return candidates.subList(0, MAX_SUGGESTIONS);
+      return new ArrayList<>(candidates.subList(0, MAX_SUGGESTIONS));
     }
     return candidates;
   }
