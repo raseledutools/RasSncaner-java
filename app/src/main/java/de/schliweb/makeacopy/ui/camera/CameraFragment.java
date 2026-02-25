@@ -198,53 +198,50 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         cameraViewModel = new ViewModelProvider(requireActivity()).get(CameraViewModel.class);
         cropViewModel = new ViewModelProvider(requireActivity()).get(CropViewModel.class);
 
-        requestPermissionLauncher = registerForActivityResult(
-                new ActivityResultContracts.RequestPermission(),
-                isGranted -> {
-                    Log.i(TAG, "Camera permission result: " + (isGranted ? "GRANTED" : "DENIED"));
-                    if (isGranted) {
-                        cameraViewModel.setCameraPermissionGranted(true);
-                    } else {
-                        UIUtils.showToast(requireContext(), R.string.msg_camera_permission_required, Toast.LENGTH_LONG);
-                    }
-                });
+        requestPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+            Log.i(TAG, "Camera permission result: " + (isGranted ? "GRANTED" : "DENIED"));
+            if (isGranted) {
+                cameraViewModel.setCameraPermissionGranted(true);
+            } else {
+                UIUtils.showToast(requireContext(), R.string.msg_camera_permission_required, Toast.LENGTH_LONG);
+            }
+        });
 
         // Register the image/PDF picker launcher (SAF)
-        pickImageLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(), result -> {
-                    if (result == null || result.getData() == null) return;
-                    if (result.getResultCode() != android.app.Activity.RESULT_OK) return;
-                    Intent data = result.getData();
-                    Uri uri = data.getData();
-                    if (uri == null) return;
+        pickImageLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if (result == null || result.getData() == null) return;
+            if (result.getResultCode() != android.app.Activity.RESULT_OK) return;
+            Intent data = result.getData();
+            Uri uri = data.getData();
+            if (uri == null) return;
 
-                    // Determine MIME type
-                    String mime = requireContext().getContentResolver().getType(uri);
-                    if (mime == null) {
-                        UIUtils.showToast(requireContext(), R.string.error_unknown_file_type, Toast.LENGTH_SHORT);
-                        return;
-                    }
+            // Determine MIME type
+            String mime = requireContext().getContentResolver().getType(uri);
+            if (mime == null) {
+                UIUtils.showToast(requireContext(), R.string.error_unknown_file_type, Toast.LENGTH_SHORT);
+                return;
+            }
 
-                    // Persist read permission if granted by the chooser (ignore if not allowed)
-                    int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                    if ((takeFlags & Intent.FLAG_GRANT_READ_URI_PERMISSION) != 0) {
-                        try {
-                            requireContext().getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        } catch (SecurityException se) {
-                            Log.w(TAG, "Persistable read permission not granted by provider", se);
-                        }
-                    }
+            // Persist read permission if granted by the chooser (ignore if not allowed)
+            int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            if ((takeFlags & Intent.FLAG_GRANT_READ_URI_PERMISSION) != 0) {
+                try {
+                    requireContext().getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                } catch (SecurityException se) {
+                    Log.w(TAG, "Persistable read permission not granted by provider", se);
+                }
+            }
 
-                    if (mime.startsWith("image/")) {
-                        // Handle image import (existing logic)
-                        handleImageImport(uri);
-                    } else if (mime.equals("application/pdf")) {
-                        // Handle PDF import
-                        handlePdfImport(uri);
-                    } else {
-                        UIUtils.showToast(requireContext(), R.string.error_unsupported_file_type, Toast.LENGTH_SHORT);
-                    }
-                });
+            if (mime.startsWith("image/")) {
+                // Handle image import (existing logic)
+                handleImageImport(uri);
+            } else if (mime.equals("application/pdf")) {
+                // Handle PDF import
+                handlePdfImport(uri);
+            } else {
+                UIUtils.showToast(requireContext(), R.string.error_unsupported_file_type, Toast.LENGTH_SHORT);
+            }
+        });
 
         binding = FragmentCameraBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
@@ -266,9 +263,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
         // Proactive ML loading: start loading DocQuad runner in background.
         // This makes the first analysis frame much faster by ensuring model is in memory/cache early.
-        de.schliweb.makeacopy.ml.docquad.DocQuadOrtRunner.getInstanceAsync(
-                requireContext().getApplicationContext(),
-                de.schliweb.makeacopy.ml.corners.DocQuadDetector.DEFAULT_MODEL_ASSET_PATH);
+        de.schliweb.makeacopy.ml.docquad.DocQuadOrtRunner.getInstanceAsync(requireContext().getApplicationContext(), de.schliweb.makeacopy.ml.corners.DocQuadDetector.DEFAULT_MODEL_ASSET_PATH);
 
 
         final TextView textView = binding.textCamera;
@@ -308,13 +303,9 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 Context ctx = getContext();
                 if (ctx != null) {
                     android.content.SharedPreferences prefs = ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE);
-                    prefs.edit()
-                            .putBoolean("skip_ocr", skip)
-                            .putBoolean("include_ocr", !skip)
-                            .putBoolean("analysis_enabled", analysisPref)
+                    prefs.edit().putBoolean("skip_ocr", skip).putBoolean("include_ocr", !skip).putBoolean("analysis_enabled", analysisPref)
                             // Accessibility is already persisted by the dialog; keep a mirror for local reads if needed
-                            .putBoolean(CameraOptionsDialogFragment.BUNDLE_ACCESSIBILITY_MODE, a11yPref)
-                            .apply();
+                            .putBoolean(CameraOptionsDialogFragment.BUNDLE_ACCESSIBILITY_MODE, a11yPref).apply();
                 }
                 // Apply analysis toggle immediately if we are in camera mode
                 if (binding != null && binding.viewFinder.getVisibility() == View.VISIBLE) {
@@ -350,10 +341,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         root.requestFocus();
         root.setOnKeyListener((v, keyCode, event) -> {
             if (!isAccessibilityModeEnabled()) return false;
-            if (keyCode != KeyEvent.KEYCODE_VOLUME_UP && keyCode != KeyEvent.KEYCODE_VOLUME_DOWN)
-                return false;
-            if (event.getAction() != KeyEvent.ACTION_DOWN)
-                return true; // consume UP as well by returning true on DOWN
+            if (keyCode != KeyEvent.KEYCODE_VOLUME_UP && keyCode != KeyEvent.KEYCODE_VOLUME_DOWN) return false;
+            if (event.getAction() != KeyEvent.ACTION_DOWN) return true; // consume UP as well by returning true on DOWN
 
             long now = System.currentTimeMillis();
             if (now - lastVolumeShutterTs < 800L) return true; // debounce
@@ -523,8 +512,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                         reinitScheduled = true;
                         new Handler(Looper.getMainLooper()).postDelayed(() -> {
                             reinitScheduled = false;
-                            if (isAdded() && cameraViewModel != null &&
-                                    Boolean.TRUE.equals(cameraViewModel.isCameraPermissionGranted().getValue())) {
+                            if (isAdded() && cameraViewModel != null && Boolean.TRUE.equals(cameraViewModel.isCameraPermissionGranted().getValue())) {
                                 initializeCamera();
                             }
                         }, 3000);
@@ -544,10 +532,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                     if (event.getAction() == MotionEvent.ACTION_UP && camera != null) {
                         MeteringPointFactory mpf = binding.viewFinder.getMeteringPointFactory();
                         MeteringPoint pt = mpf.createPoint(event.getX(), event.getY());
-                        FocusMeteringAction action = new FocusMeteringAction.Builder(
-                                pt,
-                                FocusMeteringAction.FLAG_AF | FocusMeteringAction.FLAG_AE | FocusMeteringAction.FLAG_AWB
-                        ).setAutoCancelDuration(3, TimeUnit.SECONDS).build();
+                        FocusMeteringAction action = new FocusMeteringAction.Builder(pt, FocusMeteringAction.FLAG_AF | FocusMeteringAction.FLAG_AE | FocusMeteringAction.FLAG_AWB).setAutoCancelDuration(3, TimeUnit.SECONDS).build();
                         camera.getCameraControl().startFocusAndMetering(action);
                         v.performClick();
                         return true;
@@ -559,10 +544,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                     if (ev.getAction() == MotionEvent.ACTION_UP && camera != null) {
                         MeteringPointFactory mpf = binding.viewFinder.getMeteringPointFactory();
                         MeteringPoint pt = mpf.createPoint(ev.getX(), ev.getY());
-                        FocusMeteringAction a = new FocusMeteringAction.Builder(
-                                pt,
-                                FocusMeteringAction.FLAG_AF | FocusMeteringAction.FLAG_AE | FocusMeteringAction.FLAG_AWB
-                        ).setAutoCancelDuration(3, TimeUnit.SECONDS).build();
+                        FocusMeteringAction a = new FocusMeteringAction.Builder(pt, FocusMeteringAction.FLAG_AF | FocusMeteringAction.FLAG_AE | FocusMeteringAction.FLAG_AWB).setAutoCancelDuration(3, TimeUnit.SECONDS).build();
                         camera.getCameraControl().startFocusAndMetering(a);
                         ov.performClick();
                         return true;
@@ -584,8 +566,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             reinitScheduled = true;
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 reinitScheduled = false;
-                if (isAdded() && cameraViewModel != null &&
-                        Boolean.TRUE.equals(cameraViewModel.isCameraPermissionGranted().getValue())) {
+                if (isAdded() && cameraViewModel != null && Boolean.TRUE.equals(cameraViewModel.isCameraPermissionGranted().getValue())) {
                     initializeCamera();
                 }
             }, 3000);
@@ -599,9 +580,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
         // ImplMode
         boolean isSony = "sony".equalsIgnoreCase(Build.MANUFACTURER);
-        PreviewView.ImplementationMode implMode = isSony ? PreviewView.ImplementationMode.COMPATIBLE
-                : (tier == BindTier.PERF ? PreviewView.ImplementationMode.PERFORMANCE
-                : PreviewView.ImplementationMode.COMPATIBLE);
+        PreviewView.ImplementationMode implMode = isSony ? PreviewView.ImplementationMode.COMPATIBLE : (tier == BindTier.PERF ? PreviewView.ImplementationMode.PERFORMANCE : PreviewView.ImplementationMode.COMPATIBLE);
         binding.viewFinder.setImplementationMode(implMode);
         binding.viewFinder.setScaleType(PreviewView.ScaleType.FIT_CENTER);
         Log.i(TAG, "bindWithTier: implMode=" + implMode + ", scaleType=FIT_CENTER, isSony=" + isSony);
@@ -610,47 +589,22 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         Log.i(TAG, "bindWithTier: tier=" + tier + ", rotation=" + toDegrees(rotation));
 
         // Preview selector
-        ResolutionSelector.Builder rsPrev =
-                new ResolutionSelector.Builder()
-                        .setAspectRatioStrategy(new AspectRatioStrategy(
-                                AspectRatio.RATIO_4_3,
-                                AspectRatioStrategy.FALLBACK_RULE_AUTO
-                        ));
+        ResolutionSelector.Builder rsPrev = new ResolutionSelector.Builder().setAspectRatioStrategy(new AspectRatioStrategy(AspectRatio.RATIO_4_3, AspectRatioStrategy.FALLBACK_RULE_AUTO));
 
         if (tier == BindTier.COMPAT_LOWRES) {
             android.util.Size preferredPreview = new android.util.Size(1280, 960);
-            rsPrev.setResolutionStrategy(
-                    new ResolutionStrategy(
-                            preferredPreview,
-                            ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER
-                    )
-            );
+            rsPrev.setResolutionStrategy(new ResolutionStrategy(preferredPreview, ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER));
         }
 
         // Capture selector (prefer high resolution)
-        ResolutionSelector.Builder rsCap =
-                new ResolutionSelector.Builder()
-                        .setAspectRatioStrategy(new AspectRatioStrategy(
-                                AspectRatio.RATIO_4_3,
-                                AspectRatioStrategy.FALLBACK_RULE_AUTO
-                        ));
+        ResolutionSelector.Builder rsCap = new ResolutionSelector.Builder().setAspectRatioStrategy(new AspectRatioStrategy(AspectRatio.RATIO_4_3, AspectRatioStrategy.FALLBACK_RULE_AUTO));
         android.util.Size preferredHigh = new android.util.Size(4032, 3024);
-        rsCap.setResolutionStrategy(
-                new ResolutionStrategy(
-                        preferredHigh,
-                        ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER
-                )
-        );
+        rsCap.setResolutionStrategy(new ResolutionStrategy(preferredHigh, ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER));
 
-        Preview.Builder previewBuilder = new Preview.Builder()
-                .setResolutionSelector(rsPrev.build())
-                .setTargetRotation(rotation);
+        Preview.Builder previewBuilder = new Preview.Builder().setResolutionSelector(rsPrev.build()).setTargetRotation(rotation);
 
-        ImageCapture.Builder captureBuilder = new ImageCapture.Builder()
-                .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY) // beste Qualität für OCR
-                .setResolutionSelector(rsCap.build())
-                .setTargetRotation(rotation)
-                .setJpegQuality(98);
+        ImageCapture.Builder captureBuilder = new ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY) // beste Qualität für OCR
+                .setResolutionSelector(rsCap.build()).setTargetRotation(rotation).setJpegQuality(98);
 
         // Interop: konservative FPS, High-Quality Settings ok
         Camera2Interop.Extender<Preview> pExt = new Camera2Interop.Extender<>(previewBuilder);
@@ -667,22 +621,16 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         }
 
         // AF continuous picture is generally safe and expected; keep for all OEMs
-        pExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE,
-                android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-        cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE,
-                android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+        pExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE, android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+        cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE, android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
 
         if (!isSony) {
             // High-quality post-processing and ZSL toggles can cause session config failures on some Sony devices.
             // Apply only on non-Sony devices.
-            cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.NOISE_REDUCTION_MODE,
-                    android.hardware.camera2.CaptureRequest.NOISE_REDUCTION_MODE_HIGH_QUALITY);
-            cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.EDGE_MODE,
-                    android.hardware.camera2.CaptureRequest.EDGE_MODE_HIGH_QUALITY);
-            cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.COLOR_CORRECTION_ABERRATION_MODE,
-                    android.hardware.camera2.CaptureRequest.COLOR_CORRECTION_ABERRATION_MODE_HIGH_QUALITY);
-            cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.SHADING_MODE,
-                    android.hardware.camera2.CaptureRequest.SHADING_MODE_HIGH_QUALITY);
+            cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.NOISE_REDUCTION_MODE, android.hardware.camera2.CaptureRequest.NOISE_REDUCTION_MODE_HIGH_QUALITY);
+            cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.EDGE_MODE, android.hardware.camera2.CaptureRequest.EDGE_MODE_HIGH_QUALITY);
+            cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.COLOR_CORRECTION_ABERRATION_MODE, android.hardware.camera2.CaptureRequest.COLOR_CORRECTION_ABERRATION_MODE_HIGH_QUALITY);
+            cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.SHADING_MODE, android.hardware.camera2.CaptureRequest.SHADING_MODE_HIGH_QUALITY);
             cExt.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.CONTROL_ENABLE_ZSL, false);
         } else {
             Log.i(TAG, "bindWithTier: skipping HQ NR/EDGE/CCA/SHADING and ZSL toggle on Sony device");
@@ -767,12 +715,11 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
     private void setPreviewSurfaceProviderWithLog(BindTier tier) {
         Preview.SurfaceProvider vfProvider = binding.viewFinder.getSurfaceProvider();
-        preview.setSurfaceProvider(ContextCompat.getMainExecutor(requireContext()),
-                request -> {
-                    android.util.Size s = request.getResolution();
-                    Log.i(TAG, "Preview SurfaceRequest: " + s.getWidth() + "x" + s.getHeight() + " tier=" + tier);
-                    vfProvider.onSurfaceRequested(request);
-                });
+        preview.setSurfaceProvider(ContextCompat.getMainExecutor(requireContext()), request -> {
+            android.util.Size s = request.getResolution();
+            Log.i(TAG, "Preview SurfaceRequest: " + s.getWidth() + "x" + s.getHeight() + " tier=" + tier);
+            vfProvider.onSurfaceRequested(request);
+        });
     }
 
     private void logResolutions(String label) {
@@ -783,15 +730,13 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         if (imageCapture != null) {
             ResolutionInfo ri = imageCapture.getResolutionInfo();
             if (ri != null) {
-                cap = ri.getResolution().getWidth() + "x" + ri.getResolution().getHeight() +
-                        " rot=" + ri.getRotationDegrees() + "°";
+                cap = ri.getResolution().getWidth() + "x" + ri.getResolution().getHeight() + " rot=" + ri.getRotationDegrees() + "°";
             }
         }
         if (imageAnalysis != null) {
             ResolutionInfo ri2 = imageAnalysis.getResolutionInfo();
             if (ri2 != null) {
-                ana = ri2.getResolution().getWidth() + "x" + ri2.getResolution().getHeight() +
-                        " rot=" + ri2.getRotationDegrees() + "°";
+                ana = ri2.getResolution().getWidth() + "x" + ri2.getResolution().getHeight() + " rot=" + ri2.getRotationDegrees() + "°";
             }
         }
         Log.i(TAG, "UseCase resolutions [" + label + "]: Preview=" + prev + ", Capture=" + cap + ", Analysis=" + ana);
@@ -800,23 +745,22 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     private void attachWatchdogs() {
         // StreamState Log
         if (!streamObserverAttached) {
-            binding.viewFinder.getPreviewStreamState()
-                    .observe(getViewLifecycleOwner(), (Observer<? super PreviewView.StreamState>) state -> {
-                        Log.d(TAG, "Preview stream state: " + state + " (tier=" + lastTier + ")");
-                        // Accessibility: announce camera ready once when streaming starts
-                        if (state == PreviewView.StreamState.STREAMING && isAccessibilityModeEnabled()) {
-                            long now = System.currentTimeMillis();
-                            if (now - lastA11yReadyAnnounceTs > 4000L) {
-                                lastA11yReadyAnnounceTs = now;
-                                announce(R.string.a11y_camera_ready);
-                                // Optional hint: volume keys act as shutter (announce once per session)
-                                if (now - lastA11yVolumeHintTs > 60000L) { // once per minute/session window
-                                    lastA11yVolumeHintTs = now;
-                                    binding.viewFinder.postDelayed(() -> announce(R.string.a11y_volume_shutter_hint), 1200);
-                                }
-                            }
+            binding.viewFinder.getPreviewStreamState().observe(getViewLifecycleOwner(), (Observer<? super PreviewView.StreamState>) state -> {
+                Log.d(TAG, "Preview stream state: " + state + " (tier=" + lastTier + ")");
+                // Accessibility: announce camera ready once when streaming starts
+                if (state == PreviewView.StreamState.STREAMING && isAccessibilityModeEnabled()) {
+                    long now = System.currentTimeMillis();
+                    if (now - lastA11yReadyAnnounceTs > 4000L) {
+                        lastA11yReadyAnnounceTs = now;
+                        announce(R.string.a11y_camera_ready);
+                        // Optional hint: volume keys act as shutter (announce once per session)
+                        if (now - lastA11yVolumeHintTs > 60000L) { // once per minute/session window
+                            lastA11yVolumeHintTs = now;
+                            binding.viewFinder.postDelayed(() -> announce(R.string.a11y_volume_shutter_hint), 1200);
                         }
-                    });
+                    }
+                }
+            });
             streamObserverAttached = true;
         }
 
@@ -909,36 +853,26 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             File photoFile = new File(outputDir, "MakeACopy_" + timestamp + ".jpg");
             Log.i(TAG, "captureImage: target file=" + photoFile.getAbsolutePath() + ", rotationDeg=" + toDegrees(getViewFinderRotation()));
 
-            ImageCapture.OutputFileOptions outputOptions =
-                    new ImageCapture.OutputFileOptions.Builder(photoFile).build();
+            ImageCapture.OutputFileOptions outputOptions = new ImageCapture.OutputFileOptions.Builder(photoFile).build();
 
             // short AF/AE pre-focus
             MeteringPointFactory mpf = binding.viewFinder.getMeteringPointFactory();
             MeteringPoint center = mpf.createPoint(binding.viewFinder.getWidth() / 2f, binding.viewFinder.getHeight() / 2f);
 
             // Reduced timeout from 3s to 1s for faster capture response
-            FocusMeteringAction fma = new FocusMeteringAction.Builder(
-                    center,
-                    FocusMeteringAction.FLAG_AF | FocusMeteringAction.FLAG_AE
-            ).setAutoCancelDuration(1, TimeUnit.SECONDS).build();
+            FocusMeteringAction fma = new FocusMeteringAction.Builder(center, FocusMeteringAction.FLAG_AF | FocusMeteringAction.FLAG_AE).setAutoCancelDuration(1, TimeUnit.SECONDS).build();
 
-            ListenableFuture<FocusMeteringResult> fut =
-                    camera.getCameraControl().startFocusAndMetering(fma);
+            ListenableFuture<FocusMeteringResult> fut = camera.getCameraControl().startFocusAndMetering(fma);
 
             fut.addListener(() -> {
                 try {
                     FocusMeteringResult result = fut.get(); // does not block because the listener is only invoked after completion
                     boolean ok = result != null && result.isFocusSuccessful();
                     Log.d(TAG, "captureImage: pre-focus result=" + ok);
-                    if (ok) {
-                        binding.viewFinder.postDelayed(() -> doTakePicture(outputOptions, photoFile), 150);
-                    } else {
-                        doTakePicture(outputOptions, photoFile);
-                    }
                 } catch (Exception e) {
                     Log.w(TAG, "captureImage: pre-focus threw: " + e.getMessage());
-                    doTakePicture(outputOptions, photoFile);
                 }
+                doTakePicture(outputOptions, photoFile);
             }, ContextCompat.getMainExecutor(requireContext()));
 
         } catch (Exception e) {
@@ -948,68 +882,61 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     }
 
     private void doTakePicture(ImageCapture.OutputFileOptions outputOptions, File photoFile) {
-        imageCapture.takePicture(
-                outputOptions,
-                ContextCompat.getMainExecutor(requireContext()),
-                new ImageCapture.OnImageSavedCallback() {
-                    @Override
-                    public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                        Log.d(TAG, "Image saved: " + photoFile.getAbsolutePath() + ", size=" + photoFile.length());
-                        // Accessibility: confirm capture success with haptic + spoken cue
-                        if (isAccessibilityModeEnabled() && binding != null && isAdded()) {
-                            binding.getRoot().performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
-                            announce(R.string.a11y_capture_success);
-                        }
-                        Uri imageUri;
-                        try {
-                            imageUri = FileProvider.getUriForFile(
-                                    requireContext(),
-                                    BuildConfig.APPLICATION_ID + ".fileprovider",
-                                    photoFile
-                            );
-                        } catch (IllegalArgumentException badRoot) {
-                            Log.w(TAG, "FileProvider root mismatch, fallback to file://", badRoot);
-                            imageUri = Uri.fromFile(photoFile);
-                        }
+        imageCapture.takePicture(outputOptions, ContextCompat.getMainExecutor(requireContext()), new ImageCapture.OnImageSavedCallback() {
+            @Override
+            public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                Log.d(TAG, "Image saved: " + photoFile.getAbsolutePath() + ", size=" + photoFile.length());
+                // Accessibility: confirm capture success with haptic + spoken cue
+                if (isAccessibilityModeEnabled() && binding != null && isAdded()) {
+                    binding.getRoot().performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+                    announce(R.string.a11y_capture_success);
+                }
+                Uri imageUri;
+                try {
+                    imageUri = FileProvider.getUriForFile(requireContext(), BuildConfig.APPLICATION_ID + ".fileprovider", photoFile);
+                } catch (IllegalArgumentException badRoot) {
+                    Log.w(TAG, "FileProvider root mismatch, fallback to file://", badRoot);
+                    imageUri = Uri.fromFile(photoFile);
+                }
 
-                        if (cameraViewModel != null && isAdded()) {
-                            if (cropViewModel != null) {
-                                cropViewModel.setUserRotationDegrees(0);
-                                int captureDeg = toDegrees(getViewFinderRotation());
-                                cropViewModel.setCaptureRotationDegrees(captureDeg);
-                            }
-                            cameraViewModel.setImagePath(photoFile.getAbsolutePath());
-                            cameraViewModel.setImageUri(imageUri);
+                if (cameraViewModel != null && isAdded()) {
+                    if (cropViewModel != null) {
+                        cropViewModel.setUserRotationDegrees(0);
+                        int captureDeg = toDegrees(getViewFinderRotation());
+                        cropViewModel.setCaptureRotationDegrees(captureDeg);
+                    }
+                    cameraViewModel.setImagePath(photoFile.getAbsolutePath());
+                    cameraViewModel.setImageUri(imageUri);
 
-                            OCRViewModel ocrVm = new ViewModelProvider(requireActivity()).get(OCRViewModel.class);
-                            ocrVm.resetForNewImage();
+                    OCRViewModel ocrVm = new ViewModelProvider(requireActivity()).get(OCRViewModel.class);
+                    ocrVm.resetForNewImage();
 
-                            cropViewModel.setImageCropped(false);
-                            cropViewModel.setImageBitmap(null);
+                    cropViewModel.setImageCropped(false);
+                    cropViewModel.setImageBitmap(null);
 
-                            boolean skipOcr = false;
-                            boolean skipCropping = false;
-                            Context ctx = getContext();
-                            if (ctx != null) {
-                                android.content.SharedPreferences prefs = ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE);
-                                skipOcr = prefs.getBoolean("skip_ocr", false);
-                                skipCropping = prefs.getBoolean("skip_cropping", false);
-                            }
-
-                            int dest = skipCropping ? (skipOcr ? R.id.navigation_export : R.id.navigation_ocr) : R.id.navigation_crop;
-                            try {
-                                Navigation.findNavController(requireView()).navigate(dest);
-                            } catch (IllegalArgumentException | IllegalStateException ignored) {
-                            }
-                        }
+                    boolean skipOcr = false;
+                    boolean skipCropping = false;
+                    Context ctx = getContext();
+                    if (ctx != null) {
+                        android.content.SharedPreferences prefs = ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE);
+                        skipOcr = prefs.getBoolean("skip_ocr", false);
+                        skipCropping = prefs.getBoolean("skip_cropping", false);
                     }
 
-                    @Override
-                    public void onError(@NonNull ImageCaptureException exception) {
-                        Log.e(TAG, "Image capture failed: " + exception.getMessage(), exception);
-                        handleCaptureError(exception);
+                    int dest = skipCropping ? (skipOcr ? R.id.navigation_export : R.id.navigation_ocr) : R.id.navigation_crop;
+                    try {
+                        Navigation.findNavController(requireView()).navigate(dest);
+                    } catch (IllegalArgumentException | IllegalStateException ignored) {
                     }
-                });
+                }
+            }
+
+            @Override
+            public void onError(@NonNull ImageCaptureException exception) {
+                Log.e(TAG, "Image capture failed: " + exception.getMessage(), exception);
+                handleCaptureError(exception);
+            }
+        });
     }
 
     /**
@@ -1024,8 +951,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         binding.textCamera.setText(R.string.camera_ready_tap_the_button_to_scan_a_document);
         setProcessing(false);
         // Re-enable live analysis after capture error
-        boolean analysisPref = requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE)
-                .getBoolean("analysis_enabled", false);
+        boolean analysisPref = requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE).getBoolean("analysis_enabled", false);
         setLiveAnalysisEnabled(analysisPref);
         // Accessibility: speak failure
         if (isAccessibilityModeEnabled()) {
@@ -1075,8 +1001,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         boolean analysisPref = false;
         Context ctx = getContext();
         if (ctx != null) {
-            android.content.SharedPreferences prefs =
-                    ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE);
+            android.content.SharedPreferences prefs = ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE);
             analysisPref = prefs.getBoolean("analysis_enabled", false); // Default OFF
         }
 
@@ -1180,14 +1105,12 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             if (cameraProvider != null) {
                 cameraProvider.unbindAll();
                 new Handler(Looper.getMainLooper()).post(() -> {
-                    if (isAdded() && cameraViewModel != null &&
-                            Boolean.TRUE.equals(cameraViewModel.isCameraPermissionGranted().getValue())) {
+                    if (isAdded() && cameraViewModel != null && Boolean.TRUE.equals(cameraViewModel.isCameraPermissionGranted().getValue())) {
                         initializeCamera();
                     }
                 });
             } else {
-                if (cameraViewModel != null &&
-                        Boolean.TRUE.equals(cameraViewModel.isCameraPermissionGranted().getValue())) {
+                if (cameraViewModel != null && Boolean.TRUE.equals(cameraViewModel.isCameraPermissionGranted().getValue())) {
                     initializeCamera();
                 }
             }
@@ -1288,19 +1211,14 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
         try {
             isLowLightDialogVisible = true;
-            AlertDialog dialog = new AlertDialog.Builder(requireContext())
-                    .setMessage(R.string.low_light_detected)
-                    .setPositiveButton(R.string.flashlight_on, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            if (!isFlashlightOn && hasFlash) toggleFlashlight();
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, (dialogInterface, id) -> dialogInterface.dismiss())
-                    .create();
+            AlertDialog dialog = new AlertDialog.Builder(requireContext()).setMessage(R.string.low_light_detected).setPositiveButton(R.string.flashlight_on, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    if (!isFlashlightOn && hasFlash) toggleFlashlight();
+                }
+            }).setNegativeButton(android.R.string.cancel, (dialogInterface, id) -> dialogInterface.dismiss()).create();
 
             dialog.setOnDismissListener(d -> isLowLightDialogVisible = false);
-            dialog.setOnShowListener(dlg ->
-                    de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext()));
+            dialog.setOnShowListener(dlg -> de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext()));
             dialog.show();
 
             lowLightPromptShown = true;
@@ -1325,11 +1243,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             if (BuildConfig.DEBUG || Log.isLoggable(TAG, Log.DEBUG)) {
                 Log.d(TAG, "Light level: " + lux + " lux");
             }
-            if (lux < LOW_LIGHT_THRESHOLD
-                    && binding != null
-                    && binding.viewFinder.getVisibility() == View.VISIBLE
-                    && !isFlashlightOn
-                    && hasFlash) {
+            if (lux < LOW_LIGHT_THRESHOLD && binding != null && binding.viewFinder.getVisibility() == View.VISIBLE && !isFlashlightOn && hasFlash) {
                 showLowLightPrompt();
             }
         }
@@ -1365,21 +1279,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             analysisPref = prefs.getBoolean("analysis_enabled", false);
         }
         String secPatch = Build.VERSION.SECURITY_PATCH;
-        Log.i(TAG,
-                "Env: app=" + versionName + " (" + versionCode + ")" +
-                        ", sdk=" + Build.VERSION.SDK_INT + " (release=" + Build.VERSION.RELEASE + ", incremental=" + Build.VERSION.INCREMENTAL + ", secPatch=" + (secPatch != null ? secPatch : "-") + ")" +
-                        ", brand=" + Build.BRAND +
-                        ", manuf=" + Build.MANUFACTURER +
-                        ", model=" + Build.MODEL +
-                        ", device=" + Build.DEVICE +
-                        ", product=" + Build.PRODUCT +
-                        ", hardware=" + Build.HARDWARE +
-                        ", board=" + Build.BOARD +
-                        ", fingerprint=" + Build.FINGERPRINT +
-                        ", display=" + Build.DISPLAY +
-                        ", abis=" + abis +
-                        ", locale=" + (loc != null ? loc.toLanguageTag() : "-") +
-                        ", analysisPref=" + analysisPref);
+        Log.i(TAG, "Env: app=" + versionName + " (" + versionCode + ")" + ", sdk=" + Build.VERSION.SDK_INT + " (release=" + Build.VERSION.RELEASE + ", incremental=" + Build.VERSION.INCREMENTAL + ", secPatch=" + (secPatch != null ? secPatch : "-") + ")" + ", brand=" + Build.BRAND + ", manuf=" + Build.MANUFACTURER + ", model=" + Build.MODEL + ", device=" + Build.DEVICE + ", product=" + Build.PRODUCT + ", hardware=" + Build.HARDWARE + ", board=" + Build.BOARD + ", fingerprint=" + Build.FINGERPRINT + ", display=" + Build.DISPLAY + ", abis=" + abis + ", locale=" + (loc != null ? loc.toLanguageTag() : "-") + ", analysisPref=" + analysisPref);
     }
 
     // --------- Exposure Compensation ---------
@@ -1476,8 +1376,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     private void persistExposureIndex(int index) {
         Context ctx = getContext();
         if (ctx == null) return;
-        ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE)
-                .edit().putInt(PREF_EXPOSURE_INDEX, index).apply();
+        ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE).edit().putInt(PREF_EXPOSURE_INDEX, index).apply();
     }
 
     private void logCameraCapabilities() {
@@ -1511,8 +1410,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         }
         // Persist the user's explicit preference only
         analysisEnabled = enabled;
-        android.content.SharedPreferences prefs =
-                requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE);
+        android.content.SharedPreferences prefs = requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE);
         prefs.edit().putBoolean("analysis_enabled", enabled).apply();
 
         // Effective analysis: run analyzer whenever user enabled it OR Accessibility Mode is on
@@ -1550,32 +1448,16 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     // NEU: strikt 1280x960 / YUV und 4:3
     @OptIn(markerClass = ExperimentalCamera2Interop.class)
     private void setupOrUpdateImageAnalysis(int rotation) {
-        ResolutionSelector analysisRs = new ResolutionSelector.Builder()
-                .setAspectRatioStrategy(
-                        new AspectRatioStrategy(AspectRatio.RATIO_4_3, AspectRatioStrategy.FALLBACK_RULE_AUTO)
-                )
-                .setResolutionStrategy(
-                        new ResolutionStrategy(
-                                new android.util.Size(1280, 960),
-                                ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER
-                        )
-                )
-                .build();
+        ResolutionSelector analysisRs = new ResolutionSelector.Builder().setAspectRatioStrategy(new AspectRatioStrategy(AspectRatio.RATIO_4_3, AspectRatioStrategy.FALLBACK_RULE_AUTO)).setResolutionStrategy(new ResolutionStrategy(new android.util.Size(1280, 960), ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER)).build();
 
         if (imageAnalysis == null) {
-            ImageAnalysis.Builder analysisBuilder = new ImageAnalysis.Builder()
-                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                    .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
-                    .setTargetRotation(rotation)
-                    .setResolutionSelector(analysisRs);
+            ImageAnalysis.Builder analysisBuilder = new ImageAnalysis.Builder().setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888).setTargetRotation(rotation).setResolutionSelector(analysisRs);
 
             // Add Camera2 interop to read focus distance from each frame
             Camera2Interop.Extender<ImageAnalysis> analysisExt = new Camera2Interop.Extender<>(analysisBuilder);
             analysisExt.setSessionCaptureCallback(new android.hardware.camera2.CameraCaptureSession.CaptureCallback() {
                 @Override
-                public void onCaptureCompleted(@NonNull android.hardware.camera2.CameraCaptureSession session,
-                                               @NonNull android.hardware.camera2.CaptureRequest request,
-                                               @NonNull android.hardware.camera2.TotalCaptureResult result) {
+                public void onCaptureCompleted(@NonNull android.hardware.camera2.CameraCaptureSession session, @NonNull android.hardware.camera2.CaptureRequest request, @NonNull android.hardware.camera2.TotalCaptureResult result) {
                     // Read focus distance (in diopters = 1/meters)
                     Float focusDist = result.get(android.hardware.camera2.CaptureResult.LENS_FOCUS_DISTANCE);
                     if (focusDist != null) {
@@ -1683,8 +1565,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             bmp = yuvToBitmapUprightSmall(image, de.schliweb.makeacopy.utils.OpenCVUtils.DETECTION_MAX_EDGE); // use central constant for consistent corner detection
             if (BuildConfig.DEBUG) {
                 int dispRot = getViewFinderRotation();
-                Log.d(TAG, "[A11Y_DIR] displayRot=" + dispRot + ", imgRotDeg=" + imgRotDeg
-                        + ", a11y=" + isAccessibilityModeEnabled());
+                Log.d(TAG, "[A11Y_DIR] displayRot=" + dispRot + ", imgRotDeg=" + imgRotDeg + ", a11y=" + isAccessibilityModeEnabled());
             }
             if (bmp == null) return;
 
@@ -1733,8 +1614,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             android.graphics.PointF[] viewPts = hasValid ? mapToOverlayPoints(pts, bmpW, bmpH) : null;
 
             // Optional: Evaluate FramingEngine (logging and/or accessibility guidance)
-            boolean wantFraming = FeatureFlags.isFramingLoggingEnabled()
-                    || (FeatureFlags.isA11yGuidanceEnabled() && isAccessibilityModeEnabled());
+            boolean wantFraming = FeatureFlags.isFramingLoggingEnabled() || (FeatureFlags.isA11yGuidanceEnabled() && isAccessibilityModeEnabled());
             FramingResult fr = null;
             android.graphics.RectF fbRectForOverlay = null;
             if (wantFraming) {
@@ -1746,13 +1626,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                             quad[i] = new android.graphics.PointF((float) pts[i].x, (float) pts[i].y);
                         }
                     }
-                    android.graphics.RectF fbRect = de.schliweb.makeacopy.utils.OpenCVUtils.getFallbackRectF(
-                            bmpW, bmpH);
-                    FramingEngine.Input feIn = new FramingEngine.Input(
-                            bmpW, bmpH,
-                            quad,
-                            fbRect
-                    );
+                    android.graphics.RectF fbRect = de.schliweb.makeacopy.utils.OpenCVUtils.getFallbackRectF(bmpW, bmpH);
+                    FramingEngine.Input feIn = new FramingEngine.Input(bmpW, bmpH, quad, fbRect);
                     fr = new FramingEngine().evaluate(feIn);
                     fbRectForOverlay = fbRect;
                     if (FeatureFlags.isFramingLoggingEnabled()) {
@@ -1760,8 +1635,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                     }
                     // Estimate orientation once (shared for A11y & overlay)
                     try {
-                        de.schliweb.makeacopy.utils.OpenCVUtils.OrientationEstimate est =
-                                de.schliweb.makeacopy.utils.OpenCVUtils.estimateTextOrientation(bmp);
+                        de.schliweb.makeacopy.utils.OpenCVUtils.OrientationEstimate est = de.schliweb.makeacopy.utils.OpenCVUtils.estimateTextOrientation(bmp);
                         orientBucketLocal = (est.bucketDeg() == 90) ? 90 : 0;
                         orientConfLocal = est.confidence();
                     } catch (Exception e) {
@@ -1786,12 +1660,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                         // Optional: inject orientation hint into FramingResult if no document
                         FramingResult frForA11y = fr;
                         if (fr != null && !fr.hasDocument && orientConfLocal >= 0.30) {
-                            GuidanceHint oriHint = (orientBucketLocal == 90)
-                                    ? GuidanceHint.ORIENTATION_LANDSCAPE_TIP
-                                    : GuidanceHint.ORIENTATION_PORTRAIT_TIP;
-                            frForA11y = new FramingResult(
-                                    fr.quality, fr.dxNorm, fr.dyNorm, fr.scaleRatio,
-                                    fr.tiltHorizontal, fr.tiltVertical, oriHint, false);
+                            GuidanceHint oriHint = (orientBucketLocal == 90) ? GuidanceHint.ORIENTATION_LANDSCAPE_TIP : GuidanceHint.ORIENTATION_PORTRAIT_TIP;
+                            frForA11y = new FramingResult(fr.quality, fr.dxNorm, fr.dyNorm, fr.scaleRatio, fr.tiltHorizontal, fr.tiltVertical, oriHint, false);
                         }
 
                         // Process frame through state machine (with model-free focus distance)
@@ -1810,9 +1680,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                             // Optional: emit debug log for QA when framing logging is enabled
                             if (BuildConfig.FEATURE_FRAMING_LOGGING) {
                                 A11yStateMachine.DebugInfo dbg = a11yStateMachine.getDebugInfo();
-                                Log.d(TAG, "[A11Y_STATE] event=" + event + ", state=" + state
-                                        + ", hint=" + hint + ", ts=" + now
-                                        + ", debug=" + dbg);
+                                Log.d(TAG, "[A11Y_STATE] event=" + event + ", state=" + state + ", hint=" + hint + ", ts=" + now + ", debug=" + dbg);
                             }
 
                             // Optional micro haptic for central hints (A11y mode only)
@@ -1901,17 +1769,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                     // IMPORTANT: Overlay hint must follow the same rhythm as the screen reader.
                     // Therefore, we display the last hint emitted by the AccessibilityGuidanceController.
                     GuidanceHint hintToShow = lastGuidanceEventHint;
-                    String dbg = String.format(Locale.US,
-                            "q=%.2f\nΔx=%.2f Δy=%.2f\nscale=%.2f\ntiltH=%.2f tiltV=%.2f\nori=%s conf=%s\nhint=%s",
-                            frUi.quality,
-                            frUi.dxNorm,
-                            frUi.dyNorm,
-                            frUi.scaleRatio,
-                            frUi.tiltHorizontal,
-                            frUi.tiltVertical,
-                            (orientBucketForUi >= 0 ? (orientBucketForUi + "°") : "-"),
-                            (orientConfForUi >= 0 ? String.format(Locale.US, "%.2f", orientConfForUi) : "-"),
-                            hintToShow != null ? hintToShow.name() : "-");
+                    String dbg = String.format(Locale.US, "q=%.2f\nΔx=%.2f Δy=%.2f\nscale=%.2f\ntiltH=%.2f tiltV=%.2f\nori=%s conf=%s\nhint=%s", frUi.quality, frUi.dxNorm, frUi.dyNorm, frUi.scaleRatio, frUi.tiltHorizontal, frUi.tiltVertical, (orientBucketForUi >= 0 ? (orientBucketForUi + "°") : "-"), (orientConfForUi >= 0 ? String.format(Locale.US, "%.2f", orientConfForUi) : "-"), hintToShow != null ? hintToShow.name() : "-");
                     binding.cornerOverlay.setDebugText(dbg);
                 } else {
                     binding.cornerOverlay.setModelRect(null);
@@ -1956,12 +1814,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         float contentH = bmpH * scale;
         float offX = (vw - contentW) * 0.5f;
         float offY = (vh - contentH) * 0.5f;
-        return new android.graphics.RectF(
-                offX + src.left * scale,
-                offY + src.top * scale,
-                offX + src.right * scale,
-                offY + src.bottom * scale
-        );
+        return new android.graphics.RectF(offX + src.left * scale, offY + src.top * scale, offX + src.right * scale, offY + src.bottom * scale);
     }
 
     /**
@@ -2058,39 +1911,17 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         try {
             // If no base result is available, return neutral defaults
             if (base == null) {
-                FramingResult neutral = new FramingResult(
-                        0f, 0f, 0f, 1f, 0f, 0f,
-                        GuidanceHint.OK,
-                        false
-                );
+                FramingResult neutral = new FramingResult(0f, 0f, 0f, 1f, 0f, 0f, GuidanceHint.OK, false);
                 // For low score, also treat as "no document"
                 if (rawScore < NO_DOC_SCORE_THRESHOLD) {
-                    neutral = new FramingResult(
-                            neutral.quality,
-                            neutral.dxNorm,
-                            neutral.dyNorm,
-                            neutral.scaleRatio,
-                            neutral.tiltHorizontal,
-                            neutral.tiltVertical,
-                            GuidanceHint.NO_DOCUMENT_DETECTED,
-                            false
-                    );
+                    neutral = new FramingResult(neutral.quality, neutral.dxNorm, neutral.dyNorm, neutral.scaleRatio, neutral.tiltHorizontal, neutral.tiltVertical, GuidanceHint.NO_DOCUMENT_DETECTED, false);
                 }
                 return new EffectiveFraming(neutral, !neutral.hasDocument);
             }
 
             // Low score → explicit hint and hasDocument=false
             if (rawScore < NO_DOC_SCORE_THRESHOLD) {
-                FramingResult adjusted = new FramingResult(
-                        base.quality,
-                        base.dxNorm,
-                        base.dyNorm,
-                        base.scaleRatio,
-                        base.tiltHorizontal,
-                        base.tiltVertical,
-                        GuidanceHint.NO_DOCUMENT_DETECTED,
-                        false
-                );
+                FramingResult adjusted = new FramingResult(base.quality, base.dxNorm, base.dyNorm, base.scaleRatio, base.tiltHorizontal, base.tiltVertical, GuidanceHint.NO_DOCUMENT_DETECTED, false);
                 return new EffectiveFraming(adjusted, true);
             }
 
@@ -2119,9 +1950,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 }
             }
 
-            return (bucketDeg == 90)
-                    ? GuidanceHint.ORIENTATION_LANDSCAPE_TIP
-                    : GuidanceHint.ORIENTATION_PORTRAIT_TIP;
+            return (bucketDeg == 90) ? GuidanceHint.ORIENTATION_LANDSCAPE_TIP : GuidanceHint.ORIENTATION_PORTRAIT_TIP;
         } catch (Exception ignored) {
         }
         return null;
@@ -2401,8 +2230,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
                 pfd = ctx.getContentResolver().openFileDescriptor(pdfUri, "r");
                 if (pfd == null) {
-                    runOnUiThreadSafe(() ->
-                            UIUtils.showToast(requireContext(), R.string.error_cannot_open_pdf, Toast.LENGTH_SHORT));
+                    runOnUiThreadSafe(() -> UIUtils.showToast(requireContext(), R.string.error_cannot_open_pdf, Toast.LENGTH_SHORT));
                     return;
                 }
 
@@ -2410,8 +2238,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 int pageCount = renderer.getPageCount();
 
                 if (pageCount == 0) {
-                    runOnUiThreadSafe(() ->
-                            UIUtils.showToast(requireContext(), R.string.error_pdf_empty, Toast.LENGTH_SHORT));
+                    runOnUiThreadSafe(() -> UIUtils.showToast(requireContext(), R.string.error_pdf_empty, Toast.LENGTH_SHORT));
                     return;
                 }
 
@@ -2425,8 +2252,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 }
             } catch (java.io.IOException | SecurityException e) {
                 Log.e(TAG, "PDF import error", e);
-                runOnUiThreadSafe(() ->
-                        UIUtils.showToast(requireContext(), R.string.error_pdf_import_failed, Toast.LENGTH_SHORT));
+                runOnUiThreadSafe(() -> UIUtils.showToast(requireContext(), R.string.error_pdf_import_failed, Toast.LENGTH_SHORT));
             } finally {
                 try {
                     if (renderer != null) renderer.close();
@@ -2486,10 +2312,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         // Set up RecyclerView with GridLayoutManager (3 columns)
         recyclerView.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(requireContext(), 3));
 
-        AlertDialog dialog = new AlertDialog.Builder(requireContext())
-                .setView(dialogView)
-                .setNegativeButton(android.R.string.cancel, null)
-                .create();
+        AlertDialog dialog = new AlertDialog.Builder(requireContext()).setView(dialogView).setNegativeButton(android.R.string.cancel, null).create();
 
         // Improve button contrast for dark mode
         dialog.setOnShowListener(dlg -> de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext()));
@@ -2514,8 +2337,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                     runOnUiThreadSafe(() -> processPdfBitmap(bitmap));
                 } catch (java.io.IOException e) {
                     Log.e(TAG, "PDF page render error", e);
-                    runOnUiThreadSafe(() ->
-                            UIUtils.showToast(requireContext(), R.string.error_pdf_page_render_failed, Toast.LENGTH_SHORT));
+                    runOnUiThreadSafe(() -> UIUtils.showToast(requireContext(), R.string.error_pdf_page_render_failed, Toast.LENGTH_SHORT));
                 } finally {
                     try {
                         if (renderer != null) renderer.close();
@@ -2624,8 +2446,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.item_pdf_page_thumbnail, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_pdf_page_thumbnail, parent, false);
             return new ViewHolder(view);
         }
 
