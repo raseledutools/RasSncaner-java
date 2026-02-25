@@ -12,81 +12,82 @@ import de.schliweb.makeacopy.databinding.ActivityMainBinding;
 import de.schliweb.makeacopy.services.CacheCleanupService;
 
 /**
- * MainActivity represents the entry point of the application.
- * This activity initializes the main view and setups up the UI components.
- * <p>
- * It enables edge-to-edge display mode for a more immersive user interface
- * experience and inflates the main layout using view binding.
- * <p>
- * This class extends AppCompatActivity and overrides the onCreate method
- * to set up the activity's user interface.
+ * MainActivity represents the entry point of the application. This activity initializes the main
+ * view and setups up the UI components.
+ *
+ * <p>It enables edge-to-edge display mode for a more immersive user interface experience and
+ * inflates the main layout using view binding.
+ *
+ * <p>This class extends AppCompatActivity and overrides the onCreate method to set up the
+ * activity's user interface.
  */
 public class MainActivity extends AppCompatActivity {
 
-    private ActivityMainBinding binding;
+  private ActivityMainBinding binding;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
 
-        // Enable true edge-to-edge: app draws behind system bars
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+    // Enable true edge-to-edge: app draws behind system bars
+    WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+    binding = ActivityMainBinding.inflate(getLayoutInflater());
+    setContentView(binding.getRoot());
 
-        // Apply insets to top app bar and bottom bar container if present
-        final View root = findViewById(android.R.id.content);
-        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
-            Insets sb = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+    // Apply insets to top app bar and bottom bar container if present
+    final View root = findViewById(android.R.id.content);
+    ViewCompat.setOnApplyWindowInsetsListener(
+        root,
+        (v, insets) -> {
+          Insets sb = insets.getInsets(WindowInsetsCompat.Type.systemBars());
 
-            // Toolbar oben auffüttern
-            MaterialToolbar topBar = findViewById(R.id.top_app_bar);
-            if (topBar != null) {
-                topBar.setPadding(
-                        topBar.getPaddingLeft(),
-                        sb.top,
-                        topBar.getPaddingRight(),
-                        topBar.getPaddingBottom()
-                );
-            }
+          // Toolbar oben auffüttern
+          MaterialToolbar topBar = findViewById(R.id.top_app_bar);
+          if (topBar != null) {
+            topBar.setPadding(
+                topBar.getPaddingLeft(),
+                sb.top,
+                topBar.getPaddingRight(),
+                topBar.getPaddingBottom());
+          }
 
-            // BottomAppBar/FAB-Container unten auffüttern
-            /*
-            View bottom = findViewById(R.id.bottom_bar_container);
-            if (bottom != null) {
-                bottom.setPadding(
-                        bottom.getPaddingLeft(),
-                        bottom.getPaddingTop(),
-                        bottom.getPaddingRight(),
-                        sb.bottom
-                );
-            }*/
+          // BottomAppBar/FAB-Container unten auffüttern
+          /*
+          View bottom = findViewById(R.id.bottom_bar_container);
+          if (bottom != null) {
+              bottom.setPadding(
+                      bottom.getPaddingLeft(),
+                      bottom.getPaddingTop(),
+                      bottom.getPaddingRight(),
+                      sb.bottom
+              );
+          }*/
 
-            // Optional: der Mittelbereich soll NICHT extra Padding bekommen.
-            return insets;
+          // Optional: der Mittelbereich soll NICHT extra Padding bekommen.
+          return insets;
         });
+  }
+
+  @Override
+  public void onLowMemory() {
+    super.onLowMemory();
+
+    // Trigger immediate cache cleanup when activity detects low memory
+    CacheCleanupService.forceCleanup(this);
+  }
+
+  /**
+   * Called when the operating system has determined that it is a good time for a process to trim
+   * unneeded memory from its process.
+   */
+  @Override
+  public void onTrimMemory(int level) {
+    super.onTrimMemory(level);
+
+    // Trigger cache cleanup when app is in the background and memory is low (non-deprecated level)
+    if (level >= TRIM_MEMORY_BACKGROUND) {
+      CacheCleanupService.forceCleanup(this);
     }
-
-    @Override
-    public void onLowMemory() {
-        super.onLowMemory();
-
-        // Trigger immediate cache cleanup when activity detects low memory
-        CacheCleanupService.forceCleanup(this);
-    }
-
-    /**
-     * Called when the operating system has determined that it is a good
-     * time for a process to trim unneeded memory from its process.
-     */
-    @Override
-    public void onTrimMemory(int level) {
-        super.onTrimMemory(level);
-
-        // Trigger cache cleanup when app is in the background and memory is low (non-deprecated level)
-        if (level >= TRIM_MEMORY_BACKGROUND) {
-            CacheCleanupService.forceCleanup(this);
-        }
-    }
+  }
 }

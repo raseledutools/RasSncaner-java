@@ -1,5 +1,7 @@
 package de.schliweb.makeacopy.a11y;
 
+import static org.junit.Assert.*;
+
 import android.Manifest;
 import android.view.View;
 import androidx.fragment.app.testing.FragmentScenario;
@@ -12,32 +14,31 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static org.junit.Assert.*;
-
 @RunWith(AndroidJUnit4.class)
 public class CameraA11ySmokeTest {
 
-    @Rule
-    public GrantPermissionRule camPerm = GrantPermissionRule.grant(Manifest.permission.CAMERA);
+  @Rule public GrantPermissionRule camPerm = GrantPermissionRule.grant(Manifest.permission.CAMERA);
 
-    @Test
-    public void previewView_isNotFocusable_andNotImportantForA11y() {
-        FragmentScenario<CameraFragment> scenario = FragmentScenario.launchInContainer(
-                CameraFragment.class,
-                /* fragmentArgs = */ null,
-                R.style.Theme_MakeACopy,
-                Lifecycle.State.RESUMED
-        );
+  @Test
+  public void previewView_isNotFocusable_andNotImportantForA11y() {
+    FragmentScenario<CameraFragment> scenario =
+        FragmentScenario.launchInContainer(
+            CameraFragment.class,
+            /* fragmentArgs= */ null,
+            R.style.Theme_MakeACopy,
+            Lifecycle.State.RESUMED);
 
-        scenario.onFragment(fragment -> {
-            View preview = fragment.requireView().findViewById(R.id.view_finder);
-            assertNotNull(preview);
-            assertFalse("PreviewView must not be focusable", preview.isFocusable());
-            assertFalse("PreviewView must not be clickable", preview.isClickable());
-            int importance = preview.getImportantForAccessibility();
-            assertTrue("PreviewView should be NOT important for accessibility",
-                    importance == View.IMPORTANT_FOR_ACCESSIBILITY_NO ||
-                            importance == View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
+    scenario.onFragment(
+        fragment -> {
+          View preview = fragment.requireView().findViewById(R.id.view_finder);
+          assertNotNull(preview);
+          assertFalse("PreviewView must not be focusable", preview.isFocusable());
+          assertFalse("PreviewView must not be clickable", preview.isClickable());
+          int importance = preview.getImportantForAccessibility();
+          assertTrue(
+              "PreviewView should be NOT important for accessibility",
+              importance == View.IMPORTANT_FOR_ACCESSIBILITY_NO
+                  || importance == View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
         });
-    }
+  }
 }

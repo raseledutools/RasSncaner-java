@@ -5,58 +5,59 @@ import androidx.lifecycle.MutableLiveData;
 import de.schliweb.makeacopy.ui.BaseViewModel;
 
 /**
- * ViewModel for managing camera-related operations within a specific fragment or activity.
- * Inherits from BaseViewModel to provide lifecycle-aware operations and LiveData management.
- * This ViewModel handles the state of camera permissions and image path updates.
+ * ViewModel for managing camera-related operations within a specific fragment or activity. Inherits
+ * from BaseViewModel to provide lifecycle-aware operations and LiveData management. This ViewModel
+ * handles the state of camera permissions and image path updates.
  */
 public class CameraViewModel extends BaseViewModel {
 
-    private final MutableLiveData<Boolean> mCameraPermissionGranted;
-    private final MutableLiveData<String> mImagePath = new MutableLiveData<>();
+  private final MutableLiveData<Boolean> mCameraPermissionGranted;
+  private final MutableLiveData<String> mImagePath = new MutableLiveData<>();
 
-    public CameraViewModel() {
-        super("Camera Fragment");
+  public CameraViewModel() {
+    super("Camera Fragment");
 
-        mCameraPermissionGranted = new MutableLiveData<>();
-        mCameraPermissionGranted.setValue(false);
-    }
+    mCameraPermissionGranted = new MutableLiveData<>();
+    mCameraPermissionGranted.setValue(false);
+  }
 
-    /**
-     * Checks whether the camera permission is granted.
-     *
-     * @return A LiveData object containing a Boolean value indicating if the camera permission is granted.
-     * Returns true if the permission is granted, false otherwise.
-     */
-    public LiveData<Boolean> isCameraPermissionGranted() {
-        return mCameraPermissionGranted;
-    }
+  /**
+   * Checks whether the camera permission is granted.
+   *
+   * @return A LiveData object containing a Boolean value indicating if the camera permission is
+   *     granted. Returns true if the permission is granted, false otherwise.
+   */
+  public LiveData<Boolean> isCameraPermissionGranted() {
+    return mCameraPermissionGranted;
+  }
 
-    /**
-     * Updates the camera permission status.
-     *
-     * @param granted A boolean value indicating whether the camera permission has been granted.
-     *                Pass true if the permission is granted, false otherwise.
-     */
-    public void setCameraPermissionGranted(boolean granted) {
-        mCameraPermissionGranted.setValue(granted);
-    }
+  /**
+   * Updates the camera permission status.
+   *
+   * @param granted A boolean value indicating whether the camera permission has been granted. Pass
+   *     true if the permission is granted, false otherwise.
+   */
+  public void setCameraPermissionGranted(boolean granted) {
+    mCameraPermissionGranted.setValue(granted);
+  }
 
-    /**
-     * Retrieves the LiveData object representing the image path.
-     * The image path is expected to be updated when a new image is captured or selected.
-     *
-     * @return A MutableLiveData object containing the current image path as a String.
-     */
-    public MutableLiveData<String> getImagePath() {
-        return mImagePath;
-    }
+  /**
+   * Retrieves the LiveData object representing the image path. The image path is expected to be
+   * updated when a new image is captured or selected.
+   *
+   * @return A MutableLiveData object containing the current image path as a String.
+   */
+  public MutableLiveData<String> getImagePath() {
+    return mImagePath;
+  }
 
-    /**
-     * Updates the image path stored in the ViewModel.
-     *
-     * @param path The new image path as a String. This value is used to update the current image path.
-     */
-    public void setImagePath(String path) {
-        mImagePath.setValue(path);
-    }
+  /**
+   * Updates the image path stored in the ViewModel.
+   *
+   * @param path The new image path as a String. This value is used to update the current image
+   *     path.
+   */
+  public void setImagePath(String path) {
+    mImagePath.setValue(path);
+  }
 }

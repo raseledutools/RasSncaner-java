@@ -9,103 +9,95 @@ import lombok.Getter;
 
 /**
  * A ViewModel class for managing the state of an OCR review screen.
- * <p>
- * This ViewModel operates on an {@code OcrDoc} object representing the current state
- * of the OCR document being reviewed. It maintains an edit copy for cancel/save semantics
- * and tracks whether the document has been modified (dirty state).
- * <p>
- * Key features:
- * - Edit copy: Review works on a copy; original is preserved for cancel
- * - Dirty tracking: Tracks if document has been modified since review started
- * - No undo/redo: Simplified state management (save/cancel semantics suffice)
- * - No autosave: Changes are only persisted on explicit save
+ *
+ * <p>This ViewModel operates on an {@code OcrDoc} object representing the current state of the OCR
+ * document being reviewed. It maintains an edit copy for cancel/save semantics and tracks whether
+ * the document has been modified (dirty state).
+ *
+ * <p>Key features: - Edit copy: Review works on a copy; original is preserved for cancel - Dirty
+ * tracking: Tracks if document has been modified since review started - No undo/redo: Simplified
+ * state management (save/cancel semantics suffice) - No autosave: Changes are only persisted on
+ * explicit save
  */
 public class OcrReviewViewModel extends ViewModel {
 
-    private final MutableLiveData<OcrDoc> doc = new MutableLiveData<>(new OcrDoc());
-    private final MutableLiveData<Boolean> dirty = new MutableLiveData<>(false);
+  private final MutableLiveData<OcrDoc> doc = new MutableLiveData<>(new OcrDoc());
+  private final MutableLiveData<Boolean> dirty = new MutableLiveData<>(false);
 
-    // The original document state when review started (for cancel/dirty detection)
-    private OcrDoc originalDoc;
+  // The original document state when review started (for cancel/dirty detection)
+  private OcrDoc originalDoc;
 
-    // Version counter incremented on each mutation for dirty tracking
-    @Getter
-    private long docVersion = 0;
-    private long originalVersion = 0;
+  // Version counter incremented on each mutation for dirty tracking
+  @Getter private long docVersion = 0;
+  private long originalVersion = 0;
 
-    public LiveData<OcrDoc> getDoc() {
-        return doc;
+  public LiveData<OcrDoc> getDoc() {
+    return doc;
+  }
+
+  /** Returns whether the document has been modified since review started. */
+  public LiveData<Boolean> isDirty() {
+    return dirty;
+  }
+
+  /**
+   * Sets the document for review and stores a copy as the original state. This should be called
+   * when entering the review screen.
+   *
+   * @param d the document to be set. If null, a new instance of {@code OcrDoc} is created.
+   */
+  public void setDoc(OcrDoc d) {
+    if (d == null) d = new OcrDoc();
+    // Store deep copy as original for cancel/dirty detection
+    originalDoc = OcrDocUtils.deepCopy(d);
+    originalVersion = docVersion;
+    doc.setValue(d);
+    dirty.setValue(false);
+  }
+
+  /** Returns the current document value. */
+  public OcrDoc getDocValue() {
+    return doc.getValue();
+  }
+
+  /**
+   * Marks the document as modified. Should be called after any edit operation. Increments the
+   * version counter for dirty tracking.
+   */
+  public void markModified() {
+    docVersion++;
+    dirty.setValue(true);
+  }
+
+  /**
+   * Checks if the document has unsaved changes.
+   *
+   * @return true if the document has been modified since review started
+   */
+  public boolean hasUnsavedChanges() {
+    Boolean d = dirty.getValue();
+    return d != null && d;
+  }
+
+  /** Resets the document to the original state (for cancel operation). */
+  public void resetToOriginal() {
+    if (originalDoc != null) {
+      doc.setValue(OcrDocUtils.deepCopy(originalDoc));
+      docVersion = originalVersion;
+      dirty.setValue(false);
     }
+  }
 
-    /**
-     * Returns whether the document has been modified since review started.
-     */
-    public LiveData<Boolean> isDirty() {
-        return dirty;
+  /**
+   * Clears the dirty flag after successful save. Updates the original document to the current
+   * state.
+   */
+  public void markSaved() {
+    OcrDoc current = doc.getValue();
+    if (current != null) {
+      originalDoc = OcrDocUtils.deepCopy(current);
+      originalVersion = docVersion;
     }
-
-    /**
-     * Sets the document for review and stores a copy as the original state.
-     * This should be called when entering the review screen.
-     *
-     * @param d the document to be set. If null, a new instance of {@code OcrDoc} is created.
-     */
-    public void setDoc(OcrDoc d) {
-        if (d == null) d = new OcrDoc();
-        // Store deep copy as original for cancel/dirty detection
-        originalDoc = OcrDocUtils.deepCopy(d);
-        originalVersion = docVersion;
-        doc.setValue(d);
-        dirty.setValue(false);
-    }
-
-    /**
-     * Returns the current document value.
-     */
-    public OcrDoc getDocValue() {
-        return doc.getValue();
-    }
-
-    /**
-     * Marks the document as modified. Should be called after any edit operation.
-     * Increments the version counter for dirty tracking.
-     */
-    public void markModified() {
-        docVersion++;
-        dirty.setValue(true);
-    }
-
-    /**
-     * Checks if the document has unsaved changes.
-     *
-     * @return true if the document has been modified since review started
-     */
-    public boolean hasUnsavedChanges() {
-        Boolean d = dirty.getValue();
-        return d != null && d;
-    }
-
-    /**
-     * Resets the document to the original state (for cancel operation).
-     */
-    public void resetToOriginal() {
-        if (originalDoc != null) {
-            doc.setValue(OcrDocUtils.deepCopy(originalDoc));
-            docVersion = originalVersion;
-            dirty.setValue(false);
-        }
-    }
-
-    /**
-     * Clears the dirty flag after successful save.
-     * Updates the original document to the current state.
-     */
-    public void markSaved() {
-        OcrDoc current = doc.getValue();
-        if (current != null) {
-            originalDoc = OcrDocUtils.deepCopy(current);
-            originalVersion = docVersion;
-        }
-        dirty.setValue(false);
-    }
+    dirty.setValue(false);
+  }
 }

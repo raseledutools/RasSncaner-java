@@ -1,430 +1,447 @@
 package de.schliweb.makeacopy.utils.layout;
 
 import android.graphics.Rect;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
 /**
- * Sorts document regions into proper reading order based on their positions
- * and the document's text direction (LTR or RTL).
+ * Sorts document regions into proper reading order based on their positions and the document's text
+ * direction (LTR or RTL).
  */
 public class ReadingOrderSorter {
 
-    /**
-     * Tolerance for considering regions to be on the same line (as fraction of average height).
-     */
-    private static final double LINE_TOLERANCE_RATIO = 0.5;
+  /** Tolerance for considering regions to be on the same line (as fraction of average height). */
+  private static final double LINE_TOLERANCE_RATIO = 0.5;
 
-    /**
-     * Sorts a list of document regions into reading order.
-     * Uses left-to-right, top-to-bottom ordering by default.
-     *
-     * @param regions list of regions to sort
-     */
-    public static void sort(List<DocumentRegion> regions) {
-        sort(regions, TextDirection.LTR);
+  /**
+   * Sorts a list of document regions into reading order. Uses left-to-right, top-to-bottom ordering
+   * by default.
+   *
+   * @param regions list of regions to sort
+   */
+  public static void sort(List<DocumentRegion> regions) {
+    sort(regions, TextDirection.LTR);
+  }
+
+  /**
+   * Sorts a list of document regions into reading order with specified text direction.
+   *
+   * @param regions list of regions to sort
+   * @param direction text direction (LTR or RTL)
+   */
+  public static void sort(List<DocumentRegion> regions, TextDirection direction) {
+    if (regions == null || regions.size() <= 1) {
+      return;
     }
 
-    /**
-     * Sorts a list of document regions into reading order with specified text direction.
-     *
-     * @param regions   list of regions to sort
-     * @param direction text direction (LTR or RTL)
-     */
-    public static void sort(List<DocumentRegion> regions, TextDirection direction) {
-        if (regions == null || regions.size() <= 1) {
-            return;
-        }
-
-        // Calculate average height for line tolerance
-        int totalHeight = 0;
-        for (DocumentRegion region : regions) {
-            if (region.getBounds() != null) {
-                totalHeight += region.getBounds().height();
-            }
-        }
-        final int avgHeight = totalHeight / regions.size();
-        final int lineTolerance = (int) (avgHeight * LINE_TOLERANCE_RATIO);
-
-        // Sort by position
-        final TextDirection dir = direction;
-        Collections.sort(regions, new Comparator<DocumentRegion>() {
-            @Override
-            public int compare(DocumentRegion r1, DocumentRegion r2) {
-                Rect b1 = r1.getBounds();
-                Rect b2 = r2.getBounds();
-
-                if (b1 == null && b2 == null) return 0;
-                if (b1 == null) return 1;
-                if (b2 == null) return -1;
-
-                // Check if regions are on the same line (within tolerance)
-                int y1 = b1.top;
-                int y2 = b2.top;
-
-                if (Math.abs(y1 - y2) <= lineTolerance) {
-                    // Same line - sort by x position based on text direction
-                    if (dir == TextDirection.RTL) {
-                        return Integer.compare(b2.left, b1.left); // Right to left
-                    } else {
-                        return Integer.compare(b1.left, b2.left); // Left to right
-                    }
-                } else {
-                    // Different lines - sort by y position (top to bottom)
-                    return Integer.compare(y1, y2);
-                }
-            }
-        });
-
-        // Update reading order indices
-        for (int i = 0; i < regions.size(); i++) {
-            regions.get(i).setReadingOrder(i);
-        }
+    // Calculate average height for line tolerance
+    int totalHeight = 0;
+    for (DocumentRegion region : regions) {
+      if (region.getBounds() != null) {
+        totalHeight += region.getBounds().height();
+      }
     }
+    final int avgHeight = totalHeight / regions.size();
+    final int lineTolerance = (int) (avgHeight * LINE_TOLERANCE_RATIO);
 
-    /**
-     * Sorts regions within columns, maintaining column-first reading order.
-     * Each column is read top-to-bottom before moving to the next column.
-     * Headers are always placed first, footers are always placed last.
-     *
-     * @param regions   list of regions to sort
-     * @param direction text direction (LTR or RTL)
-     */
-    public static void sortByColumns(List<DocumentRegion> regions, TextDirection direction) {
-        if (regions == null || regions.size() <= 1) {
-            return;
-        }
+    // Sort by position
+    final TextDirection dir = direction;
+    Collections.sort(
+        regions,
+        new Comparator<DocumentRegion>() {
+          @Override
+          public int compare(DocumentRegion r1, DocumentRegion r2) {
+            Rect b1 = r1.getBounds();
+            Rect b2 = r2.getBounds();
 
-        // Separate headers, footers, columns, and other regions
-        List<DocumentRegion> headers = new ArrayList<>();
-        List<DocumentRegion> footers = new ArrayList<>();
-        List<DocumentRegion> otherUnassigned = new ArrayList<>();
+            if (b1 == null && b2 == null) return 0;
+            if (b1 == null) return 1;
+            if (b2 == null) return -1;
 
-        // Group regions by column index
-        List<List<DocumentRegion>> columnGroups = new ArrayList<>();
-        int maxColumnIndex = -1;
+            // Check if regions are on the same line (within tolerance)
+            int y1 = b1.top;
+            int y2 = b2.top;
 
-        for (DocumentRegion region : regions) {
-            int colIdx = region.getColumnIndex();
-            if (colIdx >= 0) {
-                maxColumnIndex = Math.max(maxColumnIndex, colIdx);
-            }
-        }
-
-        // Initialize column groups
-        for (int i = 0; i <= maxColumnIndex; i++) {
-            columnGroups.add(new ArrayList<>());
-        }
-
-        // Categorize regions: headers, footers, columns, and other
-        for (DocumentRegion region : regions) {
-            if (region.getType() == DocumentRegion.Type.HEADER) {
-                headers.add(region);
-            } else if (region.getType() == DocumentRegion.Type.FOOTER) {
-                footers.add(region);
+            if (Math.abs(y1 - y2) <= lineTolerance) {
+              // Same line - sort by x position based on text direction
+              if (dir == TextDirection.RTL) {
+                return Integer.compare(b2.left, b1.left); // Right to left
+              } else {
+                return Integer.compare(b1.left, b2.left); // Left to right
+              }
             } else {
-                int colIdx = region.getColumnIndex();
-                if (colIdx >= 0 && colIdx < columnGroups.size()) {
-                    columnGroups.get(colIdx).add(region);
-                } else {
-                    otherUnassigned.add(region);
-                }
+              // Different lines - sort by y position (top to bottom)
+              return Integer.compare(y1, y2);
             }
-        }
-
-        // Sort headers by y position (top to bottom)
-        Collections.sort(headers, new Comparator<DocumentRegion>() {
-            @Override
-            public int compare(DocumentRegion r1, DocumentRegion r2) {
-                Rect b1 = r1.getBounds();
-                Rect b2 = r2.getBounds();
-                if (b1 == null && b2 == null) return 0;
-                if (b1 == null) return 1;
-                if (b2 == null) return -1;
-                return Integer.compare(b1.top, b2.top);
-            }
+          }
         });
 
-        // Sort each column group by y position
-        for (List<DocumentRegion> group : columnGroups) {
-            Collections.sort(group, new Comparator<DocumentRegion>() {
-                @Override
-                public int compare(DocumentRegion r1, DocumentRegion r2) {
-                    Rect b1 = r1.getBounds();
-                    Rect b2 = r2.getBounds();
-                    if (b1 == null && b2 == null) return 0;
-                    if (b1 == null) return 1;
-                    if (b2 == null) return -1;
-                    return Integer.compare(b1.top, b2.top);
-                }
-            });
-        }
+    // Update reading order indices
+    for (int i = 0; i < regions.size(); i++) {
+      regions.get(i).setReadingOrder(i);
+    }
+  }
 
-        // Sort other unassigned regions normally
-        sort(otherUnassigned, direction);
+  /**
+   * Sorts regions within columns, maintaining column-first reading order. Each column is read
+   * top-to-bottom before moving to the next column. Headers are always placed first, footers are
+   * always placed last.
+   *
+   * @param regions list of regions to sort
+   * @param direction text direction (LTR or RTL)
+   */
+  public static void sortByColumns(List<DocumentRegion> regions, TextDirection direction) {
+    if (regions == null || regions.size() <= 1) {
+      return;
+    }
 
-        // Sort footers by y position
-        Collections.sort(footers, new Comparator<DocumentRegion>() {
-            @Override
-            public int compare(DocumentRegion r1, DocumentRegion r2) {
-                Rect b1 = r1.getBounds();
-                Rect b2 = r2.getBounds();
-                if (b1 == null && b2 == null) return 0;
-                if (b1 == null) return 1;
-                if (b2 == null) return -1;
-                return Integer.compare(b1.top, b2.top);
-            }
-        });
+    // Separate headers, footers, columns, and other regions
+    List<DocumentRegion> headers = new ArrayList<>();
+    List<DocumentRegion> footers = new ArrayList<>();
+    List<DocumentRegion> otherUnassigned = new ArrayList<>();
 
-        // Rebuild the list in correct reading order:
-        // 1. Headers first
-        // 2. Columns (left to right or right to left)
-        // 3. Other unassigned regions
-        // 4. Footers last
-        regions.clear();
-        int readingOrder = 0;
+    // Group regions by column index
+    List<List<DocumentRegion>> columnGroups = new ArrayList<>();
+    int maxColumnIndex = -1;
 
-        // 1. Add headers first
-        for (DocumentRegion header : headers) {
-            header.setReadingOrder(readingOrder++);
-            regions.add(header);
-        }
+    for (DocumentRegion region : regions) {
+      int colIdx = region.getColumnIndex();
+      if (colIdx >= 0) {
+        maxColumnIndex = Math.max(maxColumnIndex, colIdx);
+      }
+    }
 
-        // 2. Add columns in order based on text direction
-        if (direction == TextDirection.RTL) {
-            // Right to left: start from rightmost column
-            for (int i = columnGroups.size() - 1; i >= 0; i--) {
-                for (DocumentRegion region : columnGroups.get(i)) {
-                    region.setReadingOrder(readingOrder++);
-                    regions.add(region);
-                }
-            }
+    // Initialize column groups
+    for (int i = 0; i <= maxColumnIndex; i++) {
+      columnGroups.add(new ArrayList<>());
+    }
+
+    // Categorize regions: headers, footers, columns, and other
+    for (DocumentRegion region : regions) {
+      if (region.getType() == DocumentRegion.Type.HEADER) {
+        headers.add(region);
+      } else if (region.getType() == DocumentRegion.Type.FOOTER) {
+        footers.add(region);
+      } else {
+        int colIdx = region.getColumnIndex();
+        if (colIdx >= 0 && colIdx < columnGroups.size()) {
+          columnGroups.get(colIdx).add(region);
         } else {
-            // Left to right: start from leftmost column
-            for (List<DocumentRegion> group : columnGroups) {
-                for (DocumentRegion region : group) {
-                    region.setReadingOrder(readingOrder++);
-                    regions.add(region);
-                }
-            }
+          otherUnassigned.add(region);
         }
-
-        // 3. Add other unassigned regions
-        for (DocumentRegion region : otherUnassigned) {
-            region.setReadingOrder(readingOrder++);
-            regions.add(region);
-        }
-
-        // 4. Add footers last
-        for (DocumentRegion footer : footers) {
-            footer.setReadingOrder(readingOrder++);
-            regions.add(footer);
-        }
+      }
     }
 
-    /**
-     * Sorts table cells in row-major order (left-to-right, top-to-bottom within table).
-     *
-     * @param cells     list of table cell regions
-     * @param direction text direction
-     */
-    public static void sortTableCells(List<DocumentRegion> cells, TextDirection direction) {
-        if (cells == null || cells.size() <= 1) {
-            return;
-        }
-
-        final TextDirection dir = direction;
-        Collections.sort(cells, new Comparator<DocumentRegion>() {
-            @Override
-            public int compare(DocumentRegion c1, DocumentRegion c2) {
-                // First sort by row
-                int rowCompare = Integer.compare(c1.getRowIndex(), c2.getRowIndex());
-                if (rowCompare != 0) {
-                    return rowCompare;
-                }
-
-                // Then by column (respecting text direction)
-                if (dir == TextDirection.RTL) {
-                    return Integer.compare(c2.getColumnIndex(), c1.getColumnIndex());
-                } else {
-                    return Integer.compare(c1.getColumnIndex(), c2.getColumnIndex());
-                }
-            }
+    // Sort headers by y position (top to bottom)
+    Collections.sort(
+        headers,
+        new Comparator<DocumentRegion>() {
+          @Override
+          public int compare(DocumentRegion r1, DocumentRegion r2) {
+            Rect b1 = r1.getBounds();
+            Rect b2 = r2.getBounds();
+            if (b1 == null && b2 == null) return 0;
+            if (b1 == null) return 1;
+            if (b2 == null) return -1;
+            return Integer.compare(b1.top, b2.top);
+          }
         });
 
-        // Update reading order
-        for (int i = 0; i < cells.size(); i++) {
-            cells.get(i).setReadingOrder(i);
-        }
-    }
-
-    /**
-     * Sorts regions hierarchically: first by region type priority, then by position.
-     * Priority order: HEADER > BODY/COLUMN > TABLE > FIGURE > CAPTION > FOOTER
-     *
-     * @param regions   list of regions to sort
-     * @param direction text direction
-     */
-    public static void sortHierarchical(List<DocumentRegion> regions, TextDirection direction) {
-        if (regions == null || regions.size() <= 1) {
-            return;
-        }
-
-        // Calculate average height for line tolerance
-        int totalHeight = 0;
-        for (DocumentRegion region : regions) {
-            if (region.getBounds() != null) {
-                totalHeight += region.getBounds().height();
-            }
-        }
-        final int avgHeight = regions.isEmpty() ? 100 : totalHeight / regions.size();
-        final int lineTolerance = (int) (avgHeight * LINE_TOLERANCE_RATIO);
-        final TextDirection dir = direction;
-
-        Collections.sort(regions, new Comparator<DocumentRegion>() {
+    // Sort each column group by y position
+    for (List<DocumentRegion> group : columnGroups) {
+      Collections.sort(
+          group,
+          new Comparator<DocumentRegion>() {
             @Override
             public int compare(DocumentRegion r1, DocumentRegion r2) {
-                // First compare by type priority
-                int priority1 = getTypePriority(r1.getType());
-                int priority2 = getTypePriority(r2.getType());
-
-                if (priority1 != priority2) {
-                    return Integer.compare(priority1, priority2);
-                }
-
-                // Same type priority - sort by position
-                Rect b1 = r1.getBounds();
-                Rect b2 = r2.getBounds();
-
-                if (b1 == null && b2 == null) return 0;
-                if (b1 == null) return 1;
-                if (b2 == null) return -1;
-
-                // Check if on same line
-                if (Math.abs(b1.top - b2.top) <= lineTolerance) {
-                    if (dir == TextDirection.RTL) {
-                        return Integer.compare(b2.left, b1.left);
-                    } else {
-                        return Integer.compare(b1.left, b2.left);
-                    }
-                }
-
-                return Integer.compare(b1.top, b2.top);
+              Rect b1 = r1.getBounds();
+              Rect b2 = r2.getBounds();
+              if (b1 == null && b2 == null) return 0;
+              if (b1 == null) return 1;
+              if (b2 == null) return -1;
+              return Integer.compare(b1.top, b2.top);
             }
+          });
+    }
+
+    // Sort other unassigned regions normally
+    sort(otherUnassigned, direction);
+
+    // Sort footers by y position
+    Collections.sort(
+        footers,
+        new Comparator<DocumentRegion>() {
+          @Override
+          public int compare(DocumentRegion r1, DocumentRegion r2) {
+            Rect b1 = r1.getBounds();
+            Rect b2 = r2.getBounds();
+            if (b1 == null && b2 == null) return 0;
+            if (b1 == null) return 1;
+            if (b2 == null) return -1;
+            return Integer.compare(b1.top, b2.top);
+          }
         });
 
-        // Update reading order
-        for (int i = 0; i < regions.size(); i++) {
-            regions.get(i).setReadingOrder(i);
-        }
+    // Rebuild the list in correct reading order:
+    // 1. Headers first
+    // 2. Columns (left to right or right to left)
+    // 3. Other unassigned regions
+    // 4. Footers last
+    regions.clear();
+    int readingOrder = 0;
+
+    // 1. Add headers first
+    for (DocumentRegion header : headers) {
+      header.setReadingOrder(readingOrder++);
+      regions.add(header);
     }
 
-    /**
-     * Gets the priority value for a region type.
-     * Lower values = higher priority (processed first).
-     *
-     * @param type region type
-     * @return priority value
-     */
-    private static int getTypePriority(DocumentRegion.Type type) {
-        if (type == null) return 100;
-
-        switch (type) {
-            case HEADER:
-                return 0;
-            case BODY:
-            case COLUMN:
-                return 10;
-            case TABLE:
-                return 20;
-            case FIGURE:
-                return 30;
-            case CAPTION:
-                return 40;
-            case SIDEBAR:
-            case MARGIN_NOTE:
-                return 50;
-            case FOOTER:
-                return 60;
-            default:
-                return 100;
+    // 2. Add columns in order based on text direction
+    if (direction == TextDirection.RTL) {
+      // Right to left: start from rightmost column
+      for (int i = columnGroups.size() - 1; i >= 0; i--) {
+        for (DocumentRegion region : columnGroups.get(i)) {
+          region.setReadingOrder(readingOrder++);
+          regions.add(region);
         }
+      }
+    } else {
+      // Left to right: start from leftmost column
+      for (List<DocumentRegion> group : columnGroups) {
+        for (DocumentRegion region : group) {
+          region.setReadingOrder(readingOrder++);
+          regions.add(region);
+        }
+      }
     }
 
-    /**
-     * Determines the likely text direction based on language code.
-     *
-     * @param languageCode ISO 639-1 or 639-2 language code
-     * @return detected text direction
-     */
-    public static TextDirection getDirectionForLanguage(String languageCode) {
-        if (languageCode == null || languageCode.isEmpty()) {
-            return TextDirection.LTR;
-        }
-
-        String lang = languageCode.toLowerCase();
-
-        // RTL languages
-        if (lang.equals("ar") || lang.equals("ara") ||    // Arabic
-                lang.equals("he") || lang.equals("heb") ||    // Hebrew
-                lang.equals("fa") || lang.equals("fas") ||    // Persian/Farsi
-                lang.equals("ur") || lang.equals("urd") ||    // Urdu
-                lang.equals("yi") || lang.equals("yid") ||    // Yiddish
-                lang.equals("ps") || lang.equals("pus") ||    // Pashto
-                lang.equals("sd") || lang.equals("snd") ||    // Sindhi
-                lang.equals("ug") || lang.equals("uig")) {    // Uyghur
-            return TextDirection.RTL;
-        }
-
-        return TextDirection.LTR;
+    // 3. Add other unassigned regions
+    for (DocumentRegion region : otherUnassigned) {
+      region.setReadingOrder(readingOrder++);
+      regions.add(region);
     }
 
-    /**
-     * Recursively sorts regions and their children.
-     *
-     * @param regions   list of regions to sort
-     * @param direction text direction
-     */
-    public static void sortRecursive(List<DocumentRegion> regions, TextDirection direction) {
-        if (regions == null || regions.isEmpty()) {
-            return;
-        }
+    // 4. Add footers last
+    for (DocumentRegion footer : footers) {
+      footer.setReadingOrder(readingOrder++);
+      regions.add(footer);
+    }
+  }
 
-        // Sort top-level regions
-        sort(regions, direction);
+  /**
+   * Sorts table cells in row-major order (left-to-right, top-to-bottom within table).
+   *
+   * @param cells list of table cell regions
+   * @param direction text direction
+   */
+  public static void sortTableCells(List<DocumentRegion> cells, TextDirection direction) {
+    if (cells == null || cells.size() <= 1) {
+      return;
+    }
 
-        // Recursively sort children
-        for (DocumentRegion region : regions) {
-            if (region.hasChildren()) {
-                List<DocumentRegion> children = region.getChildren();
-
-                // Use appropriate sorting based on region type
-                if (region.getType() == DocumentRegion.Type.TABLE) {
-                    sortTableCells(children, direction);
-                } else if (region.getType() == DocumentRegion.Type.COLUMN) {
-                    sort(children, direction);
-                } else {
-                    sortRecursive(children, direction);
-                }
+    final TextDirection dir = direction;
+    Collections.sort(
+        cells,
+        new Comparator<DocumentRegion>() {
+          @Override
+          public int compare(DocumentRegion c1, DocumentRegion c2) {
+            // First sort by row
+            int rowCompare = Integer.compare(c1.getRowIndex(), c2.getRowIndex());
+            if (rowCompare != 0) {
+              return rowCompare;
             }
+
+            // Then by column (respecting text direction)
+            if (dir == TextDirection.RTL) {
+              return Integer.compare(c2.getColumnIndex(), c1.getColumnIndex());
+            } else {
+              return Integer.compare(c1.getColumnIndex(), c2.getColumnIndex());
+            }
+          }
+        });
+
+    // Update reading order
+    for (int i = 0; i < cells.size(); i++) {
+      cells.get(i).setReadingOrder(i);
+    }
+  }
+
+  /**
+   * Sorts regions hierarchically: first by region type priority, then by position. Priority order:
+   * HEADER > BODY/COLUMN > TABLE > FIGURE > CAPTION > FOOTER
+   *
+   * @param regions list of regions to sort
+   * @param direction text direction
+   */
+  public static void sortHierarchical(List<DocumentRegion> regions, TextDirection direction) {
+    if (regions == null || regions.size() <= 1) {
+      return;
+    }
+
+    // Calculate average height for line tolerance
+    int totalHeight = 0;
+    for (DocumentRegion region : regions) {
+      if (region.getBounds() != null) {
+        totalHeight += region.getBounds().height();
+      }
+    }
+    final int avgHeight = regions.isEmpty() ? 100 : totalHeight / regions.size();
+    final int lineTolerance = (int) (avgHeight * LINE_TOLERANCE_RATIO);
+    final TextDirection dir = direction;
+
+    Collections.sort(
+        regions,
+        new Comparator<DocumentRegion>() {
+          @Override
+          public int compare(DocumentRegion r1, DocumentRegion r2) {
+            // First compare by type priority
+            int priority1 = getTypePriority(r1.getType());
+            int priority2 = getTypePriority(r2.getType());
+
+            if (priority1 != priority2) {
+              return Integer.compare(priority1, priority2);
+            }
+
+            // Same type priority - sort by position
+            Rect b1 = r1.getBounds();
+            Rect b2 = r2.getBounds();
+
+            if (b1 == null && b2 == null) return 0;
+            if (b1 == null) return 1;
+            if (b2 == null) return -1;
+
+            // Check if on same line
+            if (Math.abs(b1.top - b2.top) <= lineTolerance) {
+              if (dir == TextDirection.RTL) {
+                return Integer.compare(b2.left, b1.left);
+              } else {
+                return Integer.compare(b1.left, b2.left);
+              }
+            }
+
+            return Integer.compare(b1.top, b2.top);
+          }
+        });
+
+    // Update reading order
+    for (int i = 0; i < regions.size(); i++) {
+      regions.get(i).setReadingOrder(i);
+    }
+  }
+
+  /**
+   * Gets the priority value for a region type. Lower values = higher priority (processed first).
+   *
+   * @param type region type
+   * @return priority value
+   */
+  private static int getTypePriority(DocumentRegion.Type type) {
+    if (type == null) return 100;
+
+    switch (type) {
+      case HEADER:
+        return 0;
+      case BODY:
+      case COLUMN:
+        return 10;
+      case TABLE:
+        return 20;
+      case FIGURE:
+        return 30;
+      case CAPTION:
+        return 40;
+      case SIDEBAR:
+      case MARGIN_NOTE:
+        return 50;
+      case FOOTER:
+        return 60;
+      default:
+        return 100;
+    }
+  }
+
+  /**
+   * Determines the likely text direction based on language code.
+   *
+   * @param languageCode ISO 639-1 or 639-2 language code
+   * @return detected text direction
+   */
+  public static TextDirection getDirectionForLanguage(String languageCode) {
+    if (languageCode == null || languageCode.isEmpty()) {
+      return TextDirection.LTR;
+    }
+
+    String lang = languageCode.toLowerCase();
+
+    // RTL languages
+    if (lang.equals("ar")
+        || lang.equals("ara")
+        || // Arabic
+        lang.equals("he")
+        || lang.equals("heb")
+        || // Hebrew
+        lang.equals("fa")
+        || lang.equals("fas")
+        || // Persian/Farsi
+        lang.equals("ur")
+        || lang.equals("urd")
+        || // Urdu
+        lang.equals("yi")
+        || lang.equals("yid")
+        || // Yiddish
+        lang.equals("ps")
+        || lang.equals("pus")
+        || // Pashto
+        lang.equals("sd")
+        || lang.equals("snd")
+        || // Sindhi
+        lang.equals("ug")
+        || lang.equals("uig")) { // Uyghur
+      return TextDirection.RTL;
+    }
+
+    return TextDirection.LTR;
+  }
+
+  /**
+   * Recursively sorts regions and their children.
+   *
+   * @param regions list of regions to sort
+   * @param direction text direction
+   */
+  public static void sortRecursive(List<DocumentRegion> regions, TextDirection direction) {
+    if (regions == null || regions.isEmpty()) {
+      return;
+    }
+
+    // Sort top-level regions
+    sort(regions, direction);
+
+    // Recursively sort children
+    for (DocumentRegion region : regions) {
+      if (region.hasChildren()) {
+        List<DocumentRegion> children = region.getChildren();
+
+        // Use appropriate sorting based on region type
+        if (region.getType() == DocumentRegion.Type.TABLE) {
+          sortTableCells(children, direction);
+        } else if (region.getType() == DocumentRegion.Type.COLUMN) {
+          sort(children, direction);
+        } else {
+          sortRecursive(children, direction);
         }
+      }
     }
+  }
 
-    /**
-     * Text direction for reading order determination.
-     */
-    public enum TextDirection {
-        /**
-         * Left-to-right reading (e.g., English, German, French)
-         */
-        LTR,
+  /** Text direction for reading order determination. */
+  public enum TextDirection {
+    /** Left-to-right reading (e.g., English, German, French) */
+    LTR,
 
-        /**
-         * Right-to-left reading (e.g., Arabic, Hebrew, Persian)
-         */
-        RTL
-    }
+    /** Right-to-left reading (e.g., Arabic, Hebrew, Persian) */
+    RTL
+  }
 }
