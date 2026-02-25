@@ -4,7 +4,6 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.RadioButton;
@@ -60,8 +59,7 @@ public class ExportOptionsDialogFragment extends DialogFragment {
   @Override
   public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
     Context ctx = requireContext();
-    LayoutInflater inflater = LayoutInflater.from(ctx);
-    View view = inflater.inflate(R.layout.dialog_export_options, null);
+    View view = getLayoutInflater().inflate(R.layout.dialog_export_options, null);
 
     CheckBox cbIncludeOcr = view.findViewById(R.id.dialog_checkbox_include_ocr);
     RadioButton rbExportPdf = view.findViewById(R.id.dialog_checkbox_export_pdf);
@@ -87,7 +85,6 @@ public class ExportOptionsDialogFragment extends DialogFragment {
     RadioButton rbPageLetter = view.findViewById(R.id.dialog_radio_page_letter);
     RadioButton rbPageLegal = view.findViewById(R.id.dialog_radio_page_legal);
 
-    View pdfBwModeGroup = view.findViewById(R.id.dialog_pdf_bw_mode_group);
     CheckBox rbPdfGray = view.findViewById(R.id.dialog_pdf_grayscale);
     CheckBox rbPdfBwRobust = view.findViewById(R.id.dialog_pdf_bw_robust);
     CheckBox rbPdfBwClassic = view.findViewById(R.id.dialog_pdf_bw_classic);
@@ -96,9 +93,7 @@ public class ExportOptionsDialogFragment extends DialogFragment {
     SharedPreferences prefs = ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE);
     boolean includeOcr = prefs.getBoolean("include_ocr", false);
     boolean exportAsJpeg = prefs.getBoolean("export_as_jpeg", false);
-    // Legacy booleans kept for backward-compat; selection now driven solely by pdf_bw_mode
-    boolean toGray = prefs.getBoolean("convert_to_grayscale", false);
-    boolean toBw = prefs.getBoolean("convert_to_blackwhite", false);
+    // Legacy booleans removed; selection now driven solely by pdf_bw_mode
     String jpegModeSaved = prefs.getString("jpeg_mode", JpegExportOptions.Mode.AUTO.name());
     JpegExportOptions.Mode jpegMode;
     try {
