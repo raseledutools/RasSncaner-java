@@ -9,8 +9,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * JVM unit tests for {@link A11yStateMachine}. Covers state transitions, hysteresis counters,
- * rate limiting, event mapping, system event injection, and debug info.
+ * JVM unit tests for {@link A11yStateMachine}. Covers state transitions, hysteresis counters, rate
+ * limiting, event mapping, system event injection, and debug info.
  */
 public class A11yStateMachineUnitTest {
 
@@ -31,7 +31,7 @@ public class A11yStateMachineUnitTest {
 
   /** A plausible quad covering ~60% of the image. */
   private static PointF[] plausibleQuad() {
-    return new PointF[] { pt(100, 100), pt(900, 100), pt(900, 700), pt(100, 700) };
+    return new PointF[] {pt(100, 100), pt(900, 100), pt(900, 700), pt(100, 700)};
   }
 
   private static FramingResult okResult() {
@@ -47,10 +47,11 @@ public class A11yStateMachineUnitTest {
     sm = new A11yStateMachine();
     emittedEvents = new ArrayList<>();
     emittedStates = new ArrayList<>();
-    listener = (event, state) -> {
-      emittedEvents.add(event);
-      emittedStates.add(state);
-    };
+    listener =
+        (event, state) -> {
+          emittedEvents.add(event);
+          emittedStates.add(state);
+        };
   }
 
   // ---- Initial state ----
@@ -245,8 +246,8 @@ public class A11yStateMachineUnitTest {
       sm.onFrame(null, W, H, orientResult, (long) i * 2000, listener);
     }
     // Should have emitted orientation tip (if rate limit allows)
-    boolean hasOrientTip = emittedEvents.stream()
-        .anyMatch(e -> e == A11yStateMachine.Event.ORIENTATION_PORTRAIT_TIP);
+    boolean hasOrientTip =
+        emittedEvents.stream().anyMatch(e -> e == A11yStateMachine.Event.ORIENTATION_PORTRAIT_TIP);
     assertTrue(hasOrientTip);
   }
 

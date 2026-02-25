@@ -8,7 +8,6 @@ import android.util.Log;
 import de.schliweb.makeacopy.utils.OpenCVUtils;
 import java.io.IOException;
 import java.io.OutputStream;
-
 import lombok.experimental.UtilityClass;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;

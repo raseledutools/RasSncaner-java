@@ -29,8 +29,7 @@ public class DetectionResultTest {
   @Test
   public void successDebug_setsAllFields() {
     double[][] corners = {{10, 20}, {30, 20}, {30, 40}, {10, 40}};
-    DetectionResult r =
-        DetectionResult.successDebug(Source.DOCQUAD, corners, "mask", 0.5, 0.3);
+    DetectionResult r = DetectionResult.successDebug(Source.DOCQUAD, corners, "mask", 0.5, 0.3);
     assertTrue(r.success);
     assertEquals(Source.DOCQUAD, r.source);
     assertSame(corners, r.cornersOriginalTLTRBRBL);

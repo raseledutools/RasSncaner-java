@@ -2,6 +2,7 @@ package de.schliweb.makeacopy.utils;
 
 import android.content.Context;
 import android.os.Build;
+import android.util.Log;
 import lombok.experimental.UtilityClass;
 
 /**
@@ -23,7 +24,7 @@ public final class HapticsUtils {
   public static void setTestListener(TestListener l) {
     sTestListener = l;
   }
-  
+
   /**
    * Triggers a single haptic vibration of the specified duration on devices running Android O (API
    * 26) and above. On Android S (API 31) and later, the vibration is handled using VibratorManager.
@@ -41,7 +42,8 @@ public final class HapticsUtils {
       if (tl != null) {
         try {
           tl.onVibrate(d);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+          Log.w("HapticsUtils", "TestListener.onVibrate failed", e);
         }
       }
 
@@ -63,7 +65,8 @@ public final class HapticsUtils {
       android.os.VibrationEffect effect =
           android.os.VibrationEffect.createOneShot(d, android.os.VibrationEffect.DEFAULT_AMPLITUDE);
       vib.vibrate(effect);
-    } catch (Exception ignored) {
+    } catch (Exception e) {
+      Log.w("HapticsUtils", "Vibration failed", e);
     }
   }
 }

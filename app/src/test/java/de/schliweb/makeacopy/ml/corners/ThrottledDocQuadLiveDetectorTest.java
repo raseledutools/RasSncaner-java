@@ -2,14 +2,12 @@ package de.schliweb.makeacopy.ml.corners;
 
 import static org.junit.Assert.*;
 
-import android.graphics.Bitmap;
 import org.junit.Test;
 
 /**
- * Tests for ThrottledDocQuadLiveDetector throttling logic.
- * Note: Bitmap.createBitmap returns null in JVM unit tests (returnDefaultValues=true),
- * so throttle tests that need a non-null Bitmap use a custom CornerDetector wrapper
- * that bypasses the null-bitmap guard.
+ * Tests for ThrottledDocQuadLiveDetector throttling logic. Note: Bitmap.createBitmap returns null
+ * in JVM unit tests (returnDefaultValues=true), so throttle tests that need a non-null Bitmap use a
+ * custom CornerDetector wrapper that bypasses the null-bitmap guard.
  */
 public class ThrottledDocQuadLiveDetectorTest {
 
@@ -20,9 +18,7 @@ public class ThrottledDocQuadLiveDetectorTest {
     long[] fakeTime = {0};
     ThrottledDocQuadLiveDetector det =
         new ThrottledDocQuadLiveDetector(
-            null,
-            () -> fakeTime[0],
-            (src, ctx) -> DetectionResult.success(Source.DOCQUAD, QUAD));
+            null, () -> fakeTime[0], (src, ctx) -> DetectionResult.success(Source.DOCQUAD, QUAD));
     DetectionResult r = det.detect(null, null);
     assertFalse(r.success);
     assertEquals(Source.DOCQUAD, r.source);

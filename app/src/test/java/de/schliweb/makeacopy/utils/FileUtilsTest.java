@@ -33,8 +33,7 @@ public class FileUtilsTest {
   @Test
   public void firstUriFromJson_multipleUris_returnsFirst() {
     assertEquals(
-        "file:///a.pdf",
-        FileUtils.firstUriFromJson("[\"file:///a.pdf\", \"file:///b.pdf\"]"));
+        "file:///a.pdf", FileUtils.firstUriFromJson("[\"file:///a.pdf\", \"file:///b.pdf\"]"));
   }
 
   @Test

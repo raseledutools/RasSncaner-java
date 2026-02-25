@@ -27,8 +27,17 @@ public class CompletedScanEntryTest {
   public void fullConstructor_setsAllFields() {
     CompletedScanEntry e =
         new CompletedScanEntry(
-            "id1", "/path/file.jpg", 90, "/path/ocr.txt", "hocr", "/path/thumb.jpg", 12345L, 1920,
-            1080, 2, "metadata");
+            "id1",
+            "/path/file.jpg",
+            90,
+            "/path/ocr.txt",
+            "hocr",
+            "/path/thumb.jpg",
+            12345L,
+            1920,
+            1080,
+            2,
+            "metadata");
     assertEquals("id1", e.id);
     assertEquals("/path/file.jpg", e.filePath);
     assertEquals(90, e.rotationDeg);
@@ -69,8 +78,7 @@ public class CompletedScanEntryTest {
 
   @Test
   public void orientationMode_empty_defaultsToBaked() {
-    CompletedScanEntry e =
-        new CompletedScanEntry("id", null, 0, null, null, null, 0L, 0, 0, 1, "");
+    CompletedScanEntry e = new CompletedScanEntry("id", null, 0, null, null, null, 0L, 0, 0, 1, "");
     assertEquals("baked", e.orientationMode);
   }
 

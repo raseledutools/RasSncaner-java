@@ -3,7 +3,6 @@ package de.schliweb.makeacopy.utils;
 import static org.junit.Assert.*;
 
 import android.graphics.RectF;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -73,9 +72,7 @@ public class OCRPostProcessorCoverageTest {
 
   @Test
   public void analyzeQuality_allHighConfidence() {
-    List<RecognizedWord> words = Arrays.asList(
-        word("hello", 95f),
-        word("world", 90f));
+    List<RecognizedWord> words = Arrays.asList(word("hello", 95f), word("world", 90f));
     OCRPostProcessor.OcrQualityStats stats = OCRPostProcessor.analyzeQuality(words);
     assertEquals(2, stats.totalWordCount());
     assertEquals(0, stats.lowConfidenceWordCount());
@@ -85,10 +82,8 @@ public class OCRPostProcessorCoverageTest {
 
   @Test
   public void analyzeQuality_mixedConfidence() {
-    List<RecognizedWord> words = Arrays.asList(
-        word("good", 90f),
-        word("bad", 20f),
-        word("ok", 60f));
+    List<RecognizedWord> words =
+        Arrays.asList(word("good", 90f), word("bad", 20f), word("ok", 60f));
     OCRPostProcessor.OcrQualityStats stats = OCRPostProcessor.analyzeQuality(words);
     assertEquals(3, stats.totalWordCount());
     assertEquals(2, stats.lowConfidenceWordCount()); // 20 and 60 < LOW_CONFIDENCE_THRESHOLD (70)
@@ -148,17 +143,18 @@ public class OCRPostProcessorCoverageTest {
 
   @Test
   public void wordsToText_singleWord() {
-    List<RecognizedWord> words = Arrays.asList(
-        new RecognizedWord("hello", rect(10, 10, 50, 30), 90f));
+    List<RecognizedWord> words =
+        Arrays.asList(new RecognizedWord("hello", rect(10, 10, 50, 30), 90f));
     String text = OCRPostProcessor.wordsToText(words);
     assertEquals("hello", text.trim());
   }
 
   @Test
   public void wordsToText_twoWordsOnSameLine() {
-    List<RecognizedWord> words = Arrays.asList(
-        new RecognizedWord("hello", rect(10, 10, 50, 30), 90f),
-        new RecognizedWord("world", rect(60, 10, 100, 30), 90f));
+    List<RecognizedWord> words =
+        Arrays.asList(
+            new RecognizedWord("hello", rect(10, 10, 50, 30), 90f),
+            new RecognizedWord("world", rect(60, 10, 100, 30), 90f));
     String text = OCRPostProcessor.wordsToText(words);
     assertEquals("hello world", text.trim());
   }

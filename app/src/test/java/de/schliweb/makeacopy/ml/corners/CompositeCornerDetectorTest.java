@@ -10,12 +10,10 @@ public class CompositeCornerDetectorTest {
 
   private final CornerDetector successDocQuad =
       (src, ctx) -> DetectionResult.success(Source.DOCQUAD, QUAD);
-  private final CornerDetector failDocQuad =
-      (src, ctx) -> DetectionResult.fail(Source.DOCQUAD);
+  private final CornerDetector failDocQuad = (src, ctx) -> DetectionResult.fail(Source.DOCQUAD);
   private final CornerDetector successLegacy =
       (src, ctx) -> DetectionResult.success(Source.OPENCV, QUAD);
-  private final CornerDetector failLegacy =
-      (src, ctx) -> DetectionResult.fail(Source.OPENCV);
+  private final CornerDetector failLegacy = (src, ctx) -> DetectionResult.fail(Source.OPENCV);
   private final CornerDetector throwingDetector =
       (src, ctx) -> {
         throw new RuntimeException("boom");

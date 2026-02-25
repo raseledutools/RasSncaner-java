@@ -5,8 +5,8 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 /**
- * Unit tests for {@link DocQuadScore} — pure geometry utilities for quad scoring.
- * All methods use double[][] (no Android dependencies).
+ * Unit tests for {@link DocQuadScore} — pure geometry utilities for quad scoring. All methods use
+ * double[][] (no Android dependencies).
  */
 public class DocQuadScoreTest {
 

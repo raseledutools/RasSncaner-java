@@ -87,8 +87,7 @@ public class WordsJsonTest {
 
   @Test
   public void parse_xywh_flatCoords() {
-    String json =
-        "[{\"text\":\"XY\",\"x\":10,\"y\":20,\"w\":30,\"h\":15,\"confidence\":0.7}]";
+    String json = "[{\"text\":\"XY\",\"x\":10,\"y\":20,\"w\":30,\"h\":15,\"confidence\":0.7}]";
     List<RecognizedWord> result = WordsJson.parse(json);
     assertEquals(1, result.size());
     assertEquals("XY", result.get(0).getText());

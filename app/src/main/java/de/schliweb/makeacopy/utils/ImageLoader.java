@@ -11,13 +11,12 @@ import android.os.Looper;
 import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.exifinterface.media.ExifInterface;
-import lombok.experimental.UtilityClass;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import lombok.experimental.UtilityClass;
 
 /**
  * Centralized image loader that decodes bitmaps with a path-first strategy. - Prefer

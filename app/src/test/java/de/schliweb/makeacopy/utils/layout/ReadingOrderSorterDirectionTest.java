@@ -4,98 +4,114 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-/**
- * Unit tests for {@link ReadingOrderSorter#getDirectionForLanguage(String)}.
- */
+/** Unit tests for {@link ReadingOrderSorter#getDirectionForLanguage(String)}. */
 public class ReadingOrderSorterDirectionTest {
 
   @Test
   public void null_returnsLTR() {
-    assertEquals(ReadingOrderSorter.TextDirection.LTR, ReadingOrderSorter.getDirectionForLanguage(null));
+    assertEquals(
+        ReadingOrderSorter.TextDirection.LTR, ReadingOrderSorter.getDirectionForLanguage(null));
   }
 
   @Test
   public void empty_returnsLTR() {
-    assertEquals(ReadingOrderSorter.TextDirection.LTR, ReadingOrderSorter.getDirectionForLanguage(""));
+    assertEquals(
+        ReadingOrderSorter.TextDirection.LTR, ReadingOrderSorter.getDirectionForLanguage(""));
   }
 
   @Test
   public void english_LTR() {
-    assertEquals(ReadingOrderSorter.TextDirection.LTR, ReadingOrderSorter.getDirectionForLanguage("en"));
+    assertEquals(
+        ReadingOrderSorter.TextDirection.LTR, ReadingOrderSorter.getDirectionForLanguage("en"));
   }
 
   @Test
   public void german_LTR() {
-    assertEquals(ReadingOrderSorter.TextDirection.LTR, ReadingOrderSorter.getDirectionForLanguage("deu"));
+    assertEquals(
+        ReadingOrderSorter.TextDirection.LTR, ReadingOrderSorter.getDirectionForLanguage("deu"));
   }
 
   @Test
   public void arabic_iso2_RTL() {
-    assertEquals(ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("ar"));
+    assertEquals(
+        ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("ar"));
   }
 
   @Test
   public void arabic_iso3_RTL() {
-    assertEquals(ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("ara"));
+    assertEquals(
+        ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("ara"));
   }
 
   @Test
   public void hebrew_RTL() {
-    assertEquals(ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("he"));
+    assertEquals(
+        ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("he"));
   }
 
   @Test
   public void hebrew_iso3_RTL() {
-    assertEquals(ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("heb"));
+    assertEquals(
+        ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("heb"));
   }
 
   @Test
   public void persian_RTL() {
-    assertEquals(ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("fa"));
+    assertEquals(
+        ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("fa"));
   }
 
   @Test
   public void urdu_RTL() {
-    assertEquals(ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("ur"));
+    assertEquals(
+        ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("ur"));
   }
 
   @Test
   public void yiddish_RTL() {
-    assertEquals(ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("yi"));
+    assertEquals(
+        ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("yi"));
   }
 
   @Test
   public void pashto_RTL() {
-    assertEquals(ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("ps"));
+    assertEquals(
+        ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("ps"));
   }
 
   @Test
   public void sindhi_RTL() {
-    assertEquals(ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("sd"));
+    assertEquals(
+        ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("sd"));
   }
 
   @Test
   public void uyghur_RTL() {
-    assertEquals(ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("ug"));
+    assertEquals(
+        ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("ug"));
   }
 
   @Test
   public void upperCase_arabic_RTL() {
-    assertEquals(ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("AR"));
+    assertEquals(
+        ReadingOrderSorter.TextDirection.RTL, ReadingOrderSorter.getDirectionForLanguage("AR"));
   }
 
   @Test
   public void french_LTR() {
-    assertEquals(ReadingOrderSorter.TextDirection.LTR, ReadingOrderSorter.getDirectionForLanguage("fr"));
+    assertEquals(
+        ReadingOrderSorter.TextDirection.LTR, ReadingOrderSorter.getDirectionForLanguage("fr"));
   }
 
   @Test
   public void chinese_LTR() {
-    assertEquals(ReadingOrderSorter.TextDirection.LTR, ReadingOrderSorter.getDirectionForLanguage("zh"));
+    assertEquals(
+        ReadingOrderSorter.TextDirection.LTR, ReadingOrderSorter.getDirectionForLanguage("zh"));
   }
 
   @Test
   public void unknown_LTR() {
-    assertEquals(ReadingOrderSorter.TextDirection.LTR, ReadingOrderSorter.getDirectionForLanguage("xyz"));
+    assertEquals(
+        ReadingOrderSorter.TextDirection.LTR, ReadingOrderSorter.getDirectionForLanguage("xyz"));
   }
 }

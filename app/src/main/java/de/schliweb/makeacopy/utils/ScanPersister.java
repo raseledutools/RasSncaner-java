@@ -6,12 +6,11 @@ import android.graphics.Matrix;
 import android.util.Log;
 import de.schliweb.makeacopy.data.CompletedScansRegistry;
 import de.schliweb.makeacopy.ui.export.session.CompletedScan;
-import lombok.experimental.UtilityClass;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import lombok.experimental.UtilityClass;
 
 /**
  * Utility responsible for persisting a scanned page to the app's private storage and registry. It

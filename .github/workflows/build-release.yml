@@ -106,6 +106,9 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Code Quality
+        run: ./gradlew :app:compileDebugJavaWithJavac :app:testDebugUnitTest :app:lintDebug
+
       # Keystore nur für TAG-Builds dekodieren (PRs/branch: überspringen)
       - name: Decode Keystore (tags only)
         if: startsWith(github.ref, 'refs/tags/')

@@ -23,7 +23,7 @@ public class QuadPlausibilityUnitTest {
 
   /** A "nice" rectangle covering ~60% of the image – clearly plausible. */
   private static PointF[] niceQuad() {
-    return new PointF[] { pt(100, 100), pt(900, 100), pt(900, 700), pt(100, 700) };
+    return new PointF[] {pt(100, 100), pt(900, 100), pt(900, 700), pt(100, 700)};
   }
 
   // ---- null / invalid input guards ----
@@ -88,7 +88,7 @@ public class QuadPlausibilityUnitTest {
   @Test
   public void concaveQuad_isNotConvex() {
     // Dent: TL, TR, center-inward, BL — cross products change sign
-    PointF[] q = { pt(100, 100), pt(900, 100), pt(500, 300), pt(100, 700) };
+    PointF[] q = {pt(100, 100), pt(900, 100), pt(500, 300), pt(100, 700)};
     // Verify it's actually concave by checking cross product sign change
     // If isConvex returns true for this shape, adjust the dent further
     // TL->TR->center: cross > 0, TR->center->BL: cross < 0
@@ -97,7 +97,7 @@ public class QuadPlausibilityUnitTest {
 
   @Test
   public void collinearPoints_stillConvex() {
-    PointF[] q = { pt(0, 0), pt(500, 0), pt(1000, 0), pt(500, 500) };
+    PointF[] q = {pt(0, 0), pt(500, 0), pt(1000, 0), pt(500, 500)};
     assertTrue(QuadPlausibility.isConvex(q));
   }
 
@@ -111,7 +111,7 @@ public class QuadPlausibilityUnitTest {
   @Test
   public void bowTieQuad_selfIntersects() {
     // TL, BR, TR, BL — edge 0-1 crosses edge 2-3
-    PointF[] q = { pt(100, 100), pt(900, 700), pt(900, 100), pt(100, 700) };
+    PointF[] q = {pt(100, 100), pt(900, 700), pt(900, 100), pt(100, 700)};
     assertTrue(QuadPlausibility.selfIntersects(q));
   }
 
@@ -119,7 +119,7 @@ public class QuadPlausibilityUnitTest {
 
   @Test
   public void tinyQuad_failsMinArea() {
-    PointF[] q = { pt(400, 400), pt(410, 400), pt(410, 410), pt(400, 410) };
+    PointF[] q = {pt(400, 400), pt(410, 400), pt(410, 410), pt(400, 410)};
     QuadPlausibility.Result r = QuadPlausibility.check(q, W, H);
     assertFalse(r.meetsMinArea);
     assertFalse(r.plausible);
@@ -127,13 +127,13 @@ public class QuadPlausibilityUnitTest {
 
   @Test
   public void shoelaceArea_correctForUnitSquare() {
-    PointF[] q = { pt(0, 0), pt(100, 0), pt(100, 100), pt(0, 100) };
+    PointF[] q = {pt(0, 0), pt(100, 0), pt(100, 100), pt(0, 100)};
     assertEquals(10000f, Math.abs(QuadPlausibility.shoelaceArea(q)), 0.01f);
   }
 
   @Test
   public void minEdgeLength_correct() {
-    PointF[] q = { pt(0, 0), pt(30, 0), pt(30, 50), pt(0, 50) };
+    PointF[] q = {pt(0, 0), pt(30, 0), pt(30, 50), pt(0, 50)};
     assertEquals(30f, QuadPlausibility.minEdgeLength(q), 0.01f);
   }
 
@@ -147,7 +147,7 @@ public class QuadPlausibilityUnitTest {
 
   @Test
   public void quadFarOutside_highOobSum() {
-    PointF[] q = { pt(-200, -200), pt(1200, -200), pt(1200, 1000), pt(-200, 1000) };
+    PointF[] q = {pt(-200, -200), pt(1200, -200), pt(1200, 1000), pt(-200, 1000)};
     float oob = QuadPlausibility.computeOobSum(q, W, H, QuadPlausibility.OOB_TOL_PX);
     assertTrue(oob > QuadPlausibility.OOB_SUM_MAX);
   }
@@ -156,21 +156,21 @@ public class QuadPlausibilityUnitTest {
 
   @Test
   public void squareQuad_aspectRatioNearOne() {
-    PointF[] q = { pt(0, 0), pt(100, 0), pt(100, 100), pt(0, 100) };
+    PointF[] q = {pt(0, 0), pt(100, 0), pt(100, 100), pt(0, 100)};
     float ar = QuadPlausibility.computeAspectRatio(q);
     assertEquals(1.0f, ar, 0.01f);
   }
 
   @Test
   public void extremelyNarrowQuad_highAspectRatio() {
-    PointF[] q = { pt(0, 0), pt(1000, 0), pt(1000, 10), pt(0, 10) };
+    PointF[] q = {pt(0, 0), pt(1000, 0), pt(1000, 10), pt(0, 10)};
     float ar = QuadPlausibility.computeAspectRatio(q);
     assertTrue(ar > QuadPlausibility.ASPECT_LIKE_MAX);
   }
 
   @Test
   public void degenerateZeroSize_aspectRatioMax() {
-    PointF[] q = { pt(0, 0), pt(0, 0), pt(0, 0), pt(0, 0) };
+    PointF[] q = {pt(0, 0), pt(0, 0), pt(0, 0), pt(0, 0)};
     assertEquals(Float.MAX_VALUE, QuadPlausibility.computeAspectRatio(q), 0f);
   }
 

@@ -8,8 +8,6 @@ import de.schliweb.makeacopy.data.CompletedScansRegistry;
 import de.schliweb.makeacopy.ui.export.session.CompletedScan;
 import de.schliweb.makeacopy.utils.OCRHelper;
 import de.schliweb.makeacopy.utils.OCRUtils;
-import lombok.experimental.UtilityClass;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -18,6 +16,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import lombok.experimental.UtilityClass;
 
 /**
  * Minimal background OCR job runner without external dependencies. Ensures only one OCR job per

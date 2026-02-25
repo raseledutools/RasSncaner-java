@@ -88,7 +88,7 @@ android {
             // Only use signing config when available (GitHub Actions)
             // F-Droid will sign with their own keys
             if (project.hasProperty('SIGNING_KEY_ALIAS') && System.getenv('SIGNING_STORE_PASSWORD')) {
-                signingConfig signingConfigs.release
+                signingConfig = signingConfigs.release
             }
         }
     }
@@ -125,7 +125,7 @@ android {
     // Exclude test assets from APK packaging
     // test_jpegs are copied to instrumented_test_data before instrumented tests and deleted after (see tasks below)
     aaptOptions {
-        ignoreAssetsPattern "test_pdfs:test_jpegs"
+        ignoreAssetsPattern = "test_pdfs:test_jpegs"
     }
 
     sourceSets {

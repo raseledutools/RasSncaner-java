@@ -2,113 +2,197 @@ package de.schliweb.makeacopy.utils.layout;
 
 import static org.junit.Assert.*;
 
-import android.graphics.Rect;
 import org.junit.Test;
 
 /**
- * Unit tests for DocumentRegion class. Note: Tests that require Android Rect methods (equals,
- * contains, width, height, intersects) are skipped in JVM unit tests due to Android framework
- * mocking limitations. These should be tested in instrumented tests instead.
+ * Unit tests for {@link DocumentRegion}. Uses returnDefaultValues = true for android.graphics.Rect
+ * stubs; tests focus on pure-logic methods that don't depend on real Rect behavior.
  */
 public class DocumentRegionTest {
 
-  @Test
-  public void constructor_withBoundsAndType_createsRegion() {
-    Rect bounds = new Rect(0, 0, 100, 200);
-    DocumentRegion region = new DocumentRegion(bounds, DocumentRegion.Type.BODY);
+  // ── Type enum ──
 
-    // Check bounds reference (not equals due to Android mocking)
-    assertNotNull(region.getBounds());
+  @Test
+  public void typeEnum_allValuesPresent() {
+    DocumentRegion.Type[] values = DocumentRegion.Type.values();
+    assertEquals(10, values.length);
+    assertNotNull(DocumentRegion.Type.valueOf("HEADER"));
+    assertNotNull(DocumentRegion.Type.valueOf("BODY"));
+    assertNotNull(DocumentRegion.Type.valueOf("FOOTER"));
+    assertNotNull(DocumentRegion.Type.valueOf("TABLE"));
+    assertNotNull(DocumentRegion.Type.valueOf("FIGURE"));
+    assertNotNull(DocumentRegion.Type.valueOf("CAPTION"));
+    assertNotNull(DocumentRegion.Type.valueOf("SIDEBAR"));
+    assertNotNull(DocumentRegion.Type.valueOf("MARGIN_NOTE"));
+    assertNotNull(DocumentRegion.Type.valueOf("COLUMN"));
+    assertNotNull(DocumentRegion.Type.valueOf("UNKNOWN"));
+  }
+
+  // ── Constructor (2-arg) ──
+
+  @Test
+  public void constructor_setsTypeAndDefaults() {
+    DocumentRegion region = new DocumentRegion(null, DocumentRegion.Type.BODY);
     assertEquals(DocumentRegion.Type.BODY, region.getType());
     assertEquals(1.0f, region.getConfidence(), 0.001f);
     assertEquals(0, region.getReadingOrder());
-    assertFalse(region.hasChildren());
+    assertNotNull(region.getChildren());
+    assertTrue(region.getChildren().isEmpty());
+    assertNull(region.getBounds());
   }
 
-  @Test
-  public void constructor_withFullParams_createsRegion() {
-    Rect bounds = new Rect(10, 20, 110, 220);
-    DocumentRegion region = new DocumentRegion(bounds, DocumentRegion.Type.HEADER, 0.85f, 5);
+  // ── Constructor (4-arg) ──
 
-    assertNotNull(region.getBounds());
-    assertEquals(DocumentRegion.Type.HEADER, region.getType());
+  @Test
+  public void constructor_fullParams() {
+    DocumentRegion region = new DocumentRegion(null, DocumentRegion.Type.TABLE, 0.85f, 3);
+    assertEquals(DocumentRegion.Type.TABLE, region.getType());
     assertEquals(0.85f, region.getConfidence(), 0.001f);
-    assertEquals(5, region.getReadingOrder());
+    assertEquals(3, region.getReadingOrder());
   }
 
-  @Test
-  public void getArea_withNullBounds_returnsZero() {
-    DocumentRegion region = new DocumentRegion(null, DocumentRegion.Type.BODY);
-
-    assertEquals(0, region.getArea());
-  }
+  // ── hasChildren / addChild ──
 
   @Test
-  public void addChild_addsChildAndSetsParent() {
-    Rect parentBounds = new Rect(0, 0, 500, 800);
-    Rect childBounds = new Rect(10, 10, 100, 100);
-    DocumentRegion parent = new DocumentRegion(parentBounds, DocumentRegion.Type.BODY);
-    DocumentRegion child = new DocumentRegion(childBounds, DocumentRegion.Type.COLUMN);
-
-    parent.addChild(child);
-
-    assertTrue(parent.hasChildren());
-    assertEquals(1, parent.getChildren().size());
-    assertEquals(parent, child.getParent());
-  }
-
-  @Test
-  public void getOptimalPsm_returnsCorrectValues() {
-    assertEquals(6, new DocumentRegion(null, DocumentRegion.Type.HEADER).getOptimalPsm());
-    assertEquals(3, new DocumentRegion(null, DocumentRegion.Type.BODY).getOptimalPsm());
-    assertEquals(7, new DocumentRegion(null, DocumentRegion.Type.FOOTER).getOptimalPsm());
-    assertEquals(11, new DocumentRegion(null, DocumentRegion.Type.TABLE).getOptimalPsm());
-    assertEquals(7, new DocumentRegion(null, DocumentRegion.Type.CAPTION).getOptimalPsm());
-    assertEquals(4, new DocumentRegion(null, DocumentRegion.Type.COLUMN).getOptimalPsm());
-    assertEquals(3, new DocumentRegion(null, DocumentRegion.Type.UNKNOWN).getOptimalPsm());
-  }
-
-  @Test
-  public void toString_containsType() {
-    DocumentRegion region = new DocumentRegion(null, DocumentRegion.Type.HEADER);
-
-    String str = region.toString();
-    assertTrue(str.contains("HEADER"));
-  }
-
-  @Test
-  public void settersAndGetters_workCorrectly() {
-    DocumentRegion region = new DocumentRegion(null, DocumentRegion.Type.BODY);
-
-    region.setConfidence(0.75f);
-    assertEquals(0.75f, region.getConfidence(), 0.001f);
-
-    region.setReadingOrder(10);
-    assertEquals(10, region.getReadingOrder());
-
-    region.setColumnIndex(2);
-    assertEquals(2, region.getColumnIndex());
-
-    region.setRowIndex(3);
-    assertEquals(3, region.getRowIndex());
-
-    region.setLanguage("deu");
-    assertEquals("deu", region.getLanguage());
-  }
-
-  @Test
-  public void hasChildren_withNoChildren_returnsFalse() {
+  public void hasChildren_falseWhenEmpty() {
     DocumentRegion region = new DocumentRegion(null, DocumentRegion.Type.BODY);
     assertFalse(region.hasChildren());
   }
 
   @Test
-  public void hasChildren_withChildren_returnsTrue() {
+  public void addChild_setsParentAndAddsToList() {
     DocumentRegion parent = new DocumentRegion(null, DocumentRegion.Type.BODY);
     DocumentRegion child = new DocumentRegion(null, DocumentRegion.Type.COLUMN);
 
     parent.addChild(child);
 
     assertTrue(parent.hasChildren());
+    assertEquals(1, parent.getChildren().size());
+    assertSame(child, parent.getChildren().get(0));
+    assertSame(parent, child.getParent());
+  }
+
+  @Test
+  public void addChild_multipleChildren() {
+    DocumentRegion parent = new DocumentRegion(null, DocumentRegion.Type.TABLE);
+    DocumentRegion c1 = new DocumentRegion(null, DocumentRegion.Type.COLUMN);
+    DocumentRegion c2 = new DocumentRegion(null, DocumentRegion.Type.COLUMN);
+
+    parent.addChild(c1);
+    parent.addChild(c2);
+
+    assertEquals(2, parent.getChildren().size());
+  }
+
+  // ── getArea with null bounds ──
+
+  @Test
+  public void getArea_nullBounds_returnsZero() {
+    DocumentRegion region = new DocumentRegion(null, DocumentRegion.Type.FIGURE);
+    assertEquals(0, region.getArea());
+  }
+
+  // ── getOptimalPsm ──
+
+  @Test
+  public void getOptimalPsm_header() {
+    assertEquals(6, new DocumentRegion(null, DocumentRegion.Type.HEADER).getOptimalPsm());
+  }
+
+  @Test
+  public void getOptimalPsm_body() {
+    assertEquals(3, new DocumentRegion(null, DocumentRegion.Type.BODY).getOptimalPsm());
+  }
+
+  @Test
+  public void getOptimalPsm_footer() {
+    assertEquals(7, new DocumentRegion(null, DocumentRegion.Type.FOOTER).getOptimalPsm());
+  }
+
+  @Test
+  public void getOptimalPsm_table() {
+    assertEquals(11, new DocumentRegion(null, DocumentRegion.Type.TABLE).getOptimalPsm());
+  }
+
+  @Test
+  public void getOptimalPsm_caption() {
+    assertEquals(7, new DocumentRegion(null, DocumentRegion.Type.CAPTION).getOptimalPsm());
+  }
+
+  @Test
+  public void getOptimalPsm_sidebar() {
+    assertEquals(6, new DocumentRegion(null, DocumentRegion.Type.SIDEBAR).getOptimalPsm());
+  }
+
+  @Test
+  public void getOptimalPsm_marginNote() {
+    assertEquals(6, new DocumentRegion(null, DocumentRegion.Type.MARGIN_NOTE).getOptimalPsm());
+  }
+
+  @Test
+  public void getOptimalPsm_column() {
+    assertEquals(4, new DocumentRegion(null, DocumentRegion.Type.COLUMN).getOptimalPsm());
+  }
+
+  @Test
+  public void getOptimalPsm_unknown_fallsBackToAuto() {
+    assertEquals(3, new DocumentRegion(null, DocumentRegion.Type.UNKNOWN).getOptimalPsm());
+  }
+
+  @Test
+  public void getOptimalPsm_figure_fallsBackToAuto() {
+    assertEquals(3, new DocumentRegion(null, DocumentRegion.Type.FIGURE).getOptimalPsm());
+  }
+
+  // ── Lombok setters ──
+
+  @Test
+  public void setters_work() {
+    DocumentRegion region = new DocumentRegion(null, DocumentRegion.Type.BODY);
+    region.setConfidence(0.5f);
+    region.setReadingOrder(7);
+    region.setColumnIndex(2);
+    region.setRowIndex(3);
+    region.setLanguage("deu");
+
+    assertEquals(0.5f, region.getConfidence(), 0.001f);
+    assertEquals(7, region.getReadingOrder());
+    assertEquals(2, region.getColumnIndex());
+    assertEquals(3, region.getRowIndex());
+    assertEquals("deu", region.getLanguage());
+  }
+
+  @Test
+  public void defaultColumnAndRowIndex() {
+    DocumentRegion region = new DocumentRegion(null, DocumentRegion.Type.BODY);
+    assertEquals(-1, region.getColumnIndex());
+    assertEquals(-1, region.getRowIndex());
+  }
+
+  // ── toString ──
+
+  @Test
+  public void toString_containsType() {
+    DocumentRegion region = new DocumentRegion(null, DocumentRegion.Type.HEADER);
+    String s = region.toString();
+    assertTrue(s.contains("HEADER"));
+    assertTrue(s.contains("children=0"));
+  }
+
+  // ── intersects with null bounds ──
+
+  @Test
+  public void intersects_nullBounds_returnsFalse() {
+    DocumentRegion a = new DocumentRegion(null, DocumentRegion.Type.BODY);
+    DocumentRegion b = new DocumentRegion(null, DocumentRegion.Type.FOOTER);
+    assertFalse(a.intersects(b));
+  }
+
+  // ── contains with null bounds ──
+
+  @Test
+  public void contains_nullBounds_returnsFalse() {
+    DocumentRegion region = new DocumentRegion(null, DocumentRegion.Type.BODY);
+    assertFalse(region.contains(10, 10));
   }
 }
