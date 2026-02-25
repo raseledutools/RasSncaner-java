@@ -22,7 +22,6 @@ public class TableDetector {
   private static final String TAG = "TableDetector";
 
   /** Minimum line length as fraction of image dimension. */
-  private static final double MIN_LINE_LENGTH_RATIO = 0.1;
 
   /** Minimum number of horizontal lines to consider a region as a table. */
   private static final int MIN_HORIZONTAL_LINES = 2;
@@ -34,7 +33,6 @@ public class TableDetector {
   private static final double MIN_TABLE_AREA_RATIO = 0.01;
 
   /** Maximum gap between lines to consider them part of the same table. */
-  private static final double MAX_LINE_GAP_RATIO = 0.3;
 
   /**
    * Detects tables in a binary document image.
@@ -288,6 +286,7 @@ public class TableDetector {
    * @param vCount vertical line count
    * @return confidence score (0.0 to 1.0)
    */
+  @SuppressWarnings("UnusedVariable") // horizontal/vertical reserved for future regularity analysis
   private float calculateTableConfidence(Mat horizontal, Mat vertical, int hCount, int vCount) {
     // Base confidence from line counts
     float lineConfidence = Math.min(1.0f, (hCount + vCount) / 10.0f);
