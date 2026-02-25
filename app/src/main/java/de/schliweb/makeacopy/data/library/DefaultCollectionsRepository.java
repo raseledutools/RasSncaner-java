@@ -70,6 +70,7 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
           return getOrCreateDefaultCompletedCollection(context);
         }
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       int nextOrder = dao.getAll().size();
       CollectionEntity entity =
@@ -139,6 +140,7 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
           }
         }
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       db.scanCollectionJoinDao()
           .insert(new ScanCollectionCrossRef(scanId, collectionId, System.currentTimeMillis()));
@@ -227,6 +229,7 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
           return false;
         }
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       e.name = trimmed;
       dao.update(e);
@@ -238,12 +241,13 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
   }
 
   @Override
+  @SuppressWarnings("MixedMutabilityReturnType") // all paths return mutable lists
   public java.util.List<CollectionEntity> getCollectionsForScan(Context context, String scanId) {
     try {
-      if (scanId == null) return java.util.Collections.emptyList();
+      if (scanId == null) return new java.util.ArrayList<>();
       AppDatabase db = AppDatabase.getInstance(context);
       java.util.List<String> ids = db.scanCollectionJoinDao().getCollectionIdsForScan(scanId);
-      if (ids == null || ids.isEmpty()) return java.util.Collections.emptyList();
+      if (ids == null || ids.isEmpty()) return new java.util.ArrayList<>();
       CollectionsDao cdao = db.collectionsDao();
       java.util.ArrayList<CollectionEntity> list = new java.util.ArrayList<>();
       for (String id : ids) {
@@ -251,6 +255,7 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
           CollectionEntity ce = cdao.getById(id);
           if (ce != null) list.add(ce);
         } catch (Throwable ignore) {
+          // Best-effort; failure is non-critical
         }
       }
       // Optional: sort by sortOrder then name
@@ -264,6 +269,7 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
               return an.compareToIgnoreCase(bn);
             });
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       return list;
     } catch (Throwable t) {
@@ -283,6 +289,7 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
       try {
         existing = dao.getByName(name);
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       if (existing != null) return existing;
       // create new
@@ -291,6 +298,7 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
         java.util.List<CollectionEntity> all = dao.getAll();
         nextOrder = (all != null) ? all.size() : 0;
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       CollectionEntity entity =
           new CollectionEntity(
@@ -298,6 +306,7 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
       try {
         dao.insert(entity);
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       return entity;
     } catch (Throwable t) {
