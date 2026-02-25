@@ -3,6 +3,7 @@ package de.schliweb.makeacopy.data.library;
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
+import lombok.AllArgsConstructor;
 
 /**
  * Represents a collection in the database used to group related scans. This entity is part of the
@@ -22,6 +23,7 @@ import androidx.room.PrimaryKey;
  * <p>This entity is commonly used in conjunction with a DAO (Data Access Object), such as
  * CollectionsDao, to perform database operations like insertion, updates, queries, and deletions.
  */
+@AllArgsConstructor
 @Entity(tableName = "collections")
 public class CollectionEntity {
   @PrimaryKey @NonNull public String id; // UUID
@@ -31,11 +33,4 @@ public class CollectionEntity {
   public int sortOrder;
 
   public long createdAt;
-
-  public CollectionEntity(@NonNull String id, @NonNull String name, int sortOrder, long createdAt) {
-    this.id = id;
-    this.name = name;
-    this.sortOrder = sortOrder;
-    this.createdAt = createdAt;
-  }
 }
