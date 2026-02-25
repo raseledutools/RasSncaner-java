@@ -22,6 +22,11 @@ import org.opencv.core.Point;
  * Custom view for selecting a trapezoid area on an image Allows the user to drag the corners of the
  * trapezoid to adjust the selection
  */
+@SuppressWarnings({
+  "NonAtomicVolatileUpdate", // requestedInitSeq is only incremented on UI thread
+  "NarrowCalculation", // integer division for pixel coordinates is intentional
+  "ThreadPriorityCheck" // slightly lower priority for background corner detection is intentional
+})
 public class TrapezoidSelectionView extends View {
   private static final String TAG = "TrapezoidSelectionView";
   private static final int CORNER_RADIUS =
@@ -39,6 +44,11 @@ public class TrapezoidSelectionView extends View {
   private Paint backgroundPaint; // Paint for the semi-transparent background
   private Paint hintPaint; // Paint for the hint text
   private Paint hintBackgroundPaint; // Paint for the hint text background
+  private final Path drawPath = new Path(); // Preallocated path for onDraw
+  private final Paint crosshairPaint =
+      new Paint(Paint.ANTI_ALIAS_FLAG); // Preallocated crosshair paint
+  private final Paint indexTextPaint =
+      new Paint(Paint.ANTI_ALIAS_FLAG); // Preallocated index text paint
   private PointF[] corners; // The four corners of the trapezoid
   private PointF[] animationStartCorners; // Starting positions for corner animation
   private PointF[] animationEndCorners; // Target positions for corner animation
@@ -163,6 +173,7 @@ public class TrapezoidSelectionView extends View {
       try {
         removeCallbacks(adjustIdleClearRunnable);
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       adjustIdleClearRunnable = null;
     }
@@ -182,6 +193,7 @@ public class TrapezoidSelectionView extends View {
     try {
       postDelayed(adjustIdleClearRunnable, autoInitIdleDelayMs);
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
   }
 
@@ -385,6 +397,7 @@ public class TrapezoidSelectionView extends View {
         Log.d(TAG, "updateSystemGestureExclusion applied rects=" + rects.size());
       }
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
   }
 
@@ -541,6 +554,7 @@ public class TrapezoidSelectionView extends View {
       try {
         postDelayed(initCornersRunnable, autoInitIdleDelayMs);
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       return;
     }
@@ -552,7 +566,7 @@ public class TrapezoidSelectionView extends View {
             + "x"
             + height
             + ", attempt: "
-            + (++initializationAttempts));
+            + ++initializationAttempts);
 
     if (width == 0 || height == 0) {
       Log.w(TAG, "Cannot initialize corners, view has zero dimensions");
@@ -701,6 +715,7 @@ public class TrapezoidSelectionView extends View {
   }
 
   /** Builds a heuristic trapezoid in view space (used as fallback). */
+  @SuppressWarnings("UnusedVariable") // bmp reserved for future aspect-ratio-aware fallback
   private Point[] fallbackCorners(int viewW, int viewH, @Nullable Bitmap bmp) {
     Point[] pts = new Point[4];
     pts[0] = new Point(viewW * 0.1, viewH * 0.1);
@@ -866,10 +881,6 @@ public class TrapezoidSelectionView extends View {
     // Create a random number generator with a seed based on dimensions
     // This ensures consistent randomization for the same view size
     java.util.Random random = new java.util.Random(width * 31L + height);
-
-    // Base inset values (as percentage of dimensions)
-    double baseInsetX = width * 0.1;
-    double baseInsetY = height * 0.1;
 
     // Create the coordinates array
     Point[] defaultCoordinates = new Point[4];
@@ -1087,6 +1098,7 @@ public class TrapezoidSelectionView extends View {
       try {
         magnifier.dismiss();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
     }
     magnifier = null;
@@ -1168,6 +1180,7 @@ public class TrapezoidSelectionView extends View {
       try {
         magnifier.dismiss();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       magnifier = null;
     }
@@ -1192,19 +1205,19 @@ public class TrapezoidSelectionView extends View {
       updateAnimation();
     }
 
-    // Create a path for the trapezoid
-    Path path = new Path();
-    path.moveTo(corners[0].x, corners[0].y);
-    path.lineTo(corners[1].x, corners[1].y);
-    path.lineTo(corners[2].x, corners[2].y);
-    path.lineTo(corners[3].x, corners[3].y);
-    path.close();
+    // Reuse preallocated path for the trapezoid
+    drawPath.reset();
+    drawPath.moveTo(corners[0].x, corners[0].y);
+    drawPath.lineTo(corners[1].x, corners[1].y);
+    drawPath.lineTo(corners[2].x, corners[2].y);
+    drawPath.lineTo(corners[3].x, corners[3].y);
+    drawPath.close();
 
     // Draw the semi-transparent background inside the trapezoid
-    canvas.drawPath(path, backgroundPaint);
+    canvas.drawPath(drawPath, backgroundPaint);
 
     // Draw the trapezoid outline
-    canvas.drawPath(path, trapezoidPaint);
+    canvas.drawPath(drawPath, trapezoidPaint);
 
     // Draw the corner handles
     for (int i = 0; i < 4; i++) {
@@ -1222,29 +1235,26 @@ public class TrapezoidSelectionView extends View {
     if (isDraggingWithMagnifier && activeCornerIndex != -1) {
       float cx = corners[activeCornerIndex].x;
       float cy = corners[activeCornerIndex].y;
-      Paint crossPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-      crossPaint.setColor(Color.WHITE);
-      crossPaint.setStrokeWidth(3f);
-      // Outer subtle shadow for visibility on bright backgrounds
-      crossPaint.setShadowLayer(4f, 0f, 0f, Color.BLACK);
+      crosshairPaint.setColor(Color.WHITE);
+      crosshairPaint.setStrokeWidth(3f);
+      crosshairPaint.setShadowLayer(4f, 0f, 0f, Color.BLACK);
       float len = CORNER_RADIUS + 20f;
       // Horizontal line
-      canvas.drawLine(cx - len, cy, cx + len, cy, crossPaint);
+      canvas.drawLine(cx - len, cy, cx + len, cy, crosshairPaint);
       // Vertical line
-      canvas.drawLine(cx, cy - len, cx, cy + len, crossPaint);
+      canvas.drawLine(cx, cy - len, cx, cy + len, crosshairPaint);
     }
 
     // Draw corner indices (avoid drawing the active corner's digit while magnifier is active so it
     // doesn't appear inside the loupe)
-    Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    textPaint.setColor(Color.WHITE);
-    textPaint.setTextSize(40);
-    textPaint.setTextAlign(Paint.Align.CENTER);
+    indexTextPaint.setColor(Color.WHITE);
+    indexTextPaint.setTextSize(40);
+    indexTextPaint.setTextAlign(Paint.Align.CENTER);
     for (int i = 0; i < 4; i++) {
       if (isDraggingWithMagnifier && i == activeCornerIndex) {
         continue; // skip active corner digit to keep the loupe clean (only white crosshair visible)
       }
-      canvas.drawText(String.valueOf(i), corners[i].x, corners[i].y + 15, textPaint);
+      canvas.drawText(String.valueOf(i), corners[i].x, corners[i].y + 15, indexTextPaint);
     }
 
     // Draw user guidance hints
@@ -1305,11 +1315,6 @@ public class TrapezoidSelectionView extends View {
     }
   }
 
-  /**
-   * Draws user guidance hints based on the current state of the trapezoid
-   *
-   * @param canvas Canvas to draw on
-   */
   private int bottomUiInsetPx = 0;
 
   /**
@@ -1362,12 +1367,7 @@ public class TrapezoidSelectionView extends View {
           break;
       }
 
-      // Position the hint near the active corner but not too close
-      float cornerX = corners[activeCornerIndex].x;
-      float cornerY = corners[activeCornerIndex].y;
-
       // Determine position based on which corner is active
-      float hintX = width / 2; // Center horizontally by default
 
       // Position hint at the bottom of the screen for top corners
       // and at the top of the screen for bottom corners
@@ -1379,7 +1379,7 @@ public class TrapezoidSelectionView extends View {
       }
 
       // Draw the hint
-      drawHintText(canvas, hint, hintX, hintY);
+      drawHintText(canvas, hint, width / 2f, hintY);
 
     } else {
       // No corner is active, show general guidance
@@ -1531,6 +1531,7 @@ public class TrapezoidSelectionView extends View {
           try {
             getParent().requestDisallowInterceptTouchEvent(true);
           } catch (Throwable ignore) {
+            // Best-effort; failure is non-critical
           }
 
           // Edge-glide initial state
@@ -1571,6 +1572,7 @@ public class TrapezoidSelectionView extends View {
           try {
             getParent().requestDisallowInterceptTouchEvent(true);
           } catch (Throwable ignore) {
+            // Best-effort; failure is non-critical
           }
           updateSystemGestureExclusion();
 
@@ -1744,6 +1746,7 @@ public class TrapezoidSelectionView extends View {
         try {
           getParent().requestDisallowInterceptTouchEvent(false);
         } catch (Throwable ignore) {
+          // Best-effort; failure is non-critical
         }
         isDraggingWithMagnifier = false;
         activeCornerIndex = -1;
@@ -1855,6 +1858,7 @@ public class TrapezoidSelectionView extends View {
         }
         requestedInitSeq++; // invalidate any in-flight tasks
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       invalidate();
       return;
@@ -2057,6 +2061,7 @@ public class TrapezoidSelectionView extends View {
       try {
         magnifier.dismiss();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
     }
     magnifier = null;
