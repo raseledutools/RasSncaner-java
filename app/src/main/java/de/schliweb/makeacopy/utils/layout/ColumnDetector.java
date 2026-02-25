@@ -49,7 +49,6 @@ public class ColumnDetector {
    * Expected column gap width as fraction of image width. Typical gap between columns in a 2-column
    * layout.
    */
-  private static final double EXPECTED_GAP_WIDTH_RATIO = 0.03;
 
   /**
    * Detects columns in a binary document image.
@@ -362,7 +361,6 @@ public class ColumnDetector {
     for (int i = margin + windowSize; i < projection.length - margin - windowSize; i++) {
       // Find local minimum
       int localMin = projection[i];
-      int localMinPos = i;
 
       // Check if this is a local minimum in a small window
       boolean isLocalMin = true;
