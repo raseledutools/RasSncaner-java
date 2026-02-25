@@ -1,14 +1,17 @@
 <resources>
     <string name="app_name">MakeACopy</string>
 
-    <string name="tip_text_mode_editing">Modo de texto: As quebras de linha e a pontuação são atualmente normalizadas para espaços. Se forem inseridas menos palavras do que as reconhecidas, as palavras restantes do OCR permanecem inalteradas. As alterações são aplicadas após uma breve pausa.</string>
+    <string name="tip_text_mode_editing">Modo de texto: As quebras de linha e a pontuação são atualmente normalizadas
+        para espaços. Se forem inseridas menos palavras do que as reconhecidas, as palavras restantes do OCR permanecem
+        inalteradas. As alterações são aplicadas após uma breve pausa.
+    </string>
 
     <!-- New menu items for document scanner -->
     <string name="title_camera">Câmera</string>
     <string name="title_crop">Cortar</string>
     <string name="title_ocr">OCR</string>
     <string name="title_export">Exportar</string>
-    
+
     <!-- Button labels -->
     <string name="btn_scan">Digitalizar</string>
     <string name="btn_crop">Cortar</string>
@@ -17,12 +20,17 @@
     <string name="btn_share">Compartilhar</string>
     <string name="next">Avançar</string>
     <string name="back">Voltar</string>
-    
+
     <!-- Messages -->
-    <string name="msg_camera_permission_required">A permissão da câmera é necessária para digitalizar documentos</string>
+    <string name="msg_camera_permission_required">A permissão da câmera é necessária para digitalizar documentos
+    </string>
     <string name="confirm">Confirmar</string>
-    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">Revise sua digitalização. Toque em Avançar para continuar ou em Voltar para tentar novamente.</string>
-    <string name="camera_ready_tap_the_button_to_scan_a_document">Câmera pronta. Toque no botão para digitalizar um documento.</string>
+    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">Revise sua digitalização. Toque em
+        Avançar para continuar ou em Voltar para tentar novamente.
+    </string>
+    <string name="camera_ready_tap_the_button_to_scan_a_document">Câmera pronta. Toque no botão para digitalizar um
+        documento.
+    </string>
     <string name="captured_image">Imagem capturada</string>
     <string name="retake">Refazer</string>
     <string name="image_to_crop">Imagem a cortar</string>
@@ -33,21 +41,33 @@
     <string name="language">Idioma:</string>
     <string name="ocr_results_will_appear_here">Os resultados do OCR aparecerão aqui</string>
     <string name="ocr_no_text_detected">Nenhum texto detectado</string>
-    <string name="no_image_loaded_capture_an_image_first">Nenhuma imagem carregada. Capture uma imagem primeiro.</string>
-    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Ajuste os cantos do trapézio para selecionar a área a cortar e toque no botão Cortar.</string>
-    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">Revise sua imagem recortada. Toque em Avançar para continuar ou em Voltar para tentar novamente.</string>
+    <string name="no_image_loaded_capture_an_image_first">Nenhuma imagem carregada. Capture uma imagem primeiro.
+    </string>
+    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Ajuste os cantos do
+        trapézio para selecionar a área a cortar e toque no botão Cortar.
+    </string>
+    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">Revise sua imagem recortada.
+        Toque em Avançar para continuar ou em Voltar para tentar novamente.
+    </string>
     <string name="no_document_ready_process_ocr_first">Nenhum documento pronto. Execute o OCR primeiro.</string>
     <string name="document_ready_for_export">Documento pronto para exportação</string>
     <string name="processing_image">Processando imagem...</string>
-    <string name="no_image_processed_crop_an_image_first">Nenhuma imagem processada. Recorte uma imagem primeiro.</string>
-    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">Processamento de OCR concluído. Toque no botão para prosseguir para a exportação.</string>
+    <string name="no_image_processed_crop_an_image_first">Nenhuma imagem processada. Recorte uma imagem primeiro.
+    </string>
+    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">Processamento de OCR concluído. Toque no
+        botão para prosseguir para a exportação.
+    </string>
 
     <string name="ocr_found_rotation">Rotação detectada: %1$d°</string>
     <string name="ocr_score">Pontuação de OCR: %1$d%%</string>
     <string name="ocr_found_rotation_with_score">Rotação detectada: %1$d° — pontuação de OCR: %2$d%%</string>
 
     <!-- Explicação adicional adicionada no diálogo «Explicar modos de reconhecimento» -->
-    <string name="ocr_prep_modes_autorotate_note">Rotação automática do OCR: Quando ativada, o OCR também testa a página em passos de 90° (0/90/180/270) e seleciona o melhor resultado. A rotação detectada pode ser aplicada automaticamente durante a exportação se você não tiver rotacionado a página manualmente. Esta opção pode ser ativada ou desativada em «Escolher modo de reconhecimento».</string>
+    <string name="ocr_prep_modes_autorotate_note">Rotação automática do OCR: Quando ativada, o OCR também testa a página
+        em passos de 90° (0/90/180/270) e seleciona o melhor resultado. A rotação detectada pode ser aplicada
+        automaticamente durante a exportação se você não tiver rotacionado a página manualmente. Esta opção pode ser
+        ativada ou desativada em «Escolher modo de reconhecimento».
+    </string>
 
     <string name="initializing_camera">Inicializando a câmera…</string>
     <string name="resetting_camera">Reiniciando a câmera…</string>
@@ -70,7 +90,7 @@
     <string name="convert_to_blackwhite_pdf">Converter para P/B</string>
     <string name="export_as_jpeg">Exportar como JPEG</string>
     <string name="export_as_pdf">Exportar como PDF (padrão)</string>
-    
+
     <!-- Flashlight options -->
     <string name="toggle_flashlight">Alternar lanterna</string>
     <string name="flashlight_on">Lanterna ligada</string>
@@ -101,27 +121,28 @@
     <string name="btn_pick_image">Carregar</string>
     <string name="pick_image_cd">Carregar imagem existente</string>
     <string name="error_selected_file_is_not_an_image">O arquivo selecionado não é uma imagem</string>
-    
+
     <!-- Multipage Export (v1 increment) -->
     <string name="pages_header">Páginas (%1$d)</string>
     <string name="add_another_page">Adicionar página</string>
     <string name="clear_all_pages">Limpar tudo</string>
     <string name="remove_this_page">Remover esta página</string>
     <string name="multipage_not_implemented">Exportação multipágina ainda não implementada</string>
-    
+
     <!-- Reorder A11y controls -->
     <string name="move_page_left">Mover página para a esquerda</string>
     <string name="move_page_right">Mover página para a direita</string>
-    
+
     <!-- Back confirmation for clearing multipage session -->
     <string name="confirm_clear_multipage_title">Excluir páginas?</string>
-    <string name="confirm_clear_multipage_message">Várias páginas foram adicionadas. Deseja excluir todas e voltar?</string>
+    <string name="confirm_clear_multipage_message">Várias páginas foram adicionadas. Deseja excluir todas e voltar?
+    </string>
     <string name="cancel">Cancelar</string>
-    
+
     <!-- Clear-all confirmation for trash icon in multipage -->
     <string name="confirm_clear_pages_title">Limpar todas as páginas?</string>
     <string name="confirm_clear_pages_message">Deseja remover todas as páginas da tira de filme?</string>
-    
+
     <!-- Registry Picker -->
     <string name="picker_title_completed_scans">Escolha entre digitalizações concluídas</string>
     <string name="picker_empty">Nenhuma digitalização concluída encontrada</string>
@@ -130,13 +151,13 @@
     <string name="done">Avançar</string>
     <string name="thumbnail">Miniatura</string>
     <string name="delete">Excluir</string>
-    
+
     <!-- Picker bulk actions -->
     <string name="select_all">Selecionar tudo</string>
     <string name="deselect_all">Desmarcar tudo</string>
 
     <string name="added_pages_from_registry">Adicionadas %1$d página(s) do registro</string>
-    
+
     <!-- Add page options dialog -->
     <string name="add_page_option_choose_completed">Escolher de digitalizações concluídas</string>
     <string name="add_page_option_capture_new">Capturar nova página</string>
@@ -169,7 +190,7 @@
 
     <string name="btn_review">Revisar</string>
     <string name="edit_word_title">Editar palavra</string>
-    <string name="review_summary_format">Palavras: %1$d  •  Baixa confiança: %2$d</string>
+    <string name="review_summary_format">Palavras: %1$d • Baixa confiança: %2$d</string>
     <string name="cm_edit">Editar…</string>
     <string name="cm_merge_next">Unir com a próxima</string>
     <string name="cm_split">Dividir</string>
@@ -201,17 +222,33 @@
     <string name="ocr_delete_best_model">Excluir modelo Best</string>
     <string name="ocr_nothing_to_delete">Nenhum modelo Best para excluir no idioma atual</string>
     <string name="ocr_delete_confirm_title">Excluir modelo Best?</string>
-    <string name="ocr_delete_confirm_msg">Excluir o modelo Best importado para %1$s? O modelo Fast integrado continuará disponível.</string>
+    <string name="ocr_delete_confirm_msg">Excluir o modelo Best importado para %1$s? O modelo Fast integrado continuará
+        disponível.
+    </string>
     <string name="ocr_delete_success">Modelo excluído</string>
     <string name="ocr_delete_failed">Falha ao excluir</string>
 
     <!-- OCR models hint -->
-    <string name="ocr_models_hint">Para reconhecimento mais rápido, modelos compactos estão incluídos. Para maior precisão, você pode instalar modelos "Best" maiores. Nenhuma conexão com a internet é necessária.</string>
+    <string name="ocr_models_hint">Para reconhecimento mais rápido, modelos compactos estão incluídos. Para maior
+        precisão, você pode instalar modelos "Best" maiores. Nenhuma conexão com a internet é necessária.
+    </string>
 
     <!-- Modos de reconhecimento OCR – explicação -->
     <string name="ocr_explain_prep_modes">Explicar modos de reconhecimento</string>
     <string name="ocr_prep_modes_title">Modos de reconhecimento: explicação simples</string>
-    <string name="ocr_prep_modes_message">Existem três formas de enviar imagens para o motor de OCR:\n\n• Original (sem pré-processamento) — a mais rápida. A foto é enviada tal como está. Ideal para digitalizações já limpas e com alto contraste. Pode não detetar texto fraco ou com ruído.\n\n• OpenCV Rápido — limpeza rápida: conversão para tons de cinzento, redução ligeira de ruído, conversão automática para preto e branco e, se necessário, um ligeiro aumento de escala. Boa opção predefinida para a maioria das fotos. Equilíbrio entre velocidade e qualidade.\n\n• OpenCV Robusto — redesenhado para máxima precisão em páginas difíceis. Corrige inclinações, normaliza sombras e iluminação, aplica redução de ruído com preservação de contornos e escalonamento inteligente. É importante que o Tesseract receba uma imagem em tons de cinzento de alta qualidade (e não preto e branco rígido), preservando detalhes finos como os laços da letra “o” e dígitos pequenos. Oferece a melhor precisão em páginas exigentes, mas é mais lento e utiliza mais memória.\n\nPós-processamento de OCR: Corrige erros comuns de reconhecimento, como confusões (0↔O, 1↔l↔I, rn↔m), e verifica palavras incertas com recurso a um dicionário. Ativado por predefinição; desative para códigos técnicos ou números de série.</string>
+    <string name="ocr_prep_modes_message">Existem três formas de enviar imagens para o motor de OCR:\n\n• Original (sem
+        pré-processamento) — a mais rápida. A foto é enviada tal como está. Ideal para digitalizações já limpas e com
+        alto contraste. Pode não detetar texto fraco ou com ruído.\n\n• OpenCV Rápido — limpeza rápida: conversão para
+        tons de cinzento, redução ligeira de ruído, conversão automática para preto e branco e, se necessário, um
+        ligeiro aumento de escala. Boa opção predefinida para a maioria das fotos. Equilíbrio entre velocidade e
+        qualidade.\n\n• OpenCV Robusto — redesenhado para máxima precisão em páginas difíceis. Corrige inclinações,
+        normaliza sombras e iluminação, aplica redução de ruído com preservação de contornos e escalonamento
+        inteligente. É importante que o Tesseract receba uma imagem em tons de cinzento de alta qualidade (e não preto e
+        branco rígido), preservando detalhes finos como os laços da letra “o” e dígitos pequenos. Oferece a melhor
+        precisão em páginas exigentes, mas é mais lento e utiliza mais memória.\n\nPós-processamento de OCR: Corrige
+        erros comuns de reconhecimento, como confusões (0↔O, 1↔l↔I, rn↔m), e verifica palavras incertas com recurso a um
+        dicionário. Ativado por predefinição; desative para códigos técnicos ou números de série.
+    </string>
 
     <!-- Seleção de modo de reconhecimento OCR -->
     <string name="ocr_choose_prep_mode_menu">Modo de reconhecimento…</string>
@@ -281,7 +318,8 @@
     <string name="in_collections_count">Em %1$d coleções</string>
 
     <!-- Delete confirmation (ScanDetails) -->
-    <string name="delete_warning_irreversible">Plik zostanie usunięty z urządzenia. Tej operacji nie można cofnąć.</string>
+    <string name="delete_warning_irreversible">Plik zostanie usunięty z urządzenia. Tej operacji nie można cofnąć.
+    </string>
 
     <!-- ExportFragment toasts -->
     <string name="no_document_to_export">Brak dokumentu do eksportu</string>
@@ -298,7 +336,8 @@
     <string name="error_during_zip_export_with_reason">Błąd podczas eksportu ZIP: %1$s</string>
     <string name="ocr_text_exported_as_txt">Tekst OCR wyeksportowany jako TXT</string>
     <string name="error_exporting_ocr_text_with_reason">Błąd podczas eksportu tekstu OCR: %1$s</string>
-    <string name="no_document_to_share_export_first">Brak dokumentu do udostępnienia. Najpierw wyeksportuj dokument.</string>
+    <string name="no_document_to_share_export_first">Brak dokumentu do udostępnienia. Najpierw wyeksportuj dokument.
+    </string>
     <string name="error_sharing_document_with_reason">Błąd podczas udostępniania dokumentu: %1$s</string>
     <string name="feature_scan_library_disabled">Funkcja biblioteki skanów jest wyłączona</string>
     <string name="navigation_failed">Nawigacja nie powiodła się</string>
@@ -333,15 +372,20 @@
     <!-- Accessibility Mode -->
     <string name="a11y_doc_ready">Documento detetado — pronto para capturar.</string>
     <string name="a11y_no_document_detected">Nenhum documento detectado.</string>
-    <string name="a11y_orientation_portrait_tip">Parece estar em modo retrato. Segurar o telefone na vertical normalmente funciona melhor para páginas altas.</string>
-    <string name="a11y_orientation_landscape_tip">Parece estar em modo paisagem. Tente segurar o telefone na horizontal para páginas largas.</string>
+    <string name="a11y_orientation_portrait_tip">Parece estar em modo retrato. Segurar o telefone na vertical
+        normalmente funciona melhor para páginas altas.
+    </string>
+    <string name="a11y_orientation_landscape_tip">Parece estar em modo paisagem. Tente segurar o telefone na horizontal
+        para páginas largas.
+    </string>
     <string name="a11y_crop_summary_detected">Análise da imagem capturada: documento detectado.</string>
     <string name="a11y_crop_summary_no_doc">Análise da imagem capturada: nenhum documento detectado.</string>
     <string name="accessibility_mode_label">Modo de acessibilidade</string>
     <string name="a11y_camera_ready">Câmara pronta. Toque duas vezes em “Digitalizar” para capturar.</string>
     <string name="a11y_low_light_toggle_flash">Pouca luz detetada. Toque duas vezes em “Flash” para ativar.</string>
     <string name="a11y_capture_failed">Falha ao capturar.</string>
-    <string name="a11y_volume_shutter_hint">Dica: No modo de acessibilidade, pode capturar usando os botões de volume.</string>
+    <string name="a11y_volume_shutter_hint">Dica: No modo de acessibilidade, pode capturar usando os botões de volume.
+    </string>
     <string name="a11y_capture_success">Imagem capturada.</string>
     <string name="a11y_verbose_logs_label">Registos de acessibilidade detalhados</string>
     <string name="a11y_option_auto_capture">Captura automática com deteção estável (Modo de acessibilidade)</string>

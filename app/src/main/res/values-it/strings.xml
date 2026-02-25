@@ -1,7 +1,10 @@
 <resources>
     <string name="app_name">MakeACopy</string>
 
-    <string name="tip_text_mode_editing">Modalità testo: le interruzioni di riga e la punteggiatura vengono attualmente normalizzate in spazi. Se vengono inserite meno parole di quelle riconosciute, le restanti parole OCR rimangono invariate. Le modifiche vengono applicate dopo una breve pausa.</string>
+    <string name="tip_text_mode_editing">Modalità testo: le interruzioni di riga e la punteggiatura vengono attualmente
+        normalizzate in spazi. Se vengono inserite meno parole di quelle riconosciute, le restanti parole OCR rimangono
+        invariate. Le modifiche vengono applicate dopo una breve pausa.
+    </string>
 
     <!-- New menu items for document scanner -->
     <string name="title_camera">Fotocamera</string>
@@ -19,10 +22,16 @@
     <string name="back">Indietro</string>
 
     <!-- Messages -->
-    <string name="msg_camera_permission_required">L’autorizzazione della fotocamera è necessaria per acquisire i documenti</string>
+    <string name="msg_camera_permission_required">L’autorizzazione della fotocamera è necessaria per acquisire i
+        documenti
+    </string>
     <string name="confirm">Conferma</string>
-    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">Controlla la scansione. Tocca Avanti per procedere o Indietro per riprovare.</string>
-    <string name="camera_ready_tap_the_button_to_scan_a_document">Fotocamera pronta. Tocca il pulsante per scansionare un documento.</string>
+    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">Controlla la scansione. Tocca Avanti
+        per procedere o Indietro per riprovare.
+    </string>
+    <string name="camera_ready_tap_the_button_to_scan_a_document">Fotocamera pronta. Tocca il pulsante per scansionare
+        un documento.
+    </string>
     <string name="captured_image">Immagine acquisita</string>
     <string name="retake">Rifai</string>
     <string name="image_to_crop">Immagine da ritagliare</string>
@@ -33,21 +42,33 @@
     <string name="language">Lingua:</string>
     <string name="ocr_results_will_appear_here">I risultati OCR verranno visualizzati qui</string>
     <string name="ocr_no_text_detected">Nessun testo rilevato</string>
-    <string name="no_image_loaded_capture_an_image_first">Nessuna immagine caricata. Acquisisci prima un’immagine.</string>
-    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Regola gli angoli del trapezio per selezionare l’area da ritagliare, quindi tocca il pulsante Ritaglia.</string>
-    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">Controlla l’immagine ritagliata. Tocca Avanti per procedere o Indietro per riprovare.</string>
+    <string name="no_image_loaded_capture_an_image_first">Nessuna immagine caricata. Acquisisci prima un’immagine.
+    </string>
+    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Regola gli angoli
+        del trapezio per selezionare l’area da ritagliare, quindi tocca il pulsante Ritaglia.
+    </string>
+    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">Controlla l’immagine
+        ritagliata. Tocca Avanti per procedere o Indietro per riprovare.
+    </string>
     <string name="no_document_ready_process_ocr_first">Nessun documento pronto. Esegui prima l’OCR.</string>
     <string name="document_ready_for_export">Documento pronto per l’esportazione</string>
     <string name="processing_image">Elaborazione dell’immagine…</string>
-    <string name="no_image_processed_crop_an_image_first">Nessuna immagine elaborata. Ritaglia prima un’immagine.</string>
-    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">Elaborazione OCR completata. Tocca il pulsante per procedere all’esportazione.</string>
+    <string name="no_image_processed_crop_an_image_first">Nessuna immagine elaborata. Ritaglia prima un’immagine.
+    </string>
+    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">Elaborazione OCR completata. Tocca il
+        pulsante per procedere all’esportazione.
+    </string>
 
     <string name="ocr_found_rotation">Rotazione rilevata: %1$d°</string>
     <string name="ocr_score">Punteggio OCR: %1$d%%</string>
     <string name="ocr_found_rotation_with_score">Rotazione rilevata: %1$d° — punteggio OCR: %2$d%%</string>
 
     <!-- Spiegazione aggiuntiva inclusa nella finestra di dialogo «Spiegare le modalità di riconoscimento» -->
-    <string name="ocr_prep_modes_autorotate_note">Rotazione automatica OCR: Quando è attivata, l’OCR prova anche la pagina a intervalli di 90° (0/90/180/270) e seleziona il risultato migliore. La rotazione rilevata può essere applicata automaticamente durante l’esportazione se non hai ruotato manualmente la pagina. Questa opzione può essere attivata o disattivata in «Scegli modalità di riconoscimento».</string>
+    <string name="ocr_prep_modes_autorotate_note">Rotazione automatica OCR: Quando è attivata, l’OCR prova anche la
+        pagina a intervalli di 90° (0/90/180/270) e seleziona il risultato migliore. La rotazione rilevata può essere
+        applicata automaticamente durante l’esportazione se non hai ruotato manualmente la pagina. Questa opzione può
+        essere attivata o disattivata in «Scegli modalità di riconoscimento».
+    </string>
 
     <string name="initializing_camera">Inizializzazione della fotocamera…</string>
     <string name="resetting_camera">Reimpostazione della fotocamera…</string>
@@ -101,27 +122,29 @@
     <string name="btn_pick_image">Carica</string>
     <string name="pick_image_cd">Carica immagine esistente</string>
     <string name="error_selected_file_is_not_an_image">Il file selezionato non è un\'immagine</string>
-    
+
     <!-- Multipage Export (v1 increment) -->
     <string name="pages_header">Pagine (%1$d)</string>
     <string name="add_another_page">Aggiungi pagina</string>
     <string name="clear_all_pages">Cancella tutto</string>
     <string name="remove_this_page">Rimuovi questa pagina</string>
     <string name="multipage_not_implemented">Esportazione multipagina non ancora implementata</string>
-    
+
     <!-- Reorder A11y controls -->
     <string name="move_page_left">Sposta pagina a sinistra</string>
     <string name="move_page_right">Sposta pagina a destra</string>
-    
+
     <!-- Back confirmation for clearing multipage session -->
     <string name="confirm_clear_multipage_title">Eliminare le pagine?</string>
-    <string name="confirm_clear_multipage_message">Sono state aggiunte più pagine. Vuoi eliminare tutte le pagine e tornare indietro?</string>
+    <string name="confirm_clear_multipage_message">Sono state aggiunte più pagine. Vuoi eliminare tutte le pagine e
+        tornare indietro?
+    </string>
     <string name="cancel">Annulla</string>
-    
+
     <!-- Clear-all confirmation for trash icon in multipage -->
     <string name="confirm_clear_pages_title">Cancellare tutte le pagine?</string>
     <string name="confirm_clear_pages_message">Vuoi rimuovere tutte le pagine dalla striscia di miniature?</string>
-    
+
     <!-- Registry Picker -->
     <string name="picker_title_completed_scans">Scegli dalle scansioni completate</string>
     <string name="picker_empty">Nessuna scansione completata trovata</string>
@@ -136,7 +159,7 @@
     <string name="deselect_all">Deseleziona tutto</string>
 
     <string name="added_pages_from_registry">Aggiunte %1$d pagina/e dal registro</string>
-    
+
     <!-- Add page options dialog -->
     <string name="add_page_option_choose_completed">Scegli dalle scansioni completate</string>
     <string name="add_page_option_capture_new">Acquisisci nuova pagina</string>
@@ -167,7 +190,7 @@
     <string name="btn_new">Nuova scansione</string>
     <string name="btn_review">Verifica</string>
     <string name="edit_word_title">Modifica parola</string>
-    <string name="review_summary_format">Parole: %1$d  •  Bassa affidabilità: %2$d</string>
+    <string name="review_summary_format">Parole: %1$d • Bassa affidabilità: %2$d</string>
     <string name="cm_edit">Modifica…</string>
     <string name="cm_merge_next">Unisci con la successiva</string>
     <string name="cm_split">Dividi</string>
@@ -199,17 +222,33 @@
     <string name="ocr_delete_best_model">Elimina modello Best</string>
     <string name="ocr_nothing_to_delete">Nessun modello Best da eliminare per la lingua corrente</string>
     <string name="ocr_delete_confirm_title">Eliminare il modello Best?</string>
-    <string name="ocr_delete_confirm_msg">Eliminare il modello Best importato per %1$s? Il modello Fast integrato resterà disponibile.</string>
+    <string name="ocr_delete_confirm_msg">Eliminare il modello Best importato per %1$s? Il modello Fast integrato
+        resterà disponibile.
+    </string>
     <string name="ocr_delete_success">Modello eliminato</string>
     <string name="ocr_delete_failed">Eliminazione non riuscita</string>
 
     <!-- Suggerimento modelli OCR -->
-    <string name="ocr_models_hint">Per un riconoscimento più veloce sono inclusi modelli compatti. Per una maggiore precisione, puoi installare modelli “Best” più grandi. Non è necessaria la connessione a Internet.</string>
+    <string name="ocr_models_hint">Per un riconoscimento più veloce sono inclusi modelli compatti. Per una maggiore
+        precisione, puoi installare modelli “Best” più grandi. Non è necessaria la connessione a Internet.
+    </string>
 
     <!-- Modalità di riconoscimento OCR – spiegazione -->
     <string name="ocr_explain_prep_modes">Spiega le modalità di riconoscimento</string>
     <string name="ocr_prep_modes_title">Modalità di riconoscimento: spiegazione semplice</string>
-    <string name="ocr_prep_modes_message">Esistono tre modi per inviare le immagini al motore OCR:\n\n• Originale (senza pre-elaborazione) — il più veloce. La foto viene inviata così com’è. Ideale per scansioni già pulite e ad alto contrasto. Può non rilevare testo tenue o rumoroso.\n\n• OpenCV Rapido — pulizia veloce: conversione in scala di grigi, leggera riduzione del rumore, conversione automatica in bianco e nero e, se necessario, un lieve aumento della risoluzione. Buona scelta predefinita per la maggior parte delle foto. Equilibrio tra velocità e qualità.\n\n• OpenCV Robusto — riprogettato per la massima precisione su pagine difficili. Corregge l’inclinazione, normalizza ombre e illuminazione, applica una riduzione del rumore che preserva i bordi e un ingrandimento intelligente. È importante che Tesseract riceva un’immagine in scala di grigi di alta qualità (non un bianco e nero rigido) per preservare dettagli fini come i loop della lettera «o» e le cifre piccole. Offre la migliore precisione su pagine complesse, ma è più lento e utilizza più memoria.\n\nPost-elaborazione OCR: corregge errori di riconoscimento comuni come le confusioni (0↔O, 1↔l↔I, rn↔m) e verifica le parole incerte tramite un dizionario. Attivata per impostazione predefinita; disattivarla per codici tecnici o numeri di serie.</string>
+    <string name="ocr_prep_modes_message">Esistono tre modi per inviare le immagini al motore OCR:\n\n• Originale (senza
+        pre-elaborazione) — il più veloce. La foto viene inviata così com’è. Ideale per scansioni già pulite e ad alto
+        contrasto. Può non rilevare testo tenue o rumoroso.\n\n• OpenCV Rapido — pulizia veloce: conversione in scala di
+        grigi, leggera riduzione del rumore, conversione automatica in bianco e nero e, se necessario, un lieve aumento
+        della risoluzione. Buona scelta predefinita per la maggior parte delle foto. Equilibrio tra velocità e
+        qualità.\n\n• OpenCV Robusto — riprogettato per la massima precisione su pagine difficili. Corregge
+        l’inclinazione, normalizza ombre e illuminazione, applica una riduzione del rumore che preserva i bordi e un
+        ingrandimento intelligente. È importante che Tesseract riceva un’immagine in scala di grigi di alta qualità (non
+        un bianco e nero rigido) per preservare dettagli fini come i loop della lettera «o» e le cifre piccole. Offre la
+        migliore precisione su pagine complesse, ma è più lento e utilizza più memoria.\n\nPost-elaborazione OCR:
+        corregge errori di riconoscimento comuni come le confusioni (0↔O, 1↔l↔I, rn↔m) e verifica le parole incerte
+        tramite un dizionario. Attivata per impostazione predefinita; disattivarla per codici tecnici o numeri di serie.
+    </string>
 
     <!-- Selezione modalità di riconoscimento OCR -->
     <string name="ocr_choose_prep_mode_menu">Modalità di riconoscimento…</string>
@@ -279,7 +318,9 @@
     <string name="in_collections_count">In %1$d raccolte</string>
 
     <!-- Delete confirmation (ScanDetails) -->
-    <string name="delete_warning_irreversible">Il file verrà eliminato dal dispositivo. Questa azione non può essere annullata.</string>
+    <string name="delete_warning_irreversible">Il file verrà eliminato dal dispositivo. Questa azione non può essere
+        annullata.
+    </string>
 
     <!-- ExportFragment toasts -->
     <string name="no_document_to_export">Nessun documento da esportare</string>
@@ -296,7 +337,8 @@
     <string name="error_during_zip_export_with_reason">Errore durante l’esportazione ZIP: %1$s</string>
     <string name="ocr_text_exported_as_txt">Testo OCR esportato come TXT</string>
     <string name="error_exporting_ocr_text_with_reason">Errore durante l’esportazione del testo OCR: %1$s</string>
-    <string name="no_document_to_share_export_first">Nessun documento da condividere. Esporta prima un documento.</string>
+    <string name="no_document_to_share_export_first">Nessun documento da condividere. Esporta prima un documento.
+    </string>
     <string name="error_sharing_document_with_reason">Errore durante la condivisione del documento: %1$s</string>
     <string name="feature_scan_library_disabled">La funzione della libreria di scansioni è disattivata</string>
     <string name="navigation_failed">Navigazione non riuscita</string>
@@ -331,19 +373,29 @@
     <!-- Accessibility Mode -->
     <string name="a11y_doc_ready">Documento rilevato — pronto per la cattura.</string>
     <string name="a11y_no_document_detected">Nessun documento rilevato.</string>
-    <string name="a11y_orientation_portrait_tip">Sembra un orientamento verticale. Tenere il telefono in verticale di solito è l’ideale per pagine alte.</string>
-    <string name="a11y_orientation_landscape_tip">Sembra un orientamento orizzontale. Prova a tenere il telefono in orizzontale per pagine larghe.</string>
+    <string name="a11y_orientation_portrait_tip">Sembra un orientamento verticale. Tenere il telefono in verticale di
+        solito è l’ideale per pagine alte.
+    </string>
+    <string name="a11y_orientation_landscape_tip">Sembra un orientamento orizzontale. Prova a tenere il telefono in
+        orizzontale per pagine larghe.
+    </string>
     <string name="a11y_crop_summary_detected">Analisi dell’immagine acquisita: documento rilevato.</string>
     <string name="a11y_crop_summary_no_doc">Analisi dell’immagine acquisita: nessun documento rilevato.</string>
     <string name="accessibility_mode_label">Modalità accessibilità</string>
     <string name="a11y_camera_ready">Fotocamera pronta. Tocca due volte su “Scansiona” per catturare.</string>
-    <string name="a11y_low_light_toggle_flash">Scarsa illuminazione rilevata. Tocca due volte su “Flash” per attivarlo.</string>
+    <string name="a11y_low_light_toggle_flash">Scarsa illuminazione rilevata. Tocca due volte su “Flash” per
+        attivarlo.
+    </string>
     <string name="a11y_capture_failed">Cattura non riuscita.</string>
-    <string name="a11y_volume_shutter_hint">Suggerimento: in modalità accessibilità puoi catturare anche con i tasti del volume.</string>
+    <string name="a11y_volume_shutter_hint">Suggerimento: in modalità accessibilità puoi catturare anche con i tasti del
+        volume.
+    </string>
     <string name="a11y_capture_success">Immagine catturata.</string>
     <string name="a11y_verbose_logs_label">Log dettagliati di accessibilità</string>
     <string name="a11y_option_auto_capture">Cattura automatica con rilevamento stabile (Modalità accessibilità)</string>
-    <string name="a11y_option_auto_torch">Attiva automaticamente il flash in condizioni di scarsa luce (Modalità accessibilità)</string>
+    <string name="a11y_option_auto_torch">Attiva automaticamente il flash in condizioni di scarsa luce (Modalità
+        accessibilità)
+    </string>
     <string name="a11y_capturing_now">Cattura in corso…</string>
     <string name="a11y_score_now">Qualità del rilevamento: %1$d%%.</string>
     <string name="a11y_scan_with_score">Scansiona. Qualità del rilevamento: %1$d%%.</string>

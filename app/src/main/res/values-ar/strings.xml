@@ -2,7 +2,9 @@
     <string name="app_name">MakeACopy</string>
 
     <!-- OCR Review: Text mode editor tooltip documenting current behavior -->
-    <string name="tip_text_mode_editing">وضع النص: يتم حاليًا تحويل فواصل الأسطر وعلامات الترقيم إلى مسافات. إذا أُدخلت كلمات أقل مما تم التعرّف عليه، فستبقى كلمات OCR المتبقية دون تغيير. تُطبَّق التغييرات بعد توقف قصير.</string>
+    <string name="tip_text_mode_editing">وضع النص: يتم حاليًا تحويل فواصل الأسطر وعلامات الترقيم إلى مسافات. إذا أُدخلت
+        كلمات أقل مما تم التعرّف عليه، فستبقى كلمات OCR المتبقية دون تغيير. تُطبَّق التغييرات بعد توقف قصير.
+    </string>
 
     <!-- New menu items for document scanner -->
     <string name="title_camera">الكاميرا</string>
@@ -22,7 +24,9 @@
     <!-- Messages -->
     <string name="msg_camera_permission_required">مطلوب إذن الكاميرا لمسح المستندات</string>
     <string name="confirm">تأكيد</string>
-    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">راجع المسح. اضغط على «التالي» للمتابعة أو «رجوع» لإعادة المحاولة.</string>
+    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">راجع المسح. اضغط على «التالي» للمتابعة
+        أو «رجوع» لإعادة المحاولة.
+    </string>
     <string name="camera_ready_tap_the_button_to_scan_a_document">الكاميرا جاهزة. اضغط على الزر لمسح مستند.</string>
     <string name="captured_image">الصورة الملتقطة</string>
     <string name="retake">إعادة الالتقاط</string>
@@ -35,19 +39,28 @@
     <string name="ocr_results_will_appear_here">ستظهر نتائج OCR هنا</string>
     <string name="ocr_no_text_detected">لم يتم اكتشاف أي نص</string>
     <string name="no_image_loaded_capture_an_image_first">لم يتم تحميل أي صورة. التقط صورة أولًا.</string>
-    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">اضبط زوايا شبه المنحرف لتحديد منطقة الاقتصاص، ثم اضغط على زر «اقتصاص».</string>
-    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">راجع الصورة المقصوصة. اضغط على «التالي» للمتابعة أو «رجوع» لإعادة المحاولة.</string>
+    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">اضبط زوايا شبه
+        المنحرف لتحديد منطقة الاقتصاص، ثم اضغط على زر «اقتصاص».
+    </string>
+    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">راجع الصورة المقصوصة. اضغط
+        على «التالي» للمتابعة أو «رجوع» لإعادة المحاولة.
+    </string>
     <string name="no_document_ready_process_ocr_first">لا يوجد مستند جاهز. قم بتشغيل OCR أولًا.</string>
     <string name="document_ready_for_export">المستند جاهز للتصدير</string>
     <string name="processing_image">جارٍ معالجة الصورة...</string>
     <string name="no_image_processed_crop_an_image_first">لم تتم معالجة أي صورة. قم باقتصاص صورة أولًا.</string>
-    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">اكتملت معالجة OCR. اضغط على الزر للمتابعة إلى التصدير.</string>
+    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">اكتملت معالجة OCR. اضغط على الزر للمتابعة
+        إلى التصدير.
+    </string>
     <string name="ocr_found_rotation">تم العثور على دوران: %1$d°</string>
     <string name="ocr_score">درجة OCR: %1$d%%</string>
     <string name="ocr_found_rotation_with_score">تم العثور على دوران: %1$d° — درجة OCR: %2$d%%</string>
 
     <!-- Extra explanation appended in “Explain recognition modes” dialog -->
-    <string name="ocr_prep_modes_autorotate_note">التدوير التلقائي لـ OCR: عند التفعيل، يحاول OCR الصفحة بزوايا 90° (0/90/180/270) ويختار أفضل نتيجة. يمكن تطبيق التدوير الذي تم العثور عليه تلقائيًا أثناء التصدير إذا لم تقم بالتدوير يدويًا. يمكنك تبديل هذا الخيار في «اختيار وضع التعرّف».</string>
+    <string name="ocr_prep_modes_autorotate_note">التدوير التلقائي لـ OCR: عند التفعيل، يحاول OCR الصفحة بزوايا 90°
+        (0/90/180/270) ويختار أفضل نتيجة. يمكن تطبيق التدوير الذي تم العثور عليه تلقائيًا أثناء التصدير إذا لم تقم
+        بالتدوير يدويًا. يمكنك تبديل هذا الخيار في «اختيار وضع التعرّف».
+    </string>
 
     <string name="initializing_camera">جارٍ تهيئة الكاميرا…</string>
     <string name="resetting_camera">جارٍ إعادة ضبط الكاميرا…</string>
@@ -166,7 +179,7 @@
     <string name="btn_new">مسح جديد</string>
     <string name="btn_review">مراجعة</string>
     <string name="edit_word_title">تحرير كلمة</string>
-    <string name="review_summary_format">الكلمات: %1$d  •  ثقة منخفضة: %2$d</string>
+    <string name="review_summary_format">الكلمات: %1$d • ثقة منخفضة: %2$d</string>
     <string name="cm_edit">تحرير…</string>
     <string name="cm_merge_next">دمج مع التالي</string>
     <string name="cm_split">تقسيم</string>
@@ -198,17 +211,30 @@
     <string name="ocr_delete_best_model">حذف نموذج Best</string>
     <string name="ocr_nothing_to_delete">لا يوجد نموذج Best لحذفه للغة الحالية</string>
     <string name="ocr_delete_confirm_title">حذف نموذج Best؟</string>
-    <string name="ocr_delete_confirm_msg">هل تريد حذف نموذج Best المُستورد لـ %1$s؟ سيبقى نموذج Fast المدمج متاحًا.</string>
+    <string name="ocr_delete_confirm_msg">هل تريد حذف نموذج Best المُستورد لـ %1$s؟ سيبقى نموذج Fast المدمج متاحًا.
+    </string>
     <string name="ocr_delete_success">تم حذف النموذج</string>
     <string name="ocr_delete_failed">فشل الحذف</string>
 
     <!-- OCR models hint -->
-    <string name="ocr_models_hint">للتعرّف الأسرع، يتم تضمين نماذج مدمجة. ولدقة أعلى، يمكنك تثبيت نماذج أكبر من نوع \"Best\". لا يلزم اتصال بالإنترنت.</string>
+    <string name="ocr_models_hint">للتعرّف الأسرع، يتم تضمين نماذج مدمجة. ولدقة أعلى، يمكنك تثبيت نماذج أكبر من نوع
+        \"Best\". لا يلزم اتصال بالإنترنت.
+    </string>
 
     <!-- OCR prep modes explanation -->
     <string name="ocr_explain_prep_modes">شرح أوضاع التعرّف</string>
     <string name="ocr_prep_modes_title">أوضاع التعرّف: شرح مبسط</string>
-    <string name="ocr_prep_modes_message">هناك ثلاث طرق لإدخال الصور إلى محرّك التعرّف الضوئي على النص (OCR):\n\n• الأصلي (بدون معالجة مسبقة) — الأسرع. يتم إرسال الصورة كما هي. مناسب للصور النظيفة وعالية التباين. قد يفوّت النصوص الباهتة أو المشوَّشة.\n\n• OpenCV السريع — تنظيف سريع: تحويل إلى تدرّج الرمادي، تقليل ضوضاء خفيف، تحويل تلقائي إلى أبيض وأسود، مع تكبير بسيط عند الحاجة. خيار افتراضي جيّد لمعظم الصور، بتوازن بين السرعة والجودة.\n\n• OpenCV المتقدّم — مُعاد تصميمه لتحقيق أعلى دقّة مع الصفحات الصعبة. يقوم بتصحيح الميل، وتوحيد الظلال والإضاءة، وتطبيق تقليل ضوضاء يحافظ على الحواف، مع تكبير ذكي. والأهم أنه يزوّد Tesseract بصورة عالية الجودة بتدرّج رمادي (وليس أبيض وأسود صارم) للحفاظ على التفاصيل الدقيقة مثل حلقات حرف “o” والأرقام الصغيرة. يوفّر أفضل دقّة مع الصفحات الصعبة، لكنه أبطأ ويستهلك ذاكرة أكبر.\n\nالمعالجة اللاحقة لـ OCR: تصحّح أخطاء التعرّف الشائعة مثل الالتباس (0↔O، 1↔l↔I، rn↔m)، وتتحقّق من الكلمات غير المؤكّدة باستخدام قاموس. مفعّلة افتراضيًا؛ عطّلها عند معالجة الأكواد التقنية أو الأرقام التسلسلية.</string>
+    <string name="ocr_prep_modes_message">هناك ثلاث طرق لإدخال الصور إلى محرّك التعرّف الضوئي على النص (OCR):\n\n•
+        الأصلي (بدون معالجة مسبقة) — الأسرع. يتم إرسال الصورة كما هي. مناسب للصور النظيفة وعالية التباين. قد يفوّت
+        النصوص الباهتة أو المشوَّشة.\n\n• OpenCV السريع — تنظيف سريع: تحويل إلى تدرّج الرمادي، تقليل ضوضاء خفيف، تحويل
+        تلقائي إلى أبيض وأسود، مع تكبير بسيط عند الحاجة. خيار افتراضي جيّد لمعظم الصور، بتوازن بين السرعة والجودة.\n\n•
+        OpenCV المتقدّم — مُعاد تصميمه لتحقيق أعلى دقّة مع الصفحات الصعبة. يقوم بتصحيح الميل، وتوحيد الظلال والإضاءة،
+        وتطبيق تقليل ضوضاء يحافظ على الحواف، مع تكبير ذكي. والأهم أنه يزوّد Tesseract بصورة عالية الجودة بتدرّج رمادي
+        (وليس أبيض وأسود صارم) للحفاظ على التفاصيل الدقيقة مثل حلقات حرف “o” والأرقام الصغيرة. يوفّر أفضل دقّة مع
+        الصفحات الصعبة، لكنه أبطأ ويستهلك ذاكرة أكبر.\n\nالمعالجة اللاحقة لـ OCR: تصحّح أخطاء التعرّف الشائعة مثل
+        الالتباس (0↔O، 1↔l↔I، rn↔m)، وتتحقّق من الكلمات غير المؤكّدة باستخدام قاموس. مفعّلة افتراضيًا؛ عطّلها عند معالجة
+        الأكواد التقنية أو الأرقام التسلسلية.
+    </string>
 
 
     <!-- OCR prep modes selection -->
@@ -332,8 +358,11 @@
     <!-- Accessibility Mode -->
     <string name="a11y_doc_ready">تم اكتشاف المستند – جاهز للالتقاط.</string>
     <string name="a11y_no_document_detected">لم يتم اكتشاف أي مستند.</string>
-    <string name="a11y_orientation_portrait_tip">يبدو أن هذا بوضع عمودي. عادةً ما يناسب حمل الهاتف عموديًا الصفحات الطويلة.</string>
-    <string name="a11y_orientation_landscape_tip">يبدو أن هذا بوضع أفقي. جرّب حمل الهاتف أفقيًا للصفحات العريضة.</string>
+    <string name="a11y_orientation_portrait_tip">يبدو أن هذا بوضع عمودي. عادةً ما يناسب حمل الهاتف عموديًا الصفحات
+        الطويلة.
+    </string>
+    <string name="a11y_orientation_landscape_tip">يبدو أن هذا بوضع أفقي. جرّب حمل الهاتف أفقيًا للصفحات العريضة.
+    </string>
     <string name="a11y_crop_summary_detected">تحليل الصورة الملتقطة: تم اكتشاف مستند.</string>
     <string name="accessibility_mode_label">وضع إمكانية الوصول</string>
     <string name="a11y_camera_ready">الكاميرا جاهزة. انقر نقرتين على «مسح» للالتقاط.</string>
@@ -396,7 +425,8 @@
 
     <string name="btn_reocr">إعادة التعرف الضوئي</string>
     <string name="reocr_confirm_title">إعادة تشغيل التعرف الضوئي؟</string>
-    <string name="reocr_confirm_message">هل تريد إعادة تشغيل التعرف الضوئي على هذه الكلمة باستخدام اللغة «%1$s»؟</string>
+    <string name="reocr_confirm_message">هل تريد إعادة تشغيل التعرف الضوئي على هذه الكلمة باستخدام اللغة «%1$s»؟
+    </string>
     <string name="reocr_processing">جارٍ إعادة تشغيل التعرف الضوئي…</string>
     <string name="reocr_success">تم تحديث الكلمة: %1$s</string>
     <string name="reocr_failed">فشل إعادة التعرف الضوئي</string>

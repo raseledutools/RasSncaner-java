@@ -1,7 +1,10 @@
 <resources>
     <string name="app_name">MakeACopy</string>
 
-    <string name="tip_text_mode_editing">Teksttilstand: Linjeskift og tegnsætning normaliseres i øjeblikket til mellemrum. Hvis der indtastes færre ord, end der blev genkendt, forbliver de resterende OCR-ord uændrede. Ændringer anvendes efter en kort pause.</string>
+    <string name="tip_text_mode_editing">Teksttilstand: Linjeskift og tegnsætning normaliseres i øjeblikket til
+        mellemrum. Hvis der indtastes færre ord, end der blev genkendt, forbliver de resterende OCR-ord uændrede.
+        Ændringer anvendes efter en kort pause.
+    </string>
 
     <!-- New menu items for document scanner -->
     <string name="title_camera">Kamera</string>
@@ -21,8 +24,12 @@
     <!-- Messages -->
     <string name="msg_camera_permission_required">Kameratilladelse er påkrævet for at scanne dokumenter</string>
     <string name="confirm">Bekræft</string>
-    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">Gennemse din scanning. Tryk på Næste for at fortsætte eller Tilbage for at prøve igen.</string>
-    <string name="camera_ready_tap_the_button_to_scan_a_document">Kameraet er klar. Tryk på knappen for at scanne et dokument.</string>
+    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">Gennemse din scanning. Tryk på Næste
+        for at fortsætte eller Tilbage for at prøve igen.
+    </string>
+    <string name="camera_ready_tap_the_button_to_scan_a_document">Kameraet er klar. Tryk på knappen for at scanne et
+        dokument.
+    </string>
     <string name="captured_image">Optaget billede</string>
     <string name="retake">Tag igen</string>
     <string name="image_to_crop">Billede til beskæring</string>
@@ -34,20 +41,29 @@
     <string name="ocr_results_will_appear_here">OCR-resultater vises her</string>
     <string name="ocr_no_text_detected">Ingen tekst fundet</string>
     <string name="no_image_loaded_capture_an_image_first">Intet billede indlæst. Tag først et billede.</string>
-    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Juster trapezhjørnerne for at vælge området, der skal beskæres, og tryk derefter på Beskær-knappen.</string>
-    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">Gennemse dit beskårne billede. Tryk på Næste for at fortsætte eller Tilbage for at prøve igen.</string>
+    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Juster
+        trapezhjørnerne for at vælge området, der skal beskæres, og tryk derefter på Beskær-knappen.
+    </string>
+    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">Gennemse dit beskårne
+        billede. Tryk på Næste for at fortsætte eller Tilbage for at prøve igen.
+    </string>
     <string name="no_document_ready_process_ocr_first">Intet dokument klar. Kør først OCR.</string>
     <string name="document_ready_for_export">Dokument klar til eksport</string>
     <string name="processing_image">Behandler billede…</string>
     <string name="no_image_processed_crop_an_image_first">Intet billede behandlet. Beskær et billede først.</string>
-    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">OCR-behandling fuldført. Tryk på knappen for at fortsætte til eksport.</string>
+    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">OCR-behandling fuldført. Tryk på knappen
+        for at fortsætte til eksport.
+    </string>
 
     <string name="ocr_found_rotation">Fundet rotation: %1$d°</string>
     <string name="ocr_score">OCR-score: %1$d%%</string>
     <string name="ocr_found_rotation_with_score">Fundet rotation: %1$d° — OCR-score: %2$d%%</string>
 
     <!-- Ekstra forklaring tilføjet i dialogen “Forklar genkendelsestilstande” -->
-    <string name="ocr_prep_modes_autorotate_note">OCR automatisk rotation: Når den er aktiveret, prøver OCR også siden i 90°-trin (0/90/180/270) og vælger det bedste resultat. Den fundne rotation kan automatisk anvendes under eksport, hvis du ikke har roteret manuelt. Dette kan slås til/fra i “Vælg genkendelsestilstand”.</string>
+    <string name="ocr_prep_modes_autorotate_note">OCR automatisk rotation: Når den er aktiveret, prøver OCR også siden i
+        90°-trin (0/90/180/270) og vælger det bedste resultat. Den fundne rotation kan automatisk anvendes under
+        eksport, hvis du ikke har roteret manuelt. Dette kan slås til/fra i “Vælg genkendelsestilstand”.
+    </string>
 
     <string name="initializing_camera">Initialiserer kamera…</string>
     <string name="resetting_camera">Nulstiller kamera…</string>
@@ -115,7 +131,8 @@
 
     <!-- Back confirmation -->
     <string name="confirm_clear_multipage_title">Slet sider?</string>
-    <string name="confirm_clear_multipage_message">Flere sider er tilføjet. Vil du slette alle sider og gå tilbage?</string>
+    <string name="confirm_clear_multipage_message">Flere sider er tilføjet. Vil du slette alle sider og gå tilbage?
+    </string>
     <string name="cancel">Annuller</string>
 
     <!-- Clear all confirmation -->
@@ -168,7 +185,7 @@
     <string name="btn_new">Ny scanning</string>
     <string name="btn_review">Gennemse</string>
     <string name="edit_word_title">Rediger ord</string>
-    <string name="review_summary_format">Ord: %1$d  •  Lav selvsikkerhed: %2$d</string>
+    <string name="review_summary_format">Ord: %1$d • Lav selvsikkerhed: %2$d</string>
     <string name="cm_edit">Rediger…</string>
     <string name="cm_merge_next">Flet med næste</string>
     <string name="cm_split">Opdel</string>
@@ -200,17 +217,32 @@
     <string name="ocr_delete_best_model">Slet Best-model</string>
     <string name="ocr_nothing_to_delete">Ingen Best-model at slette for det aktuelle sprog</string>
     <string name="ocr_delete_confirm_title">Slet Best-model?</string>
-    <string name="ocr_delete_confirm_msg">Vil du slette den importerede Best-model for %1$s? Den indbyggede Fast-model vil stadig være tilgængelig.</string>
+    <string name="ocr_delete_confirm_msg">Vil du slette den importerede Best-model for %1$s? Den indbyggede Fast-model
+        vil stadig være tilgængelig.
+    </string>
     <string name="ocr_delete_success">Model slettet</string>
     <string name="ocr_delete_failed">Sletning mislykkedes</string>
 
     <!-- OCR models hint -->
-    <string name="ocr_models_hint">For hurtigere genkendelse medfølger kompakte modeller. For højere nøjagtighed kan du installere større “Best”-modeller. Ingen internetforbindelse er påkrævet.</string>
+    <string name="ocr_models_hint">For hurtigere genkendelse medfølger kompakte modeller. For højere nøjagtighed kan du
+        installere større “Best”-modeller. Ingen internetforbindelse er påkrævet.
+    </string>
 
     <!-- OCR forbehandlingsmetoder – forklaring -->
     <string name="ocr_explain_prep_modes">Forklar genkendelsestilstande</string>
     <string name="ocr_prep_modes_title">Genkendelsestilstande: enkel forklaring</string>
-    <string name="ocr_prep_modes_message">Der er tre måder at sende billeder til OCR-motoren:\n\n• Original (ingen forbehandling) — hurtigst. Fotoet sendes, som det er. Bedst til allerede rene scanninger med høj kontrast. Kan overse svag eller støjende tekst.\n\n• OpenCV Hurtig — hurtig oprydning: konvertering til gråtoner, let støjreduktion, automatisk sort/hvid-konvertering og en smule opskalering efter behov. Et godt standardvalg til de fleste fotos. Afbalancerer hastighed og kvalitet.\n\n• OpenCV Robust — ombygget for maksimal nøjagtighed på vanskelige sider. Retter skævhed, normaliserer skygger og belysning, anvender kantbevarende støjreduktion og intelligent opskalering. Vigtigt er, at Tesseract får et gråtonebillede i høj kvalitet (ikke hård sort/hvid), så fine detaljer som løkker i “o” og små cifre bevares. Giver bedst nøjagtighed på svære sider, men er langsommere og bruger mere hukommelse.\n\nOCR-efterbehandling: Retter typiske genkendelsesfejl som forvekslinger (0↔O, 1↔l↔I, rn↔m) og kontrollerer usikre ord mod en ordbog. Slået til som standard; slå fra ved tekniske koder eller serienumre.</string>
+    <string name="ocr_prep_modes_message">Der er tre måder at sende billeder til OCR-motoren:\n\n• Original (ingen
+        forbehandling) — hurtigst. Fotoet sendes, som det er. Bedst til allerede rene scanninger med høj kontrast. Kan
+        overse svag eller støjende tekst.\n\n• OpenCV Hurtig — hurtig oprydning: konvertering til gråtoner, let
+        støjreduktion, automatisk sort/hvid-konvertering og en smule opskalering efter behov. Et godt standardvalg til
+        de fleste fotos. Afbalancerer hastighed og kvalitet.\n\n• OpenCV Robust — ombygget for maksimal nøjagtighed på
+        vanskelige sider. Retter skævhed, normaliserer skygger og belysning, anvender kantbevarende støjreduktion og
+        intelligent opskalering. Vigtigt er, at Tesseract får et gråtonebillede i høj kvalitet (ikke hård sort/hvid), så
+        fine detaljer som løkker i “o” og små cifre bevares. Giver bedst nøjagtighed på svære sider, men er langsommere
+        og bruger mere hukommelse.\n\nOCR-efterbehandling: Retter typiske genkendelsesfejl som forvekslinger (0↔O,
+        1↔l↔I, rn↔m) og kontrollerer usikre ord mod en ordbog. Slået til som standard; slå fra ved tekniske koder eller
+        serienumre.
+    </string>
 
     <!-- OCR forbehandlingsmetoder – valg -->
     <string name="ocr_choose_prep_mode_menu">Genkendelsestilstand…</string>
@@ -280,7 +312,8 @@
     <string name="in_collections_count">I %1$d samlinger</string>
 
     <!-- Delete confirmation (ScanDetails) -->
-    <string name="delete_warning_irreversible">Filen vil blive slettet fra enheden. Denne handling kan ikke fortrydes.</string>
+    <string name="delete_warning_irreversible">Filen vil blive slettet fra enheden. Denne handling kan ikke fortrydes.
+    </string>
 
     <!-- ExportFragment toasts -->
     <string name="no_document_to_export">Intet dokument at eksportere</string>
@@ -333,8 +366,12 @@
     <!-- Accessibility Mode -->
     <string name="a11y_doc_ready">Dokument registreret – klar til optagelse.</string>
     <string name="a11y_no_document_detected">Intet dokument registreret.</string>
-    <string name="a11y_orientation_portrait_tip">Det ligner portræt. At holde telefonen lodret passer normalt bedst til høje sider.</string>
-    <string name="a11y_orientation_landscape_tip">Det ligner landskab. Prøv at holde telefonen vandret til brede sider.</string>
+    <string name="a11y_orientation_portrait_tip">Det ligner portræt. At holde telefonen lodret passer normalt bedst til
+        høje sider.
+    </string>
+    <string name="a11y_orientation_landscape_tip">Det ligner landskab. Prøv at holde telefonen vandret til brede
+        sider.
+    </string>
     <string name="a11y_crop_summary_detected">Analyse af det optagne billede: dokument fundet.</string>
     <string name="a11y_crop_summary_no_doc">Analyse af det optagede billede: intet dokument registreret.</string>
     <string name="accessibility_mode_label">Tilgængelighedstilstand</string>
@@ -344,7 +381,8 @@
     <string name="a11y_volume_shutter_hint">Tip: I tilgængelighedstilstand kan du optage med lydstyrketasterne.</string>
     <string name="a11y_capture_success">Billede optaget.</string>
     <string name="a11y_verbose_logs_label">Uddybede tilgængelighedslogfiler</string>
-    <string name="a11y_option_auto_capture">Automatisk optagelse ved stabil registrering (tilgængelighedstilstand)</string>
+    <string name="a11y_option_auto_capture">Automatisk optagelse ved stabil registrering (tilgængelighedstilstand)
+    </string>
     <string name="a11y_option_auto_torch">Automatisk tænding af lygte i svagt lys (tilgængelighedstilstand)</string>
     <string name="a11y_capturing_now">Optager…</string>
     <string name="a11y_score_now">Registreringskvalitet: %1$d%%.</string>

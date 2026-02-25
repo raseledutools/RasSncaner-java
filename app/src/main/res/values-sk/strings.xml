@@ -1,7 +1,10 @@
 <resources>
     <string name="app_name">MakeACopy</string>
 
-    <string name="tip_text_mode_editing">Textový režim: Zalomenia riadkov a interpunkcia sa momentálne normalizujú na medzery. Ak sa zadá menej slov, ako bolo rozpoznaných, zvyšné slová OCR zostanú nezmenené. Zmeny sa použijú po krátkej prestávke.</string>
+    <string name="tip_text_mode_editing">Textový režim: Zalomenia riadkov a interpunkcia sa momentálne normalizujú na
+        medzery. Ak sa zadá menej slov, ako bolo rozpoznaných, zvyšné slová OCR zostanú nezmenené. Zmeny sa použijú po
+        krátkej prestávke.
+    </string>
 
     <!-- New menu items for document scanner -->
     <string name="title_camera">Fotoaparát</string>
@@ -19,10 +22,16 @@
     <string name="back">Späť</string>
 
     <!-- Messages -->
-    <string name="msg_camera_permission_required">Na skenovanie dokumentov je potrebné povolenie na používanie fotoaparátu</string>
+    <string name="msg_camera_permission_required">Na skenovanie dokumentov je potrebné povolenie na používanie
+        fotoaparátu
+    </string>
     <string name="confirm">Potvrdiť</string>
-    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">Skontrolujte svoju snímku. Klepnite na „Ďalej“ pre pokračovanie alebo na „Späť“ pre opakovanie.</string>
-    <string name="camera_ready_tap_the_button_to_scan_a_document">Fotoaparát je pripravený. Klepnite na tlačidlo pre skenovanie dokumentu.</string>
+    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">Skontrolujte svoju snímku. Klepnite na
+        „Ďalej“ pre pokračovanie alebo na „Späť“ pre opakovanie.
+    </string>
+    <string name="camera_ready_tap_the_button_to_scan_a_document">Fotoaparát je pripravený. Klepnite na tlačidlo pre
+        skenovanie dokumentu.
+    </string>
     <string name="captured_image">Zachytený obrázok</string>
     <string name="retake">Znova</string>
     <string name="image_to_crop">Obrázok na orezanie</string>
@@ -33,21 +42,33 @@
     <string name="language">Jazyk:</string>
     <string name="ocr_results_will_appear_here">Výsledky OCR sa zobrazia tu</string>
     <string name="ocr_no_text_detected">Text nebol rozpoznaný</string>
-    <string name="no_image_loaded_capture_an_image_first">Nie je načítaný žiadny obrázok. Najprv zachyťte obrázok.</string>
-    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Upravte rohy lichobežníka pre výber oblasti orezania, potom klepnite na tlačidlo Orezať.</string>
-    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">Skontrolujte orezaný obrázok. Klepnite na „Ďalej“ pre pokračovanie alebo na „Späť“ pre opakovanie.</string>
+    <string name="no_image_loaded_capture_an_image_first">Nie je načítaný žiadny obrázok. Najprv zachyťte obrázok.
+    </string>
+    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Upravte rohy
+        lichobežníka pre výber oblasti orezania, potom klepnite na tlačidlo Orezať.
+    </string>
+    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">Skontrolujte orezaný obrázok.
+        Klepnite na „Ďalej“ pre pokračovanie alebo na „Späť“ pre opakovanie.
+    </string>
     <string name="no_document_ready_process_ocr_first">Žiadny dokument nie je pripravený. Najprv spustite OCR.</string>
     <string name="document_ready_for_export">Dokument pripravený na export</string>
     <string name="processing_image">Spracováva sa obrázok…</string>
-    <string name="no_image_processed_crop_an_image_first">Žiadny obrázok nebol spracovaný. Najprv orežte obrázok.</string>
-    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">Spracovanie OCR dokončené. Klepnite na tlačidlo pre pokračovanie na export.</string>
+    <string name="no_image_processed_crop_an_image_first">Žiadny obrázok nebol spracovaný. Najprv orežte obrázok.
+    </string>
+    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">Spracovanie OCR dokončené. Klepnite na
+        tlačidlo pre pokračovanie na export.
+    </string>
 
     <string name="ocr_found_rotation">Nájdená rotácia: %1$d°</string>
     <string name="ocr_score">Skóre OCR: %1$d%%</string>
     <string name="ocr_found_rotation_with_score">Nájdená rotácia: %1$d° — skóre OCR: %2$d%%</string>
 
     <!-- Dodatočné vysvetlenie pridané v dialógu „Vysvetliť režimy rozpoznávania“ -->
-    <string name="ocr_prep_modes_autorotate_note">OCR automatická rotácia: Keď je povolená, OCR skúša stránku aj v krokoch po 90° (0/90/180/270) a vyberá najlepší výsledok. Nájdená rotácia môže byť automaticky použitá pri exporte, ak ste stránku neotočili manuálne. Túto možnosť môžete zapnúť alebo vypnúť v „Vybrať režim rozpoznávania“.</string>
+    <string name="ocr_prep_modes_autorotate_note">OCR automatická rotácia: Keď je povolená, OCR skúša stránku aj v
+        krokoch po 90° (0/90/180/270) a vyberá najlepší výsledok. Nájdená rotácia môže byť automaticky použitá pri
+        exporte, ak ste stránku neotočili manuálne. Túto možnosť môžete zapnúť alebo vypnúť v „Vybrať režim
+        rozpoznávania“.
+    </string>
 
     <string name="initializing_camera">Inicializuje sa fotoaparát…</string>
     <string name="resetting_camera">Resetuje sa fotoaparát…</string>
@@ -116,7 +137,9 @@
 
     <!-- Back confirmation -->
     <string name="confirm_clear_multipage_title">Vymazať stránky?</string>
-    <string name="confirm_clear_multipage_message">Bolo pridaných viac stránok. Chcete všetky vymazať a vrátiť sa späť?</string>
+    <string name="confirm_clear_multipage_message">Bolo pridaných viac stránok. Chcete všetky vymazať a vrátiť sa
+        späť?
+    </string>
     <string name="cancel">Zrušiť</string>
 
     <!-- Clear all confirmation -->
@@ -169,7 +192,7 @@
     <string name="btn_new">Nové skenovanie</string>
     <string name="btn_review">Kontrola</string>
     <string name="edit_word_title">Upraviť slovo</string>
-    <string name="review_summary_format">Slová: %1$d  •  Nízka spoľahlivosť: %2$d</string>
+    <string name="review_summary_format">Slová: %1$d • Nízka spoľahlivosť: %2$d</string>
     <string name="cm_edit">Upraviť…</string>
     <string name="cm_merge_next">Zlúčiť s nasledujúcim</string>
     <string name="cm_split">Rozdeliť</string>
@@ -201,17 +224,33 @@
     <string name="ocr_delete_best_model">Odstrániť model Best</string>
     <string name="ocr_nothing_to_delete">Pre aktuálny jazyk nie je žiadny model Best na odstránenie</string>
     <string name="ocr_delete_confirm_title">Odstrániť model Best?</string>
-    <string name="ocr_delete_confirm_msg">Odstrániť importovaný model Best pre %1$s? Vstavaný model Fast zostane dostupný.</string>
+    <string name="ocr_delete_confirm_msg">Odstrániť importovaný model Best pre %1$s? Vstavaný model Fast zostane
+        dostupný.
+    </string>
     <string name="ocr_delete_success">Model odstránený</string>
     <string name="ocr_delete_failed">Odstránenie zlyhalo</string>
 
     <!-- OCR models hint -->
-    <string name="ocr_models_hint">Pre rýchlejšie rozpoznávanie sú zahrnuté kompaktné modely. Pre vyššiu presnosť môžete nainštalovať väčšie „Best“ modely. Internetové pripojenie nie je potrebné.</string>
+    <string name="ocr_models_hint">Pre rýchlejšie rozpoznávanie sú zahrnuté kompaktné modely. Pre vyššiu presnosť môžete
+        nainštalovať väčšie „Best“ modely. Internetové pripojenie nie je potrebné.
+    </string>
 
     <!-- Režimy rozpoznávania OCR – vysvetlenie -->
     <string name="ocr_explain_prep_modes">Vysvetliť režimy rozpoznávania</string>
     <string name="ocr_prep_modes_title">Režimy rozpoznávania: jednoduché vysvetlenie</string>
-    <string name="ocr_prep_modes_message">Existujú tri spôsoby, ako odosielať obrázky do OCR enginu:\n\n• Originál (bez predspracovania) — najrýchlejší. Fotografia sa odošle v nezmenenej podobe. Najvhodnejšie pre už čisté skeny s vysokým kontrastom. Môže prehliadnuť slabý alebo zašumený text.\n\n• OpenCV Rýchly — rýchle čistenie: prevod do odtieňov sivej, mierne potlačenie šumu, automatický prevod na čiernobiely obraz a v prípade potreby mierne zväčšenie. Dobrá predvolená voľba pre väčšinu fotografií. Vyvážený pomer rýchlosti a kvality.\n\n• OpenCV Robustný — prepracovaný pre maximálnu presnosť na náročných stranách. Vyrovnáva sklon, normalizuje tiene a osvetlenie, používa potlačenie šumu so zachovaním hrán a inteligentné zväčšenie. Dôležité je, že Tesseract dostáva vysokokvalitný obraz v odtieňoch sivej (nie tvrdý čiernobiely), aby sa zachovali jemné detaily, ako sú slučky písmena „o“ a malé číslice. Poskytuje najlepšiu presnosť na zložitých stranách, no je pomalší a spotrebúva viac pamäte.\n\nNásledné spracovanie OCR: Opravuje typické chyby rozpoznávania, ako sú zámieny (0↔O, 1↔l↔I, rn↔m), a overuje neisté slová pomocou slovníka. Predvolene zapnuté; vypnite ho pre technické kódy alebo sériové čísla.</string>
+    <string name="ocr_prep_modes_message">Existujú tri spôsoby, ako odosielať obrázky do OCR enginu:\n\n• Originál (bez
+        predspracovania) — najrýchlejší. Fotografia sa odošle v nezmenenej podobe. Najvhodnejšie pre už čisté skeny s
+        vysokým kontrastom. Môže prehliadnuť slabý alebo zašumený text.\n\n• OpenCV Rýchly — rýchle čistenie: prevod do
+        odtieňov sivej, mierne potlačenie šumu, automatický prevod na čiernobiely obraz a v prípade potreby mierne
+        zväčšenie. Dobrá predvolená voľba pre väčšinu fotografií. Vyvážený pomer rýchlosti a kvality.\n\n• OpenCV
+        Robustný — prepracovaný pre maximálnu presnosť na náročných stranách. Vyrovnáva sklon, normalizuje tiene a
+        osvetlenie, používa potlačenie šumu so zachovaním hrán a inteligentné zväčšenie. Dôležité je, že Tesseract
+        dostáva vysokokvalitný obraz v odtieňoch sivej (nie tvrdý čiernobiely), aby sa zachovali jemné detaily, ako sú
+        slučky písmena „o“ a malé číslice. Poskytuje najlepšiu presnosť na zložitých stranách, no je pomalší a
+        spotrebúva viac pamäte.\n\nNásledné spracovanie OCR: Opravuje typické chyby rozpoznávania, ako sú zámieny (0↔O,
+        1↔l↔I, rn↔m), a overuje neisté slová pomocou slovníka. Predvolene zapnuté; vypnite ho pre technické kódy alebo
+        sériové čísla.
+    </string>
 
     <!-- Výber režimu rozpoznávania OCR -->
     <string name="ocr_choose_prep_mode_menu">Režim rozpoznávania…</string>
@@ -281,7 +320,9 @@
     <string name="in_collections_count">V %1$d kolekciách</string>
 
     <!-- Delete confirmation (ScanDetails) -->
-    <string name="delete_warning_irreversible">Súbor bude odstránený zo zariadenia. Túto akciu nie je možné vrátiť späť.</string>
+    <string name="delete_warning_irreversible">Súbor bude odstránený zo zariadenia. Túto akciu nie je možné vrátiť
+        späť.
+    </string>
 
     <!-- ExportFragment toasts -->
     <string name="no_document_to_export">Žiadny dokument na export</string>
@@ -333,13 +374,18 @@
     <!-- Accessibility Mode -->
     <string name="a11y_doc_ready">Dokument zistený — pripravený na zachytenie.</string>
     <string name="a11y_no_document_detected">Nebol zistený žiadny dokument.</string>
-    <string name="a11y_orientation_portrait_tip">Vyzerá to na portrét. Držanie telefónu na výšku zvyčajne najlepšie vyhovuje vysokým stránkam.</string>
-    <string name="a11y_orientation_landscape_tip">Vyzerá to na krajinu. Skúste držať telefón na šírku pre široké stránky.</string>
+    <string name="a11y_orientation_portrait_tip">Vyzerá to na portrét. Držanie telefónu na výšku zvyčajne najlepšie
+        vyhovuje vysokým stránkam.
+    </string>
+    <string name="a11y_orientation_landscape_tip">Vyzerá to na krajinu. Skúste držať telefón na šírku pre široké
+        stránky.
+    </string>
     <string name="a11y_crop_summary_detected">Analýza zachyteného obrázka: dokument bol rozpoznaný.</string>
     <string name="a11y_crop_summary_no_doc">Analýza zachyteného obrázka: nebol zistený žiadny dokument.</string>
     <string name="accessibility_mode_label">Režim prístupnosti</string>
     <string name="a11y_camera_ready">Fotoaparát pripravený. Dvojitým ťuknutím na „Skenovať“ zachytíte.</string>
-    <string name="a11y_low_light_toggle_flash">Zistené slabé osvetlenie. Dvojitým ťuknutím na „Blesk“ ho zapnete.</string>
+    <string name="a11y_low_light_toggle_flash">Zistené slabé osvetlenie. Dvojitým ťuknutím na „Blesk“ ho zapnete.
+    </string>
     <string name="a11y_capture_failed">Zachytenie zlyhalo.</string>
     <string name="a11y_volume_shutter_hint">Tip: V režime prístupnosti môžete snímať aj tlačidlami hlasitosti.</string>
     <string name="a11y_capture_success">Obrázok zachytený.</string>

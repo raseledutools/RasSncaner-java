@@ -1,7 +1,10 @@
 <resources>
     <string name="app_name">MakeACopy</string>
 
-    <string name="tip_text_mode_editing">Mod text: În prezent, întreruperile de rând și semnele de punctuație sunt normalizate la spații. Dacă se introduc mai puține cuvinte decât au fost recunoscute, celelalte cuvinte OCR rămân neschimbate. Modificările sunt aplicate după o scurtă pauză.</string>
+    <string name="tip_text_mode_editing">Mod text: În prezent, întreruperile de rând și semnele de punctuație sunt
+        normalizate la spații. Dacă se introduc mai puține cuvinte decât au fost recunoscute, celelalte cuvinte OCR
+        rămân neschimbate. Modificările sunt aplicate după o scurtă pauză.
+    </string>
 
     <!-- New menu items for document scanner -->
     <string name="title_camera">Cameră</string>
@@ -21,8 +24,12 @@
     <!-- Messages -->
     <string name="msg_camera_permission_required">Permisiunea camerei este necesară pentru a scana documente</string>
     <string name="confirm">Confirmare</string>
-    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">Verifică scanarea. Atinge „Următor” pentru a continua sau „Înapoi” pentru a reîncerca.</string>
-    <string name="camera_ready_tap_the_button_to_scan_a_document">Camera este pregătită. Atinge butonul pentru a scana un document.</string>
+    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">Verifică scanarea. Atinge „Următor”
+        pentru a continua sau „Înapoi” pentru a reîncerca.
+    </string>
+    <string name="camera_ready_tap_the_button_to_scan_a_document">Camera este pregătită. Atinge butonul pentru a scana
+        un document.
+    </string>
     <string name="captured_image">Imagine capturată</string>
     <string name="retake">Reia</string>
     <string name="image_to_crop">Imagine de decupat</string>
@@ -33,21 +40,33 @@
     <string name="language">Limbă:</string>
     <string name="ocr_results_will_appear_here">Rezultatele OCR vor apărea aici</string>
     <string name="ocr_no_text_detected">Nu a fost detectat niciun text</string>
-    <string name="no_image_loaded_capture_an_image_first">Nicio imagine încărcată. Capturează mai întâi o imagine.</string>
-    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Ajustează colțurile trapezului pentru a selecta zona de decupat, apoi apasă butonul Decupare.</string>
-    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">Verifică imaginea decupată. Atinge „Următor” pentru a continua sau „Înapoi” pentru a reîncerca.</string>
+    <string name="no_image_loaded_capture_an_image_first">Nicio imagine încărcată. Capturează mai întâi o imagine.
+    </string>
+    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Ajustează colțurile
+        trapezului pentru a selecta zona de decupat, apoi apasă butonul Decupare.
+    </string>
+    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">Verifică imaginea decupată.
+        Atinge „Următor” pentru a continua sau „Înapoi” pentru a reîncerca.
+    </string>
     <string name="no_document_ready_process_ocr_first">Niciun document pregătit. Procesează mai întâi OCR.</string>
     <string name="document_ready_for_export">Document pregătit pentru export</string>
     <string name="processing_image">Procesare imagine…</string>
-    <string name="no_image_processed_crop_an_image_first">Nicio imagine procesată. Decupează o imagine mai întâi.</string>
-    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">Procesarea OCR este completă. Atinge butonul pentru a continua la export.</string>
+    <string name="no_image_processed_crop_an_image_first">Nicio imagine procesată. Decupează o imagine mai întâi.
+    </string>
+    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">Procesarea OCR este completă. Atinge
+        butonul pentru a continua la export.
+    </string>
 
     <string name="ocr_found_rotation">Rotație detectată: %1$d°</string>
     <string name="ocr_score">Scor OCR: %1$d%%</string>
     <string name="ocr_found_rotation_with_score">Rotație detectată: %1$d° — scor OCR: %2$d%%</string>
 
     <!-- Explicație suplimentară adăugată în dialogul „Explică modurile de recunoaștere” -->
-    <string name="ocr_prep_modes_autorotate_note">Rotire automată OCR: Când este activată, OCR încearcă pagina și în pași de 90° (0/90/180/270) și alege cel mai bun rezultat. Rotația detectată poate fi aplicată automat la export dacă nu ai rotit manual pagina. Această opțiune poate fi activată sau dezactivată în „Alege modul de recunoaștere”.</string>
+    <string name="ocr_prep_modes_autorotate_note">Rotire automată OCR: Când este activată, OCR încearcă pagina și în
+        pași de 90° (0/90/180/270) și alege cel mai bun rezultat. Rotația detectată poate fi aplicată automat la export
+        dacă nu ai rotit manual pagina. Această opțiune poate fi activată sau dezactivată în „Alege modul de
+        recunoaștere”.
+    </string>
 
     <string name="initializing_camera">Inițializare cameră…</string>
     <string name="resetting_camera">Resetare cameră…</string>
@@ -116,7 +135,9 @@
 
     <!-- Back confirmation -->
     <string name="confirm_clear_multipage_title">Ștergi paginile?</string>
-    <string name="confirm_clear_multipage_message">Au fost adăugate mai multe pagini. Dorești să le ștergi pe toate și să revii?</string>
+    <string name="confirm_clear_multipage_message">Au fost adăugate mai multe pagini. Dorești să le ștergi pe toate și
+        să revii?
+    </string>
     <string name="cancel">Anulează</string>
 
     <!-- Clear all confirmation -->
@@ -170,7 +191,7 @@
 
     <string name="btn_review">Revizuire</string>
     <string name="edit_word_title">Editează cuvântul</string>
-    <string name="review_summary_format">Cuvinte: %1$d  •  Încredere scăzută: %2$d</string>
+    <string name="review_summary_format">Cuvinte: %1$d • Încredere scăzută: %2$d</string>
     <string name="cm_edit">Editează…</string>
     <string name="cm_merge_next">Combină cu următorul</string>
     <string name="cm_split">Împarte</string>
@@ -201,17 +222,33 @@
     <string name="ocr_delete_best_model">Șterge modelul Best</string>
     <string name="ocr_nothing_to_delete">Niciun model Best de șters pentru limba curentă</string>
     <string name="ocr_delete_confirm_title">Șterge modelul Best?</string>
-    <string name="ocr_delete_confirm_msg">Dorești să ștergi modelul Best importat pentru %1$s? Modelul Fast integrat va rămâne disponibil.</string>
+    <string name="ocr_delete_confirm_msg">Dorești să ștergi modelul Best importat pentru %1$s? Modelul Fast integrat va
+        rămâne disponibil.
+    </string>
     <string name="ocr_delete_success">Model șters</string>
     <string name="ocr_delete_failed">Ștergerea a eșuat</string>
 
     <!-- OCR models hint -->
-    <string name="ocr_models_hint">Pentru recunoaștere mai rapidă sunt incluse modele compacte. Pentru o acuratețe mai mare, poți instala modele mai mari „Best”. Nu este necesară conexiunea la internet.</string>
+    <string name="ocr_models_hint">Pentru recunoaștere mai rapidă sunt incluse modele compacte. Pentru o acuratețe mai
+        mare, poți instala modele mai mari „Best”. Nu este necesară conexiunea la internet.
+    </string>
 
     <!-- Moduri de recunoaștere OCR – explicație -->
     <string name="ocr_explain_prep_modes">Explică modurile de recunoaștere</string>
     <string name="ocr_prep_modes_title">Moduri de recunoaștere: explicație simplă</string>
-    <string name="ocr_prep_modes_message">Există trei moduri de a trimite imaginile către motorul OCR:\n\n• Original (fără preprocesare) — cel mai rapid. Fotografia este trimisă așa cum este. Ideal pentru scanări deja curate și cu contrast ridicat. Poate omite textul slab sau cu zgomot.\n\n• OpenCV Rapid — curățare rapidă: conversie în tonuri de gri, reducere ușoară a zgomotului, conversie automată în alb-negru și, dacă este necesar, o ușoară mărire. O bună opțiune implicită pentru majoritatea fotografiilor. Echilibru între viteză și calitate.\n\n• OpenCV Robust — reproiectat pentru acuratețe maximă pe pagini dificile. Corectează înclinarea, normalizează umbrele și iluminarea, aplică reducere de zgomot cu păstrarea marginilor și mărire inteligentă. Este important ca Tesseract să primească o imagine în tonuri de gri de înaltă calitate (nu alb-negru dur), pentru a păstra detalii fine precum buclele literei „o” și cifrele mici. Oferă cea mai bună acuratețe pe pagini complexe, dar este mai lent și folosește mai multă memorie.\n\nPost-procesare OCR: Corectează erori frecvente de recunoaștere, cum ar fi confuziile (0↔O, 1↔l↔I, rn↔m), și verifică cuvintele incerte folosind un dicționar. Activată implicit; dezactivați pentru coduri tehnice sau numere de serie.</string>
+    <string name="ocr_prep_modes_message">Există trei moduri de a trimite imaginile către motorul OCR:\n\n• Original
+        (fără preprocesare) — cel mai rapid. Fotografia este trimisă așa cum este. Ideal pentru scanări deja curate și
+        cu contrast ridicat. Poate omite textul slab sau cu zgomot.\n\n• OpenCV Rapid — curățare rapidă: conversie în
+        tonuri de gri, reducere ușoară a zgomotului, conversie automată în alb-negru și, dacă este necesar, o ușoară
+        mărire. O bună opțiune implicită pentru majoritatea fotografiilor. Echilibru între viteză și calitate.\n\n•
+        OpenCV Robust — reproiectat pentru acuratețe maximă pe pagini dificile. Corectează înclinarea, normalizează
+        umbrele și iluminarea, aplică reducere de zgomot cu păstrarea marginilor și mărire inteligentă. Este important
+        ca Tesseract să primească o imagine în tonuri de gri de înaltă calitate (nu alb-negru dur), pentru a păstra
+        detalii fine precum buclele literei „o” și cifrele mici. Oferă cea mai bună acuratețe pe pagini complexe, dar
+        este mai lent și folosește mai multă memorie.\n\nPost-procesare OCR: Corectează erori frecvente de recunoaștere,
+        cum ar fi confuziile (0↔O, 1↔l↔I, rn↔m), și verifică cuvintele incerte folosind un dicționar. Activată implicit;
+        dezactivați pentru coduri tehnice sau numere de serie.
+    </string>
 
     <!-- Selectarea modului de recunoaștere OCR -->
     <string name="ocr_choose_prep_mode_menu">Mod de recunoaștere…</string>
@@ -282,7 +319,9 @@
     <string name="in_collections_count">În %1$d colecții</string>
 
     <!-- Delete confirmation (ScanDetails) -->
-    <string name="delete_warning_irreversible">Fișierul va fi șters de pe dispozitiv. Această acțiune nu poate fi anulată.</string>
+    <string name="delete_warning_irreversible">Fișierul va fi șters de pe dispozitiv. Această acțiune nu poate fi
+        anulată.
+    </string>
 
     <!-- ExportFragment toasts -->
     <string name="no_document_to_export">Niciun document de exportat</string>
@@ -299,7 +338,9 @@
     <string name="error_during_zip_export_with_reason">Eroare în timpul exportului ZIP: %1$s</string>
     <string name="ocr_text_exported_as_txt">Textul OCR a fost exportat ca TXT</string>
     <string name="error_exporting_ocr_text_with_reason">Eroare la exportul textului OCR: %1$s</string>
-    <string name="no_document_to_share_export_first">Niciun document disponibil pentru partajare. Exportați mai întâi un document.</string>
+    <string name="no_document_to_share_export_first">Niciun document disponibil pentru partajare. Exportați mai întâi un
+        document.
+    </string>
     <string name="error_sharing_document_with_reason">Eroare la partajarea documentului: %1$s</string>
     <string name="feature_scan_library_disabled">Funcția bibliotecii de scanări este dezactivată</string>
     <string name="navigation_failed">Navigarea a eșuat</string>
@@ -334,15 +375,22 @@
     <!-- Accessibility Mode -->
     <string name="a11y_doc_ready">Document detectat — gata pentru captură.</string>
     <string name="a11y_no_document_detected">Nu a fost detectat niciun document.</string>
-    <string name="a11y_orientation_portrait_tip">Pare a fi modul portret. Ținerea telefonului în poziție verticală este de obicei cea mai potrivită pentru paginile înalte.</string>
-    <string name="a11y_orientation_landscape_tip">Pare a fi modul peisaj. Încercați să țineți telefonul în poziție orizontală pentru paginile late.</string>
+    <string name="a11y_orientation_portrait_tip">Pare a fi modul portret. Ținerea telefonului în poziție verticală este
+        de obicei cea mai potrivită pentru paginile înalte.
+    </string>
+    <string name="a11y_orientation_landscape_tip">Pare a fi modul peisaj. Încercați să țineți telefonul în poziție
+        orizontală pentru paginile late.
+    </string>
     <string name="a11y_crop_summary_detected">Analiza imaginii capturate: document detectat.</string>
     <string name="a11y_crop_summary_no_doc">Analiza imaginii capturate: nu a fost detectat niciun document.</string>
     <string name="accessibility_mode_label">Mod de accesibilitate</string>
     <string name="a11y_camera_ready">Camera este gata. Atingeți de două ori „Scanare” pentru a captura.</string>
-    <string name="a11y_low_light_toggle_flash">Luminozitate scăzută detectată. Atingeți de două ori „Bliț” pentru a activa.</string>
+    <string name="a11y_low_light_toggle_flash">Luminozitate scăzută detectată. Atingeți de două ori „Bliț” pentru a
+        activa.
+    </string>
     <string name="a11y_capture_failed">Captura a eșuat.</string>
-    <string name="a11y_volume_shutter_hint">Sfat: În modul de accesibilitate puteți captura și cu butoanele de volum.</string>
+    <string name="a11y_volume_shutter_hint">Sfat: În modul de accesibilitate puteți captura și cu butoanele de volum.
+    </string>
     <string name="a11y_capture_success">Imagine capturată.</string>
     <string name="a11y_verbose_logs_label">Jurnale detaliate de accesibilitate</string>
     <string name="a11y_option_auto_capture">Captură automată la detectare stabilă (Mod de accesibilitate)</string>

@@ -1,7 +1,10 @@
 <resources>
     <string name="app_name">MakeACopy</string>
 
-    <string name="tip_text_mode_editing">Tryb tekstowy: Podziały wierszy i znaki interpunkcyjne są obecnie normalizowane do spacji. Jeśli wprowadzono mniej słów, niż rozpoznano, pozostałe słowa OCR pozostaną bez zmian. Zmiany zostaną zastosowane po krótkiej przerwie.</string>
+    <string name="tip_text_mode_editing">Tryb tekstowy: Podziały wierszy i znaki interpunkcyjne są obecnie normalizowane
+        do spacji. Jeśli wprowadzono mniej słów, niż rozpoznano, pozostałe słowa OCR pozostaną bez zmian. Zmiany zostaną
+        zastosowane po krótkiej przerwie.
+    </string>
 
     <!-- Nowe pozycje menu skanera dokumentów -->
     <string name="title_camera">Aparat</string>
@@ -21,8 +24,12 @@
     <!-- Komunikaty -->
     <string name="msg_camera_permission_required">Uprawnienie do aparatu jest wymagane, aby skanować dokumenty</string>
     <string name="confirm">Potwierdź</string>
-    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">Sprawdź skan. Naciśnij Dalej, aby kontynuować, lub Wstecz, aby spróbować ponownie.</string>
-    <string name="camera_ready_tap_the_button_to_scan_a_document">Aparat gotowy. Naciśnij przycisk, aby zeskanować dokument.</string>
+    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">Sprawdź skan. Naciśnij Dalej, aby
+        kontynuować, lub Wstecz, aby spróbować ponownie.
+    </string>
+    <string name="camera_ready_tap_the_button_to_scan_a_document">Aparat gotowy. Naciśnij przycisk, aby zeskanować
+        dokument.
+    </string>
     <string name="captured_image">Zarejestrowany obraz</string>
     <string name="retake">Ponów zdjęcie</string>
     <string name="image_to_crop">Obraz do przycięcia</string>
@@ -34,20 +41,30 @@
     <string name="ocr_results_will_appear_here">Wyniki OCR pojawią się tutaj</string>
     <string name="ocr_no_text_detected">Nie wykryto tekstu</string>
     <string name="no_image_loaded_capture_an_image_first">Nie załadowano obrazu. Najpierw wykonaj zdjęcie.</string>
-    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Dostosuj narożniki trapezu, aby wybrać obszar przycięcia, a następnie naciśnij przycisk Przytnij.</string>
-    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">Sprawdź przycięty obraz. Naciśnij Dalej, aby kontynuować, lub Wstecz, aby spróbować ponownie.</string>
+    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Dostosuj narożniki
+        trapezu, aby wybrać obszar przycięcia, a następnie naciśnij przycisk Przytnij.
+    </string>
+    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">Sprawdź przycięty obraz.
+        Naciśnij Dalej, aby kontynuować, lub Wstecz, aby spróbować ponownie.
+    </string>
     <string name="no_document_ready_process_ocr_first">Brak gotowego dokumentu. Najpierw wykonaj OCR.</string>
     <string name="document_ready_for_export">Dokument gotowy do eksportu</string>
     <string name="processing_image">Przetwarzanie obrazu…</string>
     <string name="no_image_processed_crop_an_image_first">Nie przetworzono obrazu. Najpierw przytnij obraz.</string>
-    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">Przetwarzanie OCR zakończone. Naciśnij przycisk, aby przejść do eksportu.</string>
+    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">Przetwarzanie OCR zakończone. Naciśnij
+        przycisk, aby przejść do eksportu.
+    </string>
 
     <string name="ocr_found_rotation">Wykryta rotacja: %1$d°</string>
     <string name="ocr_score">Wynik OCR: %1$d%%</string>
     <string name="ocr_found_rotation_with_score">Wykryta rotacja: %1$d° — wynik OCR: %2$d%%</string>
 
     <!-- Dodatkowe wyjaśnienie dodane w oknie dialogowym „Wyjaśnij tryby rozpoznawania” -->
-    <string name="ocr_prep_modes_autorotate_note">Automatyczna rotacja OCR: Gdy jest włączona, OCR sprawdza stronę również w krokach co 90° (0/90/180/270) i wybiera najlepszy wynik. Wykryta rotacja może zostać automatycznie zastosowana podczas eksportu, jeśli nie obróciłeś strony ręcznie. Opcję tę można włączyć lub wyłączyć w „Wybierz tryb rozpoznawania”.</string>
+    <string name="ocr_prep_modes_autorotate_note">Automatyczna rotacja OCR: Gdy jest włączona, OCR sprawdza stronę
+        również w krokach co 90° (0/90/180/270) i wybiera najlepszy wynik. Wykryta rotacja może zostać automatycznie
+        zastosowana podczas eksportu, jeśli nie obróciłeś strony ręcznie. Opcję tę można włączyć lub wyłączyć w „Wybierz
+        tryb rozpoznawania”.
+    </string>
 
     <string name="initializing_camera">Inicjalizacja aparatu…</string>
     <string name="resetting_camera">Resetowanie aparatu…</string>
@@ -168,7 +185,7 @@
     <string name="btn_new">Nowe skanowanie</string>
     <string name="btn_review">Przegląd</string>
     <string name="edit_word_title">Edytuj słowo</string>
-    <string name="review_summary_format">Słowa: %1$d  •  Niska pewność: %2$d</string>
+    <string name="review_summary_format">Słowa: %1$d • Niska pewność: %2$d</string>
     <string name="cm_edit">Edytuj…</string>
     <string name="cm_merge_next">Połącz z następnym</string>
     <string name="cm_split">Podziel</string>
@@ -200,17 +217,34 @@
     <string name="ocr_delete_best_model">Usuń model Best</string>
     <string name="ocr_nothing_to_delete">Brak modelu Best do usunięcia dla bieżącego języka</string>
     <string name="ocr_delete_confirm_title">Usunąć model Best?</string>
-    <string name="ocr_delete_confirm_msg">Usunąć zaimportowany model Best dla %1$s? Wbudowany model Fast pozostanie dostępny.</string>
+    <string name="ocr_delete_confirm_msg">Usunąć zaimportowany model Best dla %1$s? Wbudowany model Fast pozostanie
+        dostępny.
+    </string>
     <string name="ocr_delete_success">Model usunięty</string>
     <string name="ocr_delete_failed">Usuwanie nie powiodło się</string>
 
     <!-- Wskazówka OCR -->
-    <string name="ocr_models_hint">Dla szybszego rozpoznawania dołączono kompaktowe modele. Dla większej dokładności możesz zainstalować większe modele „Best”. Połączenie z internetem nie jest wymagane.</string>
+    <string name="ocr_models_hint">Dla szybszego rozpoznawania dołączono kompaktowe modele. Dla większej dokładności
+        możesz zainstalować większe modele „Best”. Połączenie z internetem nie jest wymagane.
+    </string>
 
     <!-- Tryby rozpoznawania OCR – wyjaśnienie -->
     <string name="ocr_explain_prep_modes">Wyjaśnij tryby rozpoznawania</string>
     <string name="ocr_prep_modes_title">Tryby rozpoznawania: proste wyjaśnienie</string>
-    <string name="ocr_prep_modes_message">Istnieją trzy sposoby przekazywania obrazów do silnika OCR:\n\n• Oryginał (bez wstępnego przetwarzania) — najszybszy. Zdjęcie jest przekazywane w niezmienionej formie. Najlepsze dla już czystych skanów o wysokim kontraście. Może pominąć słaby lub zaszumiony tekst.\n\n• OpenCV Szybki — szybkie czyszczenie: konwersja do skali szarości, lekkie odszumianie, automatyczna konwersja do czerni i bieli oraz w razie potrzeby niewielkie skalowanie w górę. Dobry wybór domyślny dla większości zdjęć. Zrównoważony kompromis między szybkością a jakością.\n\n• OpenCV Solidny — przeprojektowany z myślą o maksymalnej dokładności na trudnych stronach. Koryguje przekrzywienie, normalizuje cienie i oświetlenie, stosuje odszumianie z zachowaniem krawędzi oraz inteligentne skalowanie. Ważne jest to, że Tesseract otrzymuje obraz w skali szarości wysokiej jakości (a nie twardą czerń i biel), co pozwala zachować drobne detale, takie jak pętle w literze „o” czy małe cyfry. Zapewnia najlepszą dokładność na wymagających stronach, ale jest wolniejszy i zużywa więcej pamięci.\n\nPost-processing OCR: Koryguje typowe błędy rozpoznawania, takie jak pomyłki (0↔O, 1↔l↔I, rn↔m), oraz sprawdza niepewne słowa przy użyciu słownika. Domyślnie włączony; wyłącz go w przypadku kodów technicznych lub numerów seryjnych.</string>
+    <string name="ocr_prep_modes_message">Istnieją trzy sposoby przekazywania obrazów do silnika OCR:\n\n• Oryginał (bez
+        wstępnego przetwarzania) — najszybszy. Zdjęcie jest przekazywane w niezmienionej formie. Najlepsze dla już
+        czystych skanów o wysokim kontraście. Może pominąć słaby lub zaszumiony tekst.\n\n• OpenCV Szybki — szybkie
+        czyszczenie: konwersja do skali szarości, lekkie odszumianie, automatyczna konwersja do czerni i bieli oraz w
+        razie potrzeby niewielkie skalowanie w górę. Dobry wybór domyślny dla większości zdjęć. Zrównoważony kompromis
+        między szybkością a jakością.\n\n• OpenCV Solidny — przeprojektowany z myślą o maksymalnej dokładności na
+        trudnych stronach. Koryguje przekrzywienie, normalizuje cienie i oświetlenie, stosuje odszumianie z zachowaniem
+        krawędzi oraz inteligentne skalowanie. Ważne jest to, że Tesseract otrzymuje obraz w skali szarości wysokiej
+        jakości (a nie twardą czerń i biel), co pozwala zachować drobne detale, takie jak pętle w literze „o” czy małe
+        cyfry. Zapewnia najlepszą dokładność na wymagających stronach, ale jest wolniejszy i zużywa więcej
+        pamięci.\n\nPost-processing OCR: Koryguje typowe błędy rozpoznawania, takie jak pomyłki (0↔O, 1↔l↔I, rn↔m), oraz
+        sprawdza niepewne słowa przy użyciu słownika. Domyślnie włączony; wyłącz go w przypadku kodów technicznych lub
+        numerów seryjnych.
+    </string>
 
     <!-- Wybór trybu rozpoznawania OCR -->
     <string name="ocr_choose_prep_mode_menu">Tryb rozpoznawania…</string>
@@ -280,7 +314,8 @@
     <string name="in_collections_count">W %1$d kolekcjach</string>
 
     <!-- Delete confirmation (ScanDetails) -->
-    <string name="delete_warning_irreversible">Plik zostanie usunięty z urządzenia. Tej operacji nie można cofnąć.</string>
+    <string name="delete_warning_irreversible">Plik zostanie usunięty z urządzenia. Tej operacji nie można cofnąć.
+    </string>
 
     <!-- ExportFragment toasts -->
     <string name="no_document_to_export">Brak dokumentu do eksportu</string>
@@ -297,7 +332,8 @@
     <string name="error_during_zip_export_with_reason">Błąd podczas eksportu ZIP: %1$s</string>
     <string name="ocr_text_exported_as_txt">Tekst OCR wyeksportowany jako TXT</string>
     <string name="error_exporting_ocr_text_with_reason">Błąd podczas eksportu tekstu OCR: %1$s</string>
-    <string name="no_document_to_share_export_first">Brak dokumentu do udostępnienia. Najpierw wyeksportuj dokument.</string>
+    <string name="no_document_to_share_export_first">Brak dokumentu do udostępnienia. Najpierw wyeksportuj dokument.
+    </string>
     <string name="error_sharing_document_with_reason">Błąd podczas udostępniania dokumentu: %1$s</string>
     <string name="feature_scan_library_disabled">Funkcja biblioteki skanów jest wyłączona</string>
     <string name="navigation_failed">Nawigacja nie powiodła się</string>
@@ -332,19 +368,28 @@
     <!-- Accessibility Mode -->
     <string name="a11y_doc_ready">Wykryto dokument — gotowe do wykonania zdjęcia.</string>
     <string name="a11y_no_document_detected">Nie wykryto dokumentu.</string>
-    <string name="a11y_orientation_portrait_tip">Wygląda na orientację pionową. Trzymanie telefonu pionowo zazwyczaj najlepiej sprawdza się przy wysokich stronach.</string>
-    <string name="a11y_orientation_landscape_tip">Wygląda na orientację poziomą. Spróbuj trzymać telefon poziomo dla szerokich stron.</string>
+    <string name="a11y_orientation_portrait_tip">Wygląda na orientację pionową. Trzymanie telefonu pionowo zazwyczaj
+        najlepiej sprawdza się przy wysokich stronach.
+    </string>
+    <string name="a11y_orientation_landscape_tip">Wygląda na orientację poziomą. Spróbuj trzymać telefon poziomo dla
+        szerokich stron.
+    </string>
     <string name="a11y_crop_summary_detected">Analiza przechwyconego obrazu: wykryto dokument.</string>
     <string name="a11y_crop_summary_no_doc">Analiza przechwyconego obrazu: nie wykryto dokumentu.</string>
     <string name="accessibility_mode_label">Tryb dostępności</string>
     <string name="a11y_camera_ready">Aparat gotowy. Stuknij dwukrotnie „Skanuj”, aby wykonać zdjęcie.</string>
-    <string name="a11y_low_light_toggle_flash">Wykryto słabe oświetlenie. Stuknij dwukrotnie „Lampa”, aby włączyć.</string>
+    <string name="a11y_low_light_toggle_flash">Wykryto słabe oświetlenie. Stuknij dwukrotnie „Lampa”, aby włączyć.
+    </string>
     <string name="a11y_capture_failed">Nie udało się wykonać zdjęcia.</string>
-    <string name="a11y_volume_shutter_hint">Wskazówka: w trybie dostępności możesz robić zdjęcia przyciskami głośności.</string>
+    <string name="a11y_volume_shutter_hint">Wskazówka: w trybie dostępności możesz robić zdjęcia przyciskami
+        głośności.
+    </string>
     <string name="a11y_capture_success">Zdjęcie wykonane.</string>
     <string name="a11y_verbose_logs_label">Szczegółowe logi dostępności</string>
     <string name="a11y_option_auto_capture">Automatyczne zdjęcie przy stabilnym wykryciu (Tryb dostępności)</string>
-    <string name="a11y_option_auto_torch">Automatyczne włączanie lampy błyskowej przy słabym świetle (Tryb dostępności)</string>
+    <string name="a11y_option_auto_torch">Automatyczne włączanie lampy błyskowej przy słabym świetle (Tryb
+        dostępności)
+    </string>
     <string name="a11y_capturing_now">Trwa wykonywanie zdjęcia…</string>
     <string name="a11y_score_now">Jakość wykrycia: %1$d%%.</string>
     <string name="a11y_scan_with_score">Skanuj. Jakość wykrycia: %1$d%%.</string>
@@ -363,7 +408,8 @@
     <string name="opt_layout_analysis">Analiza układu (kolumny, tabele)</string>
     <string name="opt_layout_analysis_hint">Poprawia OCR dla dokumentów wielokolumnowych i tabel</string>
     <!-- Options: Experimental directional mapping fallback -->
-    <string name="opt_force_direction_mapping">Wymuś mapowanie podpowiedzi dla trybu poziomego (eksperymentalne)</string>
+    <string name="opt_force_direction_mapping">Wymuś mapowanie podpowiedzi dla trybu poziomego (eksperymentalne)
+    </string>
 
     <!-- Developer / Debug options -->
     <string name="opt_show_raw_source_files">Pokaż surowe pliki źródłowe w Bibliotece (deweloper)</string>

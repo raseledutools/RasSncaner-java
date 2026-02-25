@@ -1,7 +1,10 @@
 <resources>
     <string name="app_name">MakeACopy</string>
 
-    <string name="tip_text_mode_editing">Szövegmód: A sortörések és az írásjelek jelenleg szóközökre vannak normalizálva. Ha kevesebb szót ír be, mint amennyit az OCR felismert, a fennmaradó szavak változatlanok maradnak. A módosítások egy rövid szünet után lépnek életbe.</string>
+    <string name="tip_text_mode_editing">Szövegmód: A sortörések és az írásjelek jelenleg szóközökre vannak
+        normalizálva. Ha kevesebb szót ír be, mint amennyit az OCR felismert, a fennmaradó szavak változatlanok
+        maradnak. A módosítások egy rövid szünet után lépnek életbe.
+    </string>
 
     <!-- New menu items for document scanner -->
     <string name="title_camera">Kamera</string>
@@ -21,8 +24,12 @@
     <!-- Messages -->
     <string name="msg_camera_permission_required">A dokumentumok szkenneléséhez kameraengedély szükséges</string>
     <string name="confirm">Megerősítés</string>
-    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">Ellenőrizze a szkennelt képet. Nyomja meg a Tovább gombot a folytatáshoz vagy a Vissza gombot az újrapróbálkozáshoz.</string>
-    <string name="camera_ready_tap_the_button_to_scan_a_document">A kamera készen áll. Nyomja meg a gombot a dokumentum szkenneléséhez.</string>
+    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">Ellenőrizze a szkennelt képet. Nyomja
+        meg a Tovább gombot a folytatáshoz vagy a Vissza gombot az újrapróbálkozáshoz.
+    </string>
+    <string name="camera_ready_tap_the_button_to_scan_a_document">A kamera készen áll. Nyomja meg a gombot a dokumentum
+        szkenneléséhez.
+    </string>
     <string name="captured_image">Rögzített kép</string>
     <string name="retake">Újra</string>
     <string name="image_to_crop">Kép kivágáshoz</string>
@@ -34,20 +41,30 @@
     <string name="ocr_results_will_appear_here">Az OCR eredményei itt jelennek meg</string>
     <string name="ocr_no_text_detected">Nem észlelhető szöveg</string>
     <string name="no_image_loaded_capture_an_image_first">Nincs kép betöltve. Először készítsen egy képet.</string>
-    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Állítsa be a trapéz sarkait a kivágandó terület kijelöléséhez, majd nyomja meg a Kivágás gombot.</string>
-    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">Ellenőrizze a kivágott képet. Nyomja meg a Tovább gombot a folytatáshoz vagy a Vissza gombot az újrakivágáshoz.</string>
+    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Állítsa be a trapéz
+        sarkait a kivágandó terület kijelöléséhez, majd nyomja meg a Kivágás gombot.
+    </string>
+    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">Ellenőrizze a kivágott képet.
+        Nyomja meg a Tovább gombot a folytatáshoz vagy a Vissza gombot az újrakivágáshoz.
+    </string>
     <string name="no_document_ready_process_ocr_first">Nincs dokumentum készen. Először futtassa az OCR-t.</string>
     <string name="document_ready_for_export">A dokumentum exportálásra kész</string>
     <string name="processing_image">Kép feldolgozása…</string>
     <string name="no_image_processed_crop_an_image_first">Nincs feldolgozott kép. Először vágjon ki egy képet.</string>
-    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">Az OCR feldolgozás befejeződött. Nyomja meg a gombot az exportáláshoz.</string>
+    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">Az OCR feldolgozás befejeződött. Nyomja
+        meg a gombot az exportáláshoz.
+    </string>
 
     <string name="ocr_found_rotation">Talált elforgatás: %1$d°</string>
     <string name="ocr_score">OCR-pontszám: %1$d%%</string>
     <string name="ocr_found_rotation_with_score">Talált elforgatás: %1$d° — OCR-pontszám: %2$d%%</string>
 
     <!-- További magyarázat a „Felismerési módok magyarázata” párbeszédablakban -->
-    <string name="ocr_prep_modes_autorotate_note">OCR automatikus elforgatás: Ha engedélyezve van, az OCR a lapot 90°-os lépésekben is kipróbálja (0/90/180/270), és a legjobb eredményt választja ki. A talált elforgatás exportáláskor automatikusan alkalmazható, ha nem forgattad el manuálisan az oldalt. Ez a beállítás a „Felismerési mód kiválasztása” menüpontban kapcsolható.</string>
+    <string name="ocr_prep_modes_autorotate_note">OCR automatikus elforgatás: Ha engedélyezve van, az OCR a lapot 90°-os
+        lépésekben is kipróbálja (0/90/180/270), és a legjobb eredményt választja ki. A talált elforgatás exportáláskor
+        automatikusan alkalmazható, ha nem forgattad el manuálisan az oldalt. Ez a beállítás a „Felismerési mód
+        kiválasztása” menüpontban kapcsolható.
+    </string>
 
     <string name="initializing_camera">Kamera inicializálása…</string>
     <string name="resetting_camera">Kamera visszaállítása…</string>
@@ -169,7 +186,7 @@
 
     <string name="btn_review">Ellenőrzés</string>
     <string name="edit_word_title">Szó szerkesztése</string>
-    <string name="review_summary_format">Szavak: %1$d  •  Alacsony bizalom: %2$d</string>
+    <string name="review_summary_format">Szavak: %1$d • Alacsony bizalom: %2$d</string>
     <string name="cm_edit">Szerkesztés…</string>
     <string name="cm_merge_next">Egyesítés a következővel</string>
     <string name="cm_split">Felosztás</string>
@@ -201,17 +218,33 @@
     <string name="ocr_delete_best_model">Best modell törlése</string>
     <string name="ocr_nothing_to_delete">Nincs törölhető Best modell az aktuális nyelvhez</string>
     <string name="ocr_delete_confirm_title">Törlöd a Best modellt?</string>
-    <string name="ocr_delete_confirm_msg">Törlöd a(z) %1$s importált Best modellt? A beépített Fast modell elérhető marad.</string>
+    <string name="ocr_delete_confirm_msg">Törlöd a(z) %1$s importált Best modellt? A beépített Fast modell elérhető
+        marad.
+    </string>
     <string name="ocr_delete_success">Modell törölve</string>
     <string name="ocr_delete_failed">A törlés nem sikerült</string>
 
     <!-- OCR models hint -->
-    <string name="ocr_models_hint">A gyorsabb felismeréshez kompakt modellek tartoznak a csomaghoz. A nagyobb pontossághoz telepíthet nagyobb „Best” modelleket. Internetkapcsolat nem szükséges.</string>
+    <string name="ocr_models_hint">A gyorsabb felismeréshez kompakt modellek tartoznak a csomaghoz. A nagyobb
+        pontossághoz telepíthet nagyobb „Best” modelleket. Internetkapcsolat nem szükséges.
+    </string>
 
     <!-- OCR felismerési módok – magyarázat -->
     <string name="ocr_explain_prep_modes">Felismerési módok magyarázata</string>
     <string name="ocr_prep_modes_title">Felismerési módok: egyszerű magyarázat</string>
-    <string name="ocr_prep_modes_message">Három módja van annak, hogyan lehet a képeket az OCR-motorba továbbítani:\n\n• Eredeti (előfeldolgozás nélkül) — a leggyorsabb. A fotó változtatás nélkül kerül feldolgozásra. Tiszta, nagy kontrasztú beolvasásokhoz ideális. Előfordulhat, hogy a halvány vagy zajos szöveget nem ismeri fel.\n\n• OpenCV Gyors — gyors tisztítás: szürkeárnyalatos átalakítás, enyhe zajcsökkentés, automatikus fekete-fehér átalakítás, és szükség esetén enyhe felnagyítás. Jó alapértelmezett választás a legtöbb fényképhez. Kiegyensúlyozott sebesség és minőség.\n\n• OpenCV Robusztus — újratervezve a maximális pontosság érdekében nehéz oldalaknál. Kijavítja a ferdeséget, normalizálja az árnyékokat és a megvilágítást, élmegőrző zajcsökkentést és intelligens felnagyítást alkalmaz. Fontos, hogy a Tesseract kiváló minőségű szürkeárnyalatos képet kap (nem kemény fekete-fehéret), így megmaradnak az apró részletek, például az „o” betű hurkai és a kis számjegyek. A legjobb pontosságot nyújtja nehéz oldalaknál, de lassabb és több memóriát használ.\n\nOCR utófeldolgozás: Javítja a gyakori felismerési hibákat, például az összetévesztéseket (0↔O, 1↔l↔I, rn↔m), és a bizonytalan szavakat szótár alapján ellenőrzi. Alapértelmezés szerint engedélyezve; technikai kódok vagy sorozatszámok esetén kapcsolja ki.</string>
+    <string name="ocr_prep_modes_message">Három módja van annak, hogyan lehet a képeket az OCR-motorba továbbítani:\n\n•
+        Eredeti (előfeldolgozás nélkül) — a leggyorsabb. A fotó változtatás nélkül kerül feldolgozásra. Tiszta, nagy
+        kontrasztú beolvasásokhoz ideális. Előfordulhat, hogy a halvány vagy zajos szöveget nem ismeri fel.\n\n• OpenCV
+        Gyors — gyors tisztítás: szürkeárnyalatos átalakítás, enyhe zajcsökkentés, automatikus fekete-fehér átalakítás,
+        és szükség esetén enyhe felnagyítás. Jó alapértelmezett választás a legtöbb fényképhez. Kiegyensúlyozott
+        sebesség és minőség.\n\n• OpenCV Robusztus — újratervezve a maximális pontosság érdekében nehéz oldalaknál.
+        Kijavítja a ferdeséget, normalizálja az árnyékokat és a megvilágítást, élmegőrző zajcsökkentést és intelligens
+        felnagyítást alkalmaz. Fontos, hogy a Tesseract kiváló minőségű szürkeárnyalatos képet kap (nem kemény
+        fekete-fehéret), így megmaradnak az apró részletek, például az „o” betű hurkai és a kis számjegyek. A legjobb
+        pontosságot nyújtja nehéz oldalaknál, de lassabb és több memóriát használ.\n\nOCR utófeldolgozás: Javítja a
+        gyakori felismerési hibákat, például az összetévesztéseket (0↔O, 1↔l↔I, rn↔m), és a bizonytalan szavakat szótár
+        alapján ellenőrzi. Alapértelmezés szerint engedélyezve; technikai kódok vagy sorozatszámok esetén kapcsolja ki.
+    </string>
 
     <!-- OCR felismerési módok kiválasztása -->
     <string name="ocr_choose_prep_mode_menu">Felismerési mód…</string>
@@ -281,7 +314,8 @@
     <string name="in_collections_count">%1$d gyűjteményben</string>
 
     <!-- Delete confirmation (ScanDetails) -->
-    <string name="delete_warning_irreversible">A fájl törölve lesz az eszközről. Ez a művelet nem vonható vissza.</string>
+    <string name="delete_warning_irreversible">A fájl törölve lesz az eszközről. Ez a művelet nem vonható vissza.
+    </string>
 
     <!-- ExportFragment toasts -->
     <string name="no_document_to_export">Nincs exportálható dokumentum</string>
@@ -298,7 +332,8 @@
     <string name="error_during_zip_export_with_reason">Hiba a ZIP exportálása során: %1$s</string>
     <string name="ocr_text_exported_as_txt">OCR szöveg TXT formátumban exportálva</string>
     <string name="error_exporting_ocr_text_with_reason">Hiba az OCR szöveg exportálása során: %1$s</string>
-    <string name="no_document_to_share_export_first">Nincs megosztható dokumentum. Először exportálj egy dokumentumot.</string>
+    <string name="no_document_to_share_export_first">Nincs megosztható dokumentum. Először exportálj egy dokumentumot.
+    </string>
     <string name="error_sharing_document_with_reason">Hiba a dokumentum megosztása során: %1$s</string>
     <string name="feature_scan_library_disabled">A szkennelési könyvtár funkció le van tiltva</string>
     <string name="navigation_failed">A navigáció nem sikerült</string>
@@ -334,13 +369,18 @@
     <!-- Accessibility Mode -->
     <string name="a11y_doc_ready">Dokumentum érzékelve — készen áll a rögzítésre.</string>
     <string name="a11y_no_document_detected">Nem észlelhető dokumentum.</string>
-    <string name="a11y_orientation_portrait_tip">Ez portré tájolásúnak tűnik. A telefon álló helyzetben tartása általában a magas oldalakhoz a legjobb.</string>
-    <string name="a11y_orientation_landscape_tip">Ez fekvő tájolásúnak tűnik. Próbáld meg a telefont fekvő helyzetben tartani a széles oldalakhoz.</string>
+    <string name="a11y_orientation_portrait_tip">Ez portré tájolásúnak tűnik. A telefon álló helyzetben tartása
+        általában a magas oldalakhoz a legjobb.
+    </string>
+    <string name="a11y_orientation_landscape_tip">Ez fekvő tájolásúnak tűnik. Próbáld meg a telefont fekvő helyzetben
+        tartani a széles oldalakhoz.
+    </string>
     <string name="a11y_crop_summary_detected">A rögzített kép elemzése: dokumentum felismerve.</string>
     <string name="a11y_crop_summary_no_doc">A rögzített kép elemzése: nem észlelhető dokumentum.</string>
     <string name="accessibility_mode_label">Kisegítő mód</string>
     <string name="a11y_camera_ready">A kamera kész. A rögzítéshez koppintson duplán a Szkennelésre.</string>
-    <string name="a11y_low_light_toggle_flash">Gyenge fény észlelve. A bekapcsoláshoz koppintson duplán a Vaku gombra.</string>
+    <string name="a11y_low_light_toggle_flash">Gyenge fény észlelve. A bekapcsoláshoz koppintson duplán a Vaku gombra.
+    </string>
     <string name="a11y_capture_failed">A rögzítés sikertelen.</string>
     <string name="a11y_volume_shutter_hint">Tipp: Kisegítő módban a hangerőgombokkal is készíthet felvételt.</string>
     <string name="a11y_capture_success">Kép rögzítve.</string>

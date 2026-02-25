@@ -1,7 +1,10 @@
 <resources>
     <string name="app_name">MakeACopy</string>
 
-    <string name="tip_text_mode_editing">โหมดข้อความ: การขึ้นบรรทัดใหม่และเครื่องหมายวรรคตอนจะถูกปรับให้เป็นช่องว่างในขณะนี้ หากป้อนคำจำนวนน้อยกว่าที่ระบบรู้จำได้ คำ OCR ที่เหลือจะไม่เปลี่ยนแปลง การเปลี่ยนแปลงจะถูกนำไปใช้หลังจากหยุดชั่วคราวสั้น ๆ</string>
+    <string name="tip_text_mode_editing">โหมดข้อความ:
+        การขึ้นบรรทัดใหม่และเครื่องหมายวรรคตอนจะถูกปรับให้เป็นช่องว่างในขณะนี้ หากป้อนคำจำนวนน้อยกว่าที่ระบบรู้จำได้ คำ
+        OCR ที่เหลือจะไม่เปลี่ยนแปลง การเปลี่ยนแปลงจะถูกนำไปใช้หลังจากหยุดชั่วคราวสั้น ๆ
+    </string>
 
     <!-- New menu items for document scanner -->
     <string name="title_camera">กล้อง</string>
@@ -21,7 +24,9 @@
     <!-- Messages -->
     <string name="msg_camera_permission_required">ต้องการสิทธิ์กล้องเพื่อสแกนเอกสาร</string>
     <string name="confirm">ยืนยัน</string>
-    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">ตรวจสอบการสแกนของคุณ แตะ “ถัดไป” เพื่อดำเนินการต่อ หรือ “ย้อนกลับ” เพื่อลองใหม่</string>
+    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">ตรวจสอบการสแกนของคุณ แตะ “ถัดไป”
+        เพื่อดำเนินการต่อ หรือ “ย้อนกลับ” เพื่อลองใหม่
+    </string>
     <string name="camera_ready_tap_the_button_to_scan_a_document">กล้องพร้อมแล้ว แตะปุ่มเพื่อสแกนเอกสาร</string>
     <string name="captured_image">รูปที่ถ่าย</string>
     <string name="retake">ถ่ายใหม่</string>
@@ -34,20 +39,29 @@
     <string name="ocr_results_will_appear_here">ผลลัพธ์ OCR จะแสดงที่นี่</string>
     <string name="ocr_no_text_detected">ไม่พบข้อความ</string>
     <string name="no_image_loaded_capture_an_image_first">ยังไม่มีรูปภาพ โหลดรูปภาพก่อน</string>
-    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">ปรับมุมสี่เหลี่ยมคางหมูเพื่อเลือกพื้นที่ที่ต้องการครอบตัด แล้วแตะปุ่มครอบตัด</string>
-    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">ตรวจสอบรูปที่ครอบตัด แตะ “ถัดไป” เพื่อดำเนินการต่อ หรือ “ย้อนกลับ” เพื่อลองใหม่</string>
+    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">
+        ปรับมุมสี่เหลี่ยมคางหมูเพื่อเลือกพื้นที่ที่ต้องการครอบตัด แล้วแตะปุ่มครอบตัด
+    </string>
+    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">ตรวจสอบรูปที่ครอบตัด แตะ
+        “ถัดไป” เพื่อดำเนินการต่อ หรือ “ย้อนกลับ” เพื่อลองใหม่
+    </string>
     <string name="no_document_ready_process_ocr_first">ยังไม่มีเอกสารพร้อม ประมวลผล OCR ก่อน</string>
     <string name="document_ready_for_export">เอกสารพร้อมสำหรับการส่งออก</string>
     <string name="processing_image">กำลังประมวลผลรูปภาพ…</string>
     <string name="no_image_processed_crop_an_image_first">ยังไม่มีรูปประมวลผล ครอบตัดรูปก่อน</string>
-    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">OCR เสร็จสิ้น แตะปุ่มเพื่อไปยังการส่งออก</string>
+    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">OCR เสร็จสิ้น
+        แตะปุ่มเพื่อไปยังการส่งออก
+    </string>
 
     <string name="ocr_found_rotation">ตรวจพบการหมุน: %1$d°</string>
     <string name="ocr_score">คะแนน OCR: %1$d%%</string>
     <string name="ocr_found_rotation_with_score">ตรวจพบการหมุน: %1$d° — คะแนน OCR: %2$d%%</string>
 
     <!-- คำอธิบายเพิ่มเติมที่แสดงในกล่องโต้ตอบ “อธิบายโหมดการรู้จำ” -->
-    <string name="ocr_prep_modes_autorotate_note">การหมุนอัตโนมัติของ OCR: เมื่อเปิดใช้งาน OCR จะทดสอบหน้าเอกสารในขั้นละ 90° (0/90/180/270) และเลือกผลลัพธ์ที่ดีที่สุด การหมุนที่ตรวจพบสามารถนำไปใช้โดยอัตโนมัติระหว่างการส่งออก หากคุณไม่ได้หมุนหน้าด้วยตนเอง คุณสามารถเปิดหรือปิดตัวเลือกนี้ได้ใน “เลือกโหมดการรู้จำ”</string>
+    <string name="ocr_prep_modes_autorotate_note">การหมุนอัตโนมัติของ OCR: เมื่อเปิดใช้งาน OCR จะทดสอบหน้าเอกสารในขั้นละ
+        90° (0/90/180/270) และเลือกผลลัพธ์ที่ดีที่สุด การหมุนที่ตรวจพบสามารถนำไปใช้โดยอัตโนมัติระหว่างการส่งออก
+        หากคุณไม่ได้หมุนหน้าด้วยตนเอง คุณสามารถเปิดหรือปิดตัวเลือกนี้ได้ใน “เลือกโหมดการรู้จำ”
+    </string>
 
     <string name="initializing_camera">กำลังเริ่มต้นกล้อง…</string>
     <string name="resetting_camera">กำลังกำหนดค่ากล้องใหม่…</string>
@@ -170,7 +184,7 @@
 
     <string name="btn_review">ตรวจทาน</string>
     <string name="edit_word_title">แก้ไขคำ</string>
-    <string name="review_summary_format">คำ: %1$d  •  ความมั่นใจต่ำ: %2$d</string>
+    <string name="review_summary_format">คำ: %1$d • ความมั่นใจต่ำ: %2$d</string>
     <string name="cm_edit">แก้ไข…</string>
     <string name="cm_merge_next">รวมกับคำถัดไป</string>
     <string name="cm_split">แยก</string>
@@ -203,17 +217,32 @@
     <string name="ocr_delete_best_model">ลบโมเดล Best</string>
     <string name="ocr_nothing_to_delete">ไม่มีโมเดล Best สำหรับภาษาปัจจุบันให้ลบ</string>
     <string name="ocr_delete_confirm_title">ลบโมเดล Best?</string>
-    <string name="ocr_delete_confirm_msg">ต้องการลบโมเดล Best ที่นำเข้าสำหรับ %1$s หรือไม่? โมเดล Fast ที่มากับระบบจะยังคงใช้งานได้อยู่</string>
+    <string name="ocr_delete_confirm_msg">ต้องการลบโมเดล Best ที่นำเข้าสำหรับ %1$s หรือไม่? โมเดล Fast
+        ที่มากับระบบจะยังคงใช้งานได้อยู่
+    </string>
     <string name="ocr_delete_success">ลบโมเดลแล้ว</string>
     <string name="ocr_delete_failed">การลบล้มเหลว</string>
 
     <!-- คำแนะนำเกี่ยวกับโมเดล OCR -->
-    <string name="ocr_models_hint">เพื่อการรู้จำที่เร็วขึ้น มีโมเดลแบบกะทัดรัดรวมมาให้แล้ว หากต้องการความแม่นยำสูงขึ้น คุณสามารถติดตั้งโมเดล "Best" ที่มีขนาดใหญ่กว่าได้ โดยไม่ต้องเชื่อมต่ออินเทอร์เน็ต</string>
+    <string name="ocr_models_hint">เพื่อการรู้จำที่เร็วขึ้น มีโมเดลแบบกะทัดรัดรวมมาให้แล้ว หากต้องการความแม่นยำสูงขึ้น
+        คุณสามารถติดตั้งโมเดล "Best" ที่มีขนาดใหญ่กว่าได้ โดยไม่ต้องเชื่อมต่ออินเทอร์เน็ต
+    </string>
 
     <!-- โหมดการรู้จำ OCR – คำอธิบาย -->
     <string name="ocr_explain_prep_modes">อธิบายโหมดการรู้จำ</string>
     <string name="ocr_prep_modes_title">โหมดการรู้จำ: คำอธิบายแบบง่าย</string>
-    <string name="ocr_prep_modes_message">มีสามวิธีในการส่งภาพไปยังเอนจิน OCR:\n\n• ต้นฉบับ (ไม่มีการประมวลผลล่วงหน้า) — เร็วที่สุด ภาพจะถูกส่งตามสภาพเดิม เหมาะสำหรับการสแกนที่สะอาดและมีคอนทราสต์สูง อาจพลาดข้อความที่จางหรือมีสัญญาณรบกวน\n\n• OpenCV เร็ว — การทำความสะอาดอย่างรวดเร็ว: แปลงเป็นระดับสีเทา ลดสัญญาณรบกวนเล็กน้อย แปลงเป็นขาวดำโดยอัตโนมัติ และปรับขนาดขึ้นเล็กน้อยหากจำเป็น เป็นตัวเลือกเริ่มต้นที่ดีสำหรับภาพถ่ายส่วนใหญ่ สมดุลระหว่างความเร็วและคุณภาพ\n\n• OpenCV ขั้นสูง — ออกแบบใหม่เพื่อความแม่นยำสูงสุดสำหรับหน้าที่ยากต่อการประมวลผล แก้ไขความเอียง ปรับความสม่ำเสมอของเงาและแสง ใช้การลดสัญญาณรบกวนแบบรักษาขอบ และการปรับขนาดอัจฉริยะ สิ่งสำคัญคือ Tesseract จะได้รับภาพระดับสีเทาคุณภาพสูง (ไม่ใช่ขาวดำแบบแข็ง) เพื่อรักษารายละเอียดเล็ก ๆ เช่น ห่วงของตัวอักษร “o” และตัวเลขขนาดเล็ก ให้ความแม่นยำดีที่สุดสำหรับหน้าที่ยาก แต่ช้ากว่าและใช้หน่วยความจำมากกว่า\n\nการประมวลผลหลัง OCR: แก้ไขข้อผิดพลาดในการรู้จำที่พบบ่อย เช่น ความสับสน (0↔O, 1↔l↔I, rn↔m) และตรวจสอบคำที่ไม่แน่ชัดด้วยพจนานุกรม เปิดใช้งานโดยค่าเริ่มต้น; ปิดใช้งานสำหรับรหัสทางเทคนิคหรือหมายเลขซีเรียล</string>
+    <string name="ocr_prep_modes_message">มีสามวิธีในการส่งภาพไปยังเอนจิน OCR:\n\n• ต้นฉบับ (ไม่มีการประมวลผลล่วงหน้า) —
+        เร็วที่สุด ภาพจะถูกส่งตามสภาพเดิม เหมาะสำหรับการสแกนที่สะอาดและมีคอนทราสต์สูง
+        อาจพลาดข้อความที่จางหรือมีสัญญาณรบกวน\n\n• OpenCV เร็ว — การทำความสะอาดอย่างรวดเร็ว: แปลงเป็นระดับสีเทา
+        ลดสัญญาณรบกวนเล็กน้อย แปลงเป็นขาวดำโดยอัตโนมัติ และปรับขนาดขึ้นเล็กน้อยหากจำเป็น
+        เป็นตัวเลือกเริ่มต้นที่ดีสำหรับภาพถ่ายส่วนใหญ่ สมดุลระหว่างความเร็วและคุณภาพ\n\n• OpenCV ขั้นสูง —
+        ออกแบบใหม่เพื่อความแม่นยำสูงสุดสำหรับหน้าที่ยากต่อการประมวลผล แก้ไขความเอียง ปรับความสม่ำเสมอของเงาและแสง
+        ใช้การลดสัญญาณรบกวนแบบรักษาขอบ และการปรับขนาดอัจฉริยะ สิ่งสำคัญคือ Tesseract จะได้รับภาพระดับสีเทาคุณภาพสูง
+        (ไม่ใช่ขาวดำแบบแข็ง) เพื่อรักษารายละเอียดเล็ก ๆ เช่น ห่วงของตัวอักษร “o” และตัวเลขขนาดเล็ก
+        ให้ความแม่นยำดีที่สุดสำหรับหน้าที่ยาก แต่ช้ากว่าและใช้หน่วยความจำมากกว่า\n\nการประมวลผลหลัง OCR:
+        แก้ไขข้อผิดพลาดในการรู้จำที่พบบ่อย เช่น ความสับสน (0↔O, 1↔l↔I, rn↔m) และตรวจสอบคำที่ไม่แน่ชัดด้วยพจนานุกรม
+        เปิดใช้งานโดยค่าเริ่มต้น; ปิดใช้งานสำหรับรหัสทางเทคนิคหรือหมายเลขซีเรียล
+    </string>
 
     <!-- การเลือกโหมดการรู้จำ OCR -->
     <string name="ocr_choose_prep_mode_menu">โหมดการรู้จำ…</string>
@@ -335,8 +364,12 @@
     <!-- Accessibility Mode -->
     <string name="a11y_doc_ready">ตรวจพบเอกสาร — พร้อมถ่ายภาพ</string>
     <string name="a11y_no_document_detected">ไม่พบเอกสาร</string>
-    <string name="a11y_orientation_portrait_tip">ดูเหมือนเป็นโหมดตั้ง โทรศัพท์ในแนวตั้งมักเหมาะที่สุดสำหรับหน้ากระดาษที่มีความสูง</string>
-    <string name="a11y_orientation_landscape_tip">ดูเหมือนเป็นโหมดแนวนอน ลองถือโทรศัพท์ในแนวนอนสำหรับหน้ากระดาษที่กว้าง</string>
+    <string name="a11y_orientation_portrait_tip">ดูเหมือนเป็นโหมดตั้ง
+        โทรศัพท์ในแนวตั้งมักเหมาะที่สุดสำหรับหน้ากระดาษที่มีความสูง
+    </string>
+    <string name="a11y_orientation_landscape_tip">ดูเหมือนเป็นโหมดแนวนอน
+        ลองถือโทรศัพท์ในแนวนอนสำหรับหน้ากระดาษที่กว้าง
+    </string>
     <string name="a11y_crop_summary_detected">การวิเคราะห์ภาพที่บันทึกไว้: ตรวจพบเอกสาร</string>
     <string name="a11y_crop_summary_no_doc">การวิเคราะห์ภาพที่บันทึก: ไม่พบเอกสาร</string>
     <string name="accessibility_mode_label">โหมดการเข้าถึง</string>

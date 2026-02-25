@@ -2,7 +2,10 @@
     <string name="app_name">MakeACopy</string>
 
     <!-- OCR Review: Text mode editor tooltip documenting current behavior -->
-    <string name="tip_text_mode_editing">حالت متن: در حال حاضر شکست خط‌ها و علائم نگارشی به فاصله تبدیل می‌شوند. اگر تعداد کلمات واردشده کمتر از کلمات تشخیص‌داده‌شده باشد، کلمات باقی‌ماندهٔ OCR بدون تغییر می‌مانند. تغییرات پس از یک مکث کوتاه اعمال می‌شوند.</string>
+    <string name="tip_text_mode_editing">حالت متن: در حال حاضر شکست خط‌ها و علائم نگارشی به فاصله تبدیل می‌شوند. اگر
+        تعداد کلمات واردشده کمتر از کلمات تشخیص‌داده‌شده باشد، کلمات باقی‌ماندهٔ OCR بدون تغییر می‌مانند. تغییرات پس از
+        یک مکث کوتاه اعمال می‌شوند.
+    </string>
 
     <!-- New menu items for document scanner -->
     <string name="title_camera">دوربین</string>
@@ -22,8 +25,11 @@
     <!-- Messages -->
     <string name="msg_camera_permission_required">برای اسکن اسناد، مجوز دوربین لازم است</string>
     <string name="confirm">تأیید</string>
-    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">اسکن خود را بررسی کنید. برای ادامه «بعدی» را بزنید یا برای تلاش دوباره «بازگشت» را انتخاب کنید.</string>
-    <string name="camera_ready_tap_the_button_to_scan_a_document">دوربین آماده است. برای اسکن یک سند، دکمه را بزنید.</string>
+    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">اسکن خود را بررسی کنید. برای ادامه
+        «بعدی» را بزنید یا برای تلاش دوباره «بازگشت» را انتخاب کنید.
+    </string>
+    <string name="camera_ready_tap_the_button_to_scan_a_document">دوربین آماده است. برای اسکن یک سند، دکمه را بزنید.
+    </string>
     <string name="captured_image">تصویر ثبت‌شده</string>
     <string name="retake">گرفتن دوباره</string>
     <string name="image_to_crop">تصویر برای برش</string>
@@ -35,19 +41,29 @@
     <string name="ocr_results_will_appear_here">نتایج OCR اینجا نمایش داده می‌شود</string>
     <string name="ocr_no_text_detected">هیچ متنی شناسایی نشد</string>
     <string name="no_image_loaded_capture_an_image_first">هیچ تصویری بارگذاری نشده است. ابتدا یک تصویر بگیرید.</string>
-    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">گوشه‌های ذوزنقه را تنظیم کنید تا ناحیهٔ برش انتخاب شود، سپس دکمهٔ «برش» را بزنید.</string>
-    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">تصویر برش‌خورده را بررسی کنید. برای ادامه «بعدی» را بزنید یا برای تلاش دوباره «بازگشت» را انتخاب کنید.</string>
+    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">گوشه‌های ذوزنقه را
+        تنظیم کنید تا ناحیهٔ برش انتخاب شود، سپس دکمهٔ «برش» را بزنید.
+    </string>
+    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">تصویر برش‌خورده را بررسی
+        کنید. برای ادامه «بعدی» را بزنید یا برای تلاش دوباره «بازگشت» را انتخاب کنید.
+    </string>
     <string name="no_document_ready_process_ocr_first">هیچ سندی آماده نیست. ابتدا OCR را پردازش کنید.</string>
     <string name="document_ready_for_export">سند برای خروجی‌گرفتن آماده است</string>
     <string name="processing_image">در حال پردازش تصویر...</string>
-    <string name="no_image_processed_crop_an_image_first">هیچ تصویری پردازش نشده است. ابتدا یک تصویر را برش دهید.</string>
-    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">پردازش OCR کامل شد. برای رفتن به خروجی، دکمه را بزنید.</string>
+    <string name="no_image_processed_crop_an_image_first">هیچ تصویری پردازش نشده است. ابتدا یک تصویر را برش دهید.
+    </string>
+    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">پردازش OCR کامل شد. برای رفتن به خروجی،
+        دکمه را بزنید.
+    </string>
     <string name="ocr_found_rotation">چرخش پیدا شد: %1$d°</string>
     <string name="ocr_score">امتیاز OCR: %1$d%%</string>
     <string name="ocr_found_rotation_with_score">چرخش پیدا شد: %1$d° — امتیاز OCR: %2$d%%</string>
 
     <!-- Extra explanation appended in “Explain recognition modes” dialog -->
-    <string name="ocr_prep_modes_autorotate_note">چرخش خودکار OCR: وقتی فعال باشد، OCR صفحه را در گام‌های ۹۰ درجه (0/90/180/270) هم امتحان می‌کند و بهترین نتیجه را انتخاب می‌کند. اگر دستی صفحه را نچرخانده باشید، چرخشِ پیدا‌شده می‌تواند هنگام خروجی به‌صورت خودکار اعمال شود. می‌توانید این گزینه را در «انتخاب حالت تشخیص» روشن/خاموش کنید.</string>
+    <string name="ocr_prep_modes_autorotate_note">چرخش خودکار OCR: وقتی فعال باشد، OCR صفحه را در گام‌های ۹۰ درجه
+        (0/90/180/270) هم امتحان می‌کند و بهترین نتیجه را انتخاب می‌کند. اگر دستی صفحه را نچرخانده باشید، چرخشِ پیدا‌شده
+        می‌تواند هنگام خروجی به‌صورت خودکار اعمال شود. می‌توانید این گزینه را در «انتخاب حالت تشخیص» روشن/خاموش کنید.
+    </string>
 
     <string name="initializing_camera">در حال راه‌اندازی دوربین…</string>
     <string name="resetting_camera">در حال بازنشانی دوربین…</string>
@@ -113,7 +129,9 @@
 
     <!-- Back confirmation for clearing multipage session -->
     <string name="confirm_clear_multipage_title">صفحات حذف شوند؟</string>
-    <string name="confirm_clear_multipage_message">چند صفحه اضافه شده است. آیا می‌خواهید همهٔ صفحات حذف شوند و برگردید؟</string>
+    <string name="confirm_clear_multipage_message">چند صفحه اضافه شده است. آیا می‌خواهید همهٔ صفحات حذف شوند و
+        برگردید؟
+    </string>
     <string name="cancel">لغو</string>
 
     <!-- Clear-all confirmation for trash icon in multipage -->
@@ -165,7 +183,7 @@
     <string name="btn_new">اسکن جدید</string>
     <string name="btn_review">بازبینی</string>
     <string name="edit_word_title">ویرایش کلمه</string>
-    <string name="review_summary_format">کلمات: %1$d  •  اطمینان پایین: %2$d</string>
+    <string name="review_summary_format">کلمات: %1$d • اطمینان پایین: %2$d</string>
     <string name="cm_edit">ویرایش…</string>
     <string name="cm_merge_next">ادغام با بعدی</string>
     <string name="cm_split">تقسیم</string>
@@ -197,17 +215,32 @@
     <string name="ocr_delete_best_model">حذف مدل Best</string>
     <string name="ocr_nothing_to_delete">برای زبان فعلی هیچ مدل Best برای حذف وجود ندارد</string>
     <string name="ocr_delete_confirm_title">مدل Best حذف شود؟</string>
-    <string name="ocr_delete_confirm_msg">مدل Best واردشده برای %1$s حذف شود؟ مدل Fast داخلی همچنان در دسترس خواهد بود.</string>
+    <string name="ocr_delete_confirm_msg">مدل Best واردشده برای %1$s حذف شود؟ مدل Fast داخلی همچنان در دسترس خواهد
+        بود.
+    </string>
     <string name="ocr_delete_success">مدل حذف شد</string>
     <string name="ocr_delete_failed">حذف ناموفق بود</string>
 
     <!-- OCR models hint -->
-    <string name="ocr_models_hint">برای تشخیص سریع‌تر، مدل‌های کم‌حجم شامل شده‌اند. برای دقت بالاتر، می‌توانید مدل‌های بزرگ‌تر «Best» را نصب کنید. اتصال اینترنت لازم نیست.</string>
+    <string name="ocr_models_hint">برای تشخیص سریع‌تر، مدل‌های کم‌حجم شامل شده‌اند. برای دقت بالاتر، می‌توانید مدل‌های
+        بزرگ‌تر «Best» را نصب کنید. اتصال اینترنت لازم نیست.
+    </string>
 
     <!-- OCR prep modes explanation -->
     <string name="ocr_explain_prep_modes">توضیح حالت‌های تشخیص</string>
     <string name="ocr_prep_modes_title">حالت‌های تشخیص: توضیح ساده</string>
-    <string name="ocr_prep_modes_message">سه روش برای ارسال تصاویر به موتور OCR وجود دارد:\n\n• اصلی (بدون پیش‌پردازش) — سریع‌ترین حالت. عکس به همان شکل ارسال می‌شود. مناسب برای اسکن‌های تمیز و با کنتراست بالا. ممکن است متن‌های کم‌رنگ یا پرنویز را از دست بدهد.\n\n• OpenCV سریع — پاک‌سازی سریع: تبدیل به طیف خاکستری، کاهش نویز سبک، تبدیل خودکار به سیاه‌وسفید و در صورت نیاز کمی بزرگ‌نمایی. گزینهٔ پیش‌فرض مناسب برای اکثر عکس‌ها، با تعادل بین سرعت و کیفیت.\n\n• OpenCV مقاوم — بازطراحی‌شده برای بیشترین دقت در صفحات دشوار. کجی تصویر را اصلاح می‌کند، سایه‌ها و روشنایی را نرمال‌سازی می‌کند، کاهش نویز با حفظ لبه‌ها و بزرگ‌نمایی هوشمند اعمال می‌کند. نکتهٔ مهم این است که به Tesseract یک تصویر خاکستری با کیفیت بالا (نه سیاه‌وسفید سخت) داده می‌شود تا جزئیات ظریف مانند حلقه‌های حرف «o» و ارقام کوچک حفظ شوند. بهترین دقت را برای صفحات سخت ارائه می‌دهد، اما کندتر است و حافظهٔ بیشتری مصرف می‌کند.\n\nپردازش پس از OCR: خطاهای رایج تشخیص مانند اشتباهات (0↔O، 1↔l↔I، rn↔m) را اصلاح می‌کند و واژه‌های نامطمئن را با یک فرهنگ لغت بررسی می‌کند. به‌طور پیش‌فرض فعال است؛ برای کدهای فنی یا شماره‌های سریال آن را غیرفعال کنید.</string>
+    <string name="ocr_prep_modes_message">سه روش برای ارسال تصاویر به موتور OCR وجود دارد:\n\n• اصلی (بدون پیش‌پردازش) —
+        سریع‌ترین حالت. عکس به همان شکل ارسال می‌شود. مناسب برای اسکن‌های تمیز و با کنتراست بالا. ممکن است متن‌های
+        کم‌رنگ یا پرنویز را از دست بدهد.\n\n• OpenCV سریع — پاک‌سازی سریع: تبدیل به طیف خاکستری، کاهش نویز سبک، تبدیل
+        خودکار به سیاه‌وسفید و در صورت نیاز کمی بزرگ‌نمایی. گزینهٔ پیش‌فرض مناسب برای اکثر عکس‌ها، با تعادل بین سرعت و
+        کیفیت.\n\n• OpenCV مقاوم — بازطراحی‌شده برای بیشترین دقت در صفحات دشوار. کجی تصویر را اصلاح می‌کند، سایه‌ها و
+        روشنایی را نرمال‌سازی می‌کند، کاهش نویز با حفظ لبه‌ها و بزرگ‌نمایی هوشمند اعمال می‌کند. نکتهٔ مهم این است که به
+        Tesseract یک تصویر خاکستری با کیفیت بالا (نه سیاه‌وسفید سخت) داده می‌شود تا جزئیات ظریف مانند حلقه‌های حرف «o» و
+        ارقام کوچک حفظ شوند. بهترین دقت را برای صفحات سخت ارائه می‌دهد، اما کندتر است و حافظهٔ بیشتری مصرف
+        می‌کند.\n\nپردازش پس از OCR: خطاهای رایج تشخیص مانند اشتباهات (0↔O، 1↔l↔I، rn↔m) را اصلاح می‌کند و واژه‌های
+        نامطمئن را با یک فرهنگ لغت بررسی می‌کند. به‌طور پیش‌فرض فعال است؛ برای کدهای فنی یا شماره‌های سریال آن را
+        غیرفعال کنید.
+    </string>
 
     <!-- OCR prep modes selection -->
     <string name="ocr_choose_prep_mode_menu">حالت تشخیص…</string>
@@ -294,7 +327,8 @@
     <string name="error_during_zip_export_with_reason">خطا هنگام خروجی ZIP: %1$s</string>
     <string name="ocr_text_exported_as_txt">متن OCR به صورت TXT خروجی گرفته شد</string>
     <string name="error_exporting_ocr_text_with_reason">خطا هنگام خروجی گرفتن متن OCR: %1$s</string>
-    <string name="no_document_to_share_export_first">هیچ سندی برای اشتراک‌گذاری وجود ندارد. ابتدا یک سند خروجی بگیرید.</string>
+    <string name="no_document_to_share_export_first">هیچ سندی برای اشتراک‌گذاری وجود ندارد. ابتدا یک سند خروجی بگیرید.
+    </string>
     <string name="error_sharing_document_with_reason">خطا هنگام اشتراک‌گذاری سند: %1$s</string>
     <string name="feature_scan_library_disabled">ویژگی کتابخانهٔ اسکن غیرفعال است</string>
     <string name="navigation_failed">ناوبری ناموفق بود</string>
@@ -329,13 +363,18 @@
     <!-- Accessibility Mode -->
     <string name="a11y_doc_ready">سند شناسایی شد – آمادهٔ ثبت.</string>
     <string name="a11y_no_document_detected">هیچ سندی شناسایی نشد.</string>
-    <string name="a11y_orientation_portrait_tip">به نظر می‌رسد حالت عمودی است. نگه‌داشتن گوشی به صورت عمودی معمولاً برای صفحات بلند بهتر است.</string>
-    <string name="a11y_orientation_landscape_tip">به نظر می‌رسد حالت افقی است. برای صفحات عریض، گوشی را افقی نگه دارید.</string>
+    <string name="a11y_orientation_portrait_tip">به نظر می‌رسد حالت عمودی است. نگه‌داشتن گوشی به صورت عمودی معمولاً برای
+        صفحات بلند بهتر است.
+    </string>
+    <string name="a11y_orientation_landscape_tip">به نظر می‌رسد حالت افقی است. برای صفحات عریض، گوشی را افقی نگه
+        دارید.
+    </string>
     <string name="a11y_crop_summary_detected">تحلیل تصویر ثبت‌شده: سند شناسایی شد.</string>
     <string name="a11y_crop_summary_no_doc">تحلیل تصویر ثبت‌شده: هیچ سندی شناسایی نشد.</string>
     <string name="accessibility_mode_label">حالت دسترس‌پذیری</string>
     <string name="a11y_camera_ready">دوربین آماده است. برای ثبت، روی «اسکن» دوبار ضربه بزنید.</string>
-    <string name="a11y_low_light_toggle_flash">نور کم تشخیص داده شد. برای فعال‌کردن، روی «فلش» دوبار ضربه بزنید.</string>
+    <string name="a11y_low_light_toggle_flash">نور کم تشخیص داده شد. برای فعال‌کردن، روی «فلش» دوبار ضربه بزنید.
+    </string>
     <string name="a11y_capture_failed">ثبت تصویر ناموفق بود.</string>
     <string name="a11y_volume_shutter_hint">نکته: در حالت دسترس‌پذیری، برای ثبت از کلیدهای صدا استفاده کنید.</string>
     <string name="a11y_capture_success">تصویر ثبت شد.</string>

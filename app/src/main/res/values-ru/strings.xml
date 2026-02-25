@@ -1,7 +1,10 @@
 <resources>
     <string name="app_name">MakeACopy</string>
 
-    <string name="tip_text_mode_editing">Текстовый режим: Разрывы строк и знаки препинания в настоящее время нормализуются до пробелов. Если введено меньше слов, чем было распознано, оставшиеся слова OCR остаются без изменений. Изменения применяются после короткой паузы.</string>
+    <string name="tip_text_mode_editing">Текстовый режим: Разрывы строк и знаки препинания в настоящее время
+        нормализуются до пробелов. Если введено меньше слов, чем было распознано, оставшиеся слова OCR остаются без
+        изменений. Изменения применяются после короткой паузы.
+    </string>
 
     <!-- New menu items for document scanner -->
     <string name="title_camera">Камера</string>
@@ -21,8 +24,12 @@
     <!-- Messages -->
     <string name="msg_camera_permission_required">Для сканирования документов требуется разрешение на камеру</string>
     <string name="confirm">Подтвердить</string>
-    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">Проверьте скан. Нажмите «Далее», чтобы продолжить, или «Назад», чтобы повторить попытку.</string>
-    <string name="camera_ready_tap_the_button_to_scan_a_document">Камера готова. Нажмите кнопку, чтобы отсканировать документ.</string>
+    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">Проверьте скан. Нажмите «Далее», чтобы
+        продолжить, или «Назад», чтобы повторить попытку.
+    </string>
+    <string name="camera_ready_tap_the_button_to_scan_a_document">Камера готова. Нажмите кнопку, чтобы отсканировать
+        документ.
+    </string>
     <string name="captured_image">Снятое изображение</string>
     <string name="retake">Переснять</string>
     <string name="image_to_crop">Изображение для обрезки</string>
@@ -34,20 +41,31 @@
     <string name="ocr_results_will_appear_here">Результаты OCR будут показаны здесь</string>
     <string name="ocr_no_text_detected">Текст не распознан</string>
     <string name="no_image_loaded_capture_an_image_first">Изображение не загружено. Сначала сделайте снимок.</string>
-    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Отрегулируйте углы трапеции, чтобы выбрать область обрезки, затем нажмите «Обрезать».</string>
-    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">Проверьте обрезанное изображение. Нажмите «Далее», чтобы продолжить, или «Назад», чтобы попытаться снова.</string>
+    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Отрегулируйте углы
+        трапеции, чтобы выбрать область обрезки, затем нажмите «Обрезать».
+    </string>
+    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">Проверьте обрезанное
+        изображение. Нажмите «Далее», чтобы продолжить, или «Назад», чтобы попытаться снова.
+    </string>
     <string name="no_document_ready_process_ocr_first">Документ не готов. Сначала выполните OCR.</string>
     <string name="document_ready_for_export">Документ готов к экспорту</string>
     <string name="processing_image">Обработка изображения…</string>
-    <string name="no_image_processed_crop_an_image_first">Изображение не обработано. Сначала обрежьте изображение.</string>
-    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">OCR завершён. Нажмите кнопку, чтобы перейти к экспорту.</string>
+    <string name="no_image_processed_crop_an_image_first">Изображение не обработано. Сначала обрежьте изображение.
+    </string>
+    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">OCR завершён. Нажмите кнопку, чтобы
+        перейти к экспорту.
+    </string>
 
     <string name="ocr_found_rotation">Обнаружен поворот: %1$d°</string>
     <string name="ocr_score">Оценка OCR: %1$d%%</string>
     <string name="ocr_found_rotation_with_score">Обнаружен поворот: %1$d° — оценка OCR: %2$d%%</string>
 
     <!-- Дополнительное объяснение, добавленное в диалог «Пояснение режимов распознавания» -->
-    <string name="ocr_prep_modes_autorotate_note">Автоматический поворот OCR: При включении OCR также проверяет страницу с шагом 90° (0/90/180/270) и выбирает лучший результат. Обнаруженный поворот может быть автоматически применён при экспорте, если вы не поворачивали страницу вручную. Этот параметр можно включить или выключить в разделе «Выбрать режим распознавания».</string>
+    <string name="ocr_prep_modes_autorotate_note">Автоматический поворот OCR: При включении OCR также проверяет страницу
+        с шагом 90° (0/90/180/270) и выбирает лучший результат. Обнаруженный поворот может быть автоматически применён
+        при экспорте, если вы не поворачивали страницу вручную. Этот параметр можно включить или выключить в разделе
+        «Выбрать режим распознавания».
+    </string>
 
     <string name="initializing_camera">Инициализация камеры…</string>
     <string name="resetting_camera">Сброс камеры…</string>
@@ -116,7 +134,8 @@
 
     <!-- Back confirmation for clearing multipage session -->
     <string name="confirm_clear_multipage_title">Удалить страницы?</string>
-    <string name="confirm_clear_multipage_message">Добавлено несколько страниц. Удалить все страницы и вернуться?</string>
+    <string name="confirm_clear_multipage_message">Добавлено несколько страниц. Удалить все страницы и вернуться?
+    </string>
     <string name="cancel">Отмена</string>
 
     <!-- Clear-all confirmation for trash icon in multipage -->
@@ -169,7 +188,7 @@
     <string name="btn_new">Новое сканирование</string>
     <string name="btn_review">Проверить</string>
     <string name="edit_word_title">Редактировать слово</string>
-    <string name="review_summary_format">Слова: %1$d  •  Низкая уверенность: %2$d</string>
+    <string name="review_summary_format">Слова: %1$d • Низкая уверенность: %2$d</string>
     <string name="cm_edit">Редактировать…</string>
     <string name="cm_merge_next">Объединить со следующим</string>
     <string name="cm_split">Разделить</string>
@@ -201,17 +220,34 @@
     <string name="ocr_delete_best_model">Удалить модель Best</string>
     <string name="ocr_nothing_to_delete">Нет модели Best для удаления для текущего языка</string>
     <string name="ocr_delete_confirm_title">Удалить модель Best?</string>
-    <string name="ocr_delete_confirm_msg">Удалить импортированную модель Best для %1$s? Встроенная модель Fast останется доступной.</string>
+    <string name="ocr_delete_confirm_msg">Удалить импортированную модель Best для %1$s? Встроенная модель Fast останется
+        доступной.
+    </string>
     <string name="ocr_delete_success">Модель удалена</string>
     <string name="ocr_delete_failed">Не удалось удалить</string>
 
     <!-- Подсказка по моделям OCR -->
-    <string name="ocr_models_hint">Для более быстрой распознаваемости включены компактные модели. Для большей точности вы можете установить более крупные модели «Best». Подключение к интернету не требуется.</string>
+    <string name="ocr_models_hint">Для более быстрой распознаваемости включены компактные модели. Для большей точности
+        вы можете установить более крупные модели «Best». Подключение к интернету не требуется.
+    </string>
 
     <!-- Режимы распознавания OCR – объяснение -->
     <string name="ocr_explain_prep_modes">Объяснить режимы распознавания</string>
     <string name="ocr_prep_modes_title">Режимы распознавания: простое объяснение</string>
-    <string name="ocr_prep_modes_message">Существует три способа передачи изображений в OCR-движок:\n\n• Оригинал (без предварительной обработки) — самый быстрый. Фотография передаётся без изменений. Лучше всего подходит для уже чистых сканов с высоким контрастом. Может пропустить бледный или зашумлённый текст.\n\n• OpenCV Быстрый — быстрая очистка: преобразование в оттенки серого, лёгкое подавление шума, автоматическое преобразование в чёрно-белое изображение и при необходимости небольшое масштабирование. Хороший вариант по умолчанию для большинства фотографий. Сбалансированное соотношение скорости и качества.\n\n• OpenCV Надёжный — переработан для максимальной точности на сложных страницах. Исправляет перекос, нормализует тени и освещение, применяет шумоподавление с сохранением границ и интеллектуальное масштабирование. Важно, что Tesseract получает высококачественное изображение в оттенках серого (а не жёсткое чёрно-белое), чтобы сохранить мелкие детали, такие как петли буквы «o» и маленькие цифры. Обеспечивает наилучшую точность на сложных страницах, но работает медленнее и использует больше памяти.\n\nПостобработка OCR: Исправляет типичные ошибки распознавания, такие как путаница (0↔O, 1↔l↔I, rn↔m), и проверяет сомнительные слова по словарю. Включена по умолчанию; отключайте для технических кодов или серийных номеров.</string>
+    <string name="ocr_prep_modes_message">Существует три способа передачи изображений в OCR-движок:\n\n• Оригинал (без
+        предварительной обработки) — самый быстрый. Фотография передаётся без изменений. Лучше всего подходит для уже
+        чистых сканов с высоким контрастом. Может пропустить бледный или зашумлённый текст.\n\n• OpenCV Быстрый —
+        быстрая очистка: преобразование в оттенки серого, лёгкое подавление шума, автоматическое преобразование в
+        чёрно-белое изображение и при необходимости небольшое масштабирование. Хороший вариант по умолчанию для
+        большинства фотографий. Сбалансированное соотношение скорости и качества.\n\n• OpenCV Надёжный — переработан для
+        максимальной точности на сложных страницах. Исправляет перекос, нормализует тени и освещение, применяет
+        шумоподавление с сохранением границ и интеллектуальное масштабирование. Важно, что Tesseract получает
+        высококачественное изображение в оттенках серого (а не жёсткое чёрно-белое), чтобы сохранить мелкие детали,
+        такие как петли буквы «o» и маленькие цифры. Обеспечивает наилучшую точность на сложных страницах, но работает
+        медленнее и использует больше памяти.\n\nПостобработка OCR: Исправляет типичные ошибки распознавания, такие как
+        путаница (0↔O, 1↔l↔I, rn↔m), и проверяет сомнительные слова по словарю. Включена по умолчанию; отключайте для
+        технических кодов или серийных номеров.
+    </string>
 
     <!-- Выбор режима распознавания OCR -->
     <string name="ocr_choose_prep_mode_menu">Режим распознавания…</string>
@@ -298,7 +334,8 @@
     <string name="error_during_zip_export_with_reason">Ошибка при экспорте ZIP: %1$s</string>
     <string name="ocr_text_exported_as_txt">Текст OCR экспортирован как TXT</string>
     <string name="error_exporting_ocr_text_with_reason">Ошибка при экспорте текста OCR: %1$s</string>
-    <string name="no_document_to_share_export_first">Нет документа для общего доступа. Сначала экспортируйте документ.</string>
+    <string name="no_document_to_share_export_first">Нет документа для общего доступа. Сначала экспортируйте документ.
+    </string>
     <string name="error_sharing_document_with_reason">Ошибка при обмене документом: %1$s</string>
     <string name="feature_scan_library_disabled">Функция библиотеки сканов отключена</string>
     <string name="navigation_failed">Ошибка навигации</string>
@@ -333,8 +370,12 @@
     <!-- Accessibility Mode -->
     <string name="a11y_doc_ready">Документ обнаружен — готов к съёмке.</string>
     <string name="a11y_no_document_detected">Документ не обнаружен.</string>
-    <string name="a11y_orientation_portrait_tip">Похоже на портретную ориентацию. Держать телефон вертикально обычно лучше всего подходит для высоких страниц.</string>
-    <string name="a11y_orientation_landscape_tip">Похоже на альбомную ориентацию. Попробуйте держать телефон горизонтально для широких страниц.</string>
+    <string name="a11y_orientation_portrait_tip">Похоже на портретную ориентацию. Держать телефон вертикально обычно
+        лучше всего подходит для высоких страниц.
+    </string>
+    <string name="a11y_orientation_landscape_tip">Похоже на альбомную ориентацию. Попробуйте держать телефон
+        горизонтально для широких страниц.
+    </string>
     <string name="a11y_crop_summary_detected">Анализ захваченного изображения: документ обнаружен.</string>
     <string name="a11y_crop_summary_no_doc">Анализ полученного изображения: документ не обнаружен.</string>
     <string name="accessibility_mode_label">Режим доступности</string>
@@ -345,7 +386,8 @@
     <string name="a11y_capture_success">Изображение сохранено.</string>
     <string name="a11y_verbose_logs_label">Подробные журналы доступности</string>
     <string name="a11y_option_auto_capture">Автосъёмка при стабильном обнаружении (режим доступности)</string>
-    <string name="a11y_option_auto_torch">Автоматически включать вспышку при слабом освещении (режим доступности)</string>
+    <string name="a11y_option_auto_torch">Автоматически включать вспышку при слабом освещении (режим доступности)
+    </string>
     <string name="a11y_capturing_now">Идёт съёмка…</string>
     <string name="a11y_score_now">Качество распознавания: %1$d%%.</string>
     <string name="a11y_scan_with_score">Сканировать. Качество распознавания: %1$d%%.</string>
@@ -365,10 +407,13 @@
     <string name="opt_layout_analysis_hint">Улучшает OCR для многоколоночных документов и таблиц</string>
 
     <!-- Options: Experimental directional mapping fallback -->
-    <string name="opt_force_direction_mapping">Принудительное сопоставление подсказок для альбомного режима (экспериментально)</string>
+    <string name="opt_force_direction_mapping">Принудительное сопоставление подсказок для альбомного режима
+        (экспериментально)
+    </string>
 
     <!-- Developer / Debug options -->
-    <string name="opt_show_raw_source_files">Показать исходные необработанные файлы в Библиотеке (для разработчиков)</string>
+    <string name="opt_show_raw_source_files">Показать исходные необработанные файлы в Библиотеке (для разработчиков)
+    </string>
 
     <!-- Library / Collections -->
     <string name="unfiled_collection_title">Без категории</string>

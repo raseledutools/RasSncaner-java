@@ -1,14 +1,17 @@
 <resources>
     <string name="app_name">MakeACopy</string>
 
-    <string name="tip_text_mode_editing">Tekstmodus: Regelafbrekingen en interpunctie worden momenteel genormaliseerd tot spaties. Als er minder woorden worden ingevoerd dan herkend, blijven de overige OCR-woorden ongewijzigd. Wijzigingen worden toegepast na een korte pauze.</string>
+    <string name="tip_text_mode_editing">Tekstmodus: Regelafbrekingen en interpunctie worden momenteel genormaliseerd
+        tot spaties. Als er minder woorden worden ingevoerd dan herkend, blijven de overige OCR-woorden ongewijzigd.
+        Wijzigingen worden toegepast na een korte pauze.
+    </string>
 
     <!-- New menu items for document scanner -->
     <string name="title_camera">Camera</string>
     <string name="title_crop">Bijsnijden</string>
     <string name="title_ocr">OCR</string>
     <string name="title_export">Exporteren</string>
-    
+
     <!-- Button labels -->
     <string name="btn_scan">Scannen</string>
     <string name="btn_crop">Bijsnijden</string>
@@ -17,12 +20,16 @@
     <string name="btn_share">Delen</string>
     <string name="next">Verder</string>
     <string name="back">Terug</string>
-    
+
     <!-- Messages -->
     <string name="msg_camera_permission_required">Cameratoestemming is vereist om documenten te scannen</string>
     <string name="confirm">Bevestigen</string>
-    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">Controleer je scan. Tik op Verder om door te gaan of op Terug om opnieuw te proberen.</string>
-    <string name="camera_ready_tap_the_button_to_scan_a_document">Camera klaar. Tik op de knop om een document te scannen.</string>
+    <string name="review_your_scan_tap_confirm_to_proceed_or_retake_to_try_again">Controleer je scan. Tik op Verder om
+        door te gaan of op Terug om opnieuw te proberen.
+    </string>
+    <string name="camera_ready_tap_the_button_to_scan_a_document">Camera klaar. Tik op de knop om een document te
+        scannen.
+    </string>
     <string name="captured_image">Vastgelegde afbeelding</string>
     <string name="retake">Opnieuw nemen</string>
     <string name="image_to_crop">Afbeelding om bij te snijden</string>
@@ -34,20 +41,31 @@
     <string name="ocr_results_will_appear_here">OCR‑resultaten verschijnen hier</string>
     <string name="ocr_no_text_detected">Geen tekst gedetecteerd</string>
     <string name="no_image_loaded_capture_an_image_first">Geen afbeelding geladen. Maak eerst een foto.</string>
-    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Pas de hoeken van het trapezium aan om het gebied te selecteren en tik daarna op Bijsnijden.</string>
-    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">Controleer je bijgesneden afbeelding. Tik op Verder om door te gaan of op Terug om opnieuw te proberen.</string>
+    <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Pas de hoeken van
+        het trapezium aan om het gebied te selecteren en tik daarna op Bijsnijden.
+    </string>
+    <string name="review_your_cropped_image_tap_confirm_to_proceed_or_recrop_to_try_again">Controleer je bijgesneden
+        afbeelding. Tik op Verder om door te gaan of op Terug om opnieuw te proberen.
+    </string>
     <string name="no_document_ready_process_ocr_first">Geen document gereed. Voer eerst OCR uit.</string>
     <string name="document_ready_for_export">Document klaar om te exporteren</string>
     <string name="processing_image">Afbeelding verwerken...</string>
-    <string name="no_image_processed_crop_an_image_first">Geen afbeelding verwerkt. Snijd eerst een afbeelding bij.</string>
-    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">OCR voltooid. Tik op de knop om door te gaan naar exporteren.</string>
+    <string name="no_image_processed_crop_an_image_first">Geen afbeelding verwerkt. Snijd eerst een afbeelding bij.
+    </string>
+    <string name="ocr_processing_complete_tap_the_button_to_proceed_to_export">OCR voltooid. Tik op de knop om door te
+        gaan naar exporteren.
+    </string>
 
     <string name="ocr_found_rotation">Gevonden rotatie: %1$d°</string>
     <string name="ocr_score">OCR-score: %1$d%%</string>
     <string name="ocr_found_rotation_with_score">Gevonden rotatie: %1$d° — OCR-score: %2$d%%</string>
 
     <!-- Extra uitleg toegevoegd in het dialoogvenster ‘Herkenningsmodi uitleggen’ -->
-    <string name="ocr_prep_modes_autorotate_note">OCR automatische rotatie: Wanneer ingeschakeld, probeert OCR de pagina ook in stappen van 90° (0/90/180/270) en kiest het beste resultaat. De gevonden rotatie kan tijdens het exporteren automatisch worden toegepast als je de pagina niet handmatig hebt geroteerd. Deze optie kan worden in- of uitgeschakeld in ‘Kies herkenningsmodus’.</string>
+    <string name="ocr_prep_modes_autorotate_note">OCR automatische rotatie: Wanneer ingeschakeld, probeert OCR de pagina
+        ook in stappen van 90° (0/90/180/270) en kiest het beste resultaat. De gevonden rotatie kan tijdens het
+        exporteren automatisch worden toegepast als je de pagina niet handmatig hebt geroteerd. Deze optie kan worden
+        in- of uitgeschakeld in ‘Kies herkenningsmodus’.
+    </string>
 
     <string name="initializing_camera">Camera initialiseren…</string>
     <string name="resetting_camera">Camera resetten…</string>
@@ -70,7 +88,7 @@
     <string name="convert_to_blackwhite_pdf">Omzetten naar Z/W</string>
     <string name="export_as_jpeg">Exporteren als JPEG</string>
     <string name="export_as_pdf">Exporteren als PDF (standaard)</string>
-    
+
     <!-- Flashlight options -->
     <string name="toggle_flashlight">Zaklamp schakelen</string>
     <string name="flashlight_on">Zaklamp aan</string>
@@ -101,27 +119,29 @@
     <string name="btn_pick_image">Laden</string>
     <string name="pick_image_cd">Bestaande afbeelding laden</string>
     <string name="error_selected_file_is_not_an_image">Het geselecteerde bestand is geen afbeelding</string>
-    
+
     <!-- Multipage Export (v1 increment) -->
     <string name="pages_header">Pagina\'s (%1$d)</string>
     <string name="add_another_page">Pagina toevoegen</string>
     <string name="clear_all_pages">Alles wissen</string>
     <string name="remove_this_page">Deze pagina verwijderen</string>
     <string name="multipage_not_implemented">Meerdere pagina\'s exporteren is nog niet geïmplementeerd</string>
-    
+
     <!-- Reorder A11y controls -->
     <string name="move_page_left">Pagina naar links verplaatsen</string>
     <string name="move_page_right">Pagina naar rechts verplaatsen</string>
-    
+
     <!-- Back confirmation for clearing multipage session -->
     <string name="confirm_clear_multipage_title">Pagina\'s verwijderen?</string>
-    <string name="confirm_clear_multipage_message">Er zijn meerdere pagina\'s toegevoegd. Wil je alle pagina\'s verwijderen en teruggaan?</string>
+    <string name="confirm_clear_multipage_message">Er zijn meerdere pagina\'s toegevoegd. Wil je alle pagina\'s
+        verwijderen en teruggaan?
+    </string>
     <string name="cancel">Annuleren</string>
-    
+
     <!-- Clear-all confirmation for trash icon in multipage -->
     <string name="confirm_clear_pages_title">Alle pagina\'s wissen?</string>
     <string name="confirm_clear_pages_message">Wil je alle pagina\'s verwijderen uit de filmstrip?</string>
-    
+
     <!-- Registry Picker -->
     <string name="picker_title_completed_scans">Kies uit voltooide scans</string>
     <string name="picker_empty">Geen voltooide scans gevonden</string>
@@ -130,13 +150,13 @@
     <string name="done">Verder</string>
     <string name="thumbnail">Miniatuur</string>
     <string name="delete">Verwijderen</string>
-    
+
     <!-- Picker bulk actions -->
     <string name="select_all">Alles selecteren</string>
     <string name="deselect_all">Alles deselecteren</string>
 
     <string name="added_pages_from_registry">%1$d pagina(\'s) toegevoegd uit register</string>
-    
+
     <!-- Add page options dialog -->
     <string name="add_page_option_choose_completed">Kiezen uit voltooide scans</string>
     <string name="add_page_option_capture_new">Nieuwe pagina vastleggen</string>
@@ -168,7 +188,7 @@
     <string name="btn_new">Nieuwe scan</string>
     <string name="btn_review">Beoordelen</string>
     <string name="edit_word_title">Woord bewerken</string>
-    <string name="review_summary_format">Woorden: %1$d  •  Lage betrouwbaarheid: %2$d</string>
+    <string name="review_summary_format">Woorden: %1$d • Lage betrouwbaarheid: %2$d</string>
     <string name="cm_edit">Bewerken…</string>
     <string name="cm_merge_next">Samenvoegen met volgende</string>
     <string name="cm_split">Splitsen</string>
@@ -199,17 +219,33 @@
     <string name="ocr_delete_best_model">Best-model verwijderen</string>
     <string name="ocr_nothing_to_delete">Geen Best-model om te verwijderen voor de huidige taal</string>
     <string name="ocr_delete_confirm_title">Best-model verwijderen?</string>
-    <string name="ocr_delete_confirm_msg">Het geïmporteerde Best-model voor %1$s verwijderen? Het ingebouwde Fast-model blijft beschikbaar.</string>
+    <string name="ocr_delete_confirm_msg">Het geïmporteerde Best-model voor %1$s verwijderen? Het ingebouwde Fast-model
+        blijft beschikbaar.
+    </string>
     <string name="ocr_delete_success">Model verwijderd</string>
     <string name="ocr_delete_failed">Verwijderen mislukt</string>
 
     <!-- OCR models hint -->
-    <string name="ocr_models_hint">Voor snellere herkenning zijn compacte modellen inbegrepen. Voor hogere nauwkeurigheid kun je grotere "Best"‑modellen installeren. Er is geen internetverbinding nodig.</string>
+    <string name="ocr_models_hint">Voor snellere herkenning zijn compacte modellen inbegrepen. Voor hogere
+        nauwkeurigheid kun je grotere "Best"‑modellen installeren. Er is geen internetverbinding nodig.
+    </string>
 
     <!-- OCR-herkenningsmodi – uitleg -->
     <string name="ocr_explain_prep_modes">Herkenningsmodi uitleggen</string>
     <string name="ocr_prep_modes_title">Herkenningsmodi: eenvoudige uitleg</string>
-    <string name="ocr_prep_modes_message">Er zijn drie manieren om afbeeldingen naar de OCR-engine te sturen:\n\n• Origineel (geen voorbewerking) — het snelst. De foto wordt ongewijzigd verzonden. Het meest geschikt voor al schone scans met hoog contrast. Kan zwakke of ruisachtige tekst missen.\n\n• OpenCV Snel — snelle opschoning: conversie naar grijstinten, lichte ruisonderdrukking, automatische zwart-witconversie en indien nodig een lichte opschaling. Goede standaardkeuze voor de meeste foto’s. Evenwicht tussen snelheid en kwaliteit.\n\n• OpenCV Robuust — opnieuw ontworpen voor maximale nauwkeurigheid bij moeilijke pagina’s. Corrigeert scheefstand, normaliseert schaduwen en belichting, past randbehoudende ruisonderdrukking en slimme opschaling toe. Belangrijk is dat Tesseract een grijswaardenafbeelding van hoge kwaliteit ontvangt (geen hard zwart-wit) om fijne details zoals lussen in de letter “o” en kleine cijfers te behouden. Biedt de beste nauwkeurigheid op complexe pagina’s, maar is langzamer en gebruikt meer geheugen.\n\nOCR-nabewerking: Corrigeert typische herkenningsfouten zoals verwarringen (0↔O, 1↔l↔I, rn↔m) en controleert onzekere woorden met behulp van een woordenboek. Standaard ingeschakeld; schakel dit uit voor technische codes of serienummers.</string>
+    <string name="ocr_prep_modes_message">Er zijn drie manieren om afbeeldingen naar de OCR-engine te sturen:\n\n•
+        Origineel (geen voorbewerking) — het snelst. De foto wordt ongewijzigd verzonden. Het meest geschikt voor al
+        schone scans met hoog contrast. Kan zwakke of ruisachtige tekst missen.\n\n• OpenCV Snel — snelle opschoning:
+        conversie naar grijstinten, lichte ruisonderdrukking, automatische zwart-witconversie en indien nodig een lichte
+        opschaling. Goede standaardkeuze voor de meeste foto’s. Evenwicht tussen snelheid en kwaliteit.\n\n• OpenCV
+        Robuust — opnieuw ontworpen voor maximale nauwkeurigheid bij moeilijke pagina’s. Corrigeert scheefstand,
+        normaliseert schaduwen en belichting, past randbehoudende ruisonderdrukking en slimme opschaling toe. Belangrijk
+        is dat Tesseract een grijswaardenafbeelding van hoge kwaliteit ontvangt (geen hard zwart-wit) om fijne details
+        zoals lussen in de letter “o” en kleine cijfers te behouden. Biedt de beste nauwkeurigheid op complexe pagina’s,
+        maar is langzamer en gebruikt meer geheugen.\n\nOCR-nabewerking: Corrigeert typische herkenningsfouten zoals
+        verwarringen (0↔O, 1↔l↔I, rn↔m) en controleert onzekere woorden met behulp van een woordenboek. Standaard
+        ingeschakeld; schakel dit uit voor technische codes of serienummers.
+    </string>
 
     <!-- OCR-herkenningsmodi – selectie -->
     <string name="ocr_choose_prep_mode_menu">Herkenningsmodus…</string>
@@ -279,7 +315,9 @@
     <string name="in_collections_count">In %1$d verzamelingen</string>
 
     <!-- Delete confirmation (ScanDetails) -->
-    <string name="delete_warning_irreversible">Het bestand wordt van het apparaat verwijderd. Deze actie kan niet ongedaan worden gemaakt.</string>
+    <string name="delete_warning_irreversible">Het bestand wordt van het apparaat verwijderd. Deze actie kan niet
+        ongedaan worden gemaakt.
+    </string>
 
     <!-- ExportFragment toasts -->
     <string name="no_document_to_export">Geen document om te exporteren</string>
@@ -331,19 +369,28 @@
     <!-- Accessibility Mode -->
     <string name="a11y_doc_ready">Document gedetecteerd — klaar om vast te leggen.</string>
     <string name="a11y_no_document_detected">Geen document gedetecteerd.</string>
-    <string name="a11y_orientation_portrait_tip">Dit lijkt portretstand. Het vasthouden van de telefoon in portretmodus werkt meestal het beste voor hoge pagina’s.</string>
-    <string name="a11y_orientation_landscape_tip">Dit lijkt liggend. Probeer de telefoon in liggende stand te houden voor brede pagina’s.</string>
+    <string name="a11y_orientation_portrait_tip">Dit lijkt portretstand. Het vasthouden van de telefoon in portretmodus
+        werkt meestal het beste voor hoge pagina’s.
+    </string>
+    <string name="a11y_orientation_landscape_tip">Dit lijkt liggend. Probeer de telefoon in liggende stand te houden
+        voor brede pagina’s.
+    </string>
     <string name="a11y_crop_summary_detected">Analyse van de vastgelegde afbeelding: document gedetecteerd.</string>
     <string name="a11y_crop_summary_no_doc">Analyse van de vastgelegde afbeelding: geen document gedetecteerd.</string>
     <string name="accessibility_mode_label">Toegankelijkheidsmodus</string>
     <string name="a11y_camera_ready">Camera klaar. Dubbel tik op Scannen om vast te leggen.</string>
-    <string name="a11y_low_light_toggle_flash">Weinig licht gedetecteerd. Dubbel tik op Flits om in te schakelen.</string>
+    <string name="a11y_low_light_toggle_flash">Weinig licht gedetecteerd. Dubbel tik op Flits om in te schakelen.
+    </string>
     <string name="a11y_capture_failed">Vastleggen mislukt.</string>
-    <string name="a11y_volume_shutter_hint">Tip: In de toegankelijkheidsmodus kunt u ook met de volumetoetsen vastleggen.</string>
+    <string name="a11y_volume_shutter_hint">Tip: In de toegankelijkheidsmodus kunt u ook met de volumetoetsen
+        vastleggen.
+    </string>
     <string name="a11y_capture_success">Afbeelding vastgelegd.</string>
     <string name="a11y_verbose_logs_label">Uitgebreide toegankelijkheidslogboeken</string>
-    <string name="a11y_option_auto_capture">Automatisch vastleggen bij stabiele detectie (Toegankelijkheidsmodus)</string>
-    <string name="a11y_option_auto_torch">Flits automatisch inschakelen bij weinig licht (Toegankelijkheidsmodus)</string>
+    <string name="a11y_option_auto_capture">Automatisch vastleggen bij stabiele detectie (Toegankelijkheidsmodus)
+    </string>
+    <string name="a11y_option_auto_torch">Flits automatisch inschakelen bij weinig licht (Toegankelijkheidsmodus)
+    </string>
     <string name="a11y_capturing_now">Bezig met vastleggen…</string>
     <string name="a11y_score_now">Detectiekwaliteit: %1$d%%.</string>
     <string name="a11y_scan_with_score">Scannen. Detectiekwaliteit: %1$d%%.</string>
@@ -362,7 +409,8 @@
     <string name="opt_layout_analysis">Lay-outanalyse (kolommen, tabellen)</string>
     <string name="opt_layout_analysis_hint">Verbetert OCR voor documenten met meerdere kolommen en tabellen</string>
     <!-- Options: Experimental directional mapping fallback -->
-    <string name="opt_force_direction_mapping">Forceer toewijzing van hints voor liggend formaat (experimenteel)</string>
+    <string name="opt_force_direction_mapping">Forceer toewijzing van hints voor liggend formaat (experimenteel)
+    </string>
 
     <!-- Developer / Debug options -->
     <string name="opt_show_raw_source_files">Ruwe bronbestanden in de Bibliotheek tonen (ontwikkelaar)</string>
