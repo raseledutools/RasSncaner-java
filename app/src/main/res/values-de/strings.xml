@@ -405,7 +405,7 @@
     <string name="page_format_letter">US Letter</string>
     <string name="page_format_legal">Legal</string>
 
-    <string name="restore_access">Restore access</string>
+    <string name="restore_access">Zugriff wiederherstellen</string>
     <string name="status">Status</string>
-    <string name="ocr_text_editor_hint">Edit OCR text</string>
+    <string name="ocr_text_editor_hint">OCR-Text bearbeiten</string>
 </resources>

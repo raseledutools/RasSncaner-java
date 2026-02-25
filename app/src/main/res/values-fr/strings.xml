@@ -402,7 +402,7 @@
     <string name="page_format_letter">US Letter</string>
     <string name="page_format_legal">Legal</string>
 
-    <string name="restore_access">Restore access</string>
-    <string name="status">Status</string>
-    <string name="ocr_text_editor_hint">Edit OCR text</string>
+    <string name="restore_access">Restaurer l’accès</string>
+    <string name="status">Statut</string>
+    <string name="ocr_text_editor_hint">Modifier le texte OCR</string>
 </resources>

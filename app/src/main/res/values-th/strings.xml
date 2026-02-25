@@ -393,7 +393,7 @@
     <string name="page_format_letter">US Letter</string>
     <string name="page_format_legal">Legal</string>
 
-    <string name="restore_access">Restore access</string>
-    <string name="status">Status</string>
-    <string name="ocr_text_editor_hint">Edit OCR text</string>
+    <string name="restore_access">กู้คืนการเข้าถึง</string>
+    <string name="status">สถานะ</string>
+    <string name="ocr_text_editor_hint">แก้ไขข้อความ OCR</string>
 </resources>

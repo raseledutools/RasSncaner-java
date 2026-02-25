@@ -376,7 +376,7 @@
     <string name="page_format_letter">US Letter</string>
     <string name="page_format_legal">Legal</string>
 
-    <string name="restore_access">Restore access</string>
-    <string name="status">Status</string>
-    <string name="ocr_text_editor_hint">Edit OCR text</string>
+    <string name="restore_access">恢复访问</string>
+    <string name="status">状态</string>
+    <string name="ocr_text_editor_hint">编辑 OCR 文本</string>
 </resources>
