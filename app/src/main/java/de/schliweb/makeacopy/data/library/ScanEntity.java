@@ -3,6 +3,7 @@ package de.schliweb.makeacopy.data.library;
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
+import lombok.AllArgsConstructor;
 
 /**
  * Represents a scanned entity stored in the application's local database. This entity holds
@@ -19,6 +20,7 @@ import androidx.room.PrimaryKey;
  * <p>This entity is annotated with @Entity to represent a table in the Room database. The table
  * name is defined as "scans".
  */
+@AllArgsConstructor
 @Entity(tableName = "scans")
 public class ScanEntity {
   @PrimaryKey @NonNull public String id; // UUID as string
@@ -34,21 +36,4 @@ public class ScanEntity {
   public String exportPathsJson; // optional JSON of recent export file paths
 
   public String sourceMetaJson; // optional source metadata JSON
-
-  public ScanEntity(
-      @NonNull String id,
-      String title,
-      long createdAt,
-      int pageCount,
-      String coverPath,
-      String exportPathsJson,
-      String sourceMetaJson) {
-    this.id = id;
-    this.title = title;
-    this.createdAt = createdAt;
-    this.pageCount = pageCount;
-    this.coverPath = coverPath;
-    this.exportPathsJson = exportPathsJson;
-    this.sourceMetaJson = sourceMetaJson;
-  }
 }

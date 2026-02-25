@@ -3,13 +3,14 @@ package de.schliweb.makeacopy.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 import java.util.UUID;
+import lombok.experimental.UtilityClass;
 
 /**
  * Simple helper to provide a stable per-session scan ID so we can persist autosave artifacts (like
  * editable OCR JSON) before the Export screen creates/persists the CompletedScan entry.
  */
-public final class SessionIds {
-  private SessionIds() {}
+@UtilityClass
+public class SessionIds {
 
   private static final String PREFS = "session_ids";
   private static final String KEY_CURRENT_SCAN_ID = "current_scan_id";

@@ -188,6 +188,7 @@ public class ScansLibraryFragment extends Fragment {
                                           .removeScanFromCollection(
                                               requireContext(), item.id, collectionIdArg);
                                     } catch (Throwable ignore) {
+                                      // Best-effort; failure is non-critical
                                     }
                                     if (!isAdded()) return;
                                     requireActivity()
@@ -210,6 +211,7 @@ public class ScansLibraryFragment extends Fragment {
                     de.schliweb.makeacopy.utils.DialogUtils
                         .improveAlertDialogButtonContrastForNight(dialog, requireContext());
                   } catch (Throwable ignore) {
+                    // Best-effort; failure is non-critical
                   }
                 });
             dialog.show();
@@ -235,6 +237,7 @@ public class ScansLibraryFragment extends Fragment {
                       try {
                         n = ExistingScansIndexer.runIncremental(requireContext());
                       } catch (Throwable ignore) {
+                        // Best-effort; failure is non-critical
                       }
                       final int finalN = n;
                       if (!isAdded()) return;
@@ -338,9 +341,10 @@ public class ScansLibraryFragment extends Fragment {
                   }
                 }
               } catch (Throwable ignore) {
+                // Best-effort; failure is non-critical
               }
               final boolean finalShowIndexBtn =
-                  (de.schliweb.makeacopy.utils.FeatureFlags.isScanLibraryEnable());
+                  de.schliweb.makeacopy.utils.FeatureFlags.isScanLibraryEnable();
               if (!isAdded()) return;
               requireActivity()
                   .runOnUiThread(

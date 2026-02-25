@@ -3,6 +3,7 @@ package de.schliweb.makeacopy.utils;
 import android.content.Context;
 import android.view.View;
 import android.view.accessibility.AccessibilityManager;
+import lombok.experimental.UtilityClass;
 
 /**
  * Centralized Accessibility helper.
@@ -11,6 +12,7 @@ import android.view.accessibility.AccessibilityManager;
  * deprecated API calls throughout the codebase. As of current platform guidance, we rely on
  * View.announceForAccessibility, confined to this utility only.
  */
+@UtilityClass
 public final class A11yUtils {
   /** Optional test hook to capture announcements in androidTest. */
   public interface AnnounceListener {
@@ -24,8 +26,6 @@ public final class A11yUtils {
   public static void setAnnounceListener(AnnounceListener l) {
     sAnnounceListener = l;
   }
-
-  private A11yUtils() {}
 
   /**
    * Makes an accessibility announcement using the specified view and text. Ensures that any
@@ -44,6 +44,7 @@ public final class A11yUtils {
       try {
         listener.onAnnounce(text);
       } catch (Exception ignored) {
+        // Best-effort; failure is non-critical
       }
       // Do not return early: still attempt a real announcement for end-to-end coverage when
       // possible
@@ -64,6 +65,7 @@ public final class A11yUtils {
     try {
       view.announceForAccessibility(text);
     } catch (Exception ignored) {
+      // Best-effort; failure is non-critical
     }
   }
 }

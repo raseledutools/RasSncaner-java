@@ -125,11 +125,13 @@ class CompletedScansPickerAdapter extends RecyclerView.Adapter<CompletedScansPic
       try {
         deg = s.rotationDeg();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       String mode = null;
       try {
         mode = s.orientationMode();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       boolean rotate;
       try {
@@ -191,6 +193,7 @@ class CompletedScansPickerAdapter extends RecyclerView.Adapter<CompletedScansPic
               bmp = BitmapUtils.maybeRotate(bmp, rotationDeg);
             }
           } catch (Throwable ignore) {
+            // Best-effort; failure is non-critical
           }
           final Bitmap result = bmp;
           MAIN.post(
@@ -219,6 +222,7 @@ class CompletedScansPickerAdapter extends RecyclerView.Adapter<CompletedScansPic
     }
   }
 
+  @SuppressWarnings("UnusedMethod") // kept for future bitmap downsampling optimization
   private static int calculateInSampleSize(
       BitmapFactory.Options options, int reqWidth, int reqHeight) {
     int height = Math.max(1, options.outHeight);

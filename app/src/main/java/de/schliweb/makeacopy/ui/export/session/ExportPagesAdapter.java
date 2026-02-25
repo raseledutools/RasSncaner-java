@@ -24,6 +24,7 @@ import java.util.*;
  * The pages are represented using the `CompletedScan` class and displayed in a custom layout
  * defined in the application.
  */
+@SuppressWarnings("JavaUtilDate") // SimpleDateFormat requires Date
 public class ExportPagesAdapter extends RecyclerView.Adapter<ExportPagesAdapter.PageVH> {
   // Simple in-memory LRU cache for small thumbnails
   private static final LruCache<String, Bitmap> THUMB_CACHE = new LruCache<>(32);
@@ -172,6 +173,7 @@ public class ExportPagesAdapter extends RecyclerView.Adapter<ExportPagesAdapter.
     try {
       deg = s.rotationDeg();
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
 
     Bitmap bmp = s.inMemoryBitmap();
@@ -186,6 +188,7 @@ public class ExportPagesAdapter extends RecyclerView.Adapter<ExportPagesAdapter.
                   bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), m, true);
           if (rotated != null) bmp = rotated;
         } catch (Throwable ignore) {
+          // Best-effort; failure is non-critical
         }
       }
       h.thumb.setImageBitmap(bmp);
@@ -210,6 +213,7 @@ public class ExportPagesAdapter extends RecyclerView.Adapter<ExportPagesAdapter.
                   de.schliweb.makeacopy.utils.RotationPolicy.shouldRotateForThumbnail(
                       true, s.orientationMode(), deg);
             } catch (Throwable ignore) {
+              // Best-effort; failure is non-critical
             }
             Bitmap out = decoded;
             if (rotate) {
@@ -221,6 +225,7 @@ public class ExportPagesAdapter extends RecyclerView.Adapter<ExportPagesAdapter.
                         decoded, 0, 0, decoded.getWidth(), decoded.getHeight(), m, true);
                 if (rotated != null) out = rotated;
               } catch (Throwable ignore) {
+                // Best-effort; failure is non-critical
               }
             }
             ThumbCache_put(cacheKey, out);
@@ -240,6 +245,7 @@ public class ExportPagesAdapter extends RecyclerView.Adapter<ExportPagesAdapter.
         java.io.File f = new java.io.File(ocrPath);
         hasOcr = f.exists() && f.isFile();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
     }
     if (hasOcr) {
@@ -277,6 +283,7 @@ public class ExportPagesAdapter extends RecyclerView.Adapter<ExportPagesAdapter.
       String cd = ctx.getString(de.schliweb.makeacopy.R.string.page_n_of_m, position + 1, total);
       h.itemView.setContentDescription(cd);
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
 
     // Accessibility: expose contextual custom actions for Delete / Move left / Move right
@@ -346,6 +353,7 @@ public class ExportPagesAdapter extends RecyclerView.Adapter<ExportPagesAdapter.
             }
           });
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
   }
 

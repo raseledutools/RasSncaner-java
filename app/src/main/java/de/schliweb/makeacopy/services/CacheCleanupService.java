@@ -5,9 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Environment;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.util.Log;
 import androidx.annotation.Nullable;
 import java.io.File;
@@ -74,6 +72,7 @@ import java.util.concurrent.TimeUnit;
  * associated cleanup operations need to occur without instantiating the service or when the app is
  * in a background state.
  */
+@SuppressWarnings("FutureReturnValueIgnored") // cleanup tasks are fire-and-forget
 public class CacheCleanupService extends Service {
 
   private static final String TAG = "CacheCleanupService";
@@ -94,7 +93,6 @@ public class CacheCleanupService extends Service {
   private static final int DEFAULT_MEMORY_THRESHOLD_PERCENT = 75;
 
   private ScheduledExecutorService scheduledExecutor;
-  private Handler mainHandler;
   private SharedPreferences preferences;
 
   // Configuration
@@ -110,7 +108,6 @@ public class CacheCleanupService extends Service {
 
     Log.i(TAG, "CacheCleanupService created");
 
-    mainHandler = new Handler(Looper.getMainLooper());
     preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 
     loadConfiguration();
@@ -244,7 +241,7 @@ public class CacheCleanupService extends Service {
 
     scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 
-    long intervalMs = cleanupIntervalHours * 60 * 60 * 1000;
+    long intervalMs = cleanupIntervalHours * 60L * 60L * 1000L;
 
     scheduledExecutor.scheduleAtFixedRate(
         this::performScheduledCleanup,
@@ -426,7 +423,7 @@ public class CacheCleanupService extends Service {
               (file, name) -> name.startsWith("MakeACopy_") && name.endsWith(".jpg"));
       if (imageFiles == null) return 0;
 
-      long maxAgeMs = maxTempAgeHours * 60 * 60 * 1000L;
+      long maxAgeMs = maxTempAgeHours * 60L * 60L * 1000L;
       long cutoffTime = System.currentTimeMillis() - maxAgeMs;
       int deletedCount = 0;
 
@@ -485,7 +482,7 @@ public class CacheCleanupService extends Service {
     }
 
     int deletedCount = 0;
-    long maxAgeMs = maxTempAgeHours * 60 * 60 * 1000L;
+    long maxAgeMs = maxTempAgeHours * 60L * 60L * 1000L;
     long cutoffTime = System.currentTimeMillis() - maxAgeMs;
 
     File[] files = directory.listFiles();

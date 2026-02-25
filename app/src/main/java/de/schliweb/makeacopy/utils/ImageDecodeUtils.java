@@ -2,6 +2,7 @@ package de.schliweb.makeacopy.utils;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import lombok.experimental.UtilityClass;
 
 /**
  * A utility class for decoding and resizing bitmap images to optimize memory usage. This class
@@ -10,9 +11,8 @@ import android.graphics.BitmapFactory;
  *
  * <p>This class is not intended to be instantiated.
  */
+@UtilityClass
 public final class ImageDecodeUtils {
-  private ImageDecodeUtils() {}
-
   /**
    * Decodes a bitmap from a given file path, scaling it down to approximately match the specified
    * width and height. This method helps reduce memory usage by decoding the image at a lower

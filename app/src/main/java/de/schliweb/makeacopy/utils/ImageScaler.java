@@ -2,6 +2,7 @@ package de.schliweb.makeacopy.utils;
 
 import android.graphics.Bitmap;
 import android.util.Log;
+import lombok.experimental.UtilityClass;
 
 /**
  * Utility class for scaling images to predefined dimensions while maintaining aspect ratio.
@@ -14,6 +15,7 @@ import android.util.Log;
  *
  * <p>This class is not intended to be instantiated.
  */
+@UtilityClass
 public class ImageScaler {
   // A4 dimensions at 300 DPI (in pixels)
   public static final int A4_WIDTH_300DPI = 2480;

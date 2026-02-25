@@ -30,6 +30,10 @@ import java.util.concurrent.Executors;
  * data from a {@link ScanEntity} list to the provided views and handles click events via the {@link
  * OnItemClickListener} interface.
  */
+@SuppressWarnings({
+  "JavaUtilDate",
+  "FutureReturnValueIgnored"
+}) // DateFormat requires Date; loader tasks are fire-and-forget
 public class ScansAdapter extends RecyclerView.Adapter<ScansAdapter.VH> {
   private final List<ScanEntity> items = new ArrayList<>();
   private final OnItemClickListener listener;
@@ -130,6 +134,7 @@ public class ScansAdapter extends RecyclerView.Adapter<ScansAdapter.VH> {
               de.schliweb.makeacopy.utils.UIUtils.showToast(
                   v.getContext(), R.string.missing_file, android.widget.Toast.LENGTH_SHORT);
             } catch (Throwable ignore) {
+              // Best-effort; failure is non-critical
             }
           }
           listener.onItemClick(e);
@@ -212,6 +217,7 @@ public class ScansAdapter extends RecyclerView.Adapter<ScansAdapter.VH> {
                         try {
                           h.thumb.setAlpha(0.7f);
                         } catch (Throwable ignore) {
+                          // Best-effort; failure is non-critical
                         }
                       }
                       h.subtitle.setText(sub);
@@ -281,6 +287,7 @@ public class ScansAdapter extends RecyclerView.Adapter<ScansAdapter.VH> {
         }
       }
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
     return null;
   }

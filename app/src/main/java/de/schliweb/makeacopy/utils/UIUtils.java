@@ -11,6 +11,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import lombok.experimental.UtilityClass;
 
 /**
  * A utility class containing helper methods for common user interface tasks. This class provides
@@ -19,12 +20,9 @@ import androidx.core.view.WindowInsetsCompat;
  *
  * <p>This class is not intended to be instantiated.
  */
+@UtilityClass
 public class UIUtils {
   private static final String TAG = "UIUtils";
-
-  private UIUtils() {
-    // private because utility class
-  }
 
   /**
    * Adjusts the bottom margin of the given view to account for system insets, such as the

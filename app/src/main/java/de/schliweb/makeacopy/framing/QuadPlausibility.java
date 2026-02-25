@@ -1,6 +1,8 @@
 package de.schliweb.makeacopy.framing;
 
 import android.graphics.PointF;
+import java.util.Locale;
+import lombok.experimental.UtilityClass;
 
 /**
  * Utility class for determining whether a detected quad is plausible as a document.
@@ -18,9 +20,8 @@ import android.graphics.PointF;
  *   <li>Aspect sanity: aspect ratio is within reasonable bounds
  * </ul>
  */
-public final class QuadPlausibility {
-
-  private QuadPlausibility() {}
+@UtilityClass
+public class QuadPlausibility {
 
   // Configuration parameters (from concept spec-sheet section 10.1)
 
@@ -88,11 +89,11 @@ public final class QuadPlausibility {
           + ", aspectOk="
           + aspectOk
           + ", areaRatio="
-          + String.format("%.3f", areaRatio)
+          + String.format(Locale.ROOT, "%.3f", areaRatio)
           + ", oobSum="
-          + String.format("%.1f", oobSum)
+          + String.format(Locale.ROOT, "%.1f", oobSum)
           + ", aspectRatio="
-          + String.format("%.2f", aspectRatio)
+          + String.format(Locale.ROOT, "%.2f", aspectRatio)
           + '}';
     }
   }

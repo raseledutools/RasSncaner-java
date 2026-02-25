@@ -3,18 +3,16 @@ package de.schliweb.makeacopy.utils;
 import android.graphics.Bitmap;
 import android.util.Log;
 import android.widget.ImageView;
+import lombok.experimental.UtilityClass;
 import org.opencv.core.Point;
 
 /**
  * Utility class providing methods for coordinate transformation between view space and image space
  * in scenarios involving images displayed in a view with scaling and padding considerations.
  */
+@UtilityClass
 public class CoordinateTransformUtils {
   private static final String TAG = "CoordinateTransformUtils";
-
-  private CoordinateTransformUtils() {
-    // private because utility class
-  }
 
   /**
    * Transforms an array of coordinates from view space to image space based on the dimensions of

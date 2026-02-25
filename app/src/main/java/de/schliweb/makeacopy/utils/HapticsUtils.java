@@ -2,6 +2,7 @@ package de.schliweb.makeacopy.utils;
 
 import android.content.Context;
 import android.os.Build;
+import lombok.experimental.UtilityClass;
 
 /**
  * Centralized helper for short haptic signals with modern APIs.
@@ -9,6 +10,7 @@ import android.os.Build;
  * <p>minSdk = 29 → We can simplify to two paths only: - Android S+ (31+): VibratorManager +
  * VibrationEffect - Android O–R (26..30): Vibrator + VibrationEffect
  */
+@UtilityClass
 public final class HapticsUtils {
   /** Optional test hook to observe vibrations in androidTest. */
   public interface TestListener {
@@ -21,8 +23,6 @@ public final class HapticsUtils {
   public static void setTestListener(TestListener l) {
     sTestListener = l;
   }
-
-  private HapticsUtils() {}
 
   /**
    * Triggers a single haptic vibration of the specified duration on devices running Android O (API

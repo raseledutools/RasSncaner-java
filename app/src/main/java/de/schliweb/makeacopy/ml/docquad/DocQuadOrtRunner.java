@@ -365,6 +365,8 @@ public final class DocQuadOrtRunner implements AutoCloseable {
   }
 
   /**
+   * Raw model outputs containing mask logits and corner heatmaps.
+   *
    * @param maskLogits [1][1][64][64]
    * @param cornerHeatmaps [1][4][64][64]
    */

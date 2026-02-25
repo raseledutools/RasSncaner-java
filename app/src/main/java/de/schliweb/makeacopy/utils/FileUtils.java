@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.OpenableColumns;
 import android.util.Log;
+import lombok.experimental.UtilityClass;
 
 /**
  * A utility class providing functionality to interact with files and URIs, including methods for
@@ -14,12 +15,9 @@ import android.util.Log;
  *
  * <p>This class is not intended to be instantiated.
  */
+@UtilityClass
 public class FileUtils {
   private static final String TAG = "FileUtils";
-
-  private FileUtils() {
-    // private because utility class
-  }
 
   /**
    * Extracts and returns the display name from the given URI. Handles URIs with content and file
@@ -128,6 +126,7 @@ public class FileUtils {
         }
       }
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
     return false;
   }
@@ -146,6 +145,7 @@ public class FileUtils {
       Uri uri = Uri.parse(uriString);
       return isUriReadable(context, uri);
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
     return false;
   }
@@ -180,6 +180,7 @@ public class FileUtils {
         }
       }
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
     return null;
   }

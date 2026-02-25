@@ -1,6 +1,7 @@
 package de.schliweb.makeacopy.utils;
 
 import java.util.Locale;
+import lombok.experimental.UtilityClass;
 
 /**
  * A utility class providing methods for optimal OCR language selection and handling of supported
@@ -10,11 +11,10 @@ import java.util.Locale;
  *
  * <p>This class is not intended to be instantiated.
  */
+@UtilityClass
 public class OCRUtils {
 
   private static final String TAG = "OCRUtils";
-
-  private OCRUtils() {}
 
   /**
    * Resolves the effective language based on the provided language option and the system's default
@@ -130,6 +130,7 @@ public class OCRUtils {
             yield "chi_tra";
           }
         } catch (Throwable ignore) {
+          // Best-effort; failure is non-critical
         }
         yield "chi_sim";
       }

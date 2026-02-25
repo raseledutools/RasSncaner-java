@@ -253,6 +253,7 @@ public final class CompletedScansRegistry {
       try {
         fos.getFD().sync();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
     }
     // Replace

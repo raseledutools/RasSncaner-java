@@ -144,6 +144,7 @@ public class CompletedScansPickerFragment extends Fragment
       de.schliweb.makeacopy.data.RegistryCleaner.cleanupOrphans(
           requireContext().getApplicationContext());
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
     // Load synchronously for v1 simplicity; list is small
     List<CompletedScan> items =
@@ -202,6 +203,7 @@ public class CompletedScansPickerFragment extends Fragment
             requireContext().getApplicationContext(), id);
         removed++;
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
     }
     selectedIds.clear();
@@ -213,6 +215,7 @@ public class CompletedScansPickerFragment extends Fragment
                 android.widget.Toast.LENGTH_SHORT)
             .show();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
     }
     // Refresh UI
@@ -294,6 +297,7 @@ public class CompletedScansPickerFragment extends Fragment
                             android.widget.Toast.LENGTH_SHORT)
                         .show();
                   } catch (Throwable ignore) {
+                    // Best-effort; failure is non-critical
                   }
                   // Refresh list after removal
                   loadItems();

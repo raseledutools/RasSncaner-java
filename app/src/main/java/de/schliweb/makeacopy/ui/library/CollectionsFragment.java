@@ -274,6 +274,7 @@ public class CollectionsFragment extends Fragment {
                               LibraryServiceLocator.getCollectionsRepository(requireContext())
                                   .createCollection(requireContext(), name);
                             } catch (Throwable ignore) {
+                              // Best-effort; failure is non-critical
                             }
                             if (!isAdded()) return;
                             requireActivity().runOnUiThread(this::loadDataAsync);
@@ -288,6 +289,7 @@ public class CollectionsFragment extends Fragment {
             de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(
                 dialog, requireContext());
           } catch (Throwable ignore) {
+            // Best-effort; failure is non-critical
           }
         });
     dialog.show();

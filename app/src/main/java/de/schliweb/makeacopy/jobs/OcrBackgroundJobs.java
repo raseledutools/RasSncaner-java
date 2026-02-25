@@ -8,6 +8,8 @@ import de.schliweb.makeacopy.data.CompletedScansRegistry;
 import de.schliweb.makeacopy.ui.export.session.CompletedScan;
 import de.schliweb.makeacopy.utils.OCRHelper;
 import de.schliweb.makeacopy.utils.OCRUtils;
+import lombok.experimental.UtilityClass;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -21,6 +23,7 @@ import java.util.concurrent.Executors;
  * Minimal background OCR job runner without external dependencies. Ensures only one OCR job per
  * page id runs at a time. After success/failure, broadcasts ACTION_OCR_UPDATED with extras.
  */
+@UtilityClass
 public final class OcrBackgroundJobs {
   private static final String TAG = "OcrBackgroundJobs";
 
@@ -30,8 +33,6 @@ public final class OcrBackgroundJobs {
 
   private static final ExecutorService EXEC = Executors.newSingleThreadExecutor();
   private static final Set<String> running = Collections.synchronizedSet(new HashSet<>());
-
-  private OcrBackgroundJobs() {}
 
   /**
    * Enqueues a background reprocessing task for Optical Character Recognition (OCR) on a scanned
@@ -85,6 +86,7 @@ public final class OcrBackgroundJobs {
                 if (rotated != null) bmp = rotated;
               }
             } catch (Throwable ignore) {
+              // Best-effort; failure is non-critical
             }
             if (bmp == null) throw new RuntimeException("No bitmap available for OCR");
 
@@ -97,14 +99,17 @@ public final class OcrBackgroundJobs {
                 helper.setLanguage(effLang);
               }
             } catch (Throwable ignore) {
+              // Best-effort; failure is non-critical
             }
             if (!helper.initTesseract()) throw new RuntimeException("Tesseract init failed");
             OCRHelper.OcrResultWords res = helper.runOcrWithRetry(bmp);
             String text = (res != null && res.text != null) ? res.text : "";
 
             File dir = new File(app.getFilesDir(), "scans/" + s.id());
-            if (!dir.exists()) // noinspection ResultOfMethodCallIgnored
-            dir.mkdirs();
+            if (!dir.exists()) {
+              //noinspection ResultOfMethodCallIgnored
+              dir.mkdirs();
+            }
 
             // Write plain text as fallback
             File txt = new File(dir, "text.txt");
@@ -139,6 +144,7 @@ public final class OcrBackgroundJobs {
             try {
               reg.remove(s.id());
             } catch (Throwable ignore) {
+              // Best-effort; failure is non-critical
             }
             try {
               reg.insert(updated);
@@ -158,6 +164,7 @@ public final class OcrBackgroundJobs {
               intent.setPackage(app.getPackageName()); // keep broadcast within app
               app.sendBroadcast(intent);
             } catch (Throwable ignore) {
+              // Best-effort; failure is non-critical
             }
           }
         });

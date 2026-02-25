@@ -1,17 +1,17 @@
 package de.schliweb.makeacopy.ui.camera;
 
 import java.util.Locale;
+import lombok.experimental.UtilityClass;
 
 /**
  * Pure utility methods for exposure compensation index ↔ EV float conversion and clamping.
  * Extracted for testability without Android dependencies.
  */
-public final class ExposureCompensationHelper {
+@UtilityClass
+public class ExposureCompensationHelper {
 
   /** Maximum EV magnitude allowed for document scanning (±2.0 EV). */
   public static final float MAX_EV = 2.0f;
-
-  private ExposureCompensationHelper() {}
 
   /** Clamps the given index to the device's supported range [lower, upper]. */
   public static int clampIndex(int index, int lower, int upper) {

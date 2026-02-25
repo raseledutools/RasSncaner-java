@@ -5,13 +5,14 @@ import androidx.lifecycle.LifecycleOwner;
 import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.databinding.FragmentExportBinding;
 import de.schliweb.makeacopy.ui.export.ExportViewModel;
+import lombok.experimental.UtilityClass;
 
 /**
  * Binds export progress-related LiveData from ExportViewModel to the FragmentExportBinding so UI
  * classes can delegate this boilerplate and reduce complexity.
  */
+@UtilityClass
 public final class ExportUiBindings {
-  private ExportUiBindings() {}
 
   /**
    * Temporarily sets the enabled state of a given view. If the `disable` parameter is true, the

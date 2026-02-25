@@ -151,6 +151,7 @@ public class FramingEngine {
         float v = in.modelHeightOverride;
         if (v > 0f) return v;
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
     }
     // Target height ~70% of image height; if fallback has valid aspect, ensure width fits image

@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.util.Size;
 import de.schliweb.makeacopy.ui.export.session.CompletedScan;
+import lombok.experimental.UtilityClass;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
@@ -15,8 +16,8 @@ import org.opencv.imgproc.Imgproc;
  * specifically in ensuring they adhere to size and memory constraints for display. This class is
  * not intended to be instantiated.
  */
+@UtilityClass
 public final class BitmapUtils {
-  private BitmapUtils() {}
 
   // Conservative caps to avoid Canvas: trying to draw too large(...) bitmap
   // - Max edge in pixels
@@ -152,11 +153,13 @@ public final class BitmapUtils {
         try {
           deg = scan.rotationDeg();
         } catch (Throwable ignore) {
+          // Best-effort; failure is non-critical
         }
         String mode = null;
         try {
           mode = scan.orientationMode();
         } catch (Throwable ignore) {
+          // Best-effort; failure is non-critical
         }
         boolean shouldRotate;
         try {
@@ -170,6 +173,7 @@ public final class BitmapUtils {
         bmp = BitmapUtils.maybeRotate(bmp, deg);
       }
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
     return bmp;
   }
@@ -245,6 +249,7 @@ public final class BitmapUtils {
             doAuto = true;
           }
         } catch (Exception ignored) {
+          // Best-effort; failure is non-critical
         }
       } else {
         // PDF path: determine mode solely from selected pdf_bw_mode
@@ -279,6 +284,7 @@ public final class BitmapUtils {
             OpenCVUtils.init(ctx.getApplicationContext());
           }
         } catch (Throwable ignored) {
+          // Best-effort; failure is non-critical
         }
         try {
           if (toBw) {
@@ -297,6 +303,7 @@ public final class BitmapUtils {
                 classicBw = "CLASSIC".equalsIgnoreCase(bw);
               }
             } catch (Throwable ignored2) {
+              // Best-effort; failure is non-critical
             }
             Bitmap bw;
             if (classicBw) {
@@ -330,18 +337,22 @@ public final class BitmapUtils {
               Utils.matToBitmap(rgba, enhanced);
               out = enhanced;
             } catch (Throwable ignore) {
+              // Best-effort; failure is non-critical
             } finally {
               try {
                 rgba.release();
               } catch (Throwable ignore) {
+                // Best-effort; failure is non-critical
               }
               try {
                 bgr.release();
               } catch (Throwable ignore) {
+                // Best-effort; failure is non-critical
               }
             }
           }
         } catch (Throwable ignored) {
+          // Best-effort; failure is non-critical
         }
       }
       return out;

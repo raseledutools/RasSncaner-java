@@ -75,6 +75,7 @@ public final class SessionOcrUpdater {
             context.getString(R.string.ocr_processing_finished),
             android.widget.Toast.LENGTH_SHORT);
       } catch (Throwable ignored) {
+        // Best-effort; failure is non-critical
       }
     } catch (Throwable t) {
       Log.w(TAG, "Failed to update session after OCR job", t);

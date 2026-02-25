@@ -2,14 +2,15 @@ package de.schliweb.makeacopy.utils;
 
 import android.view.View;
 import android.widget.ImageView;
+import lombok.experimental.UtilityClass;
 
 /**
  * Utility class for handling view size operations. This class provides methods to retrieve the
  * width and height of views or default values if the sizes are not available. It also includes a
  * method to retrieve both dimensions for an ImageView in one call.
  */
-public final class ViewSizeUtils {
-  private ViewSizeUtils() {}
+@UtilityClass
+public class ViewSizeUtils {
 
   /**
    * Returns the current width of the provided view if it is available and greater than 0; otherwise
@@ -25,6 +26,7 @@ public final class ViewSizeUtils {
     try {
       w = v.getWidth();
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
     return (w > 0) ? w : def;
   }
@@ -43,6 +45,7 @@ public final class ViewSizeUtils {
     try {
       h = v.getHeight();
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
     return (h > 0) ? h : def;
   }

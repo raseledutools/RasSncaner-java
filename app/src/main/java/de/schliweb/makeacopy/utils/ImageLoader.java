@@ -11,6 +11,8 @@ import android.os.Looper;
 import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.exifinterface.media.ExifInterface;
+import lombok.experimental.UtilityClass;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,13 +26,12 @@ import java.util.concurrent.Executors;
  * stream; for file path, we try to rotate by reading EXIF from the file. - Provides async helper to
  * post result on main thread.
  */
+@UtilityClass
 public final class ImageLoader {
   private static final String TAG = "ImageLoader";
 
   private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
   private static final Handler MAIN = new Handler(Looper.getMainLooper());
-
-  private ImageLoader() {}
 
   public interface Callback {
     void onLoaded(@Nullable Bitmap bitmap);

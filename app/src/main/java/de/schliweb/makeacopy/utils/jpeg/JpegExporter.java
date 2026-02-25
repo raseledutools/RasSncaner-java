@@ -8,6 +8,8 @@ import android.util.Log;
 import de.schliweb.makeacopy.utils.OpenCVUtils;
 import java.io.IOException;
 import java.io.OutputStream;
+
+import lombok.experimental.UtilityClass;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -23,11 +25,10 @@ import org.opencv.imgproc.Imgproc;
  * round resize targets to multiples of 8 (helps JPEG block alignment). - Fast path: for "NONE +
  * resize" without grayscale forcing, uses Bitmap.createScaledBitmap (no OpenCV).
  */
+@UtilityClass
 public final class JpegExporter {
 
   private static final String TAG = "JpegExporter";
-
-  private JpegExporter() {}
 
   /**
    * Exports the given (already perspective-corrected) bitmap to the provided targetUri as JPEG.
@@ -223,14 +224,17 @@ public final class JpegExporter {
       try {
         srcRgba.release();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       try {
         work.release();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       try {
         tmp.release();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       // outBitmap dem GC überlassen
     }
@@ -276,6 +280,7 @@ public final class JpegExporter {
       try {
         rgba.release();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
     }
   }
@@ -464,14 +469,17 @@ public final class JpegExporter {
       try {
         srcRgba.release();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       try {
         work.release();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       try {
         tmp.release();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
     }
   }

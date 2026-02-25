@@ -2,6 +2,7 @@ package de.schliweb.makeacopy.data.library;
 
 import android.content.Context;
 import de.schliweb.makeacopy.utils.FeatureFlags;
+import lombok.experimental.UtilityClass;
 
 /**
  * Singleton service locator for providing repository instances to manage scans and collections
@@ -17,11 +18,10 @@ import de.schliweb.makeacopy.utils.FeatureFlags;
  * thread-safe manner. It also ensures that the database is initialized before creating repository
  * instances.
  */
+@UtilityClass
 public final class LibraryServiceLocator {
   private static volatile ScansRepository scansRepository;
   private static volatile CollectionsRepository collectionsRepository;
-
-  private LibraryServiceLocator() {}
 
   /**
    * Checks whether the "Scan Library" feature is enabled in the application. The feature flag is

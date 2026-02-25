@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.Toast;
@@ -96,6 +95,7 @@ public class CameraOptionsDialogFragment extends DialogFragment {
           try {
             fos.close();
           } catch (Throwable ignored) {
+            // Closing file output stream is best-effort
           }
       }
 
@@ -186,6 +186,7 @@ public class CameraOptionsDialogFragment extends DialogFragment {
           .append(BuildConfig.APPLICATION_ID)
           .append("\n");
     } catch (Throwable ignored) {
+      // Building env header is best-effort; partial result is acceptable
     }
     return sb.toString();
   }
@@ -208,7 +209,10 @@ public class CameraOptionsDialogFragment extends DialogFragment {
       String[] cmd = new String[] {"logcat", "-d", "--pid", String.valueOf(pid), "-v", "time"};
       try {
         Process proc = new ProcessBuilder(cmd).redirectErrorStream(true).start();
-        reader = new java.io.BufferedReader(new java.io.InputStreamReader(proc.getInputStream()));
+        reader =
+            new java.io.BufferedReader(
+                new java.io.InputStreamReader(
+                    proc.getInputStream(), java.nio.charset.StandardCharsets.UTF_8));
         String line;
         while ((line = reader.readLine()) != null) {
           out.append(line).append('\n');
@@ -216,12 +220,16 @@ public class CameraOptionsDialogFragment extends DialogFragment {
         proc.waitFor();
         if (out.length() > 0) return out.toString();
       } catch (Throwable ignore) {
+        // Modern logcat with --pid may not be available; fall back below
       }
       // Fallback: dump all and filter by app id/tag if possible
       out.setLength(0);
       Process proc2 =
           new ProcessBuilder("logcat", "-d", "-v", "time").redirectErrorStream(true).start();
-      reader = new java.io.BufferedReader(new java.io.InputStreamReader(proc2.getInputStream()));
+      reader =
+          new java.io.BufferedReader(
+              new java.io.InputStreamReader(
+                  proc2.getInputStream(), java.nio.charset.StandardCharsets.UTF_8));
       String line2;
       String appId = BuildConfig.APPLICATION_ID;
       while ((line2 = reader.readLine()) != null) {
@@ -233,10 +241,12 @@ public class CameraOptionsDialogFragment extends DialogFragment {
       }
       proc2.waitFor();
     } catch (Throwable ignored) {
+      // Logcat collection is best-effort
     } finally {
       try {
         if (reader != null) reader.close();
       } catch (Throwable ignored2) {
+        // Closing reader is best-effort
       }
     }
     return out.toString();
@@ -246,8 +256,7 @@ public class CameraOptionsDialogFragment extends DialogFragment {
   @Override
   public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
     Context ctx = requireContext();
-    LayoutInflater inflater = LayoutInflater.from(ctx);
-    View view = inflater.inflate(R.layout.dialog_camera_options, null);
+    View view = getLayoutInflater().inflate(R.layout.dialog_camera_options, null);
 
     CheckBox cbSkip = view.findViewById(R.id.dialog_checkbox_skip_ocr);
     CheckBox cbSkipCropping = view.findViewById(R.id.dialog_checkbox_skip_cropping);
@@ -317,6 +326,7 @@ public class CameraOptionsDialogFragment extends DialogFragment {
             de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(
                 dialog, ctx);
           } catch (Throwable ignore) {
+            // Dialog contrast improvement is best-effort
           }
         });
 

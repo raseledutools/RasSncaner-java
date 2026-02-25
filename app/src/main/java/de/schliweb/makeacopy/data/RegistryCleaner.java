@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import lombok.experimental.UtilityClass;
 
 /**
  * Utility for cleaning up on-disk artifacts related to CompletedScansRegistry.
@@ -18,10 +19,9 @@ import java.util.Set;
  * <p>This keeps the app storage tidy without requiring a background job. Can be invoked
  * opportunistically (e.g., when opening the Completed Scans picker).
  */
-public final class RegistryCleaner {
+@UtilityClass
+public class RegistryCleaner {
   private static final String TAG = "RegistryCleaner";
-
-  private RegistryCleaner() {}
 
   /**
    * Represents a report detailing the outcomes of cleanup operations, such as orphaned directories
@@ -156,10 +156,12 @@ public final class RegistryCleaner {
             try {
               reg.remove(s.id());
             } catch (IOException ignore) {
+              // Best-effort; failure is non-critical
             }
             try {
               reg.insert(normalized);
             } catch (IOException ignore) {
+              // Best-effort; failure is non-critical
             }
           }
         } catch (Throwable t) {

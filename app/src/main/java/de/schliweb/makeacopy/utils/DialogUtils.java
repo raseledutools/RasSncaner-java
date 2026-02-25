@@ -2,10 +2,11 @@ package de.schliweb.makeacopy.utils;
 
 import android.content.Context;
 import android.content.res.Configuration;
+import lombok.experimental.UtilityClass;
 
 /** Small dialog-related helpers to reduce UI code duplication. */
+@UtilityClass
 public final class DialogUtils {
-  private DialogUtils() {}
 
   /**
    * In dark mode, some AlertDialog button colors can be low contrast depending on theme. This
@@ -35,9 +36,11 @@ public final class DialogUtils {
             dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEUTRAL).setTextColor(white);
           }
         } catch (Exception ignored) {
+          // Best-effort; failure is non-critical
         }
       }
     } catch (Throwable ignored) {
+      // Best-effort; failure is non-critical
     }
   }
 }

@@ -6,6 +6,8 @@ import android.graphics.Matrix;
 import android.util.Log;
 import de.schliweb.makeacopy.data.CompletedScansRegistry;
 import de.schliweb.makeacopy.ui.export.session.CompletedScan;
+import lombok.experimental.UtilityClass;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -17,10 +19,9 @@ import java.util.List;
  * outputs (text.txt, words.json). Functionality mirrors the previously inlined logic in
  * ExportFragment to reduce its complexity without changing behavior.
  */
+@UtilityClass
 public final class ScanPersister {
   private static final String TAG = "ScanPersister";
-
-  private ScanPersister() {}
 
   /**
    * Persist the given in-memory scan to disk and registry.
@@ -62,6 +63,7 @@ public final class ScanPersister {
       try {
         deg = inMemory.rotationDeg();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       deg = ((deg % 360) + 360) % 360;
       if (deg != 0 && bmp != null && !bmp.isRecycled()) {
@@ -93,17 +95,20 @@ public final class ScanPersister {
       thumb.compress(Bitmap.CompressFormat.JPEG, 75, tfos);
       tfos.flush();
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
     if (sourceForThumb != bmp && sourceForThumb != null && sourceForThumb != baked) {
       try {
         sourceForThumb.recycle();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
     }
     if (baked != bmp) {
       try {
         baked.recycle();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
     }
 

@@ -24,6 +24,7 @@ public final class CompositeCornerDetector implements CornerDetector {
     try {
       r1 = docQuad.detect(src, ctx);
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
     if (r1 != null && r1.success) return r1;
 
@@ -31,6 +32,7 @@ public final class CompositeCornerDetector implements CornerDetector {
     try {
       r2 = legacy.detect(src, ctx);
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
     if (r2 != null && r2.success) return r2;
     return DetectionResult.fail(Source.FALLBACK);

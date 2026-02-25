@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import lombok.experimental.UtilityClass;
 
 /**
  * Utility to parse a compact JSON representation of OCR words ("words_json") into a list of
@@ -27,8 +28,8 @@ import java.util.Locale;
  * (int/float/string). Values are clamped to [0,1]. - Malformed entries are skipped; parser never
  * throws.
  */
+@UtilityClass
 public final class WordsJson {
-  private WordsJson() {}
 
   public static List<RecognizedWord> parseFile(File file) throws IOException {
     byte[] data;
@@ -87,6 +88,7 @@ public final class WordsJson {
           return obj.getAsJsonArray("result");
       }
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
     return null;
   }
@@ -146,6 +148,7 @@ public final class WordsJson {
         if (r != null) return r;
       }
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
     return null;
   }
@@ -167,6 +170,7 @@ public final class WordsJson {
         return makeRect(a0, a1, a0 + a2, a1 + a3);
       }
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
     return null;
   }
@@ -230,6 +234,7 @@ public final class WordsJson {
         if (el.getAsJsonPrimitive().isBoolean()) return el.getAsBoolean() ? 1f : 0f;
       }
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
     return null;
   }
@@ -273,6 +278,7 @@ public final class WordsJson {
         try {
           conf = w.getConfidence();
         } catch (Throwable ignore) {
+          // Best-effort; failure is non-critical
         }
         sb.append('{')
             .append("\"text\":")

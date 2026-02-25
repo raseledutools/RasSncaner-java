@@ -28,6 +28,8 @@ public class OCRViewModel extends ViewModel {
   }
 
   /**
+   * Describes the coordinate transform from original image to target (e.g. A4) dimensions.
+   *
    * @param offsetY letterboxing, else 0
    */
   // Transform Original → Target (for example A4)
@@ -42,6 +44,8 @@ public class OCRViewModel extends ViewModel {
       int offsetY) {}
 
   /**
+   * Immutable snapshot of the OCR UI state.
+   *
    * @param durationMs optional
    * @param meanConfidence optional (0..100)
    * @param transform optional

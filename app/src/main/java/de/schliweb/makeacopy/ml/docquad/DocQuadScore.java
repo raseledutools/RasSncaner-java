@@ -1,13 +1,14 @@
 package de.schliweb.makeacopy.ml.docquad;
 
+import lombok.experimental.UtilityClass;
+
 /**
  * Small geometry utilities for deterministic quad scoring.
  *
  * <p>Coordinates are typically in 256-space (double), order TL,TR,BR,BL.
  */
-public final class DocQuadScore {
-
-  private DocQuadScore() {}
+@UtilityClass
+public class DocQuadScore {
 
   public static double areaAbs(double[][] quad) {
     requireQuad(quad);

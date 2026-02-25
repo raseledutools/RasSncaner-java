@@ -1,5 +1,7 @@
 package de.schliweb.makeacopy.ml.docquad;
 
+import lombok.experimental.UtilityClass;
+
 /**
  * Minimal, deterministic postprocessor for DocQuadNet-256.
  *
@@ -7,7 +9,8 @@ package de.schliweb.makeacopy.ml.docquad;
  * - Peak coordinates (64-space) → 256-space: (i + 0.5) * 4.0 - Mask statistics from {@code
  * mask_logits} [1,1,64,64] via sigmoid
  */
-public final class DocQuadPostprocessor {
+@UtilityClass
+public class DocQuadPostprocessor {
 
   public enum ChosenSource {
     CORNERS,
@@ -18,8 +21,6 @@ public final class DocQuadPostprocessor {
     ARGMAX,
     REFINE_3X3,
   }
-
-  private DocQuadPostprocessor() {}
 
   public static Result postprocess(DocQuadOrtRunner.Outputs out) {
     if (out == null) {
@@ -745,6 +746,8 @@ public final class DocQuadPostprocessor {
   }
 
   /**
+   * Postprocessing result containing detected document corners and quality penalties.
+   *
    * @param penaltyCorners M6d Penalties (lower is better): - penaltyCorners: Geometry + Mask
    *     disagreement (only for corner quad) - penaltyMask: Geometry only (or +Inf if mask quad was
    *     not viable)

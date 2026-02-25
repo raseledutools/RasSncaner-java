@@ -1,11 +1,13 @@
 package de.schliweb.makeacopy.utils;
 
+import lombok.experimental.UtilityClass;
+
 /**
  * Centralized rotation decision helpers used by thumbnails/previews and export paths. Keeping the
  * policy in one place allows simple JVM tests without Android runtime.
  */
+@UtilityClass
 public final class RotationPolicy {
-  private RotationPolicy() {}
 
   /**
    * Returns true if a bitmap should be rotated for UI preview/thumbnail rendering. - In-memory

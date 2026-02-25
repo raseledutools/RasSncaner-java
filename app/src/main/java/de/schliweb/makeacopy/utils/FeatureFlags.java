@@ -1,5 +1,7 @@
 package de.schliweb.makeacopy.utils;
 
+import lombok.experimental.UtilityClass;
+
 /**
  * A utility class for handling feature flags within the application.
  *
@@ -9,8 +11,8 @@ package de.schliweb.makeacopy.utils;
  *
  * <p>This class is not intended to be instantiated or extended.
  */
-public final class FeatureFlags {
-  private FeatureFlags() {}
+@UtilityClass
+public class FeatureFlags {
 
   /**
    * Determines whether the OCR review feature is enabled in the application's build configuration.

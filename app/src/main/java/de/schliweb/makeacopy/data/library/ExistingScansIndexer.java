@@ -74,10 +74,11 @@ public final class ExistingScansIndexer {
                   && better != null
                   && !better.trim().isEmpty()
                   && !isGenericPlaceholder(better)
-                  && (!better.equals(curTitle))) {
+                  && !better.equals(curTitle)) {
                 repo.updateTitle(app, id, better);
               }
             } catch (Throwable ignoreRepair) {
+              // Best-effort; failure is non-critical
             }
             // Repair missing export path if registry has a readable file path
             try {
@@ -89,6 +90,7 @@ public final class ExistingScansIndexer {
                 }
               }
             } catch (Throwable ignoreRepair2) {
+              // Best-effort; failure is non-critical
             }
             // Ensure sourceMetaJson marks this as a CompletedScanEntry for UI filtering
             try {
@@ -100,6 +102,7 @@ public final class ExistingScansIndexer {
                 repo.indexExportedScan(app, patchMeta);
               }
             } catch (Throwable ignoreMark) {
+              // Best-effort; failure is non-critical
             }
             // Ensure membership in default collection
             try {
@@ -109,10 +112,12 @@ public final class ExistingScansIndexer {
                 cr.assignScanToCollection(app, id, def.id);
               }
             } catch (Throwable ignoreMembership) {
+              // Best-effort; failure is non-critical
             }
             continue;
           }
         } catch (Throwable ignore) {
+          // Best-effort; failure is non-critical
         }
         String title = deriveTitle(s);
         long created = s.createdAt();
@@ -131,6 +136,7 @@ public final class ExistingScansIndexer {
             cr.assignScanToCollection(app, id, def.id);
           }
         } catch (Throwable ignoreAssign) {
+          // Best-effort; failure is non-critical
         }
         newCount++;
       }
@@ -187,6 +193,7 @@ public final class ExistingScansIndexer {
       java.io.File f = new java.io.File(p);
       if (f.exists() && f.isFile()) return f.getAbsolutePath();
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
     return null;
   }
@@ -266,6 +273,7 @@ public final class ExistingScansIndexer {
         }
       }
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
     String id = s.id();
     return (id != null && !id.isEmpty()) ? id : "scan";

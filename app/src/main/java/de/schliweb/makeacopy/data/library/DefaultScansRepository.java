@@ -142,6 +142,7 @@ public class DefaultScansRepository implements ScansRepository {
       try {
         entity = db.scansDao().getById(id);
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
 
       // Best-effort: If this scan originated from the app's registry (incrementally indexed),
@@ -159,6 +160,7 @@ public class DefaultScansRepository implements ScansRepository {
         try {
           bestEffortDeleteBackedFiles(context.getApplicationContext(), entity);
         } catch (Throwable ignore) {
+          // Best-effort; failure is non-critical
         }
       }
 
@@ -184,6 +186,7 @@ public class DefaultScansRepository implements ScansRepository {
         }
       }
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
 
     // delete cover path if present (may be a file path or uri) and not already deleted
@@ -221,6 +224,7 @@ public class DefaultScansRepository implements ScansRepository {
         }
       }
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
   }
 

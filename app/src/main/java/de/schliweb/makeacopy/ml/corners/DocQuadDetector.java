@@ -86,6 +86,7 @@ public final class DocQuadDetector implements CornerDetector {
       try {
         if (in256 != null && !in256.isRecycled()) in256.recycle();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
     }
   }

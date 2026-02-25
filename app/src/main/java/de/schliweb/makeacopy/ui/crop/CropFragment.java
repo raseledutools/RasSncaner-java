@@ -97,6 +97,7 @@ public class CropFragment extends Fragment {
               cameraViewModel.setImagePath(null);
             }
           } catch (Throwable ignored) {
+            // Best-effort; failure is non-critical
           }
           // Navigate back to Camera
           Navigation.findNavController(requireView()).navigate(R.id.navigation_camera);
@@ -159,6 +160,7 @@ public class CropFragment extends Fragment {
                       binding.cropDevOverlay.setDebugText(null);
                       binding.cropDevOverlay.setVisibility(View.GONE);
                     } catch (Throwable ignore) {
+                      // Best-effort; failure is non-critical
                     }
                   }
                 }
@@ -197,6 +199,7 @@ public class CropFragment extends Fragment {
                   if (rotated != null) safe = rotated;
                 }
               } catch (Throwable ignore) {
+                // Best-effort; failure is non-critical
               }
               // Update both the view and the VM bitmap; rotate trapezoid selection with the image
               binding.imageToCrop.setImageBitmap(safe);
@@ -280,6 +283,7 @@ public class CropFragment extends Fragment {
                 de.schliweb.makeacopy.utils.OpenCVUtils.init(
                     requireContext().getApplicationContext());
               } catch (Throwable ignore) {
+                // Best-effort; failure is non-critical
               }
 
               boolean hasValid = false;
@@ -298,6 +302,7 @@ public class CropFragment extends Fragment {
                   hasValid = true;
                 }
               } catch (Throwable ignore) {
+                // Best-effort; failure is non-critical
               }
 
               final boolean finalHasValid = hasValid;
@@ -428,6 +433,7 @@ public class CropFragment extends Fragment {
         }
       }
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
     if (fullResSource == null) {
       // Fallback: crop the currently displayed bitmap (might be scaled)
@@ -518,6 +524,7 @@ public class CropFragment extends Fragment {
         binding.trapezoidSelection.setVisibility(View.GONE);
         binding.trapezoidSelection.setImageBitmap(null);
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       // Prevent the imageBitmap observer from re-initializing edge detection for this write-back
       skipNextBitmapObserver = true;
@@ -562,6 +569,7 @@ public class CropFragment extends Fragment {
       // Ensure draw order is on top even if ConstraintLayout reorders children
       binding.trapezoidSelection.bringToFront();
     } catch (Throwable ignored) {
+      // Best-effort; failure is non-critical
     }
 
     // Ensure in crop mode the cropped_image (when later shown) would anchor to button_container to
@@ -582,6 +590,7 @@ public class CropFragment extends Fragment {
       int dest = skipOcr ? R.id.navigation_export : R.id.navigation_ocr;
       Navigation.findNavController(requireView()).navigate(dest);
     } catch (Throwable ignored) {
+      // Best-effort; failure is non-critical
     }
   }
 
@@ -612,6 +621,7 @@ public class CropFragment extends Fragment {
     try {
       binding.trapezoidSelection.setBottomUiInsetPx(inset);
     } catch (Throwable ignored) {
+      // Best-effort; failure is non-critical
     }
   }
 
@@ -639,6 +649,7 @@ public class CropFragment extends Fragment {
         binding.cropDevOverlay.setDebugText(null);
       }
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
     super.onDestroyView();
     binding = null;
@@ -657,6 +668,7 @@ public class CropFragment extends Fragment {
         binding.cropDevOverlay.setDebugText(null);
       }
     } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
     }
   }
 
