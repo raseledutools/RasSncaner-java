@@ -194,6 +194,7 @@ public class PdfCreator {
       try {
         OpenCVUtils.init(context);
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
     } catch (Throwable t) {
       Log.e(TAG, "PDFBox init failed", t);
@@ -222,6 +223,7 @@ public class PdfCreator {
         try {
           document.getDocument().setVersion(1.5f);
         } catch (Throwable ignore) {
+          // Best-effort; failure is non-critical
         }
         document.getDocumentInformation().setCreator("MakeACopy");
         document.getDocumentInformation().setProducer("MakeACopy");
@@ -240,6 +242,7 @@ public class PdfCreator {
           page.setTrimBox(pageSize);
           page.setArtBox(pageSize);
         } catch (Throwable ignore) {
+          // Best-effort; failure is non-critical
         }
         document.addPage(page);
 
@@ -306,6 +309,7 @@ public class PdfCreator {
         try {
           prepared.recycle();
         } catch (Throwable ignore) {
+          // Best-effort; failure is non-critical
         }
       }
     }
@@ -414,6 +418,7 @@ public class PdfCreator {
           fontIdx = f;
           break;
         } catch (Exception ignore) {
+          // Best-effort; failure is non-critical
         }
       }
       if (fontIdx < 0) {
@@ -695,6 +700,7 @@ public class PdfCreator {
    *     converted to grayscale or black and white. Returns null if the original Bitmap is null or
    *     if an error occurs during conversion.
    */
+  @SuppressWarnings("UnusedMethod") // called from createPdf and multi-page export
   private static Bitmap processImageForPdf(
       Bitmap original,
       boolean toGray,
@@ -785,6 +791,7 @@ public class PdfCreator {
         try {
           base.recycle();
         } catch (Throwable ignore) {
+          // Best-effort; failure is non-critical
         }
       }
       return viaCv; // may be null → caller will handle
@@ -792,12 +799,13 @@ public class PdfCreator {
 
     // OCR-robust preprocessing for PDF: use binary output to ensure B/W embedding (preview may
     // remain grayscale)
-    if (bwMode == BwMode.OCR_ROBUST && !toBw) {
+    if (bwMode == BwMode.OCR_ROBUST) {
       Bitmap pre = OpenCVUtils.prepareForOCR(base, /*binaryOutput*/ false);
       if (base != original) {
         try {
           base.recycle();
         } catch (Throwable ignore) {
+          // Best-effort; failure is non-critical
         }
       }
       if (pre != null) return pre;
@@ -812,23 +820,10 @@ public class PdfCreator {
       try {
         base.recycle();
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
     }
     return viaCvGray; // may be null → caller will handle
-  }
-
-  /**
-   * Calculates the pixel dimensions of an A4 paper size at a given DPI (dots per inch).
-   *
-   * @param dpi the resolution in dots per inch used to calculate the dimensions.
-   * @return an array of two integers where the first element is the width in pixels and the second
-   *     element is the height in pixels.
-   */
-  private static int[] a4PixelsForDpi(int dpi) {
-    // A4 size in inches: 8.27 x 11.69
-    int w = Math.max(1, Math.round(8.27f * dpi));
-    int h = Math.max(1, Math.round(11.69f * dpi));
-    return new int[] {w, h};
   }
 
   /**
@@ -1001,14 +996,12 @@ public class PdfCreator {
 
       // Find first RTL character position
       int firstRtlPos = -1;
-      int lastRtlPos = -1;
       for (int i = 0; i < text.length(); ) {
         int cp = text.codePointAt(i);
         byte dir = Character.getDirectionality(cp);
         if (dir == Character.DIRECTIONALITY_RIGHT_TO_LEFT
             || dir == Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC) {
           if (firstRtlPos < 0) firstRtlPos = i;
-          lastRtlPos = i;
         }
         i += Character.charCount(cp);
       }
@@ -1209,6 +1202,7 @@ public class PdfCreator {
       try {
         OpenCVUtils.init(context);
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
     } catch (Throwable t) {
       Log.e(TAG, "PDFBox init failed", t);
@@ -1218,6 +1212,7 @@ public class PdfCreator {
       try {
         document.getDocument().setVersion(1.5f);
       } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
       document.getDocumentInformation().setCreator("MakeACopy");
       document.getDocumentInformation().setProducer("MakeACopy");
@@ -1233,6 +1228,7 @@ public class PdfCreator {
             try {
               listener.onPageProcessed(i + 1, total);
             } catch (Throwable ignore) {
+              // Best-effort; failure is non-critical
             }
           continue; // skip nulls defensively
         }
@@ -1270,6 +1266,7 @@ public class PdfCreator {
             page.setTrimBox(pageSize);
             page.setArtBox(pageSize);
           } catch (Throwable ignore) {
+            // Best-effort; failure is non-critical
           }
           document.addPage(page);
 
@@ -1316,6 +1313,7 @@ public class PdfCreator {
             try {
               listener.onPageProcessed(i + 1, total);
             } catch (Throwable ignore) {
+              // Best-effort; failure is non-critical
             }
           }
         } catch (Exception e) {
@@ -1326,6 +1324,7 @@ public class PdfCreator {
             try {
               prepared.recycle();
             } catch (Throwable ignore) {
+              // Best-effort; failure is non-critical
             }
           }
         }

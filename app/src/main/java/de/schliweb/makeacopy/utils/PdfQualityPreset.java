@@ -46,7 +46,7 @@ public enum PdfQualityPreset {
   public static PdfQualityPreset fromName(String name, PdfQualityPreset def) {
     if (name == null) return def;
     try {
-      return PdfQualityPreset.valueOf(name.trim().toUpperCase());
+      return PdfQualityPreset.valueOf(name.trim().toUpperCase(java.util.Locale.ROOT));
     } catch (IllegalArgumentException ex) {
       return def;
     }

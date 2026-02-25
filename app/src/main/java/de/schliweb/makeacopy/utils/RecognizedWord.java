@@ -3,6 +3,7 @@ package de.schliweb.makeacopy.utils;
 import android.graphics.RectF;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 /**
  * Represents a single word that has been recognized, typically in the context of image or text
@@ -10,6 +11,7 @@ import lombok.Setter;
  * size, and a confidence level indicating the likelihood of its correctness.
  */
 @Getter
+@ToString(of = {"text", "boundingBox", "confidence"})
 public class RecognizedWord {
 
   /**
@@ -154,19 +156,6 @@ public class RecognizedWord {
 
   public float centerX() {
     return 0.5f * (boundingBox.left + boundingBox.right);
-  }
-
-  @Override
-  public String toString() {
-    return "RecognizedWord{"
-        + "text='"
-        + text
-        + '\''
-        + ", boundingBox="
-        + boundingBox
-        + ", confidence="
-        + confidence
-        + '}';
   }
 
   // ---- private helpers ----

@@ -42,8 +42,7 @@ public final class ShareIntentHelper {
     if (fragment == null || documentUri == null) return;
     Context ctx = fragment.requireContext();
 
-    String lower = fileName != null ? fileName.toLowerCase() : "";
-    boolean isPdf = lower.endsWith(".pdf");
+    String lower = fileName != null ? fileName.toLowerCase(java.util.Locale.ROOT) : "";
     boolean isJpg = lower.endsWith(".jpg") || lower.endsWith(".jpeg");
     boolean isZip = lower.endsWith(".zip");
     String primaryMime = isZip ? "application/zip" : (isJpg ? "image/jpeg" : "application/pdf");

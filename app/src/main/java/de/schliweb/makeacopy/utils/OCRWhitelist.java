@@ -123,7 +123,7 @@ public class OCRWhitelist {
   public static String getWhitelistForLangSpec(String langSpec) {
     if (langSpec == null || langSpec.trim().isEmpty()) return DEFAULT;
     StringBuilder sb = new StringBuilder();
-    for (String part : langSpec.split("\\+")) {
+    for (String part : langSpec.split("\\+", -1)) {
       String lang = part.trim();
       if (!lang.isEmpty()) sb.append(getWhitelistForLanguage(lang));
     }
