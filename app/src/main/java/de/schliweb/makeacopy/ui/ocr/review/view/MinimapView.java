@@ -44,6 +44,7 @@ public class MinimapView extends View {
   private final Paint ocrBoxPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
   private final RectF tmpRect = new RectF();
 
+  @SuppressWarnings("UnusedVariable") // detector is retained by the view's touch listener
   private GestureDetector gestureDetector;
 
   private ValueAnimator autoHideAnimator;
@@ -104,8 +105,8 @@ public class MinimapView extends View {
         setContentDescription("Minimap, tap to navigate, double-tap to toggle zoom");
       }
     } catch (Throwable ignore) {
+      // Accessibility setup is best-effort
     }
-
     gestureDetector =
         new GestureDetector(
             getContext(),
@@ -412,6 +413,7 @@ public class MinimapView extends View {
           });
       pm.show();
     } catch (Throwable ignore) {
+      // Context menu display is best-effort
     }
   }
 
@@ -467,6 +469,7 @@ public class MinimapView extends View {
               AccessibilityNodeInfo.ACTION_CLICK, "Toggle zoom");
       info.addAction(click);
     } catch (Throwable ignore) {
+      // Accessibility action setup is best-effort
     }
   }
 
