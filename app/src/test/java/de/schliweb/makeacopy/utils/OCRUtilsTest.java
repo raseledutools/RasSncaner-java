@@ -247,40 +247,38 @@ public class OCRUtilsTest {
   public void multiLanguageFormat_plusSeparator_isValid() {
     // Verify that the multi-language format uses + as separator
     String multiLang = "deu+eng";
-    String[] parts = multiLang.split("\\+");
-    assertEquals(2, parts.length);
-    assertEquals("deu", parts[0]);
-    assertEquals("eng", parts[1]);
+    assertTrue(multiLang.contains("+"));
+    assertEquals("deu", multiLang.substring(0, multiLang.indexOf('+')));
+    assertEquals("eng", multiLang.substring(multiLang.indexOf('+') + 1));
   }
 
   @Test
   public void multiLanguageFormat_threeLanguages_isValid() {
     String multiLang = "deu+eng+fra";
-    String[] parts = multiLang.split("\\+");
-    assertEquals(3, parts.length);
-    assertEquals("deu", parts[0]);
-    assertEquals("eng", parts[1]);
-    assertEquals("fra", parts[2]);
+    assertTrue(multiLang.contains("+"));
+    int first = multiLang.indexOf('+');
+    int second = multiLang.indexOf('+', first + 1);
+    assertEquals("deu", multiLang.substring(0, first));
+    assertEquals("eng", multiLang.substring(first + 1, second));
+    assertEquals("fra", multiLang.substring(second + 1));
   }
 
   @Test
   public void multiLanguageFormat_rtlPlusLtr_isValid() {
     // Persian (RTL) + English (LTR)
     String multiLang = "fas+eng";
-    String[] parts = multiLang.split("\\+");
-    assertEquals(2, parts.length);
-    assertEquals("fas", parts[0]);
-    assertEquals("eng", parts[1]);
+    assertTrue(multiLang.contains("+"));
+    assertEquals("fas", multiLang.substring(0, multiLang.indexOf('+')));
+    assertEquals("eng", multiLang.substring(multiLang.indexOf('+') + 1));
   }
 
   @Test
   public void multiLanguageFormat_arabicPlusFrench_isValid() {
     // Arabic (RTL) + French (LTR)
     String multiLang = "ara+fra";
-    String[] parts = multiLang.split("\\+");
-    assertEquals(2, parts.length);
-    assertEquals("ara", parts[0]);
-    assertEquals("fra", parts[1]);
+    assertTrue(multiLang.contains("+"));
+    assertEquals("ara", multiLang.substring(0, multiLang.indexOf('+')));
+    assertEquals("fra", multiLang.substring(multiLang.indexOf('+') + 1));
   }
 
   // ==================== Helper Methods ====================
