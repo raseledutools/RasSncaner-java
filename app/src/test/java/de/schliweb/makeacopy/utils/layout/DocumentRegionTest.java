@@ -16,16 +16,16 @@ public class DocumentRegionTest {
   public void typeEnum_allValuesPresent() {
     DocumentRegion.Type[] values = DocumentRegion.Type.values();
     assertEquals(10, values.length);
-    assertNotNull(DocumentRegion.Type.valueOf("HEADER"));
-    assertNotNull(DocumentRegion.Type.valueOf("BODY"));
-    assertNotNull(DocumentRegion.Type.valueOf("FOOTER"));
-    assertNotNull(DocumentRegion.Type.valueOf("TABLE"));
-    assertNotNull(DocumentRegion.Type.valueOf("FIGURE"));
-    assertNotNull(DocumentRegion.Type.valueOf("CAPTION"));
-    assertNotNull(DocumentRegion.Type.valueOf("SIDEBAR"));
-    assertNotNull(DocumentRegion.Type.valueOf("MARGIN_NOTE"));
-    assertNotNull(DocumentRegion.Type.valueOf("COLUMN"));
-    assertNotNull(DocumentRegion.Type.valueOf("UNKNOWN"));
+    assertEquals(DocumentRegion.Type.HEADER, DocumentRegion.Type.valueOf("HEADER"));
+    assertEquals(DocumentRegion.Type.BODY, DocumentRegion.Type.valueOf("BODY"));
+    assertEquals(DocumentRegion.Type.FOOTER, DocumentRegion.Type.valueOf("FOOTER"));
+    assertEquals(DocumentRegion.Type.TABLE, DocumentRegion.Type.valueOf("TABLE"));
+    assertEquals(DocumentRegion.Type.FIGURE, DocumentRegion.Type.valueOf("FIGURE"));
+    assertEquals(DocumentRegion.Type.CAPTION, DocumentRegion.Type.valueOf("CAPTION"));
+    assertEquals(DocumentRegion.Type.SIDEBAR, DocumentRegion.Type.valueOf("SIDEBAR"));
+    assertEquals(DocumentRegion.Type.MARGIN_NOTE, DocumentRegion.Type.valueOf("MARGIN_NOTE"));
+    assertEquals(DocumentRegion.Type.COLUMN, DocumentRegion.Type.valueOf("COLUMN"));
+    assertEquals(DocumentRegion.Type.UNKNOWN, DocumentRegion.Type.valueOf("UNKNOWN"));
   }
 
   // ── Constructor (2-arg) ──
