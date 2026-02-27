@@ -11,16 +11,17 @@ public class SourceTest {
   public void allValues_present() {
     Source[] values = Source.values();
     assertEquals(3, values.length);
-    assertNotNull(Source.valueOf("DOCQUAD"));
-    assertNotNull(Source.valueOf("OPENCV"));
-    assertNotNull(Source.valueOf("FALLBACK"));
+    assertEquals(Source.DOCQUAD, Source.valueOf("DOCQUAD"));
+    assertEquals(Source.OPENCV, Source.valueOf("OPENCV"));
+    assertEquals(Source.FALLBACK, Source.valueOf("FALLBACK"));
   }
 
   @Test
-  public void ordinal_order() {
-    assertEquals(0, Source.DOCQUAD.ordinal());
-    assertEquals(1, Source.OPENCV.ordinal());
-    assertEquals(2, Source.FALLBACK.ordinal());
+  public void values_order() {
+    Source[] values = Source.values();
+    assertEquals(Source.DOCQUAD, values[0]);
+    assertEquals(Source.OPENCV, values[1]);
+    assertEquals(Source.FALLBACK, values[2]);
   }
 
   @Test(expected = IllegalArgumentException.class)
