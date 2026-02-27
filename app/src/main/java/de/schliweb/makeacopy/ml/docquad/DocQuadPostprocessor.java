@@ -84,6 +84,10 @@ public class DocQuadPostprocessor {
       quadOriginal = mapCorners256ToOriginal(qm.quad256, lb);
       chosenOriginal = (chosenSource == ChosenSource.MASK) ? quadOriginal : cornersOriginal;
     }
+    // Evidence-based product guardrails for suspicious detection
+    String suspiciousReason = evaluateSuspicious(cornerHeatmaps, ms, qm, pc, peakMode);
+    boolean suspiciousForProduct = suspiciousReason != null;
+
     return new Result(
         corners256,
         cornersOriginal,
@@ -96,7 +100,111 @@ public class DocQuadPostprocessor {
         chosenOriginal,
         chosenSource,
         penaltyCorners,
-        penaltyMask);
+        penaltyMask,
+        suspiciousForProduct,
+        suspiciousReason);
+  }
+
+  /**
+   * Minimum number of standard deviations the peak must be above the mean for each corner heatmap.
+   * Below this threshold, the heatmap is considered diffuse and the model uncertain about corner
+   * placement. A well-peaked heatmap has a peak many σ above the mean.
+   */
+  private static final double PEAK_SIGMA_THRESHOLD = 5.0;
+
+  /**
+   * Maximum allowed mask probability mean for a non-diffuse mask. A high mean with low area
+   * indicates the mask is spread across the image.
+   */
+  private static final double MASK_DIFFUSE_MEAN_THRESHOLD = 0.45;
+
+  /** Minimum mask area (pixels with prob > 0.5) for a valid document detection. */
+  private static final int MASK_DIFFUSE_MIN_AREA = 100;
+
+  /** Maximum geometry penalty before the result is considered implausible. */
+  private static final double GEOMETRY_IMPLAUSIBLE_THRESHOLD = 1e4;
+
+  /**
+   * Evaluates evidence-based guardrails to determine if the detection result is suspicious.
+   *
+   * @return a reason string if suspicious, or null if the result appears reliable
+   */
+  private static String evaluateSuspicious(
+      float[][][][] cornerHeatmaps,
+      MaskStats ms,
+      QuadFromMask qm,
+      PathChoice pc,
+      PeakMode peakMode) {
+
+    // Rule D: LOW_PEAK_MARGIN - check if corner heatmap peaks are ambiguous
+    if (hasLowPeakMargin(cornerHeatmaps)) {
+      return "LOW_PEAK_MARGIN";
+    }
+
+    // Rule E: MASK_DIFFUSE - mask probability is spread without clear document region
+    if (ms.maskProbMean > MASK_DIFFUSE_MEAN_THRESHOLD
+        && ms.maskProbGt05Count < MASK_DIFFUSE_MIN_AREA) {
+      return "MASK_DIFFUSE";
+    }
+
+    // Rule F: CHOSEN_MASK_INCONSISTENT - mask fallback was used and corners have high penalty
+    if (qm.usedFallback && pc.penaltyCorners > GEOMETRY_IMPLAUSIBLE_THRESHOLD) {
+      return "MASK_FALLBACK_AND_PCORNER";
+    }
+
+    // DISAGREE_64PX - corners and mask quads disagree significantly (> 64px in 256-space)
+    if (!qm.usedFallback) {
+      double maxDist = maxCornerDistance(pc.chosenQuad256, qm.quad256);
+      if (pc.chosenSource == ChosenSource.CORNERS && maxDist > 64.0) {
+        return "DISAGREE_64PX";
+      }
+    }
+
+    // GEOMETRY_IMPLAUSIBLE - chosen quad has severe geometric issues
+    double chosenPenalty =
+        (pc.chosenSource == ChosenSource.MASK) ? pc.penaltyMask : pc.penaltyCorners;
+    if (chosenPenalty >= GEOMETRY_IMPLAUSIBLE_THRESHOLD) {
+      return "GEOMETRY_IMPLAUSIBLE";
+    }
+
+    return null;
+  }
+
+  /**
+   * Checks if any corner heatmap has a low peak-to-mean ratio. A low ratio indicates the model is
+   * uncertain about corner placement (the heatmap is diffuse rather than sharply peaked).
+   */
+  private static boolean hasLowPeakMargin(float[][][][] cornerHeatmaps) {
+    for (int c = 0; c < 4; c++) {
+      float[][] hm = cornerHeatmaps[0][c];
+      float best = -Float.MAX_VALUE;
+      double sum = 0.0;
+      int n = 0;
+      for (int y = 0; y < 64; y++) {
+        for (int x = 0; x < 64; x++) {
+          float v = hm[y][x];
+          sum += v;
+          n++;
+          if (v > best) {
+            best = v;
+          }
+        }
+      }
+      double mean = sum / Math.max(n, 1);
+      double sumSq = 0.0;
+      for (int y = 0; y < 64; y++) {
+        for (int x = 0; x < 64; x++) {
+          double d = hm[y][x] - mean;
+          sumSq += d * d;
+        }
+      }
+      double std = Math.sqrt(sumSq / Math.max(n, 1));
+      // If the peak is not many σ above the mean, the heatmap is diffuse
+      if (std > 1e-6 && (best - mean) / std < PEAK_SIGMA_THRESHOLD) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -764,7 +872,9 @@ public class DocQuadPostprocessor {
       double[][] chosenQuadOriginal,
       ChosenSource chosenSource,
       double penaltyCorners,
-      double penaltyMask) {}
+      double penaltyMask,
+      boolean suspiciousForProduct,
+      String suspiciousReason) {}
 
   record PathChoice(
       double[][] chosenQuad256,

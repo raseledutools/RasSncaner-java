@@ -52,11 +52,15 @@ public final class DocQuadOrtRunner implements AutoCloseable {
   private final OrtEnvironment env;
   private final OrtSession session;
 
-  private DocQuadOrtRunner(Context context, String modelAssetPath) throws Exception {
+  DocQuadOrtRunner(Context context, String modelAssetPath) throws Exception {
+    this(context, modelAssetPath, context.getCacheDir());
+  }
+
+  DocQuadOrtRunner(Context context, String modelAssetPath, File cacheDir) throws Exception {
     this.env = OrtEnvironment.getEnvironment();
 
     // Optimized model loading: copy to cache and use file path for mmap support.
-    File modelFile = copyAssetToCache(context, modelAssetPath);
+    File modelFile = copyAssetToCache(context, modelAssetPath, cacheDir);
 
     this.session = createSessionWithFallback(env, modelFile.getAbsolutePath());
     Log.d(TAG, "Model loaded from " + modelFile.getAbsolutePath());
@@ -242,7 +246,8 @@ public final class DocQuadOrtRunner implements AutoCloseable {
    * @return a File object pointing to the copied asset in the cache directory
    * @throws IOException if an I/O error occurs during file copy
    */
-  private static File copyAssetToCache(Context context, String assetPath) throws IOException {
+  private static File copyAssetToCache(Context context, String assetPath, File cacheDir)
+      throws IOException {
     AssetManager am = context.getAssets();
     String baseName = new File(assetPath).getName();
     long versionCode;
@@ -254,7 +259,7 @@ public final class DocQuadOrtRunner implements AutoCloseable {
       versionCode = -1L;
     }
     String versionedName = versionCode + "_" + baseName;
-    File outFile = new File(context.getCacheDir(), versionedName);
+    File outFile = new File(cacheDir, versionedName);
     if (!outFile.exists()) {
       Log.i(TAG, "Copying asset " + assetPath + " to cache as " + versionedName + "...");
       try (InputStream is = am.open(assetPath);
@@ -266,7 +271,7 @@ public final class DocQuadOrtRunner implements AutoCloseable {
         }
       }
       // Clean up stale cached copies from previous versions.
-      deleteStaleModelFiles(context.getCacheDir(), baseName, versionedName);
+      deleteStaleModelFiles(cacheDir, baseName, versionedName);
     }
     return outFile;
   }

@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import java.io.File;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -25,14 +26,15 @@ public class DocQuadOrtGoldenTest extends DocQuadGoldenTestBase {
 
   @Test
   public void golden_stats_match_v1() throws Exception {
-    Context ctx = InstrumentationRegistry.getInstrumentation().getContext();
+    Context testCtx = InstrumentationRegistry.getInstrumentation().getContext();
+    File cacheDir = InstrumentationRegistry.getInstrumentation().getTargetContext().getCacheDir();
 
     // 1) Input exakt wie in Python Golden Sample v1
     float[] input = makeGoldenInputV1Nchw();
 
     // 2) ORT laufen lassen
     DocQuadOrtRunner.Outputs out;
-    try (DocQuadOrtRunner runner = new DocQuadOrtRunner(ctx, MODEL_ASSET)) {
+    try (DocQuadOrtRunner runner = new DocQuadOrtRunner(testCtx, MODEL_ASSET, cacheDir)) {
       out = runner.run(input);
     }
 
@@ -51,7 +53,7 @@ public class DocQuadOrtGoldenTest extends DocQuadGoldenTestBase {
     int maskArea = computeMaskAreaV1(out.maskLogits());
 
     // 3) Erwartete Stats laden
-    JsonObject expected = readJsonAsset(ctx, EXPECTED_JSON_ASSET);
+    JsonObject expected = readJsonAsset(testCtx, EXPECTED_JSON_ASSET);
     assertEquals(MASK_AREA_DEFINITION_V1, expected.get("mask_area_definition").getAsString());
 
     JsonObject sample0 = expected.getAsJsonObject("samples").getAsJsonObject("sample0");

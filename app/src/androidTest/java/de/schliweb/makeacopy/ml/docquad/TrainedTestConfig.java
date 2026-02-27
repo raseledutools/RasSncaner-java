@@ -35,7 +35,7 @@ final class TrainedTestConfig {
     // Das trainierte Modell ist ein Runtime-Asset (App-APK), nicht ein Test-Asset.
     // Deshalb muss hier i.d.R. der *targetContext* (nicht der instrumentation context)
     // verwendet werden.
-    return requireExistingAsset(ctx, "docquad/docquadnet256_trained_opset17.onnx");
+    return requireExistingAsset(ctx, "docquad/docquadnet256_trained_opset17.ort");
   }
 
   /**
