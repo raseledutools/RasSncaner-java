@@ -129,6 +129,7 @@ public class DocQuadPostprocessor {
    *
    * @return a reason string if suspicious, or null if the result appears reliable
    */
+  @SuppressWarnings("UnusedVariable")
   private static String evaluateSuspicious(
       float[][][][] cornerHeatmaps,
       MaskStats ms,

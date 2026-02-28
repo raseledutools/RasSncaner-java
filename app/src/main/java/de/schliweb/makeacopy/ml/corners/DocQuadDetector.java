@@ -70,6 +70,13 @@ public final class DocQuadDetector implements CornerDetector {
       if (r == null || r.chosenQuadOriginal() == null || r.chosenQuadOriginal().length != 4)
         return DetectionResult.fail(Source.DOCQUAD);
 
+      /*
+           if (r.suspiciousForProduct()) {
+             Log.i(TAG, "Detection flagged as suspicious: " + r.suspiciousReason());
+             return DetectionResult.fail(Source.DOCQUAD);
+           }
+      */
+
       if (!isValidQuad(r.chosenQuadOriginal(), srcW, srcH))
         return DetectionResult.fail(Source.DOCQUAD);
 
