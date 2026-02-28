@@ -33,16 +33,16 @@ public class OCRWhitelistFilterTest {
   }
 
   @Test
-  public void filterByWhitelist_germanWhitelistKeepsUmlauts() {
+  public void filterByWhitelist_germanWhitelistKeepsUmlautsAndSymbols() {
     String text = "Über™ Straße© 42§";
     String filtered = OCRWhitelist.filterByWhitelist(text, OCRWhitelist.DE);
-    assertEquals("Über Straße 42§", filtered);
+    assertEquals("Über™ Straße© 42§", filtered);
   }
 
   @Test
-  public void filterByWhitelist_englishWhitelistRemovesSpecialChars() {
+  public void filterByWhitelist_englishWhitelistKeepsCommonSymbols() {
     String text = "Hello© World™ 2024";
     String filtered = OCRWhitelist.filterByWhitelist(text, OCRWhitelist.EN);
-    assertEquals("Hello World 2024", filtered);
+    assertEquals("Hello© World™ 2024", filtered);
   }
 }

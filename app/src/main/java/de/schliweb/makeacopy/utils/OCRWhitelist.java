@@ -9,69 +9,78 @@ package de.schliweb.makeacopy.utils;
  */
 public class OCRWhitelist {
 
-  // German (includes common symbols: %, €, §, +, =, <, >, &, @, #, *, _, |, \, {, }, ~)
+  // Common base: digits, punctuation, and symbols shared across all Latin-script languages
+  private static final String COMMON_BASE =
+      "0123456789.,:;-?!()[]/\"' %\u20AC\u00A7+=<>&@#*_|\\{}~$\u00A3\u00A5\u00B0\u00A9\u00AE\u2122\u2020\u2021\u2022\u2026\u2013\u2014\u00AB\u00BB\u2039\u203A\u201E\u201C\u201D\u2018\u2019\u00BF\u00A1";
+
+  // German
   public static final String DE =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜabcdefghijklmnopqrstuvwxyzäöüß0123456789.,:;-?!()[]/\"' %€§+=<>&@#*_|\\{}~";
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜabcdefghijklmnopqrstuvwxyzäöüß" + COMMON_BASE;
 
   // English
   public static final String EN =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,:;-?!()[]/\"' ";
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" + COMMON_BASE;
 
   // Spanish
   public static final String ES =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzáéíóúüñÁÉÍÓÚÜÑ0123456789.,:;-?!()[]/\"' ";
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzáéíóúüñÁÉÍÓÚÜÑ" + COMMON_BASE;
 
   // French
   public static final String FR =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzàâäçéèêëîïôöùûüÿœæÀÂÄÇÉÈÊËÎÏÔÖÙÛÜŸŒÆ0123456789.,:;-?!()[]/\"' ";
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzàâäçéèêëîïôöùûüÿœæÀÂÄÇÉÈÊËÎÏÔÖÙÛÜŸŒÆ"
+          + COMMON_BASE;
 
   // Italian
   public static final String IT =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzàèéìíîòóùúÀÈÉÌÍÎÒÓÙÚ0123456789.,:;-?!()[]/\"' ";
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzàèéìíîòóùúÀÈÉÌÍÎÒÓÙÚ" + COMMON_BASE;
 
   // Portuguese
   public static final String PT =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzáàâãçéêíóôõúüÁÀÂÃÇÉÊÍÓÔÕÚÜ0123456789.,:;-?!()[]/\"' ";
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzáàâãçéêíóôõúüÁÀÂÃÇÉÊÍÓÔÕÚÜ"
+          + COMMON_BASE;
 
   // Dutch
   public static final String NL =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜáàâäéèêëíìîïóòôöúùûüÿŸ0123456789.,:;-?!()[]/\"' ";
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜáàâäéèêëíìîïóòôöúùûüÿŸ"
+          + COMMON_BASE;
 
   // Polish
   public static final String PL =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzĄĆĘŁŃÓŚŹŻąćęłńóśźż0123456789.,:;-?!()[]/\"' ";
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzĄĆĘŁŃÓŚŹŻąćęłńóśźż" + COMMON_BASE;
 
   // Czech
   public static final String CS =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÁČĎÉĚÍŇÓŘŠŤÚŮÝŽáčďéěíňóřšťúůýž0123456789.,:;-?!()[]/\"' ";
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÁČĎÉĚÍŇÓŘŠŤÚŮÝŽáčďéěíňóřšťúůýž"
+          + COMMON_BASE;
 
   // Slovak
   public static final String SK =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÁÄČĎÉÍĹĽŇÓÔŔŠŤÚÝŽáäčďéíĺľňóôŕšťúýž0123456789.,:;-?!()[]/\"' ";
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÁÄČĎÉÍĹĽŇÓÔŔŠŤÚÝŽáäčďéíĺľňóôŕšťúýž"
+          + COMMON_BASE;
 
   // Hungarian
   public static final String HU =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÁÉÍÓÖŐÚÜŰáéíóöőúüű0123456789.,:;-?!()[]/\"' ";
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÁÉÍÓÖŐÚÜŰáéíóöőúüű" + COMMON_BASE;
 
   // Romanian
   public static final String RO =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZĂÂÎȘȚŞŢabcdefghijklmnopqrstuvwxyzăâîșțşţ0123456789.,:;-?!()[]/\"' ";
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZĂÂÎȘȚŞŢabcdefghijklmnopqrstuvwxyzăâîșțşţ" + COMMON_BASE;
 
   // Danish
   public static final String DA =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅabcdefghijklmnopqrstuvwxyzæøå0123456789.,:;-?!()[]/\"' ";
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅabcdefghijklmnopqrstuvwxyzæøå" + COMMON_BASE;
 
   // Norwegian
   public static final String NO =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅabcdefghijklmnopqrstuvwxyzæøå0123456789.,:;-?!()[]/\"' ";
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅabcdefghijklmnopqrstuvwxyzæøå" + COMMON_BASE;
 
   // Swedish
   public static final String SV =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖabcdefghijklmnopqrstuvwxyzåäö0123456789.,:;-?!()[]/\"' ";
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖabcdefghijklmnopqrstuvwxyzåäö" + COMMON_BASE;
 
   // Russian (Cyrillic incl. Ё/ё)
   public static final String RU =
-      "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя0123456789.,:;-?!()[]/\"' ";
+      "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя" + COMMON_BASE;
 
   // Default: Superset
   public static final String DEFAULT =
@@ -120,6 +129,20 @@ public class OCRWhitelist {
    * @return A string containing the combined whitelist of allowed characters for the specified
    *     language specification, or the default whitelist if the input is null or empty.
    */
+  public static String getWhitelistForLangSpec(String langSpec) {
+    if (langSpec == null || langSpec.trim().isEmpty()) return DEFAULT;
+    StringBuilder sb = new StringBuilder();
+    for (String part : langSpec.split("\\+", -1)) {
+      String lang = part.trim();
+      if (!lang.isEmpty()) sb.append(getWhitelistForLanguage(lang));
+    }
+    // cleanup duplicates
+    return sb.chars()
+        .distinct()
+        .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+        .toString();
+  }
+
   /**
    * Filters the given text, removing any characters that are not in the provided whitelist.
    * Whitespace characters (spaces, tabs, newlines) are always preserved.
@@ -139,19 +162,5 @@ public class OCRWhitelist {
       }
     }
     return sb.toString();
-  }
-
-  public static String getWhitelistForLangSpec(String langSpec) {
-    if (langSpec == null || langSpec.trim().isEmpty()) return DEFAULT;
-    StringBuilder sb = new StringBuilder();
-    for (String part : langSpec.split("\\+", -1)) {
-      String lang = part.trim();
-      if (!lang.isEmpty()) sb.append(getWhitelistForLanguage(lang));
-    }
-    // cleanup duplicates
-    return sb.chars()
-        .distinct()
-        .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-        .toString();
   }
 }

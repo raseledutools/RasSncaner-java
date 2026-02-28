@@ -15,6 +15,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.Getter;
 
 /**
  * OCRHelper is a utility class used for Optical Character Recognition (OCR) by leveraging Tesseract
@@ -83,7 +84,7 @@ public class OCRHelper {
   private String language = DEFAULT_LANGUAGE;
   private boolean isInitialized = false;
   // Use a fixed Page Segmentation Mode by default to stabilize OCR results
-  private int pageSegMode = TessBaseAPI.PageSegMode.PSM_SINGLE_BLOCK;
+  @Getter private int pageSegMode = TessBaseAPI.PageSegMode.PSM_SINGLE_BLOCK;
   // Option to reinitialize Tesseract engine per OCR run to avoid internal state carry-over
   private boolean reinitPerRun = true;
   // Flag to indicate if Best model optimizations should be applied
@@ -284,10 +285,6 @@ public class OCRHelper {
    */
   public boolean isTesseractInitialized() {
     return isInitialized;
-  }
-
-  public int getPageSegMode() {
-    return pageSegMode;
   }
 
   /**
@@ -574,6 +571,21 @@ public class OCRHelper {
   }
 
   /**
+   * Returns the active whitelist string for the current language configuration. Returns an empty
+   * string when no whitelist filtering should be applied (e.g., Best models, RTL scripts,
+   * CJK/Thai).
+   */
+  private String getActiveWhitelist() {
+    String ls = (language == null) ? "" : language.toLowerCase(java.util.Locale.ROOT);
+    boolean isCjkOrThai = ls.contains("chi_") || ls.contains("tha");
+    boolean isRtlArabic = ls.contains("ara") || ls.contains("fas");
+    if (useBestModelSettings || isRtlArabic || isCjkOrThai) {
+      return "";
+    }
+    return OCRWhitelist.getWhitelistForLangSpec(language);
+  }
+
+  /**
    * Performs Optical Character Recognition (OCR) on the given bitmap and retrieves the recognized
    * text along with additional details such as recognition confidence and word-level information.
    * This method uses Tesseract OCR and processes the input image to extract text.
@@ -631,7 +643,11 @@ public class OCRHelper {
       Integer conf = getMeanConfidenceSafe();
       tessBaseAPI.clear();
 
-      List<RecognizedWord> words = parseHocrWords(hocr, conf);
+      // Post-process: filter text by whitelist (Tesseract LSTM engine may ignore whitelist)
+      String whitelist = getActiveWhitelist();
+      text = OCRWhitelist.filterByWhitelist(text, whitelist);
+
+      List<RecognizedWord> words = parseHocrWords(hocr, conf, whitelist);
       Log.i(
           TAG,
           "runOcrWithWords: done textLen="
@@ -761,7 +777,7 @@ public class OCRHelper {
    * @return a list of recognized words extracted from the hOCR content. Each recognized word
    *     includes the text content, bounding box, and confidence level.
    */
-  private List<RecognizedWord> parseHocrWords(String hocr, Integer defaultConf) {
+  private List<RecognizedWord> parseHocrWords(String hocr, Integer defaultConf, String whitelist) {
     List<RecognizedWord> out = new ArrayList<>();
     if (hocr == null || hocr.isEmpty()) return out;
 
@@ -793,6 +809,7 @@ public class OCRHelper {
         }
 
         String text = cleanHtmlText(htmlText);
+        text = OCRWhitelist.filterByWhitelist(text, whitelist);
         if (text.isEmpty()) continue;
 
         out.add(new RecognizedWord(text, box, conf));
