@@ -1,4 +1,4 @@
-MakeACopy 3.3.0 (Release Candidate)
+MakeACopy 3.3.0 (Release)
 * Major internal refactoring for improved code quality and maintainability
 * Introduced Hilt dependency injection — replaced all manual singletons
 * Significantly expanded test coverage with 200+ new unit tests
@@ -7,5 +7,3 @@ MakeACopy 3.3.0 (Release Candidate)
 * Repository pattern consistently applied across all UI components
 * Minor bug fixes
 * Fully offline, no cloud or tracking
-
-This is a release candidate — feedback and bug reports are welcome!
