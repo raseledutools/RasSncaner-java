@@ -3,6 +3,7 @@ package de.schliweb.makeacopy.utils;
 import static org.junit.Assert.*;
 
 import android.graphics.RectF;
+import de.schliweb.makeacopy.utils.ocr.RecognizedWord;
 import org.junit.Test;
 
 /**

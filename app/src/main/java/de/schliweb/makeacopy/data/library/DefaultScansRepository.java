@@ -8,6 +8,7 @@ import java.io.File;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.inject.Inject;
 import org.json.JSONArray;
 
 /**
@@ -26,6 +27,15 @@ import org.json.JSONArray;
 public class DefaultScansRepository implements ScansRepository {
   private static final String TAG = "ScansRepo";
 
+  private final ScansDao scansDao;
+  private final ScanCollectionJoinDao joinDao;
+
+  @Inject
+  public DefaultScansRepository(ScansDao scansDao, ScanCollectionJoinDao joinDao) {
+    this.scansDao = scansDao;
+    this.joinDao = joinDao;
+  }
+
   /**
    * Indexes or updates the metadata of an exported scan in the database. This method ensures that
    * the scan represented by the given metadata is persisted in the database. If the scan already
@@ -39,8 +49,6 @@ public class DefaultScansRepository implements ScansRepository {
   @Override
   public void indexExportedScan(Context context, ScanIndexMeta meta) {
     try {
-      AppDatabase db = AppDatabase.getInstance(context);
-      ScansDao scansDao = db.scansDao();
       // Idempotent-ish: check if exists
       ScanEntity existing = scansDao.getById(meta.id());
       if (existing == null) {
@@ -80,7 +88,7 @@ public class DefaultScansRepository implements ScansRepository {
   @Override
   public List<ScanEntity> getAllScans(Context context) {
     try {
-      return AppDatabase.getInstance(context).scansDao().getAll();
+      return scansDao.getAll();
     } catch (Throwable t) {
       Log.e(TAG, "getAllScans failed", t);
       return java.util.Collections.emptyList();
@@ -99,7 +107,7 @@ public class DefaultScansRepository implements ScansRepository {
   @Override
   public List<ScanEntity> getScansForCollection(Context context, String collectionId) {
     try {
-      return AppDatabase.getInstance(context).scansDao().getAllByCollection(collectionId);
+      return scansDao.getAllByCollection(collectionId);
     } catch (Throwable t) {
       Log.e(TAG, "getScansForCollection failed", t);
       return java.util.Collections.emptyList();
@@ -118,7 +126,7 @@ public class DefaultScansRepository implements ScansRepository {
   @Override
   public ScanEntity getScanById(Context context, String id) {
     try {
-      return AppDatabase.getInstance(context).scansDao().getById(id);
+      return scansDao.getById(id);
     } catch (Throwable t) {
       Log.e(TAG, "getScanById failed", t);
       return null;
@@ -137,10 +145,9 @@ public class DefaultScansRepository implements ScansRepository {
   @Override
   public void deleteScan(Context context, String id) {
     try {
-      AppDatabase db = AppDatabase.getInstance(context);
       ScanEntity entity = null;
       try {
-        entity = db.scansDao().getById(id);
+        entity = scansDao.getById(id);
       } catch (Throwable ignore) {
         // Best-effort; failure is non-critical
       }
@@ -165,8 +172,8 @@ public class DefaultScansRepository implements ScansRepository {
       }
 
       // Remove any joins first to respect FK constraints if added later
-      db.scanCollectionJoinDao().removeAllForScan(id);
-      db.scansDao().deleteById(id);
+      joinDao.removeAllForScan(id);
+      scansDao.deleteById(id);
     } catch (Throwable t) {
       Log.e(TAG, "deleteScan failed", t);
     }
@@ -231,12 +238,10 @@ public class DefaultScansRepository implements ScansRepository {
   @Override
   public void updateTitle(Context context, String id, String newTitle) {
     try {
-      AppDatabase db = AppDatabase.getInstance(context);
-      ScansDao dao = db.scansDao();
-      ScanEntity e = dao.getById(id);
+      ScanEntity e = scansDao.getById(id);
       if (e != null) {
         e.title = newTitle;
-        dao.update(e);
+        scansDao.update(e);
       }
     } catch (Throwable t) {
       Log.e(TAG, "updateTitle failed", t);
@@ -246,12 +251,10 @@ public class DefaultScansRepository implements ScansRepository {
   @Override
   public void updateExportPathsJson(Context context, String id, String exportPathsJson) {
     try {
-      AppDatabase db = AppDatabase.getInstance(context);
-      ScansDao dao = db.scansDao();
-      ScanEntity e = dao.getById(id);
+      ScanEntity e = scansDao.getById(id);
       if (e != null) {
         e.exportPathsJson = exportPathsJson;
-        dao.update(e);
+        scansDao.update(e);
       }
     } catch (Throwable t) {
       Log.e(TAG, "updateExportPathsJson failed", t);

@@ -8,7 +8,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import de.schliweb.makeacopy.utils.OpenCVUtils;
+import de.schliweb.makeacopy.utils.image.OpenCVUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 

@@ -4,7 +4,7 @@ import android.util.Log;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
-import de.schliweb.makeacopy.utils.RecognizedWord;
+import de.schliweb.makeacopy.utils.ocr.RecognizedWord;
 import java.util.ArrayList;
 import java.util.List;
 

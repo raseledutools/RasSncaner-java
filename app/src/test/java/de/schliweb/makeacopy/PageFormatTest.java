@@ -2,7 +2,7 @@ package de.schliweb.makeacopy;
 
 import static org.junit.Assert.*;
 
-import de.schliweb.makeacopy.utils.PageFormat;
+import de.schliweb.makeacopy.utils.export.PageFormat;
 import org.junit.Test;
 
 /**

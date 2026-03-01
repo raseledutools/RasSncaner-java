@@ -17,7 +17,8 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import de.schliweb.makeacopy.R;
-import de.schliweb.makeacopy.utils.UIUtils;
+import de.schliweb.makeacopy.utils.ui.DialogUtils;
+import de.schliweb.makeacopy.utils.ui.UIUtils;
 import java.io.IOException;
 
 /**
@@ -168,7 +169,7 @@ final class PdfImportHelper {
     // Improve button contrast for dark mode
     dialog.setOnShowListener(
         dlg ->
-            de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(
+            DialogUtils.improveAlertDialogButtonContrastForNight(
                 dialog, fragment.requireContext()));
 
     // Create adapter with page selection callback

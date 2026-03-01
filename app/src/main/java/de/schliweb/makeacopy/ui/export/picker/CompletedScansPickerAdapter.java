@@ -17,7 +17,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.ui.export.session.CompletedScan;
-import de.schliweb.makeacopy.utils.BitmapUtils;
+import de.schliweb.makeacopy.utils.image.BitmapUtils;
+import de.schliweb.makeacopy.utils.image.ImageDecodeUtils;
+import de.schliweb.makeacopy.utils.image.RotationPolicy;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -135,8 +137,7 @@ class CompletedScansPickerAdapter extends RecyclerView.Adapter<CompletedScansPic
       }
       boolean rotate;
       try {
-        rotate =
-            de.schliweb.makeacopy.utils.RotationPolicy.shouldRotateForThumbnail(true, mode, deg);
+        rotate = RotationPolicy.shouldRotateForThumbnail(true, mode, deg);
       } catch (Throwable ignore) {
         rotate = false;
       }
@@ -215,8 +216,7 @@ class CompletedScansPickerAdapter extends RecyclerView.Adapter<CompletedScansPic
   private static Bitmap decodeSampled(String path, int reqW, int reqH) {
     // Centralized EXIF-neutral decode for baked disk files
     try {
-      return de.schliweb.makeacopy.utils.ImageDecodeUtils.decodeSampled(
-          path, Math.max(1, reqW), Math.max(1, reqH));
+      return ImageDecodeUtils.decodeSampled(path, Math.max(1, reqW), Math.max(1, reqH));
     } catch (Throwable t) {
       return null;
     }

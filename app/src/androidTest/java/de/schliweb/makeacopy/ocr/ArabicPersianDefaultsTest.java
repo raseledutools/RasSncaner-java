@@ -5,7 +5,7 @@ import static org.junit.Assert.*;
 import android.content.Context;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
-import de.schliweb.makeacopy.utils.OCRHelper;
+import de.schliweb.makeacopy.utils.ocr.OCRHelper;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;

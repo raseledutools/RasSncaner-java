@@ -1,6 +1,6 @@
 package de.schliweb.makeacopy.a11y.util;
 
-import de.schliweb.makeacopy.utils.A11yUtils;
+import de.schliweb.makeacopy.utils.ui.A11yUtils;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 

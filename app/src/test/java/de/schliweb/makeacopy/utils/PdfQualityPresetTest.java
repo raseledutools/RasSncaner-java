@@ -3,6 +3,7 @@ package de.schliweb.makeacopy.utils;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import de.schliweb.makeacopy.utils.export.PdfQualityPreset;
 import org.junit.Test;
 
 public class PdfQualityPresetTest {

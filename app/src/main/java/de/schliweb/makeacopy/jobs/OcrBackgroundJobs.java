@@ -6,8 +6,10 @@ import android.graphics.Bitmap;
 import android.util.Log;
 import de.schliweb.makeacopy.data.CompletedScansRegistry;
 import de.schliweb.makeacopy.ui.export.session.CompletedScan;
-import de.schliweb.makeacopy.utils.OCRHelper;
-import de.schliweb.makeacopy.utils.OCRUtils;
+import de.schliweb.makeacopy.utils.image.ImageDecodeUtils;
+import de.schliweb.makeacopy.utils.ocr.OCRHelper;
+import de.schliweb.makeacopy.utils.ocr.OCRUtils;
+import de.schliweb.makeacopy.utils.ocr.WordsJson;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -42,8 +44,14 @@ public final class OcrBackgroundJobs {
    * @param pageId The unique identifier of the scanned page to be reprocessed.
    * @param languageOpt Optional language code for OCR processing (e.g., "eng" for English). If null
    *     or empty, a default language will be used.
+   * @param ocrHelperSupplier Supplier for OCRHelper instances (DI-friendly). Must not be {@code
+   *     null}.
    */
-  public static void enqueueReprocess(Context ctx, String pageId, String languageOpt) {
+  public static void enqueueReprocess(
+      Context ctx,
+      String pageId,
+      String languageOpt,
+      java.util.function.Supplier<OCRHelper> ocrHelperSupplier) {
     if (ctx == null || pageId == null) return;
     final Context app = ctx.getApplicationContext();
     synchronized (running) {
@@ -67,10 +75,9 @@ public final class OcrBackgroundJobs {
             }
             if (s == null) throw new RuntimeException("Entry not found in registry: " + pageId);
             Bitmap bmp = null;
-            if (s.filePath() != null)
-              bmp = de.schliweb.makeacopy.utils.ImageDecodeUtils.decodeFull(s.filePath());
+            if (s.filePath() != null) bmp = ImageDecodeUtils.decodeFull(s.filePath());
             if (bmp == null && s.thumbPath() != null)
-              bmp = de.schliweb.makeacopy.utils.ImageDecodeUtils.decodeFull(s.thumbPath());
+              bmp = ImageDecodeUtils.decodeFull(s.thumbPath());
             // For rare legacy metadata entries: apply rotation before OCR so text is upright
             try {
               String mode = s.orientationMode();
@@ -89,7 +96,7 @@ public final class OcrBackgroundJobs {
             }
             if (bmp == null) throw new RuntimeException("No bitmap available for OCR");
 
-            OCRHelper helper = new OCRHelper(app);
+            OCRHelper helper = ocrHelperSupplier.get();
             // Determine effective language: use provided, else map from system locale
             String effLang = OCRUtils.resolveEffectiveLanguage(languageOpt);
             try {
@@ -119,8 +126,7 @@ public final class OcrBackgroundJobs {
             // Write words.json
             File wordsFile = new File(dir, "words.json");
             try (FileOutputStream wos = new FileOutputStream(wordsFile)) {
-              String json =
-                  de.schliweb.makeacopy.utils.WordsJson.toWordsJson(res != null ? res.words : null);
+              String json = WordsJson.toWordsJson(res != null ? res.words : null);
               wos.write(json.getBytes(StandardCharsets.UTF_8));
               wos.flush();
             }

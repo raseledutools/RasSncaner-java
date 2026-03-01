@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.data.CompletedScansRegistry;
 import de.schliweb.makeacopy.ui.export.session.CompletedScan;
+import de.schliweb.makeacopy.utils.ui.DialogUtils;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -306,9 +307,7 @@ public class CompletedScansPickerFragment extends Fragment
             .create();
     // Improve dark mode contrast for dialog buttons similar to other dialogs
     dialog.setOnShowListener(
-        dlg ->
-            de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(
-                dialog, requireContext()));
+        dlg -> DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext()));
     dialog.show();
   }
 }

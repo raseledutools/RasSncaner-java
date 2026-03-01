@@ -4,7 +4,7 @@ import static org.junit.Assert.*;
 
 import android.graphics.RectF;
 import de.schliweb.makeacopy.ui.ocr.OCRViewModel;
-import de.schliweb.makeacopy.utils.RecognizedWord;
+import de.schliweb.makeacopy.utils.ocr.RecognizedWord;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

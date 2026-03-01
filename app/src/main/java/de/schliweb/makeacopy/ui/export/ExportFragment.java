@@ -25,9 +25,18 @@ import de.schliweb.makeacopy.databinding.FragmentExportBinding;
 import de.schliweb.makeacopy.ui.camera.CameraViewModel;
 import de.schliweb.makeacopy.ui.crop.CropViewModel;
 import de.schliweb.makeacopy.ui.ocr.OCRViewModel;
-import de.schliweb.makeacopy.utils.*;
-import de.schliweb.makeacopy.utils.jpeg.JpegExportOptions;
-import de.schliweb.makeacopy.utils.jpeg.JpegExporter;
+import de.schliweb.makeacopy.utils.export.*;
+import de.schliweb.makeacopy.utils.export.jpeg.JpegExportOptions;
+import de.schliweb.makeacopy.utils.export.jpeg.JpegExporter;
+import de.schliweb.makeacopy.utils.image.*;
+import de.schliweb.makeacopy.utils.infra.FeatureFlags;
+import de.schliweb.makeacopy.utils.infra.FileUtils;
+import de.schliweb.makeacopy.utils.infra.SessionIds;
+import de.schliweb.makeacopy.utils.ocr.*;
+import de.schliweb.makeacopy.utils.ui.A11yUtils;
+import de.schliweb.makeacopy.utils.ui.DialogUtils;
+import de.schliweb.makeacopy.utils.ui.UIUtils;
+import de.schliweb.makeacopy.utils.ui.ViewSizeUtils;
 import java.io.File;
 import java.io.OutputStream;
 import java.util.*;
@@ -61,6 +70,7 @@ import javax.inject.Inject;
 public class ExportFragment extends Fragment {
 
   @Inject ScansRepository scansRepository;
+  @Inject javax.inject.Provider<OCRHelper> ocrHelperProvider;
   private static final String TAG = "ExportFragment";
   // Main thread handler for safe UI updates
   private final android.os.Handler mainHandler =
@@ -109,7 +119,7 @@ public class ExportFragment extends Fragment {
           if (id == null) return;
           if (success) {
             try {
-              de.schliweb.makeacopy.utils.SessionOcrUpdater.applyOcrResultToSession(
+              SessionOcrUpdater.applyOcrResultToSession(
                   requireContext(), exportSessionViewModel, id);
             } catch (Exception e) {
               Log.w(TAG, "Failed to update session after OCR job", e);
@@ -160,7 +170,7 @@ public class ExportFragment extends Fragment {
     if (binding == null || source == null) return;
     Context ctx = getContext();
     if (ctx == null) return;
-    Bitmap out = de.schliweb.makeacopy.utils.BitmapUtils.processForPreview(source, ctx);
+    Bitmap out = BitmapUtils.processForPreview(source, ctx);
     binding.documentPreview.setImageBitmap(out);
     binding.documentPreview.setVisibility(View.VISIBLE);
   }
@@ -211,8 +221,7 @@ public class ExportFragment extends Fragment {
     // Keep the inline checkbox hidden and do not alter its visibility here.
 
     // Observe exporting state and progress to update progress bar (delegated)
-    de.schliweb.makeacopy.utils.ExportUiBindings.bindExportProgress(
-        binding, getViewLifecycleOwner(), exportViewModel);
+    ExportUiBindings.bindExportProgress(binding, getViewLifecycleOwner(), exportViewModel);
 
     // Back button: navigate to OCR (if not skipping OCR) or Crop (if skipping OCR)
     View backBtn = root.findViewById(R.id.button_back);
@@ -238,7 +247,7 @@ public class ExportFragment extends Fragment {
                 : null;
         Uri u =
             cameraViewModel.getImageUri() != null ? cameraViewModel.getImageUri().getValue() : null;
-        Bitmap bmp = de.schliweb.makeacopy.utils.ImageLoader.decode(ctxInit, path, u);
+        Bitmap bmp = ImageLoader.decode(ctxInit, path, u);
         if (bmp != null) {
           cropViewModel.setImageBitmap(bmp);
         }
@@ -258,8 +267,7 @@ public class ExportFragment extends Fragment {
                 // A11y: announce removal
                 View v = getView();
                 if (isAdded() && v != null) {
-                  de.schliweb.makeacopy.utils.A11yUtils.announce(
-                      v, getString(R.string.page_removed));
+                  A11yUtils.announce(v, getString(R.string.page_removed));
                 }
               }
 
@@ -271,13 +279,11 @@ public class ExportFragment extends Fragment {
                 de.schliweb.makeacopy.ui.export.session.CompletedScan sel = cur.get(position);
                 if (sel == null) return;
                 int[] sz =
-                    de.schliweb.makeacopy.utils.ViewSizeUtils.sizeOrDefault(
+                    ViewSizeUtils.sizeOrDefault(
                         binding != null ? binding.documentPreview : null, 2048, 2048);
                 int reqW = sz[0];
                 int reqH = sz[1];
-                Bitmap bmp =
-                    de.schliweb.makeacopy.utils.BitmapUtils.loadPreviewBitmapForCompletedScan(
-                        sel, reqW, reqH);
+                Bitmap bmp = BitmapUtils.loadPreviewBitmapForCompletedScan(sel, reqW, reqH);
                 if (bmp != null) {
                   exportViewModel.setDocumentBitmap(bmp);
                   exportViewModel.setDocumentReady(true);
@@ -290,7 +296,7 @@ public class ExportFragment extends Fragment {
                 // A11y: announce new position (1-based)
                 View rootV = getView();
                 if (isAdded() && rootV != null) {
-                  de.schliweb.makeacopy.utils.A11yUtils.announce(
+                  A11yUtils.announce(
                       rootV, getString(R.string.page_moved_to_position, toPosition + 1));
                 }
               }
@@ -366,13 +372,11 @@ public class ExportFragment extends Fragment {
                 de.schliweb.makeacopy.ui.export.session.CompletedScan first = pages.get(0);
                 if (first != null) {
                   int[] sz =
-                      de.schliweb.makeacopy.utils.ViewSizeUtils.sizeOrDefault(
+                      ViewSizeUtils.sizeOrDefault(
                           binding != null ? binding.documentPreview : null, 2048, 2048);
                   int reqW = sz[0];
                   int reqH = sz[1];
-                  Bitmap bmp =
-                      de.schliweb.makeacopy.utils.BitmapUtils.loadPreviewBitmapForCompletedScan(
-                          first, reqW, reqH);
+                  Bitmap bmp = BitmapUtils.loadPreviewBitmapForCompletedScan(first, reqW, reqH);
                   if (bmp != null) {
                     exportViewModel.setDocumentBitmap(bmp);
                     exportViewModel.setDocumentReady(true);
@@ -385,7 +389,7 @@ public class ExportFragment extends Fragment {
                 View rootView = getView();
                 if (rootView != null) {
                   String msg = getString(R.string.pages_count_announcement, n);
-                  de.schliweb.makeacopy.utils.A11yUtils.announce(rootView, msg);
+                  A11yUtils.announce(rootView, msg);
                 }
               }
               // Do not toggle Include OCR checkbox visibility here; it remains hidden and
@@ -419,11 +423,10 @@ public class ExportFragment extends Fragment {
                 1,
                 "metadata");
         // Align the session id used by Review autosave to this export session id
-        if (de.schliweb.makeacopy.utils.FeatureFlags.isOcrReviewEnabled() && isAdded()) {
+        if (FeatureFlags.isOcrReviewEnabled() && isAdded()) {
           Context c = getContext();
           if (c != null) {
-            de.schliweb.makeacopy.utils.SessionIds.setCurrentScanId(
-                c.getApplicationContext(), initial.id());
+            SessionIds.setCurrentScanId(c.getApplicationContext(), initial.id());
           }
         }
         exportSessionViewModel.setInitial(initial);
@@ -463,11 +466,10 @@ public class ExportFragment extends Fragment {
                   "metadata");
           // Keep SessionIds aligned to the last added page (so Review autosave per-page stays
           // consistent)
-          if (de.schliweb.makeacopy.utils.FeatureFlags.isOcrReviewEnabled() && isAdded()) {
+          if (FeatureFlags.isOcrReviewEnabled() && isAdded()) {
             Context c2 = getContext();
             if (c2 != null) {
-              de.schliweb.makeacopy.utils.SessionIds.setCurrentScanId(
-                  c2.getApplicationContext(), added.id());
+              SessionIds.setCurrentScanId(c2.getApplicationContext(), added.id());
             }
           }
           exportSessionViewModel.add(added);
@@ -698,8 +700,8 @@ public class ExportFragment extends Fragment {
                           .create();
                   dialog.setOnShowListener(
                       dlg ->
-                          de.schliweb.makeacopy.utils.DialogUtils
-                              .improveAlertDialogButtonContrastForNight(dialog, requireContext()));
+                          DialogUtils.improveAlertDialogButtonContrastForNight(
+                              dialog, requireContext()));
                   dialog.show();
                   return;
                 }
@@ -929,7 +931,7 @@ public class ExportFragment extends Fragment {
 
     // PDF text layer words sourcing: prefer edited OCR JSON when OCR Review feature is enabled
     List<RecognizedWord> wordsTmp;
-    if (de.schliweb.makeacopy.utils.FeatureFlags.isOcrReviewEnabled()) {
+    if (FeatureFlags.isOcrReviewEnabled()) {
       wordsTmp = null;
       // Try to find a scan id to resolve autosave path
       String candidateId = null;
@@ -941,14 +943,12 @@ public class ExportFragment extends Fragment {
       Context ctxForIds = getContext();
       if ((candidateId == null || candidateId.trim().isEmpty()) && ctxForIds != null) {
         // Fall back to session id used by Review autosave
-        candidateId =
-            de.schliweb.makeacopy.utils.SessionIds.getOrCreateCurrentScanId(
-                ctxForIds.getApplicationContext());
+        candidateId = SessionIds.getOrCreateCurrentScanId(ctxForIds.getApplicationContext());
       }
       if (candidateId != null && !candidateId.trim().isEmpty() && ctxForIds != null) {
         File dir = new File(ctxForIds.getFilesDir(), "scans/" + candidateId);
         File ocrFile = new File(dir, "page.ocr.json");
-        List<RecognizedWord> fromJson = de.schliweb.makeacopy.utils.OcrJsonWords.parseFile(ocrFile);
+        List<RecognizedWord> fromJson = OcrJsonWords.parseFile(ocrFile);
         if (fromJson != null && !fromJson.isEmpty()) {
           wordsTmp = fromJson;
         }
@@ -976,7 +976,7 @@ public class ExportFragment extends Fragment {
     if (isAdded()) {
       View rv = getView();
       if (rv != null) {
-        de.schliweb.makeacopy.utils.A11yUtils.announce(rv, getString(R.string.export_started));
+        A11yUtils.announce(rv, getString(R.string.export_started));
       }
     }
 
@@ -989,16 +989,14 @@ public class ExportFragment extends Fragment {
                         ? exportSessionViewModel.getPages().getValue()
                         : null;
                 int pageCount = (pgsForPreset == null) ? 0 : pgsForPreset.size();
-                de.schliweb.makeacopy.utils.PdfQualityPreset preset =
-                    ExportPrefsHelper.resolvePreset(appContext, pageCount);
+                PdfQualityPreset preset = ExportPrefsHelper.resolvePreset(appContext, pageCount);
                 boolean[] grayBw =
                     ExportPrefsHelper.resolveGrayAndBwFlags(
                         appContext, preset.forceGrayscale, convertToGrayscale);
                 final boolean convertGrayEffective = grayBw[0];
                 final boolean convertBwEffective = grayBw[1];
                 final int jpegQuality = preset.jpegQuality;
-                final de.schliweb.makeacopy.utils.PdfCreator.BwMode bwMode =
-                    ExportPrefsHelper.resolveBwMode(appContext);
+                final PdfCreator.BwMode bwMode = ExportPrefsHelper.resolveBwMode(appContext);
                 final PageFormat pageFormat = ExportPrefsHelper.resolvePageFormat(appContext);
 
                 Uri exportUri;
@@ -1024,7 +1022,7 @@ public class ExportFragment extends Fragment {
                       if (p != null) {
                         // Decode full-res without implicit EXIF rotation; baked files are visually
                         // upright
-                        pageBmp = de.schliweb.makeacopy.utils.ImageDecodeUtils.decodeFull(p);
+                        pageBmp = ImageDecodeUtils.decodeFull(p);
                         loadedFromFile = (pageBmp != null);
                         if (loadedFromFile) toRecycle.add(pageBmp);
                       }
@@ -1037,8 +1035,7 @@ public class ExportFragment extends Fragment {
                     int deg = s.rotationDeg();
                     String mode = s.orientationMode();
                     boolean shouldRotate =
-                        de.schliweb.makeacopy.utils.RotationPolicy.shouldRotateForExport(
-                            loadedFromFile, mode, deg);
+                        RotationPolicy.shouldRotateForExport(loadedFromFile, mode, deg);
                     if (shouldRotate) {
                       android.graphics.Matrix m = new android.graphics.Matrix();
                       m.postRotate(((deg % 360) + 360) % 360);
@@ -1062,7 +1059,7 @@ public class ExportFragment extends Fragment {
                     // otherwise or if not found, use registry words_json; finally fall back to
                     // in-memory words for current page.
                     List<RecognizedWord> pageWords = null;
-                    if (de.schliweb.makeacopy.utils.FeatureFlags.isOcrReviewEnabled()) {
+                    if (FeatureFlags.isOcrReviewEnabled()) {
                       // 1) Try our editable OCR JSON sidecar under
                       // filesDir/scans/<id)/page.ocr.json
                       if (s.id() != null) {
@@ -1070,8 +1067,7 @@ public class ExportFragment extends Fragment {
                         if (c != null) {
                           File dir = new File(c.getFilesDir(), "scans/" + s.id());
                           File ocrFile = new File(dir, "page.ocr.json");
-                          List<RecognizedWord> fromJson =
-                              de.schliweb.makeacopy.utils.OcrJsonWords.parseFile(ocrFile);
+                          List<RecognizedWord> fromJson = OcrJsonWords.parseFile(ocrFile);
                           if (fromJson != null && !fromJson.isEmpty()) pageWords = fromJson;
                         }
                       }
@@ -1082,7 +1078,7 @@ public class ExportFragment extends Fragment {
                         if ("words_json".equalsIgnoreCase(fmt) && path != null) {
                           File f = new File(path);
                           if (f.exists() && f.isFile()) {
-                            pageWords = de.schliweb.makeacopy.utils.WordsJson.parseFile(f);
+                            pageWords = WordsJson.parseFile(f);
                             if (pageWords != null && pageWords.isEmpty()) pageWords = null;
                           }
                         }
@@ -1093,7 +1089,7 @@ public class ExportFragment extends Fragment {
                       if ("words_json".equalsIgnoreCase(fmt) && path != null) {
                         File f = new File(path);
                         if (f.exists() && f.isFile()) {
-                          pageWords = de.schliweb.makeacopy.utils.WordsJson.parseFile(f);
+                          pageWords = WordsJson.parseFile(f);
                           if (pageWords != null && pageWords.isEmpty()) pageWords = null;
                         }
                       }
@@ -1184,7 +1180,7 @@ public class ExportFragment extends Fragment {
                         UIUtils.showToast(appContext, msg, Toast.LENGTH_LONG);
                         View rv = getView();
                         if (isAdded() && rv != null) {
-                          de.schliweb.makeacopy.utils.A11yUtils.announce(rv, msg);
+                          A11yUtils.announce(rv, msg);
                         }
 
                         // Begin: index exported PDF into scan library (feature-guarded via service
@@ -1205,7 +1201,7 @@ public class ExportFragment extends Fragment {
                         UIUtils.showToast(appContext, fail, Toast.LENGTH_SHORT);
                         View rv = getView();
                         if (isAdded() && rv != null) {
-                          de.schliweb.makeacopy.utils.A11yUtils.announce(rv, fail);
+                          A11yUtils.announce(rv, fail);
                         }
                       }
                     });
@@ -1221,7 +1217,7 @@ public class ExportFragment extends Fragment {
                       UIUtils.showToast(appContext, err, Toast.LENGTH_SHORT);
                       View rv = getView();
                       if (isAdded() && rv != null) {
-                        de.schliweb.makeacopy.utils.A11yUtils.announce(rv, err);
+                        A11yUtils.announce(rv, err);
                       }
                     });
               } finally {
@@ -1363,7 +1359,7 @@ public class ExportFragment extends Fragment {
     if (isAdded()) {
       View rv = getView();
       if (rv != null) {
-        de.schliweb.makeacopy.utils.A11yUtils.announce(rv, getString(R.string.export_started));
+        A11yUtils.announce(rv, getString(R.string.export_started));
       }
     }
     new Thread(
@@ -1460,7 +1456,7 @@ public class ExportFragment extends Fragment {
     if (isAdded()) {
       View rv = getView();
       if (rv != null) {
-        de.schliweb.makeacopy.utils.A11yUtils.announce(rv, getString(R.string.export_started));
+        A11yUtils.announce(rv, getString(R.string.export_started));
       }
     }
     exportViewModel.setTxtExportUri(null);
@@ -1510,7 +1506,7 @@ public class ExportFragment extends Fragment {
                       try {
                         // Decode full-res without implicit EXIF rotation; baked files are visually
                         // upright
-                        pageBmp = de.schliweb.makeacopy.utils.ImageDecodeUtils.decodeFull(p);
+                        pageBmp = ImageDecodeUtils.decodeFull(p);
                         loadedFromFile = (pageBmp != null);
                       } catch (Exception e) {
                         Log.w(TAG, "ZIP export: decodeFull failed for " + p, e);
@@ -1526,8 +1522,7 @@ public class ExportFragment extends Fragment {
                   int deg = s.rotationDeg();
                   String orientationMode = s.orientationMode();
                   boolean shouldRotate =
-                      de.schliweb.makeacopy.utils.RotationPolicy.shouldRotateForExport(
-                          loadedFromFile, orientationMode, deg);
+                      RotationPolicy.shouldRotateForExport(loadedFromFile, orientationMode, deg);
                   if (shouldRotate) {
                     try {
                       android.graphics.Matrix m = new android.graphics.Matrix();
@@ -1672,7 +1667,7 @@ public class ExportFragment extends Fragment {
     boolean skipOcrPref = ExportPrefsHelper.isSkipOcr(requireContext());
     // Capture current in-memory OCR text/words at call time unless Skip OCR is enabled
     final String ocrTextAtCall = skipOcrPref ? null : getOcrTextFromState();
-    final java.util.List<de.schliweb.makeacopy.utils.RecognizedWord> ocrWordsAtCall =
+    final java.util.List<RecognizedWord> ocrWordsAtCall =
         skipOcrPref ? null : getOcrWordsFromState();
     new Thread(
             () -> {
@@ -1680,8 +1675,7 @@ public class ExportFragment extends Fragment {
                 // Persist scan (page.jpg, thumb.jpg, and optional OCR artifacts) and insert into
                 // registry
                 de.schliweb.makeacopy.ui.export.session.CompletedScan persisted =
-                    de.schliweb.makeacopy.utils.ScanPersister.persist(
-                        appContext, s, ocrTextAtCall, ocrWordsAtCall);
+                    ScanPersister.persist(appContext, s, ocrTextAtCall, ocrWordsAtCall);
 
                 // Update current session item so the filmstrip badge reflects OCR immediately
                 final String finalOcrPath = persisted.ocrTextPath();
@@ -1755,10 +1749,10 @@ public class ExportFragment extends Fragment {
     String lang = (st != null && st.language() != null) ? st.language() : null;
     // If user hasn't visited the OCR screen, fall back to a sensible system-based default
     if (lang == null || lang.trim().isEmpty()) {
-      lang = de.schliweb.makeacopy.utils.OCRUtils.resolveEffectiveLanguage(lang);
+      lang = OCRUtils.resolveEffectiveLanguage(lang);
     }
     de.schliweb.makeacopy.jobs.OcrBackgroundJobs.enqueueReprocess(
-        requireContext().getApplicationContext(), s.id(), lang);
+        requireContext().getApplicationContext(), s.id(), lang, () -> ocrHelperProvider.get());
   }
 
   /**
@@ -1805,8 +1799,7 @@ public class ExportFragment extends Fragment {
     try {
       String fileName = FileUtils.getDisplayNameFromUri(requireContext(), lastExportedDocumentUri);
       Uri txtUri = exportViewModel.getTxtExportUri().getValue();
-      de.schliweb.makeacopy.utils.ShareIntentHelper.shareDocument(
-          this, lastExportedDocumentUri, txtUri, fileName);
+      ShareIntentHelper.shareDocument(this, lastExportedDocumentUri, txtUri, fileName);
     } catch (android.content.ActivityNotFoundException e) {
       Log.w(TAG, "No activity found to handle share intent", e);
       UIUtils.showToast(

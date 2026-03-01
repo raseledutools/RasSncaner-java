@@ -2,6 +2,7 @@ package de.schliweb.makeacopy.utils;
 
 import static org.junit.Assert.*;
 
+import de.schliweb.makeacopy.utils.ocr.OCRUtils;
 import org.junit.Test;
 
 /** Unit tests for {@link OCRUtils} to verify language mapping and multi-language support. */

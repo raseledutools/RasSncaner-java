@@ -1,6 +1,7 @@
 package de.schliweb.makeacopy.data;
 
 import android.content.Context;
+import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import de.schliweb.makeacopy.ui.export.session.CompletedScan;
@@ -199,7 +200,7 @@ public final class CompletedScansRegistry {
     try {
       return load();
     } catch (Exception e) {
-      System.err.println(TAG + ": safeLoad: treating as empty due to error: " + e.getMessage());
+      Log.w(TAG, "safeLoad: treating as empty due to error: " + e.getMessage());
       RegistryFile rf = new RegistryFile();
       rf.version = 1;
       rf.items = new ArrayList<>();
@@ -258,8 +259,7 @@ public final class CompletedScansRegistry {
     }
     // Replace
     if (indexFile.exists() && !indexFile.delete()) {
-      System.err.println(
-          TAG + ": writeAtomically: failed to delete old index, attempting overwrite via rename");
+      Log.w(TAG, "writeAtomically: failed to delete old index, attempting overwrite via rename");
     }
     boolean renamed = tmp.renameTo(indexFile);
     if (!renamed) {

@@ -3,6 +3,7 @@ package de.schliweb.makeacopy.utils;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import de.schliweb.makeacopy.utils.ocr.DictionaryManager;
 import org.junit.Test;
 
 /**

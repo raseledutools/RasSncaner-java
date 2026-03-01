@@ -3,6 +3,8 @@ package de.schliweb.makeacopy.utils;
 import static org.junit.Assert.*;
 
 import android.graphics.RectF;
+import de.schliweb.makeacopy.utils.ocr.OCRPostProcessor;
+import de.schliweb.makeacopy.utils.ocr.RecognizedWord;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;

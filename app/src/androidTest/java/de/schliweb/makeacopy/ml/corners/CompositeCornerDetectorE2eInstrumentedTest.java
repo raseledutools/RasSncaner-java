@@ -9,7 +9,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import de.schliweb.makeacopy.utils.OpenCVUtils;
+import de.schliweb.makeacopy.ml.docquad.DocQuadOrtRunner;
+import de.schliweb.makeacopy.utils.image.OpenCVUtils;
 import java.io.InputStream;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,8 +37,10 @@ public class CompositeCornerDetectorE2eInstrumentedTest {
     assertTrue(bmp.getWidth() > 0);
     assertTrue(bmp.getHeight() > 0);
 
+    DocQuadOrtRunner runner =
+        DocQuadOrtRunner.getInstance(ctx, DocQuadDetector.DEFAULT_MODEL_ASSET_PATH);
     CornerDetector detector =
-        new CompositeCornerDetector(new DocQuadDetector(), new LegacyCornerDetector());
+        new CompositeCornerDetector(new DocQuadDetector(runner), new LegacyCornerDetector());
     DetectionResult r = detector.detect(bmp, ctx);
 
     assertNotNull(r);

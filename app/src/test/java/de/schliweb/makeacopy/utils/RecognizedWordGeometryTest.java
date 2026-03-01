@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 
 import android.graphics.RectF;
+import de.schliweb.makeacopy.utils.ocr.RecognizedWord;
 import org.junit.Test;
 
 /**

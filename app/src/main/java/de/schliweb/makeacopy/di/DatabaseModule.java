@@ -14,7 +14,7 @@ import de.schliweb.makeacopy.data.library.DefaultScansRepository;
 import de.schliweb.makeacopy.data.library.ScanCollectionJoinDao;
 import de.schliweb.makeacopy.data.library.ScansDao;
 import de.schliweb.makeacopy.data.library.ScansRepository;
-import de.schliweb.makeacopy.utils.DictionaryManager;
+import de.schliweb.makeacopy.utils.ocr.DictionaryManager;
 import javax.inject.Singleton;
 
 /** Hilt module that provides database-related dependencies as singletons. */
@@ -45,14 +45,15 @@ public class DatabaseModule {
 
   @Provides
   @Singleton
-  ScansRepository provideScansRepository() {
-    return new DefaultScansRepository();
+  ScansRepository provideScansRepository(ScansDao scansDao, ScanCollectionJoinDao joinDao) {
+    return new DefaultScansRepository(scansDao, joinDao);
   }
 
   @Provides
   @Singleton
-  CollectionsRepository provideCollectionsRepository() {
-    return new DefaultCollectionsRepository();
+  CollectionsRepository provideCollectionsRepository(
+      CollectionsDao collectionsDao, ScanCollectionJoinDao joinDao, ScansDao scansDao) {
+    return new DefaultCollectionsRepository(collectionsDao, joinDao, scansDao);
   }
 
   @Provides

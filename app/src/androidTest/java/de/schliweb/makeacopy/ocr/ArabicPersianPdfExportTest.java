@@ -13,8 +13,9 @@ import com.tom_roush.pdfbox.android.PDFBoxResourceLoader;
 import com.tom_roush.pdfbox.pdmodel.PDDocument;
 import com.tom_roush.pdfbox.pdmodel.font.PDFont;
 import com.tom_roush.pdfbox.text.PDFTextStripper;
-import de.schliweb.makeacopy.utils.OCRHelper;
-import de.schliweb.makeacopy.utils.PdfCreator;
+import de.schliweb.makeacopy.utils.export.PdfCreator;
+import de.schliweb.makeacopy.utils.ocr.OCRHelper;
+import de.schliweb.makeacopy.utils.ocr.RecognizedWord;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -411,19 +412,19 @@ public class ArabicPersianPdfExportTest {
     // but should be read right-to-left in Arabic
     // Word positions: "كلمة" at x=700, "اختبار" at x=400, "مرحبا" at x=100
     // Expected RTL reading order: كلمة اختبار مرحبا (right to left)
-    java.util.List<de.schliweb.makeacopy.utils.RecognizedWord> words = new java.util.ArrayList<>();
+    java.util.List<RecognizedWord> words = new java.util.ArrayList<>();
 
     // Word 1: "مرحبا" (Hello) - leftmost position (x=100)
     android.graphics.RectF rect1 = new android.graphics.RectF(100, 50, 200, 100);
-    words.add(new de.schliweb.makeacopy.utils.RecognizedWord("مرحبا", rect1, 95.0f));
+    words.add(new RecognizedWord("مرحبا", rect1, 95.0f));
 
     // Word 2: "اختبار" (Test) - middle position (x=400)
     android.graphics.RectF rect2 = new android.graphics.RectF(400, 50, 550, 100);
-    words.add(new de.schliweb.makeacopy.utils.RecognizedWord("اختبار", rect2, 95.0f));
+    words.add(new RecognizedWord("اختبار", rect2, 95.0f));
 
     // Word 3: "كلمة" (Word) - rightmost position (x=700)
     android.graphics.RectF rect3 = new android.graphics.RectF(700, 50, 850, 100);
-    words.add(new de.schliweb.makeacopy.utils.RecognizedWord("كلمة", rect3, 95.0f));
+    words.add(new RecognizedWord("كلمة", rect3, 95.0f));
 
     System.out.println(
         "[DEBUG_LOG] BiDi test - created " + words.size() + " synthetic Arabic words");
@@ -493,21 +494,21 @@ public class ArabicPersianPdfExportTest {
     Bitmap testBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
     testBitmap.eraseColor(android.graphics.Color.WHITE);
 
-    java.util.List<de.schliweb.makeacopy.utils.RecognizedWord> words = new java.util.ArrayList<>();
+    java.util.List<RecognizedWord> words = new java.util.ArrayList<>();
 
     // Line 1 (y=50): Arabic text - should be sorted RTL
     android.graphics.RectF arabicRect1 = new android.graphics.RectF(100, 50, 200, 100);
-    words.add(new de.schliweb.makeacopy.utils.RecognizedWord("أول", arabicRect1, 95.0f));
+    words.add(new RecognizedWord("أول", arabicRect1, 95.0f));
 
     android.graphics.RectF arabicRect2 = new android.graphics.RectF(500, 50, 600, 100);
-    words.add(new de.schliweb.makeacopy.utils.RecognizedWord("ثاني", arabicRect2, 95.0f));
+    words.add(new RecognizedWord("ثاني", arabicRect2, 95.0f));
 
     // Line 2 (y=200): Latin text - should be sorted LTR
     android.graphics.RectF latinRect1 = new android.graphics.RectF(100, 200, 200, 250);
-    words.add(new de.schliweb.makeacopy.utils.RecognizedWord("First", latinRect1, 95.0f));
+    words.add(new RecognizedWord("First", latinRect1, 95.0f));
 
     android.graphics.RectF latinRect2 = new android.graphics.RectF(500, 200, 600, 250);
-    words.add(new de.schliweb.makeacopy.utils.RecognizedWord("Second", latinRect2, 95.0f));
+    words.add(new RecognizedWord("Second", latinRect2, 95.0f));
 
     System.out.println(
         "[DEBUG_LOG] Mixed BiDi test - created " + words.size() + " words (2 Arabic, 2 Latin)");

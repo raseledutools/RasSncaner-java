@@ -13,6 +13,8 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import de.schliweb.makeacopy.R;
+import de.schliweb.makeacopy.utils.image.ImageDecodeUtils;
+import de.schliweb.makeacopy.utils.image.RotationPolicy;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -70,8 +72,7 @@ public class ExportPagesAdapter extends RecyclerView.Adapter<ExportPagesAdapter.
   private static Bitmap decodeSampled(String path, int reqW, int reqH) {
     // Use centralized EXIF-neutral decoder for baked disk files
     try {
-      return de.schliweb.makeacopy.utils.ImageDecodeUtils.decodeSampled(
-          path, Math.max(1, reqW), Math.max(1, reqH));
+      return ImageDecodeUtils.decodeSampled(path, Math.max(1, reqW), Math.max(1, reqH));
     } catch (Throwable t) {
       return null;
     }
@@ -209,9 +210,7 @@ public class ExportPagesAdapter extends RecyclerView.Adapter<ExportPagesAdapter.
             // Decide rotation via centralized policy to avoid drift
             boolean rotate = false;
             try {
-              rotate =
-                  de.schliweb.makeacopy.utils.RotationPolicy.shouldRotateForThumbnail(
-                      true, s.orientationMode(), deg);
+              rotate = RotationPolicy.shouldRotateForThumbnail(true, s.orientationMode(), deg);
             } catch (Throwable ignore) {
               // Best-effort; failure is non-critical
             }

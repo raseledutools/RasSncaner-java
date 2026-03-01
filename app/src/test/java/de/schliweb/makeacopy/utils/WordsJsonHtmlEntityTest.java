@@ -3,6 +3,8 @@ package de.schliweb.makeacopy.utils;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import de.schliweb.makeacopy.utils.ocr.RecognizedWord;
+import de.schliweb.makeacopy.utils.ocr.WordsJson;
 import java.util.List;
 import org.junit.Test;
 

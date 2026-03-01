@@ -15,8 +15,9 @@ import dagger.hilt.android.AndroidEntryPoint;
 import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.data.library.CollectionEntity;
 import de.schliweb.makeacopy.data.library.CollectionsRepository;
-import de.schliweb.makeacopy.utils.FeatureFlags;
-import de.schliweb.makeacopy.utils.UIUtils;
+import de.schliweb.makeacopy.utils.infra.FeatureFlags;
+import de.schliweb.makeacopy.utils.ui.DialogUtils;
+import de.schliweb.makeacopy.utils.ui.UIUtils;
 import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
@@ -286,8 +287,7 @@ public class CollectionsFragment extends Fragment {
     dialog.setOnShowListener(
         d -> {
           try {
-            de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(
-                dialog, requireContext());
+            DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext());
           } catch (Throwable ignore) {
             // Best-effort; failure is non-critical
           }

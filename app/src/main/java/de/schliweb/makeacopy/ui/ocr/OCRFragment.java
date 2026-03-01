@@ -23,10 +23,16 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 import com.googlecode.tesseract.android.TessBaseAPI;
+import dagger.hilt.android.AndroidEntryPoint;
 import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.databinding.FragmentOcrBinding;
 import de.schliweb.makeacopy.ui.crop.CropViewModel;
-import de.schliweb.makeacopy.utils.*;
+import de.schliweb.makeacopy.utils.image.ImageLoader;
+import de.schliweb.makeacopy.utils.image.OpenCVUtils;
+import de.schliweb.makeacopy.utils.infra.FeatureFlags;
+import de.schliweb.makeacopy.utils.ocr.*;
+import de.schliweb.makeacopy.utils.ui.DialogUtils;
+import de.schliweb.makeacopy.utils.ui.UIUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -35,6 +41,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.IntStream;
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 /**
  * OCRFragment handles the Optical Character Recognition (OCR) functionality within the application.
@@ -43,6 +51,7 @@ import java.util.stream.IntStream;
  *
  * <p>Flow: Crop -> (optional) User Rotation -> OCR -> Export
  */
+@AndroidEntryPoint
 public class OCRFragment extends Fragment {
   private static final String TAG = "OCRFragment";
   // Early-exit threshold: if the first rotation attempt (extra=0) reaches this mean confidence,
@@ -58,6 +67,9 @@ public class OCRFragment extends Fragment {
 
   // Language helper for listing/availability checks (no long-lived TessBaseAPI instance)
   private OCRHelper langHelper;
+
+  @Inject Provider<OCRHelper> ocrHelperProvider;
+  @Inject DictionaryManager dictionaryManager;
 
   // Concurrency: serialize OCR jobs, 1 job ↔ 1 TessBaseAPI instance
   private final ExecutorService ocrExecutor = Executors.newSingleThreadExecutor();
@@ -86,8 +98,7 @@ public class OCRFragment extends Fragment {
                 .get(de.schliweb.makeacopy.ui.camera.CameraViewModel.class);
         String path = camVm.getImagePath() != null ? camVm.getImagePath().getValue() : null;
         android.net.Uri uri = camVm.getImageUri() != null ? camVm.getImageUri().getValue() : null;
-        android.graphics.Bitmap bmp =
-            de.schliweb.makeacopy.utils.ImageLoader.decode(requireContext(), path, uri);
+        android.graphics.Bitmap bmp = ImageLoader.decode(requireContext(), path, uri);
         if (bmp != null) {
           cropViewModel.setImageBitmap(bmp);
         }
@@ -114,7 +125,7 @@ public class OCRFragment extends Fragment {
     }
 
     // Language helper (no initTesseract() here!)
-    langHelper = new OCRHelper(requireContext().getApplicationContext());
+    langHelper = ocrHelperProvider.get();
 
     // Init SAF launcher for manual .traineddata import
     openTraineddataLauncher =
@@ -668,7 +679,7 @@ public class OCRFragment extends Fragment {
    */
   private boolean isUsingBestModel(String code) {
     try {
-      java.io.File dir = de.schliweb.makeacopy.utils.OCRHelper.getTessdataDir(requireContext());
+      java.io.File dir = OCRHelper.getTessdataDir(requireContext());
       java.io.File local = new java.io.File(dir, code + ".traineddata");
       long localSize = local.exists() ? local.length() : -1L;
 
@@ -709,7 +720,7 @@ public class OCRFragment extends Fragment {
   private void refreshLanguageSpinner() {
     try {
       // Recreate helper to see any new files (not strictly necessary)
-      langHelper = new OCRHelper(requireContext().getApplicationContext());
+      langHelper = ocrHelperProvider.get();
       setupLanguageSpinner();
     } catch (Throwable t) {
       Log.w(TAG, "Failed to refresh language spinner", t);
@@ -877,7 +888,7 @@ public class OCRFragment extends Fragment {
     boolean hasBestTmp = false;
     if (langCode != null) {
       try {
-        java.io.File dir = de.schliweb.makeacopy.utils.OCRHelper.getTessdataDir(requireContext());
+        java.io.File dir = OCRHelper.getTessdataDir(requireContext());
         java.io.File local = new java.io.File(dir, langCode + ".traineddata");
         long localSize = local.exists() ? local.length() : -1L;
         long assetSize = -1L;
@@ -1147,7 +1158,7 @@ public class OCRFragment extends Fragment {
                   }
 
                   // Fresh Tesseract per job
-                  localHelper = new OCRHelper(requireContext().getApplicationContext());
+                  localHelper = ocrHelperProvider.get();
                   // 1 job = 1 engine instance. No automatic reinitialization per run.
                   try {
                     localHelper.setReinitPerRun(false);
@@ -1445,7 +1456,7 @@ public class OCRFragment extends Fragment {
                     try {
                       // Process words with dictionary - this is the single source of truth
                       ocrWords =
-                          OCRPostProcessor.processWithDictionary(ocrWords, lang, requireContext());
+                          OCRPostProcessor.processWithDictionary(ocrWords, lang, dictionaryManager);
                       // Derive text from processed words instead of processing text separately
                       ocrText = OCRPostProcessor.wordsToText(ocrWords);
                       if (ocrText == null || ocrText.trim().isEmpty()) ocrText = "";

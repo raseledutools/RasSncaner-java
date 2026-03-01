@@ -16,6 +16,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import de.schliweb.makeacopy.BuildConfig;
 import de.schliweb.makeacopy.R;
+import de.schliweb.makeacopy.utils.ui.DialogUtils;
 
 /**
  * A DialogFragment implementation that provides camera-specific options and configurations. It
@@ -323,8 +324,7 @@ public class CameraOptionsDialogFragment extends DialogFragment {
     dialog.setOnShowListener(
         dlg -> {
           try {
-            de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(
-                dialog, ctx);
+            DialogUtils.improveAlertDialogButtonContrastForNight(dialog, ctx);
           } catch (Throwable ignore) {
             // Dialog contrast improvement is best-effort
           }

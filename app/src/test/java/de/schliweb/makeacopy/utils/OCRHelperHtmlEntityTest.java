@@ -2,6 +2,7 @@ package de.schliweb.makeacopy.utils;
 
 import static org.junit.Assert.assertEquals;
 
+import de.schliweb.makeacopy.utils.ocr.OCRHelper;
 import java.lang.reflect.Method;
 import org.junit.Test;
 

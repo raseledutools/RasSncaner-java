@@ -17,13 +17,21 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
+import dagger.hilt.android.AndroidEntryPoint;
 import de.schliweb.makeacopy.BuildConfig;
 import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.ui.crop.CropViewModel;
 import de.schliweb.makeacopy.ui.ocr.review.model.OcrDoc;
 import de.schliweb.makeacopy.ui.ocr.review.view.MinimapView;
 import de.schliweb.makeacopy.ui.ocr.review.view.OcrOverlayView;
-import de.schliweb.makeacopy.utils.UIUtils;
+import de.schliweb.makeacopy.utils.ocr.DictionaryManager;
+import de.schliweb.makeacopy.utils.ocr.OCRHelper;
+import de.schliweb.makeacopy.utils.ocr.OCRUtils;
+import de.schliweb.makeacopy.utils.ocr.RecognizedWord;
+import de.schliweb.makeacopy.utils.ui.DialogUtils;
+import de.schliweb.makeacopy.utils.ui.UIUtils;
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 /**
  * OcrReviewFragment is a subclass of Fragment that provides functionality for reviewing and editing
@@ -31,7 +39,11 @@ import de.schliweb.makeacopy.utils.UIUtils;
  * autosave operations for OCR documents. The fragment supports features such as inline editing,
  * word operations (e.g., delete, merge, split), and language configuration.
  */
+@AndroidEntryPoint
 public class OcrReviewFragment extends Fragment {
+
+  @Inject Provider<OCRHelper> ocrHelperProvider;
+  @Inject DictionaryManager dictionaryManager;
 
   private boolean minimapVisible = true;
 
@@ -1187,7 +1199,6 @@ public class OcrReviewFragment extends Fragment {
     }
 
     final String finalLangSpec = langSpec;
-    final android.content.Context ctx = requireContext().getApplicationContext();
 
     // Run suggestion lookup on background thread
     new Thread(
@@ -1195,7 +1206,7 @@ public class OcrReviewFragment extends Fragment {
               try {
                 de.schliweb.makeacopy.ui.ocr.review.suggest.DictionarySuggestProvider provider =
                     new de.schliweb.makeacopy.ui.ocr.review.suggest.DictionarySuggestProvider(
-                        ctx, finalLangSpec);
+                        dictionaryManager, finalLangSpec);
                 java.util.List<
                         de.schliweb.makeacopy.ui.ocr.review.suggest.DictionarySuggestProvider
                             .Suggestion>
@@ -1275,9 +1286,7 @@ public class OcrReviewFragment extends Fragment {
                 })
             .create();
     dialog.setOnShowListener(
-        d ->
-            de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(
-                dialog, requireContext()));
+        d -> DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext()));
     dialog.show();
   }
 
@@ -1314,9 +1323,7 @@ public class OcrReviewFragment extends Fragment {
                 })
             .create();
     dialog.setOnShowListener(
-        d ->
-            de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(
-                dialog, requireContext()));
+        d -> DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext()));
     dialog.show();
   }
 
@@ -1400,8 +1407,7 @@ public class OcrReviewFragment extends Fragment {
             .create();
     dialog.setOnShowListener(
         d -> {
-          de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(
-              dialog, requireContext());
+          DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext());
           // Force horizontal button layout to prevent stacking on narrow screens
           try {
             android.widget.Button btnPositive = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
@@ -1434,15 +1440,14 @@ public class OcrReviewFragment extends Fragment {
    */
   private String[] getAvailableLanguageCodes() {
     try {
-      de.schliweb.makeacopy.utils.OCRHelper helper =
-          new de.schliweb.makeacopy.utils.OCRHelper(requireContext().getApplicationContext());
+      OCRHelper helper = ocrHelperProvider.get();
       String[] langs = helper.getAvailableLanguages();
       if (langs != null && langs.length > 0) return langs;
     } catch (Throwable ignore) {
       // Best-effort; failure is non-critical
     }
     // Fallback to common languages
-    return de.schliweb.makeacopy.utils.OCRUtils.getLanguages();
+    return OCRUtils.getLanguages();
   }
 
   /**
@@ -1601,16 +1606,13 @@ public class OcrReviewFragment extends Fragment {
       return;
     }
 
-    final android.content.Context ctx = requireContext().getApplicationContext();
-
     // Run OCR on background thread
     new Thread(
             () -> {
               String newText = null;
               Float newConfidence = null;
               try {
-                de.schliweb.makeacopy.utils.OCRHelper ocrHelper =
-                    new de.schliweb.makeacopy.utils.OCRHelper(ctx);
+                OCRHelper ocrHelper = ocrHelperProvider.get();
                 ocrHelper.setLanguage(newLang);
                 // Use PSM_SINGLE_WORD for single word recognition
                 // TODO
@@ -1618,7 +1620,7 @@ public class OcrReviewFragment extends Fragment {
                     com.googlecode.tesseract.android.TessBaseAPI.PageSegMode.PSM_SINGLE_WORD);
 
                 if (ocrHelper.initTesseract()) {
-                  de.schliweb.makeacopy.utils.OCRHelper.OcrResultWords result =
+                  de.schliweb.makeacopy.utils.ocr.OCRHelper.OcrResultWords result =
                       ocrHelper.runOcrWithRetry(wordBitmap);
                   if (result != null && result.text != null) {
                     newText = result.text.trim();
@@ -2107,9 +2109,7 @@ public class OcrReviewFragment extends Fragment {
               .setNegativeButton(R.string.cancel, null)
               .create();
       dialog.setOnShowListener(
-          d ->
-              de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(
-                  dialog, requireContext()));
+          d -> DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext()));
       dialog.show();
     } else {
       navigateBack();
@@ -2169,8 +2169,7 @@ public class OcrReviewFragment extends Fragment {
           new ViewModelProvider(requireActivity())
               .get(de.schliweb.makeacopy.ui.ocr.OCRViewModel.class);
       // Convert OcrDoc.Word list to RecognizedWord list
-      java.util.List<de.schliweb.makeacopy.utils.RecognizedWord> reviewedWords =
-          new java.util.ArrayList<>();
+      java.util.List<RecognizedWord> reviewedWords = new java.util.ArrayList<>();
       if (doc.words != null) {
         for (OcrDoc.Word word : doc.words) {
           if (word != null && word.b != null && word.b.length >= 4) {
@@ -2179,8 +2178,7 @@ public class OcrReviewFragment extends Fragment {
                 new android.graphics.RectF(
                     word.b[0], word.b[1], word.b[0] + word.b[2], word.b[1] + word.b[3]);
             reviewedWords.add(
-                new de.schliweb.makeacopy.utils.RecognizedWord(
-                    word.t != null ? word.t : "", box, word.c, word.lang));
+                new RecognizedWord(word.t != null ? word.t : "", box, word.c, word.lang));
           }
         }
       }

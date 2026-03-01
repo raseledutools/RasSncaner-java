@@ -6,7 +6,7 @@ import android.net.Uri;
 import android.util.Log;
 import android.widget.Toast;
 import de.schliweb.makeacopy.R;
-import de.schliweb.makeacopy.utils.UIUtils;
+import de.schliweb.makeacopy.utils.ui.UIUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;

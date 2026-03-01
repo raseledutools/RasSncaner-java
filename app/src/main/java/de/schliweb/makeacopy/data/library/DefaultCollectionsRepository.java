@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 import java.util.List;
 import java.util.UUID;
+import javax.inject.Inject;
 
 /**
  * Default implementation of the CollectionsRepository interface. Provides concrete methods to
@@ -30,6 +31,18 @@ import java.util.UUID;
 public class DefaultCollectionsRepository implements CollectionsRepository {
   private static final String TAG = "CollectionsRepo";
 
+  private final CollectionsDao collectionsDao;
+  private final ScanCollectionJoinDao joinDao;
+  private final ScansDao scansDao;
+
+  @Inject
+  public DefaultCollectionsRepository(
+      CollectionsDao collectionsDao, ScanCollectionJoinDao joinDao, ScansDao scansDao) {
+    this.collectionsDao = collectionsDao;
+    this.joinDao = joinDao;
+    this.scansDao = scansDao;
+  }
+
   private boolean isDefaultCollection(Context context, CollectionEntity e) {
     if (e == null) return false;
     try {
@@ -54,8 +67,6 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
   @Override
   public CollectionEntity createCollection(Context context, String name) {
     try {
-      AppDatabase db = AppDatabase.getInstance(context);
-      CollectionsDao dao = db.collectionsDao();
       // Normalize input
       String trimmed = (name == null) ? null : name.trim();
       if (trimmed == null || trimmed.isEmpty()) return null;
@@ -72,11 +83,11 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
       } catch (Throwable ignore) {
         // Best-effort; failure is non-critical
       }
-      int nextOrder = dao.getAll().size();
+      int nextOrder = collectionsDao.getAll().size();
       CollectionEntity entity =
           new CollectionEntity(
               UUID.randomUUID().toString(), trimmed, nextOrder, System.currentTimeMillis());
-      dao.insert(entity);
+      collectionsDao.insert(entity);
       return entity;
     } catch (Throwable t) {
       Log.e(TAG, "createCollection failed", t);
@@ -95,7 +106,7 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
   @Override
   public List<CollectionEntity> getAllCollections(Context context) {
     try {
-      return AppDatabase.getInstance(context).collectionsDao().getAll();
+      return collectionsDao.getAll();
     } catch (Throwable t) {
       Log.e(TAG, "getAllCollections failed", t);
       return java.util.Collections.emptyList();
@@ -116,13 +127,12 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
   @Override
   public void assignScanToCollection(Context context, String scanId, String collectionId) {
     try {
-      AppDatabase db = AppDatabase.getInstance(context);
       // Guard: Default "Completed Scans" collection is ONLY for CompletedScanEntry items.
       // If target is the default collection, verify the scan has the marker in sourceMetaJson.
       try {
         if (isDefaultCollectionId(context, collectionId)) {
           try {
-            ScanEntity se = db.scansDao().getById(scanId);
+            ScanEntity se = scansDao.getById(scanId);
             String sm = (se != null) ? se.sourceMetaJson : null;
             boolean isCompletedScanEntry = (sm != null && sm.contains("\"CompletedScanEntry\""));
             if (!isCompletedScanEntry) {
@@ -142,8 +152,7 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
       } catch (Throwable ignore) {
         // Best-effort; failure is non-critical
       }
-      db.scanCollectionJoinDao()
-          .insert(new ScanCollectionCrossRef(scanId, collectionId, System.currentTimeMillis()));
+      joinDao.insert(new ScanCollectionCrossRef(scanId, collectionId, System.currentTimeMillis()));
     } catch (Throwable t) {
       Log.e(TAG, "assignScanToCollection failed", t);
     }
@@ -164,8 +173,7 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
   @Override
   public void removeScanFromCollection(Context context, String scanId, String collectionId) {
     try {
-      AppDatabase db = AppDatabase.getInstance(context);
-      db.scanCollectionJoinDao().remove(scanId, collectionId);
+      joinDao.remove(scanId, collectionId);
     } catch (Throwable t) {
       Log.e(TAG, "removeScanFromCollection failed", t);
     }
@@ -183,13 +191,11 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
   @Override
   public boolean deleteCollectionIfEmpty(Context context, String collectionId) {
     try {
-      AppDatabase db = AppDatabase.getInstance(context);
-      CollectionsDao cdao = db.collectionsDao();
       // Guard: default collection cannot be deleted at all
       if (isDefaultCollectionId(context, collectionId)) return false;
-      int count = cdao.countItems(collectionId);
+      int count = collectionsDao.countItems(collectionId);
       if (count > 0) return false;
-      cdao.deleteById(collectionId);
+      collectionsDao.deleteById(collectionId);
       return true;
     } catch (Throwable t) {
       Log.e(TAG, "deleteCollectionIfEmpty failed", t);
@@ -200,7 +206,7 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
   @Override
   public int countItems(Context context, String collectionId) {
     try {
-      return AppDatabase.getInstance(context).collectionsDao().countItems(collectionId);
+      return collectionsDao.countItems(collectionId);
     } catch (Throwable t) {
       Log.e(TAG, "countItems failed", t);
       return 0;
@@ -213,9 +219,7 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
       if (newName == null) return false;
       String trimmed = newName.trim();
       if (trimmed.isEmpty()) return false;
-      AppDatabase db = AppDatabase.getInstance(context);
-      CollectionsDao dao = db.collectionsDao();
-      CollectionEntity e = dao.getById(collectionId);
+      CollectionEntity e = collectionsDao.getById(collectionId);
       if (e == null) return false;
       // Guard: default collection cannot be renamed (by ID)
       if (isDefaultCollection(context, e)) return false;
@@ -232,7 +236,7 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
         // Best-effort; failure is non-critical
       }
       e.name = trimmed;
-      dao.update(e);
+      collectionsDao.update(e);
       return true;
     } catch (Throwable t) {
       Log.e(TAG, "renameCollection failed", t);
@@ -245,14 +249,12 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
   public java.util.List<CollectionEntity> getCollectionsForScan(Context context, String scanId) {
     try {
       if (scanId == null) return new java.util.ArrayList<>();
-      AppDatabase db = AppDatabase.getInstance(context);
-      java.util.List<String> ids = db.scanCollectionJoinDao().getCollectionIdsForScan(scanId);
+      java.util.List<String> ids = joinDao.getCollectionIdsForScan(scanId);
       if (ids == null || ids.isEmpty()) return new java.util.ArrayList<>();
-      CollectionsDao cdao = db.collectionsDao();
       java.util.ArrayList<CollectionEntity> list = new java.util.ArrayList<>();
       for (String id : ids) {
         try {
-          CollectionEntity ce = cdao.getById(id);
+          CollectionEntity ce = collectionsDao.getById(id);
           if (ce != null) list.add(ce);
         } catch (Throwable ignore) {
           // Best-effort; failure is non-critical
@@ -282,12 +284,10 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
   public CollectionEntity getOrCreateDefaultCompletedCollection(Context context) {
     try {
       Context app = context.getApplicationContext();
-      AppDatabase db = AppDatabase.getInstance(app);
-      CollectionsDao dao = db.collectionsDao();
       String name = app.getString(de.schliweb.makeacopy.R.string.collection_completed_scans);
       CollectionEntity existing = null;
       try {
-        existing = dao.getByName(name);
+        existing = collectionsDao.getByName(name);
       } catch (Throwable ignore) {
         // Best-effort; failure is non-critical
       }
@@ -295,7 +295,7 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
       // create new
       int nextOrder = 0;
       try {
-        java.util.List<CollectionEntity> all = dao.getAll();
+        java.util.List<CollectionEntity> all = collectionsDao.getAll();
         nextOrder = (all != null) ? all.size() : 0;
       } catch (Throwable ignore) {
         // Best-effort; failure is non-critical
@@ -304,7 +304,7 @@ public class DefaultCollectionsRepository implements CollectionsRepository {
           new CollectionEntity(
               java.util.UUID.randomUUID().toString(), name, nextOrder, System.currentTimeMillis());
       try {
-        dao.insert(entity);
+        collectionsDao.insert(entity);
       } catch (Throwable ignore) {
         // Best-effort; failure is non-critical
       }

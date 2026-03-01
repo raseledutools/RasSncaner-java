@@ -2,6 +2,7 @@ package de.schliweb.makeacopy.utils;
 
 import static org.junit.Assert.*;
 
+import de.schliweb.makeacopy.utils.ocr.OCRWhitelist;
 import org.junit.Test;
 
 /** Unit tests for {@link OCRWhitelist} to verify multi-language whitelist generation. */

@@ -5,6 +5,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import android.graphics.RectF;
+import de.schliweb.makeacopy.utils.ocr.OCRPostProcessor;
+import de.schliweb.makeacopy.utils.ocr.RecognizedWord;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;

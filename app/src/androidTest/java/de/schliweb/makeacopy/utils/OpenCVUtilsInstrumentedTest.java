@@ -11,6 +11,8 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
+import de.schliweb.makeacopy.utils.image.BinarizationUtils;
+import de.schliweb.makeacopy.utils.image.OpenCVUtils;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;

@@ -2,6 +2,7 @@ package de.schliweb.makeacopy.utils.jpeg;
 
 import static org.junit.Assert.*;
 
+import de.schliweb.makeacopy.utils.export.jpeg.JpegExportOptions;
 import org.junit.Test;
 
 public class JpegExportOptionsTest {

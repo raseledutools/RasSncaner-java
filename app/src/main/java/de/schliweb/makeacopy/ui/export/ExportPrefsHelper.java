@@ -2,10 +2,10 @@ package de.schliweb.makeacopy.ui.export;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import de.schliweb.makeacopy.utils.PageFormat;
-import de.schliweb.makeacopy.utils.PdfCreator;
-import de.schliweb.makeacopy.utils.PdfQualityPreset;
-import de.schliweb.makeacopy.utils.jpeg.JpegExportOptions;
+import de.schliweb.makeacopy.utils.export.PageFormat;
+import de.schliweb.makeacopy.utils.export.PdfCreator;
+import de.schliweb.makeacopy.utils.export.PdfQualityPreset;
+import de.schliweb.makeacopy.utils.export.jpeg.JpegExportOptions;
 import lombok.experimental.UtilityClass;
 
 /**

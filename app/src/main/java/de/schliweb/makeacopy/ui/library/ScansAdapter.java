@@ -12,8 +12,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.data.library.ScanEntity;
-import de.schliweb.makeacopy.utils.FileUtils;
-import de.schliweb.makeacopy.utils.ImageDecodeUtils;
+import de.schliweb.makeacopy.utils.image.ImageDecodeUtils;
+import de.schliweb.makeacopy.utils.infra.FileUtils;
+import de.schliweb.makeacopy.utils.ui.UIUtils;
 import java.io.File;
 import java.io.InputStream;
 import java.text.DateFormat;
@@ -131,7 +132,7 @@ public class ScansAdapter extends RecyclerView.Adapter<ScansAdapter.VH> {
           Boolean unread = unreadableMap.get(e.id);
           if (Boolean.TRUE.equals(unread)) {
             try {
-              de.schliweb.makeacopy.utils.UIUtils.showToast(
+              UIUtils.showToast(
                   v.getContext(), R.string.missing_file, android.widget.Toast.LENGTH_SHORT);
             } catch (Throwable ignore) {
               // Best-effort; failure is non-critical

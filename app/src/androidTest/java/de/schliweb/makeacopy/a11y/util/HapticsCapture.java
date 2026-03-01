@@ -1,6 +1,6 @@
 package de.schliweb.makeacopy.a11y.util;
 
-import de.schliweb.makeacopy.utils.HapticsUtils;
+import de.schliweb.makeacopy.utils.ui.HapticsUtils;
 
 /** Test helper to capture one-shot haptic vibrations emitted via HapticsUtils. */
 public final class HapticsCapture {

@@ -39,9 +39,10 @@ public final class ExistingScansIndexer {
    * Runs the one-time bootstrap indexing if it hasn't been executed yet. Internally delegates to
    * the incremental pass. Returns the number of newly inserted items.
    */
-  public static int runOnceIfNeeded(Context context) {
+  public static int runOnceIfNeeded(
+      Context context, ScansRepository scansRepo, CollectionsRepository collectionsRepo) {
     if (isAlreadyIndexed(context)) return 0;
-    int count = runIncremental(context);
+    int count = runIncremental(context, scansRepo, collectionsRepo);
     markDone(context);
     return count;
   }
@@ -52,12 +53,12 @@ public final class ExistingScansIndexer {
    *
    * @return number of newly inserted items (duplicates are skipped)
    */
-  public static int runIncremental(Context context) {
+  public static int runIncremental(
+      Context context, ScansRepository repo, CollectionsRepository cr) {
     try {
       Context app = context.getApplicationContext();
       List<CompletedScan> items = CompletedScansRegistry.get(app).listAllOrderedByDateDesc();
       if (items == null || items.isEmpty()) return 0;
-      ScansRepository repo = LibraryServiceLocator.getScansRepository(app);
       int newCount = 0;
       for (CompletedScan s : items) {
         if (s == null) continue;
@@ -106,7 +107,6 @@ public final class ExistingScansIndexer {
             }
             // Ensure membership in default collection
             try {
-              CollectionsRepository cr = LibraryServiceLocator.getCollectionsRepository(app);
               CollectionEntity def = cr.getOrCreateDefaultCompletedCollection(app);
               if (def != null) {
                 cr.assignScanToCollection(app, id, def.id);
@@ -130,7 +130,6 @@ public final class ExistingScansIndexer {
         repo.indexExportedScan(app, meta);
         // Assign to default collection
         try {
-          CollectionsRepository cr = LibraryServiceLocator.getCollectionsRepository(app);
           CollectionEntity def = cr.getOrCreateDefaultCompletedCollection(app);
           if (def != null) {
             cr.assignScanToCollection(app, id, def.id);
@@ -151,12 +150,11 @@ public final class ExistingScansIndexer {
    * Legacy: Performs indexing for all items regardless of prior existence. Kept for debugging.
    * Returns the number of items attempted (not necessarily newly inserted).
    */
-  public static int runNow(Context context) {
+  public static int runNow(Context context, ScansRepository repo) {
     try {
       Context app = context.getApplicationContext();
       List<CompletedScan> items = CompletedScansRegistry.get(app).listAllOrderedByDateDesc();
       if (items == null || items.isEmpty()) return 0;
-      ScansRepository repo = LibraryServiceLocator.getScansRepository(app);
       int n = 0;
       for (CompletedScan s : items) {
         if (s == null) continue;

@@ -5,8 +5,8 @@ import android.util.Log;
 import dagger.hilt.android.HiltAndroidApp;
 import de.schliweb.makeacopy.data.library.CollectionsRepository;
 import de.schliweb.makeacopy.services.CacheCleanupService;
-import de.schliweb.makeacopy.utils.FeatureFlags;
-import de.schliweb.makeacopy.utils.OpenCVUtils;
+import de.schliweb.makeacopy.utils.image.OpenCVUtils;
+import de.schliweb.makeacopy.utils.infra.FeatureFlags;
 import javax.inject.Inject;
 
 /**

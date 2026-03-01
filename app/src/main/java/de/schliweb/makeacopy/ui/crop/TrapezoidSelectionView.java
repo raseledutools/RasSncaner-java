@@ -10,7 +10,8 @@ import android.view.View;
 import android.widget.Magnifier;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import de.schliweb.makeacopy.utils.OpenCVUtils;
+import de.schliweb.makeacopy.utils.image.CoordinateTransformUtils;
+import de.schliweb.makeacopy.utils.image.OpenCVUtils;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -785,7 +786,7 @@ public class TrapezoidSelectionView extends View {
 
     // Use CoordinateTransformUtils for the core transformation
     Point[] viewCoordinates =
-        de.schliweb.makeacopy.utils.CoordinateTransformUtils.transformImageToViewCoordinates(
+        CoordinateTransformUtils.transformImageToViewCoordinates(
             imageCoordinates, bitmap, viewWidth, viewHeight);
 
     if (viewCoordinates == null) {
@@ -1939,8 +1940,7 @@ public class TrapezoidSelectionView extends View {
       for (int i = 0; i < 4; i++)
         viewPts[i] = new org.opencv.core.Point(corners[i].x, corners[i].y);
       org.opencv.core.Point[] imgPts =
-          de.schliweb.makeacopy.utils.CoordinateTransformUtils.transformViewToImageCoordinates(
-              viewPts, curBmp, viewW, viewH);
+          CoordinateTransformUtils.transformViewToImageCoordinates(viewPts, curBmp, viewW, viewH);
       if (imgPts == null)
         throw new IllegalStateException("transformViewToImageCoordinates returned null");
 
@@ -1990,8 +1990,7 @@ public class TrapezoidSelectionView extends View {
               : Bitmap.createBitmap(
                   Math.max(1, newImgW), Math.max(1, newImgH), Bitmap.Config.ARGB_8888);
       org.opencv.core.Point[] viewPtsNew =
-          de.schliweb.makeacopy.utils.CoordinateTransformUtils.transformImageToViewCoordinates(
-              imgPtsRot, basis, viewW, viewH);
+          CoordinateTransformUtils.transformImageToViewCoordinates(imgPtsRot, basis, viewW, viewH);
       if (viewPtsNew == null)
         throw new IllegalStateException("transformImageToViewCoordinates returned null");
 

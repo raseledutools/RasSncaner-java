@@ -16,7 +16,10 @@ import de.schliweb.makeacopy.data.library.CollectionsRepository;
 import de.schliweb.makeacopy.data.library.ExistingScansIndexer;
 import de.schliweb.makeacopy.data.library.ScanEntity;
 import de.schliweb.makeacopy.data.library.ScansRepository;
-import de.schliweb.makeacopy.utils.FeatureFlags;
+import de.schliweb.makeacopy.utils.infra.FeatureFlags;
+import de.schliweb.makeacopy.utils.ui.A11yUtils;
+import de.schliweb.makeacopy.utils.ui.DialogUtils;
+import de.schliweb.makeacopy.utils.ui.UIUtils;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -38,8 +41,8 @@ import javax.inject.Inject;
  * <p>Navigation: - Navigates to scan details when an item in the list is clicked. - Provides a
  * button to navigate to other collections.
  *
- * <p>Data Handling: - Loads scan data asynchronously. - Uses `LibraryServiceLocator` to fetch scan
- * data from the repository. - Dynamically updates the RecyclerView through `ScansAdapter`.
+ * <p>Data Handling: - Loads scan data asynchronously. - Uses injected repositories to fetch scan
+ * data. - Dynamically updates the RecyclerView through `ScansAdapter`.
  *
  * <p>Configuration Dependencies: - Requires `BuildConfig.FEATURE_SCAN_LIBRARY` to enable scan
  * library functionality. - Provides feedback to users via Toast messages when features are
@@ -119,7 +122,7 @@ public class ScansLibraryFragment extends Fragment {
                 androidx.navigation.Navigation.findNavController(requireView())
                     .navigate(R.id.navigation_scan_details, args);
               } catch (Throwable t) {
-                de.schliweb.makeacopy.utils.UIUtils.showToast(
+                UIUtils.showToast(
                     requireContext(),
                     R.string.navigation_failed,
                     android.widget.Toast.LENGTH_SHORT);
@@ -142,7 +145,7 @@ public class ScansLibraryFragment extends Fragment {
         new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL));
 
     if (!FeatureFlags.isScanLibraryEnable()) {
-      de.schliweb.makeacopy.utils.UIUtils.showToast(
+      UIUtils.showToast(
           requireContext(),
           R.string.feature_scan_library_disabled,
           android.widget.Toast.LENGTH_SHORT);
@@ -199,7 +202,7 @@ public class ScansLibraryFragment extends Fragment {
                                     requireActivity()
                                         .runOnUiThread(
                                             () -> {
-                                              de.schliweb.makeacopy.utils.UIUtils.showToast(
+                                              UIUtils.showToast(
                                                   requireContext(),
                                                   R.string.removed_from_collection,
                                                   android.widget.Toast.LENGTH_SHORT);
@@ -213,8 +216,7 @@ public class ScansLibraryFragment extends Fragment {
             dialog.setOnShowListener(
                 d -> {
                   try {
-                    de.schliweb.makeacopy.utils.DialogUtils
-                        .improveAlertDialogButtonContrastForNight(dialog, requireContext());
+                    DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext());
                   } catch (Throwable ignore) {
                     // Best-effort; failure is non-critical
                   }
@@ -228,7 +230,7 @@ public class ScansLibraryFragment extends Fragment {
           try {
             Navigation.findNavController(requireView()).navigate(R.id.navigation_collections);
           } catch (Throwable t) {
-            de.schliweb.makeacopy.utils.UIUtils.showToast(
+            UIUtils.showToast(
                 requireContext(), R.string.navigation_failed, android.widget.Toast.LENGTH_SHORT);
           }
         });
@@ -240,7 +242,9 @@ public class ScansLibraryFragment extends Fragment {
                     () -> {
                       int n = 0;
                       try {
-                        n = ExistingScansIndexer.runIncremental(requireContext());
+                        n =
+                            ExistingScansIndexer.runIncremental(
+                                requireContext(), scansRepository, collectionsRepository);
                       } catch (Throwable ignore) {
                         // Best-effort; failure is non-critical
                       }
@@ -254,13 +258,13 @@ public class ScansLibraryFragment extends Fragment {
                                 CharSequence msg;
                                 if (finalN > 0) {
                                   msg = getString(R.string.indexed_new_items, finalN);
-                                  de.schliweb.makeacopy.utils.UIUtils.showToast(
+                                  UIUtils.showToast(
                                       requireContext(),
                                       msg.toString(),
                                       android.widget.Toast.LENGTH_SHORT);
                                 } else {
                                   msg = getString(R.string.nothing_new_to_index);
-                                  de.schliweb.makeacopy.utils.UIUtils.showToast(
+                                  UIUtils.showToast(
                                       requireContext(),
                                       msg.toString(),
                                       android.widget.Toast.LENGTH_SHORT);
@@ -287,7 +291,7 @@ public class ScansLibraryFragment extends Fragment {
     View root = getView();
     if (root == null) return;
     root.setContentDescription(text);
-    de.schliweb.makeacopy.utils.A11yUtils.announce(root, text);
+    A11yUtils.announce(root, text);
   }
 
   private void loadDataAsync() {
@@ -345,8 +349,7 @@ public class ScansLibraryFragment extends Fragment {
               } catch (Throwable ignore) {
                 // Best-effort; failure is non-critical
               }
-              final boolean finalShowIndexBtn =
-                  de.schliweb.makeacopy.utils.FeatureFlags.isScanLibraryEnable();
+              final boolean finalShowIndexBtn = FeatureFlags.isScanLibraryEnable();
               if (!isAdded()) return;
               requireActivity()
                   .runOnUiThread(

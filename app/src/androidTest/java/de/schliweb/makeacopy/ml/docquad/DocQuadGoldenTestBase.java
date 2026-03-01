@@ -96,7 +96,7 @@ public abstract class DocQuadGoldenTestBase {
       while ((n = is.read(buf)) >= 0) {
         if (n > 0) baos.write(buf, 0, n);
       }
-      String s = baos.toString(StandardCharsets.UTF_8);
+      String s = new String(baos.toByteArray(), StandardCharsets.UTF_8);
       return JsonParser.parseString(s).getAsJsonObject();
     }
   }

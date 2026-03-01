@@ -2,6 +2,7 @@ package de.schliweb.makeacopy.utils;
 
 import static org.junit.Assert.*;
 
+import de.schliweb.makeacopy.utils.ocr.OCRPostProcessor;
 import org.junit.Test;
 
 /**

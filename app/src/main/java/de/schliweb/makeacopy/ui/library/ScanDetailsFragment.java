@@ -13,9 +13,12 @@ import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.data.library.CollectionsRepository;
 import de.schliweb.makeacopy.data.library.ScanEntity;
 import de.schliweb.makeacopy.data.library.ScansRepository;
-import de.schliweb.makeacopy.utils.FeatureFlags;
-import de.schliweb.makeacopy.utils.FileUtils;
-import de.schliweb.makeacopy.utils.ImageDecodeUtils;
+import de.schliweb.makeacopy.utils.export.ShareIntentHelper;
+import de.schliweb.makeacopy.utils.image.ImageDecodeUtils;
+import de.schliweb.makeacopy.utils.infra.FeatureFlags;
+import de.schliweb.makeacopy.utils.infra.FileUtils;
+import de.schliweb.makeacopy.utils.ui.DialogUtils;
+import de.schliweb.makeacopy.utils.ui.UIUtils;
 import java.text.DateFormat;
 import java.util.Date;
 import javax.inject.Inject;
@@ -207,7 +210,7 @@ public class ScanDetailsFragment extends Fragment {
         });
 
     if (!FeatureFlags.isScanLibraryEnable()) {
-      de.schliweb.makeacopy.utils.UIUtils.showToast(
+      UIUtils.showToast(
           requireContext(),
           R.string.feature_scan_library_disabled,
           android.widget.Toast.LENGTH_SHORT);
@@ -219,7 +222,7 @@ public class ScanDetailsFragment extends Fragment {
       scanId = getArguments().getString("scanId");
     }
     if (scanId == null || scanId.isEmpty()) {
-      de.schliweb.makeacopy.utils.UIUtils.showToast(
+      UIUtils.showToast(
           requireContext(), R.string.missing_scan_id, android.widget.Toast.LENGTH_SHORT);
       requireActivity().getOnBackPressedDispatcher().onBackPressed();
       return root;
@@ -331,10 +334,7 @@ public class ScanDetailsFragment extends Fragment {
                                                                         requireActivity()
                                                                             .runOnUiThread(
                                                                                 () ->
-                                                                                    de.schliweb
-                                                                                        .makeacopy
-                                                                                        .utils
-                                                                                        .UIUtils
+                                                                                    UIUtils
                                                                                         .showToast(
                                                                                             requireContext(),
                                                                                             getString(
@@ -359,7 +359,7 @@ public class ScanDetailsFragment extends Fragment {
                                           createDialog.setOnShowListener(
                                               d -> {
                                                 try {
-                                                  de.schliweb.makeacopy.utils.DialogUtils
+                                                  DialogUtils
                                                       .improveAlertDialogButtonContrastForNight(
                                                           createDialog, requireContext());
                                                 } catch (Throwable ignore) {
@@ -382,8 +382,7 @@ public class ScanDetailsFragment extends Fragment {
                                                         requireActivity()
                                                             .runOnUiThread(
                                                                 () ->
-                                                                    de.schliweb.makeacopy.utils
-                                                                        .UIUtils.showToast(
+                                                                    UIUtils.showToast(
                                                                         requireContext(),
                                                                         getString(
                                                                             R.string
@@ -403,9 +402,8 @@ public class ScanDetailsFragment extends Fragment {
                           pickerDialog.setOnShowListener(
                               d -> {
                                 try {
-                                  de.schliweb.makeacopy.utils.DialogUtils
-                                      .improveAlertDialogButtonContrastForNight(
-                                          pickerDialog, requireContext());
+                                  DialogUtils.improveAlertDialogButtonContrastForNight(
+                                      pickerDialog, requireContext());
                                 } catch (Throwable ignore) {
                                   // Best-effort; failure is non-critical
                                 }
@@ -439,8 +437,7 @@ public class ScanDetailsFragment extends Fragment {
   private void bind(@Nullable ScanEntity e) {
     this.entity = e;
     if (e == null) {
-      de.schliweb.makeacopy.utils.UIUtils.showToast(
-          requireContext(), R.string.missing_file, android.widget.Toast.LENGTH_SHORT);
+      UIUtils.showToast(requireContext(), R.string.missing_file, android.widget.Toast.LENGTH_SHORT);
       requireActivity().getOnBackPressedDispatcher().onBackPressed();
       return;
     }
@@ -510,7 +507,7 @@ public class ScanDetailsFragment extends Fragment {
               try {
                 restoreAccessLauncher.launch(types);
               } catch (Throwable t) {
-                de.schliweb.makeacopy.utils.UIUtils.showToast(
+                UIUtils.showToast(
                     requireContext(), R.string.picker_failed, android.widget.Toast.LENGTH_SHORT);
               }
             });
@@ -927,8 +924,7 @@ public class ScanDetailsFragment extends Fragment {
     dialog.setOnShowListener(
         d -> {
           try {
-            de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(
-                dialog, requireContext());
+            DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext());
           } catch (Throwable ignore) {
             // Best-effort; failure is non-critical
           }
@@ -948,8 +944,7 @@ public class ScanDetailsFragment extends Fragment {
     dialog.setOnShowListener(
         d -> {
           try {
-            de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(
-                dialog, requireContext());
+            DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext());
           } catch (Throwable ignore) {
             // Best-effort; failure is non-critical
           }
@@ -969,7 +964,7 @@ public class ScanDetailsFragment extends Fragment {
               requireActivity()
                   .runOnUiThread(
                       () -> {
-                        de.schliweb.makeacopy.utils.UIUtils.showToast(
+                        UIUtils.showToast(
                             requireContext(), R.string.deleted, android.widget.Toast.LENGTH_SHORT);
                         requireActivity().getOnBackPressedDispatcher().onBackPressed();
                       });
@@ -980,13 +975,12 @@ public class ScanDetailsFragment extends Fragment {
   private void share() {
     android.net.Uri uri = getPrimaryExportUri();
     if (uri == null) {
-      de.schliweb.makeacopy.utils.UIUtils.showToast(
-          requireContext(), R.string.missing_file, android.widget.Toast.LENGTH_SHORT);
+      UIUtils.showToast(requireContext(), R.string.missing_file, android.widget.Toast.LENGTH_SHORT);
       return;
     }
     try {
       String name = FileUtils.getDisplayNameFromUri(requireContext(), uri);
-      de.schliweb.makeacopy.utils.ShareIntentHelper.shareDocument(this, uri, null, name);
+      ShareIntentHelper.shareDocument(this, uri, null, name);
     } catch (Throwable t) {
       // Fallback to a plain ACTION_SEND if helper fails
       try {
@@ -998,7 +992,7 @@ public class ScanDetailsFragment extends Fragment {
         send.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
         startActivity(android.content.Intent.createChooser(send, getString(R.string.btn_share)));
       } catch (Throwable t2) {
-        de.schliweb.makeacopy.utils.UIUtils.showToast(
+        UIUtils.showToast(
             requireContext(), R.string.share_failed, android.widget.Toast.LENGTH_SHORT);
       }
     }
@@ -1007,8 +1001,7 @@ public class ScanDetailsFragment extends Fragment {
   private void openInExport() {
     android.net.Uri uri = getPrimaryExportUri();
     if (uri == null) {
-      de.schliweb.makeacopy.utils.UIUtils.showToast(
-          requireContext(), R.string.missing_file, android.widget.Toast.LENGTH_SHORT);
+      UIUtils.showToast(requireContext(), R.string.missing_file, android.widget.Toast.LENGTH_SHORT);
       return;
     }
     try {
@@ -1018,7 +1011,7 @@ public class ScanDetailsFragment extends Fragment {
       view.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
       startActivity(android.content.Intent.createChooser(view, getString(R.string.title_export)));
     } catch (Throwable t) {
-      de.schliweb.makeacopy.utils.UIUtils.showToast(
+      UIUtils.showToast(
           requireContext(), R.string.no_app_found_to_open_file, android.widget.Toast.LENGTH_SHORT);
     }
   }

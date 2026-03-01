@@ -2,7 +2,7 @@ package de.schliweb.makeacopy.ml.corners;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import de.schliweb.makeacopy.utils.OpenCVUtils;
+import de.schliweb.makeacopy.utils.image.OpenCVUtils;
 import org.opencv.core.Point;
 
 /**

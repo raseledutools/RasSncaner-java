@@ -2,7 +2,7 @@ package de.schliweb.makeacopy.ui.export;
 
 import static org.junit.Assert.*;
 
-import de.schliweb.makeacopy.utils.RotationPolicy;
+import de.schliweb.makeacopy.utils.image.RotationPolicy;
 import org.junit.Test;
 
 /**

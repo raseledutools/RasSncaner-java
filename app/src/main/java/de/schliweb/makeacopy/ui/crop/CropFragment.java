@@ -16,8 +16,13 @@ import androidx.navigation.Navigation;
 import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.databinding.FragmentCropBinding;
 import de.schliweb.makeacopy.ui.camera.CameraViewModel;
-import de.schliweb.makeacopy.utils.FeatureFlags;
-import de.schliweb.makeacopy.utils.OpenCVUtils;
+import de.schliweb.makeacopy.utils.image.BitmapUtils;
+import de.schliweb.makeacopy.utils.image.CoordinateTransformUtils;
+import de.schliweb.makeacopy.utils.image.ImageLoader;
+import de.schliweb.makeacopy.utils.image.OpenCVUtils;
+import de.schliweb.makeacopy.utils.infra.FeatureFlags;
+import de.schliweb.makeacopy.utils.ui.A11yUtils;
+import de.schliweb.makeacopy.utils.ui.UIUtils;
 
 /**
  * The CropFragment class is a user interface component responsible for handling image cropping
@@ -79,8 +84,7 @@ public class CropFragment extends Fragment {
     ViewCompat.setOnApplyWindowInsetsListener(
         binding.cropButtonContainer,
         (v, insets) -> {
-          de.schliweb.makeacopy.utils.UIUtils.adjustMarginForSystemInsets(
-              binding.cropButtonContainer, 8);
+          UIUtils.adjustMarginForSystemInsets(binding.cropButtonContainer, 8);
           return insets;
         });
 
@@ -139,7 +143,7 @@ public class CropFragment extends Fragment {
                   navigateAfterCrop();
                 } else {
                   showCropMode();
-                  Bitmap safe = de.schliweb.makeacopy.utils.BitmapUtils.ensureDisplaySafe(bitmap);
+                  Bitmap safe = BitmapUtils.ensureDisplaySafe(bitmap);
                   binding.imageToCrop.setImageBitmap(safe);
                   binding.trapezoidSelection.setImageBitmap(safe);
                   lastUserRotationDeg = 0; // reset rotation baseline for selection sync
@@ -194,7 +198,7 @@ public class CropFragment extends Fragment {
               if (original == null) original = cropViewModel.getImageBitmap().getValue();
               if (original == null) return;
               int deg = degObj == null ? 0 : ((degObj % 360) + 360) % 360;
-              Bitmap safe = de.schliweb.makeacopy.utils.BitmapUtils.ensureDisplaySafe(original);
+              Bitmap safe = BitmapUtils.ensureDisplaySafe(original);
               try {
                 if (deg != 0) {
                   android.graphics.Matrix m = new android.graphics.Matrix();
@@ -228,7 +232,7 @@ public class CropFragment extends Fragment {
               tryUpdateMagnifierMapping();
 
               // Dev-Overlay im Crop: nach Rotation neu mappen, wenn Flag aktiv
-              if (de.schliweb.makeacopy.utils.FeatureFlags.isFramingLoggingEnabled()) {
+              if (FeatureFlags.isFramingLoggingEnabled()) {
                 final Bitmap safeFinal = safe;
                 binding.cropDevOverlay.post(() -> updateDevOverlayForBitmap(safeFinal));
               }
@@ -253,10 +257,8 @@ public class CropFragment extends Fragment {
     ViewCompat.setOnApplyWindowInsetsListener(
         root,
         (v, insets) -> {
-          de.schliweb.makeacopy.utils.UIUtils.adjustTextViewTopMarginForStatusBar(
-              binding.textCrop, 8);
-          de.schliweb.makeacopy.utils.UIUtils.adjustMarginForSystemInsets(
-              binding.cropButtonContainer, 80);
+          UIUtils.adjustTextViewTopMarginForStatusBar(binding.textCrop, 8);
+          UIUtils.adjustMarginForSystemInsets(binding.cropButtonContainer, 80);
           return insets;
         });
 
@@ -286,8 +288,7 @@ public class CropFragment extends Fragment {
             () -> {
               try {
                 // Ensure OpenCV is ready
-                de.schliweb.makeacopy.utils.OpenCVUtils.init(
-                    requireContext().getApplicationContext());
+                OpenCVUtils.init(requireContext().getApplicationContext());
               } catch (Throwable ignore) {
                 // Best-effort; failure is non-critical
               }
@@ -333,7 +334,7 @@ public class CropFragment extends Fragment {
     if (binding == null) return;
     View root = binding.getRoot();
     root.setContentDescription(text);
-    de.schliweb.makeacopy.utils.A11yUtils.announce(root, text);
+    A11yUtils.announce(root, text);
   }
 
   private void tryUpdateMagnifierMapping() {
@@ -374,14 +375,14 @@ public class CropFragment extends Fragment {
         cameraViewModel != null && cameraViewModel.getImagePath() != null
             ? cameraViewModel.getImagePath().getValue()
             : null;
-    Bitmap bitmap = de.schliweb.makeacopy.utils.ImageLoader.decode(requireContext(), path, uri);
+    Bitmap bitmap = ImageLoader.decode(requireContext(), path, uri);
     if (bitmap != null) {
       cropViewModel.setImageUri(uri);
       cropViewModel.setImageBitmap(bitmap);
       cropViewModel.setOriginalImageBitmap(bitmap);
     } else {
       // Error Handling: show friendly message
-      de.schliweb.makeacopy.utils.UIUtils.showToast(
+      UIUtils.showToast(
           requireContext(),
           getString(R.string.error_displaying_image, "decode failed"),
           android.widget.Toast.LENGTH_SHORT);
@@ -463,7 +464,7 @@ public class CropFragment extends Fragment {
     try {
       org.opencv.core.Point[] viewCorners = binding.trapezoidSelection.getCorners();
       imgCornersDisplay =
-          de.schliweb.makeacopy.utils.CoordinateTransformUtils.transformViewToImageCoordinates(
+          CoordinateTransformUtils.transformViewToImageCoordinates(
               viewCorners, displayedBitmap, binding.imageToCrop);
       android.util.Log.d(
           TAG,
@@ -479,7 +480,7 @@ public class CropFragment extends Fragment {
     if (imgCornersDisplay == null) {
       android.util.Log.w(
           TAG, LP + "performCrop: No corners available; aborting crop and staying in crop UI");
-      de.schliweb.makeacopy.utils.UIUtils.showToast(
+      UIUtils.showToast(
           requireContext(),
           getString(
               R.string
@@ -541,7 +542,7 @@ public class CropFragment extends Fragment {
     } else {
       android.util.Log.w(
           TAG, LP + "performCrop: OpenCV returned null cropped bitmap (took=" + dt + "ms)");
-      de.schliweb.makeacopy.utils.UIUtils.showToast(
+      UIUtils.showToast(
           requireContext(),
           getString(R.string.error_displaying_image, "crop failed"),
           android.widget.Toast.LENGTH_SHORT);
@@ -639,7 +640,7 @@ public class CropFragment extends Fragment {
       showCropMode();
       Bitmap bitmap = cropViewModel.getImageBitmap().getValue();
       if (bitmap != null) {
-        Bitmap safe = de.schliweb.makeacopy.utils.BitmapUtils.ensureDisplaySafe(bitmap);
+        Bitmap safe = BitmapUtils.ensureDisplaySafe(bitmap);
         binding.trapezoidSelection.setImageBitmap(safe);
       }
       // Re-apply inset in case system UI or rotations changed sizes
@@ -664,7 +665,7 @@ public class CropFragment extends Fragment {
   // --- Dev overlay (framing logging) in the CropFragment ---
   private void updateDevOverlayForBitmap(@androidx.annotation.NonNull Bitmap bmp) {
     if (binding == null) return;
-    if (!de.schliweb.makeacopy.utils.FeatureFlags.isFramingLoggingEnabled()) return;
+    if (!FeatureFlags.isFramingLoggingEnabled()) return;
     try {
       RectF fb = OpenCVUtils.getFallbackRectF(bmp.getWidth(), bmp.getHeight());
       RectF vr = mapBitmapToOverlayRect(fb, bmp.getWidth(), bmp.getHeight());

@@ -17,6 +17,8 @@ import com.tom_roush.pdfbox.pdmodel.common.PDRectangle;
 import com.tom_roush.pdfbox.pdmodel.font.PDFont;
 import com.tom_roush.pdfbox.text.PDFTextStripper;
 import com.tom_roush.pdfbox.text.PDFTextStripperByArea;
+import de.schliweb.makeacopy.utils.export.PdfCreator;
+import de.schliweb.makeacopy.utils.ocr.RecognizedWord;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;

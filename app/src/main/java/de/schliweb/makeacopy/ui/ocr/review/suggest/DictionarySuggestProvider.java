@@ -1,9 +1,8 @@
 package de.schliweb.makeacopy.ui.ocr.review.suggest;
 
-import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import de.schliweb.makeacopy.utils.DictionaryManager;
+import de.schliweb.makeacopy.utils.ocr.DictionaryManager;
 import java.text.Normalizer;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -32,11 +31,12 @@ public class DictionarySuggestProvider {
   /**
    * Creates a new DictionarySuggestProvider.
    *
-   * @param context Android context for dictionary access
+   * @param dictionaryManager the DictionaryManager instance to use
    * @param langSpec OCR language specification (e.g., "eng+deu" or "eng")
    */
-  public DictionarySuggestProvider(@NonNull Context context, @Nullable String langSpec) {
-    this.dictionaryManager = DictionaryManager.getInstance(context);
+  public DictionarySuggestProvider(
+      @NonNull DictionaryManager dictionaryManager, @Nullable String langSpec) {
+    this.dictionaryManager = dictionaryManager;
     this.languages = parseLangSpec(langSpec);
   }
 

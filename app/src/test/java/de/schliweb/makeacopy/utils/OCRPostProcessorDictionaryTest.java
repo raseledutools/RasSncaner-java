@@ -2,6 +2,9 @@ package de.schliweb.makeacopy.utils;
 
 import static org.junit.Assert.*;
 
+import de.schliweb.makeacopy.utils.ocr.DictionaryManager;
+import de.schliweb.makeacopy.utils.ocr.OCRPostProcessor;
+import de.schliweb.makeacopy.utils.ocr.RecognizedWord;
 import java.util.HashSet;
 import java.util.Set;
 import org.junit.Test;

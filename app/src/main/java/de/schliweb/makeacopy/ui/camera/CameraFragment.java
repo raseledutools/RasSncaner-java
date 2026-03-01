@@ -50,8 +50,12 @@ import de.schliweb.makeacopy.databinding.FragmentCameraBinding;
 import de.schliweb.makeacopy.framing.*;
 import de.schliweb.makeacopy.ui.crop.CropViewModel;
 import de.schliweb.makeacopy.ui.ocr.OCRViewModel;
-import de.schliweb.makeacopy.utils.FeatureFlags;
-import de.schliweb.makeacopy.utils.UIUtils;
+import de.schliweb.makeacopy.utils.image.OpenCVUtils;
+import de.schliweb.makeacopy.utils.infra.FeatureFlags;
+import de.schliweb.makeacopy.utils.ui.A11yUtils;
+import de.schliweb.makeacopy.utils.ui.DialogUtils;
+import de.schliweb.makeacopy.utils.ui.HapticsUtils;
+import de.schliweb.makeacopy.utils.ui.UIUtils;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -1495,9 +1499,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
       dialog.setOnDismissListener(d -> isLowLightDialogVisible = false);
       dialog.setOnShowListener(
-          dlg ->
-              de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(
-                  dialog, requireContext()));
+          dlg -> DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext()));
       dialog.show();
 
       lowLightPromptShown = true;
@@ -1946,7 +1948,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       bmp =
           yuvToBitmapUprightSmall(
               image,
-              de.schliweb.makeacopy.utils.OpenCVUtils
+              OpenCVUtils
                   .DETECTION_MAX_EDGE); // use central constant for consistent corner detection
       if (BuildConfig.DEBUG) {
         int dispRot = getViewFinderRotation();
@@ -1967,9 +1969,9 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       final int bmpH = bmp.getHeight();
 
       // Init CV once
-      if (!de.schliweb.makeacopy.utils.OpenCVUtils.isInitialized()) {
+      if (!OpenCVUtils.isInitialized()) {
         try {
-          de.schliweb.makeacopy.utils.OpenCVUtils.init(requireContext().getApplicationContext());
+          OpenCVUtils.init(requireContext().getApplicationContext());
         } catch (Exception e) {
           Log.w(TAG, "OpenCV init failed", e);
         }
@@ -2026,8 +2028,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
               quad[i] = new android.graphics.PointF((float) pts[i].x, (float) pts[i].y);
             }
           }
-          android.graphics.RectF fbRect =
-              de.schliweb.makeacopy.utils.OpenCVUtils.getFallbackRectF(bmpW, bmpH);
+          android.graphics.RectF fbRect = OpenCVUtils.getFallbackRectF(bmpW, bmpH);
           FramingEngine.Input feIn = new FramingEngine.Input(bmpW, bmpH, quad, fbRect);
           fr = new FramingEngine().evaluate(feIn);
           fbRectForOverlay = fbRect;
@@ -2036,8 +2037,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
           }
           // Estimate orientation once (shared for A11y & overlay)
           try {
-            de.schliweb.makeacopy.utils.OpenCVUtils.OrientationEstimate est =
-                de.schliweb.makeacopy.utils.OpenCVUtils.estimateTextOrientation(bmp);
+            OpenCVUtils.OrientationEstimate est = OpenCVUtils.estimateTextOrientation(bmp);
             orientBucketLocal = (est.bucketDeg() == 90) ? 90 : 0;
             orientConfLocal = est.confidence();
           } catch (Exception e) {
@@ -2385,7 +2385,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         return; // other hints: no haptics
     }
     // Centralized, SDK-guarded haptics
-    de.schliweb.makeacopy.utils.HapticsUtils.vibrateOneShot(ctx, durationMs);
+    HapticsUtils.vibrateOneShot(ctx, durationMs);
   }
 
   private void runOnUiThreadSafe(Runnable r) {
@@ -2449,7 +2449,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     // Haptics (light tap) – centralized via HapticsUtils
     Context ctx = getContext();
     if (ctx != null) {
-      de.schliweb.makeacopy.utils.HapticsUtils.vibrateOneShot(ctx, 20L);
+      HapticsUtils.vibrateOneShot(ctx, 20L);
     }
     // Announcement
     announce(R.string.a11y_doc_ready);
@@ -2462,7 +2462,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
           View root = binding.getRoot();
           CharSequence text = getString(resId);
           root.setContentDescription(text);
-          de.schliweb.makeacopy.utils.A11yUtils.announce(root, text);
+          A11yUtils.announce(root, text);
         });
   }
 

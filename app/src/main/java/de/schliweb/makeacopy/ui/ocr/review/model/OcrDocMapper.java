@@ -2,7 +2,7 @@ package de.schliweb.makeacopy.ui.ocr.review.model;
 
 import android.graphics.RectF;
 import de.schliweb.makeacopy.ui.ocr.OCRViewModel;
-import de.schliweb.makeacopy.utils.RecognizedWord;
+import de.schliweb.makeacopy.utils.ocr.RecognizedWord;
 import java.util.List;
 
 /**

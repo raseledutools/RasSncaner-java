@@ -99,7 +99,17 @@
 -keep class de.schliweb.makeacopy.data.CompletedScanEntry { *; }
 -keep class de.schliweb.makeacopy.data.CompletedScansRegistry$RegistryFile { *; }
 
--keep class de.schliweb.makeacopy.utils.OcrModelManager { *; }
+-keep class de.schliweb.makeacopy.utils.ocr.OcrModelManager { *; }
+
+# ---- Room database keeps ----
+# Room uses reflection and generated code that references entity/DAO classes by name.
+-keep class de.schliweb.makeacopy.data.library.AppDatabase { *; }
+-keep class de.schliweb.makeacopy.data.library.ScanEntity { *; }
+-keep class de.schliweb.makeacopy.data.library.CollectionEntity { *; }
+-keep class de.schliweb.makeacopy.data.library.ScanCollectionCrossRef { *; }
+-keep class de.schliweb.makeacopy.data.library.ScansDao { *; }
+-keep class de.schliweb.makeacopy.data.library.CollectionsDao { *; }
+-keep class de.schliweb.makeacopy.data.library.ScanCollectionJoinDao { *; }
 
 # Ensure generic type info is retained (Gson reads List<CompletedScanEntry> from field signature)
 -keepattributes Signature

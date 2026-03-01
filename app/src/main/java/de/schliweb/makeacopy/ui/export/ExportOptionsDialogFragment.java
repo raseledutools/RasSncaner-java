@@ -14,9 +14,10 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import de.schliweb.makeacopy.R;
-import de.schliweb.makeacopy.utils.PageFormat;
-import de.schliweb.makeacopy.utils.PdfQualityPreset;
-import de.schliweb.makeacopy.utils.jpeg.JpegExportOptions;
+import de.schliweb.makeacopy.utils.export.PageFormat;
+import de.schliweb.makeacopy.utils.export.PdfQualityPreset;
+import de.schliweb.makeacopy.utils.export.jpeg.JpegExportOptions;
+import de.schliweb.makeacopy.utils.ui.DialogUtils;
 
 /**
  * A dialog fragment that displays export options for the user to configure. Options include
@@ -246,9 +247,7 @@ public class ExportOptionsDialogFragment extends DialogFragment {
 
     // Improve dark mode contrast for dialog buttons similar to other dialogs
     dialog.setOnShowListener(
-        dlg ->
-            de.schliweb.makeacopy.utils.DialogUtils.improveAlertDialogButtonContrastForNight(
-                dialog, ctx));
+        dlg -> DialogUtils.improveAlertDialogButtonContrastForNight(dialog, ctx));
 
     return dialog;
   }

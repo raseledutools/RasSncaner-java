@@ -4,8 +4,8 @@ import static org.junit.Assert.*;
 
 import android.graphics.RectF;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import de.schliweb.makeacopy.utils.OCRPostProcessor;
-import de.schliweb.makeacopy.utils.RecognizedWord;
+import de.schliweb.makeacopy.utils.ocr.OCRPostProcessor;
+import de.schliweb.makeacopy.utils.ocr.RecognizedWord;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;

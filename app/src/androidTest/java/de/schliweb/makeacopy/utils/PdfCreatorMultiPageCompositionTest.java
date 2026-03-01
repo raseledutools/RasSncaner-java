@@ -12,6 +12,8 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader;
 import com.tom_roush.pdfbox.pdmodel.PDDocument;
 import com.tom_roush.pdfbox.text.PDFTextStripper;
+import de.schliweb.makeacopy.utils.export.PdfCreator;
+import de.schliweb.makeacopy.utils.ocr.RecognizedWord;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;

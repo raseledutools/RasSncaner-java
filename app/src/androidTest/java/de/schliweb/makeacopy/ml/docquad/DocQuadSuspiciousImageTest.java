@@ -162,7 +162,9 @@ public class DocQuadSuspiciousImageTest {
     assertNotNull("Test image could not be loaded: " + TEST_IMAGE_ASSET, srcBitmap);
 
     // 2) Create CompositeCornerDetector (DocQuad -> Legacy/OpenCV fallback)
-    DocQuadDetector docQuadDetector = new DocQuadDetector();
+    DocQuadOrtRunner runner =
+        DocQuadOrtRunner.getInstance(ctx, DocQuadDetector.DEFAULT_MODEL_ASSET_PATH);
+    DocQuadDetector docQuadDetector = new DocQuadDetector(runner);
     LegacyCornerDetector legacyDetector = new LegacyCornerDetector();
     CompositeCornerDetector compositeDetector =
         new CompositeCornerDetector(docQuadDetector, legacyDetector);

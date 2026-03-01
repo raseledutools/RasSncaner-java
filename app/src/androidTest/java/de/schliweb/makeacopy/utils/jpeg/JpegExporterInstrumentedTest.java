@@ -9,6 +9,8 @@ import android.net.Uri;
 import android.util.Log;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
+import de.schliweb.makeacopy.utils.export.jpeg.JpegExportOptions;
+import de.schliweb.makeacopy.utils.export.jpeg.JpegExporter;
 import java.io.File;
 import java.util.Random;
 import org.junit.Assert;

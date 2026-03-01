@@ -17,28 +17,12 @@ public final class DocQuadDetector implements CornerDetector {
   // Release-Asset (F-Droid kompatibel, kein Download)
   public static final String DEFAULT_MODEL_ASSET_PATH = "docquad/docquadnet256_trained_opset17.ort";
 
-  private final String modelAssetPath;
+  private final DocQuadOrtRunner runner;
 
-  // Optional injected runner (for live caching). Not owned/closed by this detector.
-  private final DocQuadOrtRunner injectedRunner;
-
-  public DocQuadDetector() {
-    this(DEFAULT_MODEL_ASSET_PATH, null);
-  }
-
-  public DocQuadDetector(String modelAssetPath) {
-    this(modelAssetPath, null);
-  }
-
-  /** Live/Provider ctor: uses a cached runner. */
-  public DocQuadDetector(DocQuadOrtRunner injectedRunner) {
-    this(DEFAULT_MODEL_ASSET_PATH, injectedRunner);
-  }
-
-  private DocQuadDetector(String modelAssetPath, DocQuadOrtRunner injectedRunner) {
-    Log.d(TAG, "DocQuadDetector created with modelAssetPath=" + modelAssetPath);
-    this.modelAssetPath = modelAssetPath;
-    this.injectedRunner = injectedRunner;
+  /** Creates a detector with the given ORT runner. */
+  public DocQuadDetector(DocQuadOrtRunner runner) {
+    Log.d(TAG, "DocQuadDetector created");
+    this.runner = runner;
   }
 
   @Override
@@ -56,14 +40,7 @@ public final class DocQuadDetector implements CornerDetector {
       in256 = renderLetterbox256(src, lb);
       float[] input = bitmapToNchwFloat01(in256);
 
-      DocQuadOrtRunner.Outputs outputs;
-      if (injectedRunner != null) {
-        outputs = injectedRunner.run(input);
-      } else {
-        // Performant solution: use cached singleton instead of re-loading every time.
-        DocQuadOrtRunner runner = DocQuadOrtRunner.getInstance(ctx, modelAssetPath);
-        outputs = runner.run(input);
-      }
+      DocQuadOrtRunner.Outputs outputs = runner.run(input);
 
       DocQuadPostprocessor.Result r =
           DocQuadPostprocessor.postprocess(outputs, lb, DocQuadPostprocessor.PeakMode.REFINE_3X3);

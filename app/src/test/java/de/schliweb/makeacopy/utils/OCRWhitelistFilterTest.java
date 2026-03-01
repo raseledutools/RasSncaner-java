@@ -3,6 +3,7 @@ package de.schliweb.makeacopy.utils;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import de.schliweb.makeacopy.utils.ocr.OCRWhitelist;
 import org.junit.Test;
 
 public class OCRWhitelistFilterTest {

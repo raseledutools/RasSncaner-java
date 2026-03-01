@@ -2,6 +2,7 @@ package de.schliweb.makeacopy.utils;
 
 import static org.junit.Assert.assertEquals;
 
+import de.schliweb.makeacopy.utils.export.PdfCreator;
 import java.lang.reflect.Field;
 import org.junit.Before;
 import org.junit.Test;
