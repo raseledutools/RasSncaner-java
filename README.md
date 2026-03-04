@@ -343,6 +343,9 @@ A big thank you to the people who make *MakeACopy* better:
 - **teastrainer** – tested several release candidates with remarkable precision and patience,  
   helping to refine the crop and rotation workflow step by step.  
   A great example of constructive collaboration.
+- **dansseg** – provided a highly precise bug report and helped validate the fix by testing multiple release candidates.  
+  His report made it possible to identify and resolve a critical Android 15 crash on the Redmi Note 13 Pro 5G quickly and reliably.  
+  A great example of how fast and precise open-source collaboration can be.
 - **hekele1022** – tested multiple release candidates on a Sony Xperia device, providing logs and feedback that confirmed the new camera system works reliably without any device-specific hacks.  
   A key contribution that helped make *MakeACopy* fully cross-device compatible.
 - **djayko** – helped test Sony builds with great patience in real-world use, confirming the stability of the new camera flow.  
