@@ -396,4 +396,17 @@
     <string name="restore_access">กู้คืนการเข้าถึง</string>
     <string name="status">สถานะ</string>
     <string name="ocr_text_editor_hint">แก้ไขข้อความ OCR</string>
+
+    <!-- Scan cleanup settings -->
+    <string name="scan_cleanup_settings">การตั้งค่าการล้างข้อมูลสแกนที่เสร็จสิ้น</string>
+    <string name="cleanup_policy">นโยบายการล้างข้อมูล</string>
+    <string name="cleanup_policy_none">ไม่มี (เก็บทั้งหมด)</string>
+    <string name="cleanup_policy_max_age">ตามอายุ</string>
+    <string name="cleanup_policy_max_count">ตามจำนวน</string>
+    <string name="cleanup_policy_max_storage">ตามพื้นที่จัดเก็บ</string>
+    <string name="cleanup_policy_combined">รวมกัน</string>
+    <string name="cleanup_max_age_days">อายุสูงสุด (วัน)</string>
+    <string name="cleanup_max_count">จำนวนสูงสุด</string>
+    <string name="cleanup_max_storage_mb">พื้นที่จัดเก็บสูงสุด (MB)</string>
+    <string name="cleanup_settings_saved">บันทึกการตั้งค่าการล้างข้อมูลแล้ว</string>
 </resources>

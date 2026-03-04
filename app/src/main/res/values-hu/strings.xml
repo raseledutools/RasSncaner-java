@@ -402,4 +402,17 @@
     <string name="restore_access">Hozzáférés visszaállítása</string>
     <string name="status">Állapot</string>
     <string name="ocr_text_editor_hint">OCR-szöveg szerkesztése</string>
+
+    <!-- Scan cleanup settings -->
+    <string name="scan_cleanup_settings">Befejezett szkennelések tisztítási beállításai</string>
+    <string name="cleanup_policy">Tisztítási szabályzat</string>
+    <string name="cleanup_policy_none">Nincs (összes megtartása)</string>
+    <string name="cleanup_policy_max_age">Életkor alapján</string>
+    <string name="cleanup_policy_max_count">Darabszám alapján</string>
+    <string name="cleanup_policy_max_storage">Tárhely alapján</string>
+    <string name="cleanup_policy_combined">Kombinált</string>
+    <string name="cleanup_max_age_days">Maximális életkor (nap)</string>
+    <string name="cleanup_max_count">Maximális darabszám</string>
+    <string name="cleanup_max_storage_mb">Maximális tárhely (MB)</string>
+    <string name="cleanup_settings_saved">Tisztítási beállítások mentve</string>
 </resources>

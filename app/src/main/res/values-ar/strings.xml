@@ -388,4 +388,17 @@
     <string name="restore_access">استعادة الوصول</string>
     <string name="status">الحالة</string>
     <string name="ocr_text_editor_hint">تحرير نص OCR</string>
+
+    <!-- Scan cleanup settings -->
+    <string name="scan_cleanup_settings">إعدادات تنظيف عمليات المسح المكتملة</string>
+    <string name="cleanup_policy">سياسة التنظيف</string>
+    <string name="cleanup_policy_none">بدون (الاحتفاظ بالجميع)</string>
+    <string name="cleanup_policy_max_age">حسب العمر</string>
+    <string name="cleanup_policy_max_count">حسب العدد</string>
+    <string name="cleanup_policy_max_storage">حسب مساحة التخزين</string>
+    <string name="cleanup_policy_combined">مجتمعة</string>
+    <string name="cleanup_max_age_days">الحد الأقصى للعمر (بالأيام)</string>
+    <string name="cleanup_max_count">الحد الأقصى للعدد</string>
+    <string name="cleanup_max_storage_mb">الحد الأقصى للتخزين (ميغابايت)</string>
+    <string name="cleanup_settings_saved">تم حفظ إعدادات التنظيف</string>
 </resources>

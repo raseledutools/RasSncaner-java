@@ -408,4 +408,17 @@
     <string name="restore_access">Zugriff wiederherstellen</string>
     <string name="status">Status</string>
     <string name="ocr_text_editor_hint">OCR-Text bearbeiten</string>
+
+    <!-- Scan cleanup settings -->
+    <string name="scan_cleanup_settings">Bereinigungseinstellungen für abgeschlossene Scans</string>
+    <string name="cleanup_policy">Bereinigungsrichtlinie</string>
+    <string name="cleanup_policy_none">Keine (alles behalten)</string>
+    <string name="cleanup_policy_max_age">Nach Alter</string>
+    <string name="cleanup_policy_max_count">Nach Anzahl</string>
+    <string name="cleanup_policy_max_storage">Nach Speicherplatz</string>
+    <string name="cleanup_policy_combined">Kombiniert</string>
+    <string name="cleanup_max_age_days">Maximales Alter (Tage)</string>
+    <string name="cleanup_max_count">Maximale Anzahl</string>
+    <string name="cleanup_max_storage_mb">Maximaler Speicherplatz (MB)</string>
+    <string name="cleanup_settings_saved">Bereinigungseinstellungen gespeichert</string>
 </resources>

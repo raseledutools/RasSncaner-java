@@ -394,4 +394,16 @@
     <string name="ocr_text_editor_hint">Edit OCR text</string>
     <string name="restore_access">Restore access</string>
     <string name="status">Status</string>
+    <!-- Scan cleanup settings -->
+    <string name="scan_cleanup_settings">Completed Scan cleanup settings</string>
+    <string name="cleanup_policy">Cleanup policy</string>
+    <string name="cleanup_policy_none">None (keep all)</string>
+    <string name="cleanup_policy_max_age">By age</string>
+    <string name="cleanup_policy_max_count">By count</string>
+    <string name="cleanup_policy_max_storage">By storage</string>
+    <string name="cleanup_policy_combined">Combined</string>
+    <string name="cleanup_max_age_days">Max age (days)</string>
+    <string name="cleanup_max_count">Max count</string>
+    <string name="cleanup_max_storage_mb">Max storage (MB)</string>
+    <string name="cleanup_settings_saved">Cleanup settings saved</string>
 </resources>

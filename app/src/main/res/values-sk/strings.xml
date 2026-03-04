@@ -406,4 +406,17 @@
     <string name="restore_access">Obnoviť prístup</string>
     <string name="status">Stav</string>
     <string name="ocr_text_editor_hint">Upraviť text OCR</string>
+
+    <!-- Scan cleanup settings -->
+    <string name="scan_cleanup_settings">Nastavenia čistenia dokončených skenov</string>
+    <string name="cleanup_policy">Zásady čistenia</string>
+    <string name="cleanup_policy_none">Žiadne (ponechať všetko)</string>
+    <string name="cleanup_policy_max_age">Podľa veku</string>
+    <string name="cleanup_policy_max_count">Podľa počtu</string>
+    <string name="cleanup_policy_max_storage">Podľa úložiska</string>
+    <string name="cleanup_policy_combined">Kombinované</string>
+    <string name="cleanup_max_age_days">Maximálny vek (dni)</string>
+    <string name="cleanup_max_count">Maximálny počet</string>
+    <string name="cleanup_max_storage_mb">Maximálne úložisko (MB)</string>
+    <string name="cleanup_settings_saved">Nastavenia čistenia uložené</string>
 </resources>

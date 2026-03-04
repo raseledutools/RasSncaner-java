@@ -402,4 +402,17 @@
     <string name="restore_access">Восстановить доступ</string>
     <string name="status">Статус</string>
     <string name="ocr_text_editor_hint">Редактировать текст OCR</string>
+
+    <!-- Scan cleanup settings -->
+    <string name="scan_cleanup_settings">Настройки очистки завершённых сканов</string>
+    <string name="cleanup_policy">Политика очистки</string>
+    <string name="cleanup_policy_none">Нет (сохранять всё)</string>
+    <string name="cleanup_policy_max_age">По сроку хранения</string>
+    <string name="cleanup_policy_max_count">По количеству</string>
+    <string name="cleanup_policy_max_storage">По объёму хранения</string>
+    <string name="cleanup_policy_combined">Комбинированная</string>
+    <string name="cleanup_max_age_days">Максимальный срок (дни)</string>
+    <string name="cleanup_max_count">Максимальное количество</string>
+    <string name="cleanup_max_storage_mb">Максимальный объём хранения (МБ)</string>
+    <string name="cleanup_settings_saved">Настройки очистки сохранены</string>
 </resources>

@@ -404,4 +404,17 @@
     <string name="restore_access">Toegang herstellen</string>
     <string name="status">Status</string>
     <string name="ocr_text_editor_hint">OCR-tekst bewerken</string>
+
+    <!-- Scan cleanup settings -->
+    <string name="scan_cleanup_settings">Instellingen voor opschonen van voltooide scans</string>
+    <string name="cleanup_policy">Opschoningsbeleid</string>
+    <string name="cleanup_policy_none">Geen (alles behouden)</string>
+    <string name="cleanup_policy_max_age">Op leeftijd</string>
+    <string name="cleanup_policy_max_count">Op aantal</string>
+    <string name="cleanup_policy_max_storage">Op opslagruimte</string>
+    <string name="cleanup_policy_combined">Gecombineerd</string>
+    <string name="cleanup_max_age_days">Maximale leeftijd (dagen)</string>
+    <string name="cleanup_max_count">Maximaal aantal</string>
+    <string name="cleanup_max_storage_mb">Maximale opslagruimte (MB)</string>
+    <string name="cleanup_settings_saved">Opschoningsinstellingen opgeslagen</string>
 </resources>

@@ -379,4 +379,17 @@
     <string name="restore_access">恢复访问</string>
     <string name="status">状态</string>
     <string name="ocr_text_editor_hint">编辑 OCR 文本</string>
+
+    <!-- Scan cleanup settings -->
+    <string name="scan_cleanup_settings">已完成扫描的清理设置</string>
+    <string name="cleanup_policy">清理策略</string>
+    <string name="cleanup_policy_none">无（保留全部）</string>
+    <string name="cleanup_policy_max_age">按时间</string>
+    <string name="cleanup_policy_max_count">按数量</string>
+    <string name="cleanup_policy_max_storage">按存储空间</string>
+    <string name="cleanup_policy_combined">组合</string>
+    <string name="cleanup_max_age_days">最大保留时间（天）</string>
+    <string name="cleanup_max_count">最大数量</string>
+    <string name="cleanup_max_storage_mb">最大存储空间（MB）</string>
+    <string name="cleanup_settings_saved">清理设置已保存</string>
 </resources>

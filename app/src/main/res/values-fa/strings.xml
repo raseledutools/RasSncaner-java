@@ -396,4 +396,17 @@
     <string name="restore_access">بازیابی دسترسی</string>
     <string name="status">وضعیت</string>
     <string name="ocr_text_editor_hint">ویرایش متن OCR</string>
+
+    <!-- Scan cleanup settings -->
+    <string name="scan_cleanup_settings">تنظیمات پاک‌سازی اسکن‌های تکمیل‌شده</string>
+    <string name="cleanup_policy">سیاست پاک‌سازی</string>
+    <string name="cleanup_policy_none">هیچ‌کدام (همه را نگه‌دار)</string>
+    <string name="cleanup_policy_max_age">بر اساس سن</string>
+    <string name="cleanup_policy_max_count">بر اساس تعداد</string>
+    <string name="cleanup_policy_max_storage">بر اساس فضای ذخیره‌سازی</string>
+    <string name="cleanup_policy_combined">ترکیبی</string>
+    <string name="cleanup_max_age_days">حداکثر سن (روز)</string>
+    <string name="cleanup_max_count">حداکثر تعداد</string>
+    <string name="cleanup_max_storage_mb">حداکثر فضای ذخیره‌سازی (مگابایت)</string>
+    <string name="cleanup_settings_saved">تنظیمات پاک‌سازی ذخیره شد</string>
 </resources>

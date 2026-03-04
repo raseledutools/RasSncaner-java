@@ -403,4 +403,17 @@
     <string name="restore_access">Przywróć dostęp</string>
     <string name="status">Status</string>
     <string name="ocr_text_editor_hint">Edytuj tekst OCR</string>
+
+    <!-- Scan cleanup settings -->
+    <string name="scan_cleanup_settings">Ustawienia czyszczenia ukończonych skanów</string>
+    <string name="cleanup_policy">Zasady czyszczenia</string>
+    <string name="cleanup_policy_none">Brak (zachowaj wszystkie)</string>
+    <string name="cleanup_policy_max_age">Według wieku</string>
+    <string name="cleanup_policy_max_count">Według liczby</string>
+    <string name="cleanup_policy_max_storage">Według miejsca na dysku</string>
+    <string name="cleanup_policy_combined">Połączone</string>
+    <string name="cleanup_max_age_days">Maksymalny wiek (dni)</string>
+    <string name="cleanup_max_count">Maksymalna liczba</string>
+    <string name="cleanup_max_storage_mb">Maksymalna przestrzeń (MB)</string>
+    <string name="cleanup_settings_saved">Ustawienia czyszczenia zapisane</string>
 </resources>

@@ -398,4 +398,17 @@
     <string name="restore_access">Återställ åtkomst</string>
     <string name="status">Status</string>
     <string name="ocr_text_editor_hint">Redigera OCR-text</string>
+
+    <!-- Scan cleanup settings -->
+    <string name="scan_cleanup_settings">Inställningar för rensning av slutförda skanningar</string>
+    <string name="cleanup_policy">Rensningspolicy</string>
+    <string name="cleanup_policy_none">Ingen (behåll alla)</string>
+    <string name="cleanup_policy_max_age">Efter ålder</string>
+    <string name="cleanup_policy_max_count">Efter antal</string>
+    <string name="cleanup_policy_max_storage">Efter lagringsutrymme</string>
+    <string name="cleanup_policy_combined">Kombinerad</string>
+    <string name="cleanup_max_age_days">Maximal ålder (dagar)</string>
+    <string name="cleanup_max_count">Maximalt antal</string>
+    <string name="cleanup_max_storage_mb">Maximalt lagringsutrymme (MB)</string>
+    <string name="cleanup_settings_saved">Rensningsinställningar sparade</string>
 </resources>

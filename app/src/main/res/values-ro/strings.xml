@@ -409,4 +409,17 @@
     <string name="restore_access">Restabilește accesul</string>
     <string name="status">Stare</string>
     <string name="ocr_text_editor_hint">Editează textul OCR</string>
+
+    <!-- Scan cleanup settings -->
+    <string name="scan_cleanup_settings">Setări de curățare pentru scanările finalizate</string>
+    <string name="cleanup_policy">Politica de curățare</string>
+    <string name="cleanup_policy_none">Niciuna (păstrează tot)</string>
+    <string name="cleanup_policy_max_age">După vechime</string>
+    <string name="cleanup_policy_max_count">După număr</string>
+    <string name="cleanup_policy_max_storage">După spațiu de stocare</string>
+    <string name="cleanup_policy_combined">Combinată</string>
+    <string name="cleanup_max_age_days">Vechime maximă (zile)</string>
+    <string name="cleanup_max_count">Număr maxim</string>
+    <string name="cleanup_max_storage_mb">Spațiu maxim de stocare (MB)</string>
+    <string name="cleanup_settings_saved">Setările de curățare au fost salvate</string>
 </resources>
