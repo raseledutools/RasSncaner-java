@@ -38,6 +38,26 @@ public class OCRWhitelistTest {
   }
 
   @Test
+  public void getWhitelistForLanguage_turkish_returnsTurkishCharacters() {
+    String whitelist = OCRWhitelist.getWhitelistForLanguage("tur");
+    assertEquals(OCRWhitelist.TR, whitelist);
+    assertTrue("Should contain dotted capital I (İ)", whitelist.contains("İ"));
+    assertTrue("Should contain dotless small i (ı)", whitelist.contains("ı"));
+    assertTrue("Should contain Ğ", whitelist.contains("Ğ"));
+    assertTrue("Should contain ğ", whitelist.contains("ğ"));
+    assertTrue("Should contain Ş", whitelist.contains("Ş"));
+    assertTrue("Should contain ş", whitelist.contains("ş"));
+    assertTrue("Should contain Ç", whitelist.contains("Ç"));
+    assertTrue("Should contain ç", whitelist.contains("ç"));
+    assertTrue("Should contain Ö", whitelist.contains("Ö"));
+    assertTrue("Should contain ö", whitelist.contains("ö"));
+    assertTrue("Should contain Ü", whitelist.contains("Ü"));
+    assertTrue("Should contain ü", whitelist.contains("ü"));
+    assertTrue("Should contain basic Latin letters", whitelist.contains("A"));
+    assertTrue("Should contain digits", whitelist.contains("0"));
+  }
+
+  @Test
   public void getWhitelistForLanguage_russian_returnsCyrillicCharacters() {
     String whitelist = OCRWhitelist.getWhitelistForLanguage("rus");
     assertEquals(OCRWhitelist.RU, whitelist);
@@ -210,7 +230,7 @@ public class OCRWhitelistTest {
   public void getWhitelistForLanguage_allSupportedLanguages_returnNonEmpty() {
     String[] supportedLangs = {
       "deu", "eng", "spa", "fra", "ita", "por", "nld", "pol", "ces", "slk", "hun", "ron", "dan",
-      "nor", "swe", "rus"
+      "nor", "swe", "tur", "rus"
     };
 
     for (String lang : supportedLangs) {

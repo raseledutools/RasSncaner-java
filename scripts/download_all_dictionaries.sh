@@ -1,11 +1,11 @@
 #!/bin/bash
 # download_all_dictionaries.sh - macOS kompatibel
 
-DICT_DIR="/Users/christian/Documents/git/makeacopy/app/src/main/assets/dictionaries"
+DICT_DIR="/Users/christian/Documents/git/makeacopy/app/src/full/assets/dictionaries"
 mkdir -p "$DICT_DIR"
 cd "$DICT_DIR"
 
-echo "Downloading dictionaries for all 21 supported languages..."
+echo "Downloading dictionaries for all 22 supported languages..."
 
 # Funktion zum Download
 download_dict() {
@@ -49,6 +49,7 @@ download_dict "chi_sim" "zh"
 download_dict "tha" "th"
 download_dict "ara" "ar"
 download_dict "fas" "fa"
+download_dict "tur" "tr"
 
 # chi_tra verwendet dasselbe Wörterbuch wie chi_sim
 if [ -f "chi_sim.txt.gz" ]; then

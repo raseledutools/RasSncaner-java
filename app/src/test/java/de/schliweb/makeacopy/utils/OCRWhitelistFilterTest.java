@@ -46,4 +46,34 @@ public class OCRWhitelistFilterTest {
     String filtered = OCRWhitelist.filterByWhitelist(text, OCRWhitelist.EN);
     assertEquals("Hello© World™ 2024", filtered);
   }
+
+  @Test
+  public void filterByWhitelist_turkishWhitelistKeepsTurkishChars() {
+    String text = "İstanbul'da güzel bir gün";
+    String filtered = OCRWhitelist.filterByWhitelist(text, OCRWhitelist.TR);
+    assertEquals(text, filtered);
+  }
+
+  @Test
+  public void filterByWhitelist_turkishWhitelistKeepsAllSpecialChars() {
+    String text = "İıĞğŞşÇçÖöÜü 123";
+    String filtered = OCRWhitelist.filterByWhitelist(text, OCRWhitelist.TR);
+    assertEquals(text, filtered);
+  }
+
+  @Test
+  public void filterByWhitelist_turkishWhitelistRemovesCyrillic() {
+    // Turkish whitelist should not contain Cyrillic characters
+    String text = "İstanbul Москва";
+    String filtered = OCRWhitelist.filterByWhitelist(text, OCRWhitelist.TR);
+    assertEquals("İstanbul ", filtered);
+  }
+
+  @Test
+  public void filterByWhitelist_englishWhitelistRemovesTurkishSpecific() {
+    // English whitelist should not contain İ, ı, Ğ, ğ, Ş, ş
+    String text = "İstanbul";
+    String filtered = OCRWhitelist.filterByWhitelist(text, OCRWhitelist.EN);
+    assertEquals("stanbul", filtered);
+  }
 }
