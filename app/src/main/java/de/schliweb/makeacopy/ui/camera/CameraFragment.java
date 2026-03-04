@@ -49,6 +49,7 @@ import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.databinding.FragmentCameraBinding;
 import de.schliweb.makeacopy.framing.*;
 import de.schliweb.makeacopy.ui.crop.CropViewModel;
+import de.schliweb.makeacopy.ui.export.ExportPrefsHelper;
 import de.schliweb.makeacopy.ui.ocr.OCRViewModel;
 import de.schliweb.makeacopy.utils.image.OpenCVUtils;
 import de.schliweb.makeacopy.utils.infra.FeatureFlags;
@@ -258,9 +259,11 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
               if (mime.startsWith("image/")) {
                 // Handle image import (existing logic)
+                ExportPrefsHelper.setLastImportUri(requireContext(), uri.toString());
                 handleImageImport(uri);
               } else if (mime.equals("application/pdf")) {
                 // Handle PDF import
+                ExportPrefsHelper.setLastImportUri(requireContext(), uri.toString());
                 handlePdfImport(uri);
               } else {
                 UIUtils.showToast(
@@ -321,6 +324,15 @@ public class CameraFragment extends Fragment implements SensorEventListener {
           intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
           intent.addFlags(
               Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+
+          // Restore last import location if available
+          String lastImportUri = ExportPrefsHelper.getLastImportUri(requireContext());
+          if (lastImportUri != null) {
+            Uri initialUri = Uri.parse(lastImportUri);
+            // On Android 11+ (API 30+), EXTRA_INITIAL_URI works for ACTION_OPEN_DOCUMENT
+            intent.putExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI, initialUri);
+          }
+
           pickImageLauncher.launch(intent);
         });
 

@@ -136,6 +136,25 @@ public class ExportFragment extends Fragment {
   private ActivityResultLauncher<String> createTxtDocumentLauncher;
   private ActivityResultLauncher<String> createJpegDocumentLauncher;
   private ActivityResultLauncher<String> createZipDocumentLauncher;
+
+  private static class CreateDocumentWithInitialUri extends ActivityResultContracts.CreateDocument {
+    public CreateDocumentWithInitialUri(@NonNull String mimeType) {
+      super(mimeType);
+    }
+
+    @NonNull
+    @Override
+    public android.content.Intent createIntent(@NonNull Context context, @NonNull String input) {
+      android.content.Intent intent = super.createIntent(context, input);
+      String lastExportUri = ExportPrefsHelper.getLastExportUri(context);
+      if (lastExportUri != null) {
+        Uri initialUri = Uri.parse(lastExportUri);
+        intent.putExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI, initialUri);
+      }
+      return intent;
+    }
+  }
+
   // URI of the last exported document for sharing
   private Uri lastExportedDocumentUri;
   private String lastExportedPdfName;
@@ -552,10 +571,11 @@ public class ExportFragment extends Fragment {
 
     createDocumentLauncher =
         registerForActivityResult(
-            new ActivityResultContracts.CreateDocument("application/pdf"),
+            new CreateDocumentWithInitialUri("application/pdf"),
             uri -> {
               Log.d(TAG, "createDocumentLauncher: Document creation result received");
               if (uri != null) {
+                ExportPrefsHelper.setLastExportUri(requireContext(), uri.toString());
                 String displayName = FileUtils.getDisplayNameFromUri(requireContext(), uri);
                 exportViewModel.setSelectedFileLocation(uri);
                 exportViewModel.setSelectedFileLocationName(displayName);
@@ -568,9 +588,10 @@ public class ExportFragment extends Fragment {
 
     createTxtDocumentLauncher =
         registerForActivityResult(
-            new ActivityResultContracts.CreateDocument("text/plain"),
+            new CreateDocumentWithInitialUri("text/plain"),
             uri -> {
               if (uri != null) {
+                ExportPrefsHelper.setLastExportUri(requireContext(), uri.toString());
                 String displayName = FileUtils.getDisplayNameFromUri(requireContext(), uri);
                 Log.d(TAG, "createTxtDocumentLauncher: Display name from URI: " + displayName);
                 exportOcrTextToTxt(uri);
@@ -581,10 +602,11 @@ public class ExportFragment extends Fragment {
 
     createJpegDocumentLauncher =
         registerForActivityResult(
-            new ActivityResultContracts.CreateDocument("image/jpeg"),
+            new CreateDocumentWithInitialUri("image/jpeg"),
             uri -> {
               Log.d(TAG, "createJpegDocumentLauncher: JPEG creation result received");
               if (uri != null) {
+                ExportPrefsHelper.setLastExportUri(requireContext(), uri.toString());
                 String displayName = FileUtils.getDisplayNameFromUri(requireContext(), uri);
                 exportViewModel.setSelectedFileLocation(uri);
                 exportViewModel.setSelectedFileLocationName(displayName);
@@ -595,10 +617,11 @@ public class ExportFragment extends Fragment {
             });
     createZipDocumentLauncher =
         registerForActivityResult(
-            new ActivityResultContracts.CreateDocument("application/zip"),
+            new CreateDocumentWithInitialUri("application/zip"),
             uri -> {
               Log.d(TAG, "createZipDocumentLauncher: ZIP creation result received");
               if (uri != null) {
+                ExportPrefsHelper.setLastExportUri(requireContext(), uri.toString());
                 String displayName = FileUtils.getDisplayNameFromUri(requireContext(), uri);
                 exportViewModel.setSelectedFileLocation(uri);
                 exportViewModel.setSelectedFileLocationName(displayName);

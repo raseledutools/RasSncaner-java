@@ -15,53 +15,53 @@ import lombok.experimental.UtilityClass;
  * <p>This class cannot be instantiated.
  */
 @UtilityClass
-final class ExportPrefsHelper {
+public final class ExportPrefsHelper {
 
   private static final String PREFS_NAME = "export_options";
 
-  static SharedPreferences getPrefs(Context context) {
+  public static SharedPreferences getPrefs(Context context) {
     return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
   }
 
-  static boolean isIncludeOcr(Context context) {
+  public static boolean isIncludeOcr(Context context) {
     return getPrefs(context).getBoolean("include_ocr", false);
   }
 
-  static boolean isExportAsJpeg(Context context) {
+  public static boolean isExportAsJpeg(Context context) {
     return getPrefs(context).getBoolean("export_as_jpeg", false);
   }
 
-  static boolean isSkipOcr(Context context) {
+  public static boolean isSkipOcr(Context context) {
     return getPrefs(context).getBoolean("skip_ocr", false);
   }
 
-  static String getPdfBwMode(Context context) {
+  public static String getPdfBwMode(Context context) {
     return getPrefs(context).getString("pdf_bw_mode", null);
   }
 
-  static boolean isGrayscaleFromPdfMode(Context context) {
+  public static boolean isGrayscaleFromPdfMode(Context context) {
     return "GRAYSCALE".equalsIgnoreCase(getPdfBwMode(context));
   }
 
-  static String getPdfPreset(Context context) {
+  public static String getPdfPreset(Context context) {
     return getPrefs(context).getString("pdf_preset", null);
   }
 
-  static String getPageFormatSaved(Context context) {
+  public static String getPageFormatSaved(Context context) {
     return getPrefs(context).getString("page_format", null);
   }
 
-  static PageFormat resolvePageFormat(Context context) {
+  public static PageFormat resolvePageFormat(Context context) {
     return PageFormat.fromName(getPageFormatSaved(context), PageFormat.FIT_TO_IMAGE);
   }
 
-  static PdfQualityPreset resolvePreset(Context context, int pageCount) {
+  public static PdfQualityPreset resolvePreset(Context context, int pageCount) {
     String presetSaved = getPdfPreset(context);
     PdfQualityPreset def = (pageCount > 1) ? PdfQualityPreset.STANDARD : PdfQualityPreset.HIGH;
     return PdfQualityPreset.fromName(presetSaved, def);
   }
 
-  static PdfCreator.BwMode resolveBwMode(Context context) {
+  public static PdfCreator.BwMode resolveBwMode(Context context) {
     String bw = getPdfBwMode(context);
     if ("CLASSIC".equalsIgnoreCase(bw)) return PdfCreator.BwMode.CLASSIC;
     if ("ROBUST".equalsIgnoreCase(bw)) return PdfCreator.BwMode.ROBUST;
@@ -74,7 +74,7 @@ final class ExportPrefsHelper {
    *
    * @return a boolean array: [0] = convertGrayEffective, [1] = convertBwEffective
    */
-  static boolean[] resolveGrayAndBwFlags(
+  public static boolean[] resolveGrayAndBwFlags(
       Context context, boolean presetForceGrayscale, boolean viewModelGrayscale) {
     String pdfModeSel = getPdfBwMode(context);
     String bwModeSaved = pdfModeSel;
@@ -95,7 +95,7 @@ final class ExportPrefsHelper {
     return new boolean[] {convertGray, convertBw};
   }
 
-  static JpegExportOptions.Mode resolveJpegMode(Context context) {
+  public static JpegExportOptions.Mode resolveJpegMode(Context context) {
     String saved = getPrefs(context).getString("jpeg_mode", JpegExportOptions.Mode.AUTO.name());
     try {
       return JpegExportOptions.Mode.valueOf(saved);
@@ -104,15 +104,31 @@ final class ExportPrefsHelper {
     }
   }
 
-  static boolean isPendingAddPage(Context context) {
+  public static boolean isPendingAddPage(Context context) {
     return getPrefs(context).getBoolean("pending_add_page", false);
   }
 
-  static void clearPendingAddPage(Context context) {
+  public static void clearPendingAddPage(Context context) {
     getPrefs(context).edit().putBoolean("pending_add_page", false).apply();
   }
 
-  static void setPendingAddPage(Context context) {
+  public static void setPendingAddPage(Context context) {
     getPrefs(context).edit().putBoolean("pending_add_page", true).apply();
+  }
+
+  public static String getLastImportUri(Context context) {
+    return getPrefs(context).getString("last_import_uri", null);
+  }
+
+  public static void setLastImportUri(Context context, String uri) {
+    getPrefs(context).edit().putString("last_import_uri", uri).apply();
+  }
+
+  public static String getLastExportUri(Context context) {
+    return getPrefs(context).getString("last_export_uri", null);
+  }
+
+  public static void setLastExportUri(Context context, String uri) {
+    getPrefs(context).edit().putString("last_export_uri", uri).apply();
   }
 }
