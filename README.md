@@ -21,7 +21,7 @@ MakeACopy is available in two editions:
 
 | Edition | OCR Languages | Fonts | APK Size (arm64-v8a) |
 |---------|--------------|-------|---------------------|
-| **Full** | 21 languages (incl. CJK, Arabic, Thai) | 4 fonts (incl. CJK) | ~99 MB |
+| **Full** | 22 languages (incl. CJK, Arabic, Thai, Turkish) | 4 fonts (incl. CJK) | ~99 MB |
 | **Light** | English + German | 1 font (NotoSans) | ~58 MB |
 
 Both editions include the same ML-based document detection (ONNX model), OpenCV image processing, and full offline functionality. Both editions use an operator-stripped ONNX Runtime build that includes only the operators required for document detection. The Light edition additionally ships fewer OCR language models, fonts, and dictionaries, and uses a minimal ONNX Runtime AAR without XNNPACK and NNAPI to further reduce APK size.
@@ -83,7 +83,7 @@ apksigner verify --print-certs MakeACopy-vX.Y.Z.apk
 MakeACopy supports OCR via Tesseract. You can choose the OCR language during the OCR step.
 
 Supported out of the box:
-- English (eng), German (deu), French (fra), Italian (ita), Spanish (spa), Portuguese (por), Dutch (nld), Polish (pol), Czech (ces), Slovak (slk), Hungarian (hun), Romanian (ron), Danish (dan), Norwegian (nor), Swedish (swe), Russian (rus), Thai (tha)
+- English (eng), German (deu), French (fra), Italian (ita), Spanish (spa), Portuguese (por), Dutch (nld), Polish (pol), Czech (ces), Slovak (slk), Hungarian (hun), Romanian (ron), Danish (dan), Norwegian (nor), Swedish (swe), Turkish (tur), Russian (rus), Thai (tha)
 - Chinese (Simplified) — chi_sim, Chinese (Traditional) — chi_tra
 - Arabic (ara), Persian/Farsi (fas)
 
@@ -204,7 +204,7 @@ MakeACopy uses word frequency dictionaries for OCR post-processing to improve te
 
 The dictionaries are used to validate and correct OCR results by checking recognized words against known word lists. This helps reduce common OCR errors while maintaining fully offline operation.
 
-Included dictionaries cover 21 languages: Arabic (ara), Czech (ces), Danish (dan), German (deu), English (eng), Persian (fas), French (fra), Hungarian (hun), Italian (ita), Dutch (nld), Norwegian (nor), Polish (pol), Portuguese (por), Romanian (ron), Russian (rus), Slovak (slk), Spanish (spa), Swedish (swe), Thai (tha), Chinese Simplified (chi_sim), and Chinese Traditional (chi_tra).
+Included dictionaries cover 22 languages: Arabic (ara), Czech (ces), Danish (dan), German (deu), English (eng), Persian (fas), French (fra), Hungarian (hun), Italian (ita), Dutch (nld), Norwegian (nor), Polish (pol), Portuguese (por), Romanian (ron), Russian (rus), Slovak (slk), Spanish (spa), Swedish (swe), Thai (tha), Turkish (tur), Chinese Simplified (chi_sim), and Chinese Traditional (chi_tra).
 
 ## Submodules
 

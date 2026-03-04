@@ -66,5 +66,6 @@ The following language dictionaries are included:
 - spa.txt.gz    (Spanish)
 - swe.txt.gz    (Swedish)
 - tha.txt.gz    (Thai)
+- tur.txt.gz    (Turkish)
 
 Each file contains the 50,000 most frequent words for the respective language.

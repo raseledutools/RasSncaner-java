@@ -74,7 +74,7 @@ includes third-party components under their respective licenses as noted below.
     - Project: https://github.com/hermitdave/FrequencyWords
     - License: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
     - Notes: Word frequency dictionaries derived from Wikipedia are used for OCR
-      post-processing to improve text recognition accuracy. Dictionaries for 21
+      post-processing to improve text recognition accuracy. Dictionaries for 22
       languages are included. The license notice is included at
       app/src/main/assets/dictionaries/LICENSE.txt.
 
