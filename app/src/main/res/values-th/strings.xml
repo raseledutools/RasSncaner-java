@@ -409,4 +409,19 @@
     <string name="cleanup_max_count">จำนวนสูงสุด</string>
     <string name="cleanup_max_storage_mb">พื้นที่จัดเก็บสูงสุด (MB)</string>
     <string name="cleanup_settings_saved">บันทึกการตั้งค่าการล้างข้อมูลแล้ว</string>
+    <string name="inbox_mode">โหมดกล่องขาเข้า</string>
+    <string name="inbox_mode_enable">เปิดใช้โฟลเดอร์ส่งออกเริ่มต้น</string>
+    <string name="inbox_select_folder">เลือกโฟลเดอร์</string>
+    <string name="inbox_folder_set">โฟลเดอร์ Inbox: %1$s</string>
+    <string name="inbox_folder_none">ไม่ได้เลือกโฟลเดอร์</string>
+    <string name="inbox_saved">✓ บันทึกไปยัง Inbox แล้ว</string>
+    <string name="inbox_permission_lost">สูญเสียการเข้าถึงโฟลเดอร์ Inbox กรุณาเลือกโฟลเดอร์ใหม่</string>
+    <string name="inbox_no_folder_selected">กรุณาเลือกโฟลเดอร์ Inbox ก่อน</string>
+    <string name="inbox_export_failed">บันทึกไปยังโฟลเดอร์ Inbox ล้มเหลว</string>
+    <string name="inbox_clear">ล้างโฟลเดอร์ Inbox</string>
+    <string name="inbox_filename_format">รูปแบบชื่อไฟล์</string>
+    <string name="inbox_auto_new_scan">เริ่มสแกนใหม่โดยอัตโนมัติหลังส่งออก</string>
+    <string name="inbox_filename_date_scan">วันที่ + Scan (2026-03-04_scan)</string>
+    <string name="inbox_filename_date_time_scan">วันที่ + เวลา + Scan (2026-03-04_143022_scan)</string>
+    <string name="inbox_filename_date_only">วันที่เท่านั้น (2026-03-04)</string>
 </resources>

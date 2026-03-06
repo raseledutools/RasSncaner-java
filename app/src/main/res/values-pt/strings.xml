@@ -417,4 +417,19 @@
     <string name="cleanup_max_count">Quantidade máxima</string>
     <string name="cleanup_max_storage_mb">Armazenamento máximo (MB)</string>
     <string name="cleanup_settings_saved">Configurações de limpeza salvas</string>
+    <string name="inbox_mode">Modo Caixa de entrada</string>
+    <string name="inbox_mode_enable">Ativar pasta de exportação padrão</string>
+    <string name="inbox_select_folder">Selecionar pasta</string>
+    <string name="inbox_folder_set">Pasta Inbox: %1$s</string>
+    <string name="inbox_folder_none">Nenhuma pasta selecionada</string>
+    <string name="inbox_saved">✓ Salvo na Inbox</string>
+    <string name="inbox_permission_lost">Acesso à pasta Inbox perdido. Selecione uma nova pasta.</string>
+    <string name="inbox_no_folder_selected">Selecione primeiro uma pasta Inbox.</string>
+    <string name="inbox_export_failed">Falha ao salvar na pasta Inbox</string>
+    <string name="inbox_clear">Limpar pasta Inbox</string>
+    <string name="inbox_filename_format">Formato do nome do arquivo</string>
+    <string name="inbox_auto_new_scan">Iniciar nova digitalização automaticamente após exportar</string>
+    <string name="inbox_filename_date_scan">Data + Scan (2026-03-04_scan)</string>
+    <string name="inbox_filename_date_time_scan">Data + hora + Scan (2026-03-04_143022_scan)</string>
+    <string name="inbox_filename_date_only">Apenas data (2026-03-04)</string>
 </resources>

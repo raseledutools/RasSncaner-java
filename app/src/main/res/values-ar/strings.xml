@@ -401,4 +401,19 @@
     <string name="cleanup_max_count">الحد الأقصى للعدد</string>
     <string name="cleanup_max_storage_mb">الحد الأقصى للتخزين (ميغابايت)</string>
     <string name="cleanup_settings_saved">تم حفظ إعدادات التنظيف</string>
+    <string name="inbox_mode">وضع صندوق الوارد</string>
+    <string name="inbox_mode_enable">تفعيل مجلد التصدير الافتراضي</string>
+    <string name="inbox_select_folder">اختيار مجلد</string>
+    <string name="inbox_folder_set">مجلد الوارد: %1$s</string>
+    <string name="inbox_folder_none">لم يتم اختيار مجلد</string>
+    <string name="inbox_saved">✓ تم الحفظ في صندوق الوارد</string>
+    <string name="inbox_permission_lost">فُقد الوصول إلى مجلد الوارد. يرجى اختيار مجلد جديد.</string>
+    <string name="inbox_no_folder_selected">يرجى اختيار مجلد الوارد أولاً.</string>
+    <string name="inbox_export_failed">فشل الحفظ في مجلد الوارد</string>
+    <string name="inbox_clear">مسح مجلد الوارد</string>
+    <string name="inbox_filename_format">تنسيق اسم الملف</string>
+    <string name="inbox_auto_new_scan">بدء مسح جديد تلقائيًا بعد التصدير</string>
+    <string name="inbox_filename_date_scan">تاريخ + مسح (2026-03-04_scan)</string>
+    <string name="inbox_filename_date_time_scan">تاريخ + وقت + مسح (2026-03-04_143022_scan)</string>
+    <string name="inbox_filename_date_only">تاريخ فقط (2026-03-04)</string>
 </resources>

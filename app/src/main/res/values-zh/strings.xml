@@ -392,4 +392,19 @@
     <string name="cleanup_max_count">最大数量</string>
     <string name="cleanup_max_storage_mb">最大存储空间（MB）</string>
     <string name="cleanup_settings_saved">清理设置已保存</string>
+    <string name="inbox_mode">收件箱模式</string>
+    <string name="inbox_mode_enable">启用默认导出文件夹</string>
+    <string name="inbox_select_folder">选择文件夹</string>
+    <string name="inbox_folder_set">收件箱文件夹：%1$s</string>
+    <string name="inbox_folder_none">未选择文件夹</string>
+    <string name="inbox_saved">✓ 已保存到收件箱</string>
+    <string name="inbox_permission_lost">收件箱文件夹访问权限丢失。请选择新文件夹。</string>
+    <string name="inbox_no_folder_selected">请先选择收件箱文件夹。</string>
+    <string name="inbox_export_failed">保存到收件箱文件夹失败</string>
+    <string name="inbox_clear">清除收件箱文件夹</string>
+    <string name="inbox_filename_format">文件名格式</string>
+    <string name="inbox_auto_new_scan">导出后自动开始新扫描</string>
+    <string name="inbox_filename_date_scan">日期 + Scan (2026-03-04_scan)</string>
+    <string name="inbox_filename_date_time_scan">日期 + 时间 + Scan (2026-03-04_143022_scan)</string>
+    <string name="inbox_filename_date_only">仅日期 (2026-03-04)</string>
 </resources>

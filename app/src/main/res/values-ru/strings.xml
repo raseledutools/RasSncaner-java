@@ -415,4 +415,19 @@
     <string name="cleanup_max_count">Максимальное количество</string>
     <string name="cleanup_max_storage_mb">Максимальный объём хранения (МБ)</string>
     <string name="cleanup_settings_saved">Настройки очистки сохранены</string>
+    <string name="inbox_mode">Режим Входящие</string>
+    <string name="inbox_mode_enable">Включить папку экспорта по умолчанию</string>
+    <string name="inbox_select_folder">Выбрать папку</string>
+    <string name="inbox_folder_set">Папка Inbox: %1$s</string>
+    <string name="inbox_folder_none">Папка не выбрана</string>
+    <string name="inbox_saved">✓ Сохранено в Inbox</string>
+    <string name="inbox_permission_lost">Доступ к папке Inbox потерян. Выберите новую папку.</string>
+    <string name="inbox_no_folder_selected">Сначала выберите папку Inbox.</string>
+    <string name="inbox_export_failed">Не удалось сохранить в папку Inbox</string>
+    <string name="inbox_clear">Очистить папку Inbox</string>
+    <string name="inbox_filename_format">Формат имени файла</string>
+    <string name="inbox_auto_new_scan">Автоматически начать новое сканирование после экспорта</string>
+    <string name="inbox_filename_date_scan">Дата + Scan (2026-03-04_scan)</string>
+    <string name="inbox_filename_date_time_scan">Дата + время + Scan (2026-03-04_143022_scan)</string>
+    <string name="inbox_filename_date_only">Только дата (2026-03-04)</string>
 </resources>

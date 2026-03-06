@@ -417,4 +417,19 @@
     <string name="cleanup_max_count">Maximaal aantal</string>
     <string name="cleanup_max_storage_mb">Maximale opslagruimte (MB)</string>
     <string name="cleanup_settings_saved">Opschoningsinstellingen opgeslagen</string>
+    <string name="inbox_mode">Inbox-modus</string>
+    <string name="inbox_mode_enable">Standaard exportmap inschakelen</string>
+    <string name="inbox_select_folder">Map selecteren</string>
+    <string name="inbox_folder_set">Inbox-map: %1$s</string>
+    <string name="inbox_folder_none">Geen map geselecteerd</string>
+    <string name="inbox_saved">✓ Opgeslagen in Inbox</string>
+    <string name="inbox_permission_lost">Toegang tot Inbox-map verloren. Selecteer een nieuwe map.</string>
+    <string name="inbox_no_folder_selected">Selecteer eerst een Inbox-map.</string>
+    <string name="inbox_export_failed">Opslaan in Inbox-map mislukt</string>
+    <string name="inbox_clear">Inbox-map wissen</string>
+    <string name="inbox_filename_format">Bestandsnaamformaat</string>
+    <string name="inbox_auto_new_scan">Na export automatisch nieuwe scan starten</string>
+    <string name="inbox_filename_date_scan">Datum + Scan (2026-03-04_scan)</string>
+    <string name="inbox_filename_date_time_scan">Datum + tijd + Scan (2026-03-04_143022_scan)</string>
+    <string name="inbox_filename_date_only">Alleen datum (2026-03-04)</string>
 </resources>

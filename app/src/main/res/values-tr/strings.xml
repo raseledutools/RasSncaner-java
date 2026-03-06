@@ -412,4 +412,19 @@
     <string name="cleanup_max_count">Maksimum sayı</string>
     <string name="cleanup_max_storage_mb">Maksimum depolama (MB)</string>
     <string name="cleanup_settings_saved">Temizleme ayarları kaydedildi</string>
+    <string name="inbox_mode">Gelen Kutusu Modu</string>
+    <string name="inbox_mode_enable">Varsayılan dışa aktarma klasörünü etkinleştir</string>
+    <string name="inbox_select_folder">Klasör seç</string>
+    <string name="inbox_folder_set">Inbox klasörü: %1$s</string>
+    <string name="inbox_folder_none">Klasör seçilmedi</string>
+    <string name="inbox_saved">✓ Inbox\'a kaydedildi</string>
+    <string name="inbox_permission_lost">Inbox klasörüne erişim kaybedildi. Lütfen yeni bir klasör seçin.</string>
+    <string name="inbox_no_folder_selected">Lütfen önce bir Inbox klasörü seçin.</string>
+    <string name="inbox_export_failed">Inbox klasörüne kaydetme başarısız</string>
+    <string name="inbox_clear">Inbox klasörünü temizle</string>
+    <string name="inbox_filename_format">Dosya adı biçimi</string>
+    <string name="inbox_auto_new_scan">Dışa aktarma sonrası otomatik olarak yeni tarama başlat</string>
+    <string name="inbox_filename_date_scan">Tarih + Scan (2026-03-04_scan)</string>
+    <string name="inbox_filename_date_time_scan">Tarih + saat + Scan (2026-03-04_143022_scan)</string>
+    <string name="inbox_filename_date_only">Yalnızca tarih (2026-03-04)</string>
 </resources>

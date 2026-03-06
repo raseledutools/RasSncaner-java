@@ -416,4 +416,19 @@
     <string name="cleanup_max_count">Maksymalna liczba</string>
     <string name="cleanup_max_storage_mb">Maksymalna przestrzeń (MB)</string>
     <string name="cleanup_settings_saved">Ustawienia czyszczenia zapisane</string>
+    <string name="inbox_mode">Tryb Inbox</string>
+    <string name="inbox_mode_enable">Włącz domyślny folder eksportu</string>
+    <string name="inbox_select_folder">Wybierz folder</string>
+    <string name="inbox_folder_set">Folder Inbox: %1$s</string>
+    <string name="inbox_folder_none">Nie wybrano folderu</string>
+    <string name="inbox_saved">✓ Zapisano w Inbox</string>
+    <string name="inbox_permission_lost">Utracono dostęp do folderu Inbox. Wybierz nowy folder.</string>
+    <string name="inbox_no_folder_selected">Najpierw wybierz folder Inbox.</string>
+    <string name="inbox_export_failed">Nie udało się zapisać w folderze Inbox</string>
+    <string name="inbox_clear">Wyczyść folder Inbox</string>
+    <string name="inbox_filename_format">Format nazwy pliku</string>
+    <string name="inbox_auto_new_scan">Automatycznie rozpocznij nowe skanowanie po eksporcie</string>
+    <string name="inbox_filename_date_scan">Data + Scan (2026-03-04_scan)</string>
+    <string name="inbox_filename_date_time_scan">Data + czas + Scan (2026-03-04_143022_scan)</string>
+    <string name="inbox_filename_date_only">Tylko data (2026-03-04)</string>
 </resources>

@@ -415,4 +415,19 @@
     <string name="cleanup_max_count">Maximális darabszám</string>
     <string name="cleanup_max_storage_mb">Maximális tárhely (MB)</string>
     <string name="cleanup_settings_saved">Tisztítási beállítások mentve</string>
+    <string name="inbox_mode">Inbox mód</string>
+    <string name="inbox_mode_enable">Alapértelmezett exportmappa engedélyezése</string>
+    <string name="inbox_select_folder">Mappa kiválasztása</string>
+    <string name="inbox_folder_set">Inbox mappa: %1$s</string>
+    <string name="inbox_folder_none">Nincs mappa kiválasztva</string>
+    <string name="inbox_saved">✓ Mentve az Inboxba</string>
+    <string name="inbox_permission_lost">Az Inbox mappa hozzáférése elveszett. Kérjük, válasszon új mappát.</string>
+    <string name="inbox_no_folder_selected">Kérjük, először válasszon Inbox mappát.</string>
+    <string name="inbox_export_failed">Nem sikerült menteni az Inbox mappába</string>
+    <string name="inbox_clear">Inbox mappa törlése</string>
+    <string name="inbox_filename_format">Fájlnév formátum</string>
+    <string name="inbox_auto_new_scan">Exportálás után automatikusan új szkennelés indítása</string>
+    <string name="inbox_filename_date_scan">Dátum + Scan (2026-03-04_scan)</string>
+    <string name="inbox_filename_date_time_scan">Dátum + idő + Scan (2026-03-04_143022_scan)</string>
+    <string name="inbox_filename_date_only">Csak dátum (2026-03-04)</string>
 </resources>

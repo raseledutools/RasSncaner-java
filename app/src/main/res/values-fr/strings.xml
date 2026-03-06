@@ -418,4 +418,19 @@
     <string name="cleanup_max_count">Nombre maximal</string>
     <string name="cleanup_max_storage_mb">Espace de stockage maximal (Mo)</string>
     <string name="cleanup_settings_saved">Paramètres de nettoyage enregistrés</string>
+    <string name="inbox_mode">Mode Boîte de réception</string>
+    <string name="inbox_mode_enable">Activer le dossier d\'exportation par défaut</string>
+    <string name="inbox_select_folder">Sélectionner un dossier</string>
+    <string name="inbox_folder_set">Dossier Inbox : %1$s</string>
+    <string name="inbox_folder_none">Aucun dossier sélectionné</string>
+    <string name="inbox_saved">✓ Enregistré dans Inbox</string>
+    <string name="inbox_permission_lost">Accès au dossier Inbox perdu. Veuillez sélectionner un nouveau dossier.</string>
+    <string name="inbox_no_folder_selected">Veuillez d\'abord sélectionner un dossier Inbox.</string>
+    <string name="inbox_export_failed">Échec de l\'enregistrement dans le dossier Inbox</string>
+    <string name="inbox_clear">Effacer le dossier Inbox</string>
+    <string name="inbox_filename_format">Format du nom de fichier</string>
+    <string name="inbox_auto_new_scan">Démarrer automatiquement un nouveau scan après l\'exportation</string>
+    <string name="inbox_filename_date_scan">Date + Scan (2026-03-04_scan)</string>
+    <string name="inbox_filename_date_time_scan">Date + heure + Scan (2026-03-04_143022_scan)</string>
+    <string name="inbox_filename_date_only">Date uniquement (2026-03-04)</string>
 </resources>

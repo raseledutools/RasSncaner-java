@@ -422,4 +422,19 @@
     <string name="cleanup_max_count">Număr maxim</string>
     <string name="cleanup_max_storage_mb">Spațiu maxim de stocare (MB)</string>
     <string name="cleanup_settings_saved">Setările de curățare au fost salvate</string>
+    <string name="inbox_mode">Mod Inbox</string>
+    <string name="inbox_mode_enable">Activează folderul implicit de export</string>
+    <string name="inbox_select_folder">Selectează folder</string>
+    <string name="inbox_folder_set">Folder Inbox: %1$s</string>
+    <string name="inbox_folder_none">Niciun folder selectat</string>
+    <string name="inbox_saved">✓ Salvat în Inbox</string>
+    <string name="inbox_permission_lost">Accesul la folderul Inbox a fost pierdut. Selectați un folder nou.</string>
+    <string name="inbox_no_folder_selected">Selectați mai întâi un folder Inbox.</string>
+    <string name="inbox_export_failed">Salvarea în folderul Inbox a eșuat</string>
+    <string name="inbox_clear">Șterge folderul Inbox</string>
+    <string name="inbox_filename_format">Format nume fișier</string>
+    <string name="inbox_auto_new_scan">Pornește automat o scanare nouă după export</string>
+    <string name="inbox_filename_date_scan">Dată + Scan (2026-03-04_scan)</string>
+    <string name="inbox_filename_date_time_scan">Dată + oră + Scan (2026-03-04_143022_scan)</string>
+    <string name="inbox_filename_date_only">Doar dată (2026-03-04)</string>
 </resources>

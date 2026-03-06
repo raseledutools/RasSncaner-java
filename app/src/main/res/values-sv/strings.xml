@@ -411,4 +411,19 @@
     <string name="cleanup_max_count">Maximalt antal</string>
     <string name="cleanup_max_storage_mb">Maximalt lagringsutrymme (MB)</string>
     <string name="cleanup_settings_saved">Rensningsinställningar sparade</string>
+    <string name="inbox_mode">Inbox-läge</string>
+    <string name="inbox_mode_enable">Aktivera standardexportmapp</string>
+    <string name="inbox_select_folder">Välj mapp</string>
+    <string name="inbox_folder_set">Inbox-mapp: %1$s</string>
+    <string name="inbox_folder_none">Ingen mapp vald</string>
+    <string name="inbox_saved">✓ Sparat i Inbox</string>
+    <string name="inbox_permission_lost">Åtkomst till Inbox-mapp förlorad. Välj en ny mapp.</string>
+    <string name="inbox_no_folder_selected">Välj en Inbox-mapp först.</string>
+    <string name="inbox_export_failed">Kunde inte spara i Inbox-mapp</string>
+    <string name="inbox_clear">Rensa Inbox-mapp</string>
+    <string name="inbox_filename_format">Filnamnsformat</string>
+    <string name="inbox_auto_new_scan">Starta ny skanning automatiskt efter export</string>
+    <string name="inbox_filename_date_scan">Datum + Scan (2026-03-04_scan)</string>
+    <string name="inbox_filename_date_time_scan">Datum + tid + Scan (2026-03-04_143022_scan)</string>
+    <string name="inbox_filename_date_only">Endast datum (2026-03-04)</string>
 </resources>

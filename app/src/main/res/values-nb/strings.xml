@@ -411,4 +411,19 @@
     <string name="cleanup_max_count">Maksimalt antall</string>
     <string name="cleanup_max_storage_mb">Maksimal lagringsplass (MB)</string>
     <string name="cleanup_settings_saved">Oppryddingsinnstillinger lagret</string>
+    <string name="inbox_mode">Innboks-modus</string>
+    <string name="inbox_mode_enable">Aktiver standard eksportmappe</string>
+    <string name="inbox_select_folder">Velg mappe</string>
+    <string name="inbox_folder_set">Innboks-mappe: %1$s</string>
+    <string name="inbox_folder_none">Ingen mappe valgt</string>
+    <string name="inbox_saved">✓ Lagret i Innboks</string>
+    <string name="inbox_permission_lost">Tilgang til Innboks-mappe mistet. Velg en ny mappe.</string>
+    <string name="inbox_no_folder_selected">Velg en Innboks-mappe først.</string>
+    <string name="inbox_export_failed">Kunne ikke lagre i Innboks-mappe</string>
+    <string name="inbox_clear">Tøm Innboks-mappe</string>
+    <string name="inbox_filename_format">Filnavnformat</string>
+    <string name="inbox_auto_new_scan">Start ny skanning automatisk etter eksport</string>
+    <string name="inbox_filename_date_scan">Dato + Scan (2026-03-04_scan)</string>
+    <string name="inbox_filename_date_time_scan">Dato + tid + Scan (2026-03-04_143022_scan)</string>
+    <string name="inbox_filename_date_only">Kun dato (2026-03-04)</string>
 </resources>

@@ -406,4 +406,21 @@
     <string name="cleanup_max_count">Max count</string>
     <string name="cleanup_max_storage_mb">Max storage (MB)</string>
     <string name="cleanup_settings_saved">Cleanup settings saved</string>
+
+    <!-- Inbox Mode -->
+    <string name="inbox_mode">Inbox Mode</string>
+    <string name="inbox_mode_enable">Enable default export directory</string>
+    <string name="inbox_select_folder">Select folder</string>
+    <string name="inbox_folder_set">Inbox folder: %1$s</string>
+    <string name="inbox_folder_none">No folder selected</string>
+    <string name="inbox_saved">✓ Saved to Inbox</string>
+    <string name="inbox_permission_lost">Inbox folder access lost. Please select a new folder.</string>
+    <string name="inbox_no_folder_selected">Please select an Inbox folder first.</string>
+    <string name="inbox_export_failed">Failed to save to Inbox folder</string>
+    <string name="inbox_clear">Clear Inbox folder</string>
+    <string name="inbox_filename_format">Filename format</string>
+    <string name="inbox_auto_new_scan">Start new scan automatically after export</string>
+    <string name="inbox_filename_date_scan">Date + Scan (2026-03-04_scan)</string>
+    <string name="inbox_filename_date_time_scan">Date + Time + Scan (2026-03-04_143022_scan)</string>
+    <string name="inbox_filename_date_only">Date only (2026-03-04)</string>
 </resources>

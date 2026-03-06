@@ -409,4 +409,19 @@
     <string name="cleanup_max_count">حداکثر تعداد</string>
     <string name="cleanup_max_storage_mb">حداکثر فضای ذخیره‌سازی (مگابایت)</string>
     <string name="cleanup_settings_saved">تنظیمات پاک‌سازی ذخیره شد</string>
+    <string name="inbox_mode">حالت صندوق ورودی</string>
+    <string name="inbox_mode_enable">فعال‌سازی پوشه پیش‌فرض خروجی</string>
+    <string name="inbox_select_folder">انتخاب پوشه</string>
+    <string name="inbox_folder_set">پوشه صندوق ورودی: %1$s</string>
+    <string name="inbox_folder_none">پوشه‌ای انتخاب نشده</string>
+    <string name="inbox_saved">✓ در صندوق ورودی ذخیره شد</string>
+    <string name="inbox_permission_lost">دسترسی به پوشه صندوق ورودی از دست رفت. لطفاً پوشه جدیدی انتخاب کنید.</string>
+    <string name="inbox_no_folder_selected">لطفاً ابتدا پوشه صندوق ورودی را انتخاب کنید.</string>
+    <string name="inbox_export_failed">ذخیره در پوشه صندوق ورودی ناموفق بود</string>
+    <string name="inbox_clear">پاک کردن پوشه صندوق ورودی</string>
+    <string name="inbox_filename_format">قالب نام فایل</string>
+    <string name="inbox_auto_new_scan">شروع خودکار اسکن جدید پس از خروجی</string>
+    <string name="inbox_filename_date_scan">تاریخ + اسکن (2026-03-04_scan)</string>
+    <string name="inbox_filename_date_time_scan">تاریخ + زمان + اسکن (2026-03-04_143022_scan)</string>
+    <string name="inbox_filename_date_only">فقط تاریخ (2026-03-04)</string>
 </resources>
