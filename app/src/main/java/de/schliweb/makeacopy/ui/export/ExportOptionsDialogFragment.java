@@ -2,12 +2,17 @@ package de.schliweb.makeacopy.ui.export;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.TextView;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -17,6 +22,7 @@ import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.utils.export.PageFormat;
 import de.schliweb.makeacopy.utils.export.PdfQualityPreset;
 import de.schliweb.makeacopy.utils.export.jpeg.JpegExportOptions;
+import de.schliweb.makeacopy.utils.infra.FeatureFlags;
 import de.schliweb.makeacopy.utils.ui.DialogUtils;
 
 /**
@@ -43,6 +49,10 @@ import de.schliweb.makeacopy.utils.ui.DialogUtils;
  */
 public class ExportOptionsDialogFragment extends DialogFragment {
 
+  private ActivityResultLauncher<Uri> inboxFolderLauncher;
+  private TextView inboxFolderLabel;
+  private CheckBox cbInboxEnabled;
+
   public static final String REQUEST_KEY = "export_options";
   public static final String BUNDLE_INCLUDE_OCR = "include_ocr";
   public static final String BUNDLE_EXPORT_AS_JPEG = "export_as_jpeg";
@@ -54,6 +64,40 @@ public class ExportOptionsDialogFragment extends DialogFragment {
 
   public static void show(@NonNull FragmentManager fm) {
     new ExportOptionsDialogFragment().show(fm, "ExportOptionsDialogFragment");
+  }
+
+  @Override
+  public void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    inboxFolderLauncher =
+        registerForActivityResult(
+            new ActivityResultContracts.OpenDocumentTree(),
+            uri -> {
+              if (uri != null && getContext() != null) {
+                // Persist permission across reboots
+                int flags =
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
+                getContext().getContentResolver().takePersistableUriPermission(uri, flags);
+                ExportPrefsHelper.setInboxUri(getContext(), uri.toString());
+                ExportPrefsHelper.setInboxEnabled(getContext(), true);
+                if (cbInboxEnabled != null) cbInboxEnabled.setChecked(true);
+                updateInboxFolderLabel();
+              }
+            });
+  }
+
+  private void updateInboxFolderLabel() {
+    if (inboxFolderLabel == null || getContext() == null) return;
+    String uri = ExportPrefsHelper.getInboxUri(getContext());
+    if (uri != null) {
+      // Show last path segment for readability
+      Uri parsed = Uri.parse(uri);
+      String display = parsed.getLastPathSegment();
+      if (display == null) display = uri;
+      inboxFolderLabel.setText(getString(R.string.inbox_folder_set, display));
+    } else {
+      inboxFolderLabel.setText(R.string.inbox_folder_none);
+    }
   }
 
   @NonNull
@@ -143,6 +187,87 @@ public class ExportOptionsDialogFragment extends DialogFragment {
     else if ("CLASSIC".equalsIgnoreCase(pdfBwModeSaved)) rbPdfBwClassic.setChecked(true);
     else if ("ROBUST".equalsIgnoreCase(pdfBwModeSaved)) rbPdfBwRobust.setChecked(true);
     else if ("OCR_ROBUST".equalsIgnoreCase(pdfBwModeSaved)) rbPdfOcrRobust.setChecked(true);
+
+    // ── Inbox Mode UI ──
+    View inboxGroup = view.findViewById(R.id.dialog_inbox_group);
+    cbInboxEnabled = view.findViewById(R.id.dialog_checkbox_inbox_enabled);
+    inboxFolderLabel = view.findViewById(R.id.dialog_inbox_folder_label);
+    View btnInboxSelect = view.findViewById(R.id.dialog_button_inbox_select);
+    View btnInboxClear = view.findViewById(R.id.dialog_button_inbox_clear);
+
+    if (FeatureFlags.isInboxModeEnabled() && inboxGroup != null) {
+      inboxGroup.setVisibility(View.VISIBLE);
+      cbInboxEnabled.setChecked(ExportPrefsHelper.isInboxEnabled(ctx));
+      updateInboxFolderLabel();
+
+      cbInboxEnabled.setOnCheckedChangeListener(
+          (buttonView, isChecked) -> {
+            if (isChecked && ExportPrefsHelper.getInboxUri(ctx) == null) {
+              buttonView.setChecked(false);
+              android.widget.Toast.makeText(
+                      ctx, R.string.inbox_no_folder_selected, android.widget.Toast.LENGTH_SHORT)
+                  .show();
+              return;
+            }
+            ExportPrefsHelper.setInboxEnabled(ctx, isChecked);
+          });
+
+      if (btnInboxSelect != null) {
+        btnInboxSelect.setOnClickListener(v2 -> inboxFolderLauncher.launch((Uri) null));
+      }
+      if (btnInboxClear != null) {
+        btnInboxClear.setOnClickListener(
+            v2 -> {
+              ExportPrefsHelper.clearInbox(ctx);
+              cbInboxEnabled.setChecked(false);
+              updateInboxFolderLabel();
+            });
+      }
+
+      // Filename template spinner
+      android.widget.Spinner filenameSpinner =
+          view.findViewById(R.id.dialog_inbox_filename_spinner);
+      if (filenameSpinner != null) {
+        String[] templateLabels = {
+          getString(R.string.inbox_filename_date_scan),
+          getString(R.string.inbox_filename_date_time_scan),
+          getString(R.string.inbox_filename_date_only)
+        };
+        String[] templateValues = {"date_scan", "date_time_scan", "date_only"};
+        android.widget.ArrayAdapter<String> adapter =
+            new android.widget.ArrayAdapter<>(
+                ctx, android.R.layout.simple_spinner_item, templateLabels);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        filenameSpinner.setAdapter(adapter);
+
+        String current = ExportPrefsHelper.getInboxFilenameTemplate(ctx);
+        for (int i = 0; i < templateValues.length; i++) {
+          if (templateValues[i].equals(current)) {
+            filenameSpinner.setSelection(i);
+            break;
+          }
+        }
+        filenameSpinner.setOnItemSelectedListener(
+            new android.widget.AdapterView.OnItemSelectedListener() {
+              @Override
+              public void onItemSelected(
+                  android.widget.AdapterView<?> parent, View v, int pos, long id) {
+                ExportPrefsHelper.setInboxFilenameTemplate(ctx, templateValues[pos]);
+              }
+
+              @Override
+              public void onNothingSelected(android.widget.AdapterView<?> parent) {}
+            });
+      }
+
+      // Auto new scan checkbox
+      CheckBox cbAutoNewScan = view.findViewById(R.id.dialog_checkbox_inbox_auto_new_scan);
+      if (cbAutoNewScan != null) {
+        cbAutoNewScan.setChecked(ExportPrefsHelper.isInboxAutoNewScan(ctx));
+        cbAutoNewScan.setOnCheckedChangeListener(
+            (buttonView, isChecked) -> ExportPrefsHelper.setInboxAutoNewScan(ctx, isChecked));
+      }
+    }
 
     // Visibility toggle between PDF and JPEG groups based on selected format
     updateGroups(exportAsJpeg, pdfGroup, jpegGroup);

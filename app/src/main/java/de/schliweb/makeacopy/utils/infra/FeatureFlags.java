@@ -79,6 +79,20 @@ public class FeatureFlags {
   }
 
   /**
+   * Feature flag: enables Inbox Mode for automatic export to a default directory. When enabled,
+   * users can configure a default export folder and skip the file picker during export.
+   */
+  public static boolean isInboxModeEnabled() {
+    try {
+      Class<?> c = de.schliweb.makeacopy.BuildConfig.class;
+      java.lang.reflect.Field f = c.getField("FEATURE_INBOX_MODE");
+      return f.getBoolean(null);
+    } catch (Throwable ignore) {
+      return false;
+    }
+  }
+
+  /**
    * Feature flag: enables layout analysis for complex documents. When enabled, OCR can detect and
    * process multi-column documents and tables with optimized settings for each region.
    */

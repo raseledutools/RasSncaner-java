@@ -131,4 +131,63 @@ public final class ExportPrefsHelper {
   public static void setLastExportUri(Context context, String uri) {
     getPrefs(context).edit().putString("last_export_uri", uri).apply();
   }
+
+  // ── Inbox Mode preferences ──
+
+  private static final String KEY_INBOX_ENABLED = "inbox_enabled";
+  private static final String KEY_INBOX_URI = "inbox_uri";
+
+  /** Returns {@code true} when the user has enabled Inbox Mode in settings. */
+  public static boolean isInboxEnabled(Context context) {
+    return getPrefs(context).getBoolean(KEY_INBOX_ENABLED, false);
+  }
+
+  public static void setInboxEnabled(Context context, boolean enabled) {
+    getPrefs(context).edit().putBoolean(KEY_INBOX_ENABLED, enabled).apply();
+  }
+
+  /** Returns the persisted tree URI string for the Inbox directory, or {@code null}. */
+  public static String getInboxUri(Context context) {
+    return getPrefs(context).getString(KEY_INBOX_URI, null);
+  }
+
+  public static void setInboxUri(Context context, String uri) {
+    getPrefs(context).edit().putString(KEY_INBOX_URI, uri).apply();
+  }
+
+  /** Clears the Inbox directory URI and disables Inbox Mode. */
+  public static void clearInbox(Context context) {
+    getPrefs(context).edit().remove(KEY_INBOX_URI).putBoolean(KEY_INBOX_ENABLED, false).apply();
+  }
+
+  // ── Inbox filename template ──
+
+  private static final String KEY_INBOX_FILENAME_TEMPLATE = "inbox_filename_template";
+
+  /**
+   * Returns the configured filename template for Inbox exports. Defaults to {@code "date_scan"}
+   * which produces names like {@code 2026-03-04_scan.pdf}.
+   *
+   * <p>Supported values: {@code "date_scan"}, {@code "date_time_scan"}, {@code "date_only"}.
+   */
+  public static String getInboxFilenameTemplate(Context context) {
+    return getPrefs(context).getString(KEY_INBOX_FILENAME_TEMPLATE, "date_scan");
+  }
+
+  public static void setInboxFilenameTemplate(Context context, String template) {
+    getPrefs(context).edit().putString(KEY_INBOX_FILENAME_TEMPLATE, template).apply();
+  }
+
+  // ── Auto new scan after inbox export ──
+
+  private static final String KEY_INBOX_AUTO_NEW_SCAN = "inbox_auto_new_scan";
+
+  /** Returns {@code true} when the app should automatically start a new scan after inbox export. */
+  public static boolean isInboxAutoNewScan(Context context) {
+    return getPrefs(context).getBoolean(KEY_INBOX_AUTO_NEW_SCAN, false);
+  }
+
+  public static void setInboxAutoNewScan(Context context, boolean enabled) {
+    getPrefs(context).edit().putBoolean(KEY_INBOX_AUTO_NEW_SCAN, enabled).apply();
+  }
 }

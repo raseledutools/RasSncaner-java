@@ -158,6 +158,8 @@ public class ExportFragment extends Fragment {
   // URI of the last exported document for sharing
   private Uri lastExportedDocumentUri;
   private String lastExportedPdfName;
+  // Tracks whether the current export was triggered via Inbox Mode (for auto-new-scan)
+  private boolean inboxExportInProgress = false;
   // Library assignment helper: remember last indexed scan id (only when feature flag is on)
   private boolean ocrReceiverRegistered = false;
 
@@ -759,6 +761,46 @@ public class ExportFragment extends Fragment {
           exportViewModel.setConvertToGrayscale(graySel);
           exportViewModel.setExportFormat(exportAsJpegSel ? "JPEG" : "PDF");
 
+          // Inbox Mode: skip file picker and export directly to inbox directory
+          if (FeatureFlags.isInboxModeEnabled() && ExportPrefsHelper.isInboxEnabled(ctx)) {
+            String inboxUriStr = ExportPrefsHelper.getInboxUri(ctx);
+            if (inboxUriStr == null) {
+              UIUtils.showToast(
+                  ctx, getString(R.string.inbox_no_folder_selected), Toast.LENGTH_LONG);
+              return;
+            }
+            if (inboxUriStr != null) {
+              Uri inboxTreeUri = Uri.parse(inboxUriStr);
+              if (InboxExporter.hasValidPermission(ctx, inboxTreeUri)) {
+                String template = ExportPrefsHelper.getInboxFilenameTemplate(ctx);
+                String baseName = InboxExporter.buildInboxBaseName(template);
+                String mimeType = exportAsJpegSel ? "image/jpeg" : "application/pdf";
+                String extension = exportAsJpegSel ? ".jpg" : ".pdf";
+                Uri fileUri =
+                    InboxExporter.createFileInInbox(
+                        ctx, inboxTreeUri, mimeType, baseName, extension);
+                if (fileUri != null) {
+                  String displayName =
+                      de.schliweb.makeacopy.utils.infra.FileUtils.getDisplayNameFromUri(
+                          ctx, fileUri);
+                  exportViewModel.setSelectedFileLocation(fileUri);
+                  exportViewModel.setSelectedFileLocationName(displayName);
+                  lastExportedPdfName = displayName;
+                  inboxExportInProgress = true;
+                  if (exportAsJpegSel) {
+                    performJpegExport();
+                  } else {
+                    performExport();
+                  }
+                  return;
+                }
+              }
+              // Permission lost or file creation failed → clear inbox and fall through to picker
+              UIUtils.showToast(ctx, getString(R.string.inbox_permission_lost), Toast.LENGTH_LONG);
+              ExportPrefsHelper.clearInbox(ctx);
+            }
+          }
+
           // Proceed to file location selection based on format
           if (exportAsJpegSel) {
             selectJpegFileLocation();
@@ -1212,9 +1254,14 @@ public class ExportFragment extends Fragment {
                         indexScanLibraryAsync(displayName, pageCountForIndex, finalUri);
                         // End: index
                         if (includeOcr) {
-                          // Defer showing the assignment snackbar until TXT has been saved
-                          deferAssignUntilTxt = true;
-                          launchTxtFileCreation();
+                          if (inboxExportInProgress) {
+                            // Inbox Mode: export TXT directly to inbox without file picker
+                            exportTxtToInbox();
+                          } else {
+                            // Normal mode: show file picker for TXT
+                            deferAssignUntilTxt = true;
+                            launchTxtFileCreation();
+                          }
                         }
                       } else {
                         lastExportedDocumentUri = null;
@@ -1249,6 +1296,7 @@ public class ExportFragment extends Fragment {
                       exportViewModel.setExporting(false);
                       exportViewModel.setExportProgress(0);
                       exportViewModel.setExportProgressMax(0);
+                      maybeAutoNewScan();
                     });
               }
             })
@@ -1267,6 +1315,27 @@ public class ExportFragment extends Fragment {
   private void selectFileLocation() {
     String defaultFileName = buildDefaultBaseName() + ".pdf";
     createDocumentLauncher.launch(defaultFileName);
+  }
+
+  /**
+   * If the current export was triggered via Inbox Mode and auto-new-scan is enabled, navigates back
+   * to the camera fragment to start a new scan immediately.
+   */
+  private void maybeAutoNewScan() {
+    if (!inboxExportInProgress) return;
+    inboxExportInProgress = false;
+    Context ctx = getContext();
+    if (ctx == null) return;
+    if (!ExportPrefsHelper.isInboxAutoNewScan(ctx)) return;
+    if (!isAdded()) return;
+    UIUtils.showToast(ctx, getString(R.string.inbox_saved), Toast.LENGTH_SHORT);
+    cameraViewModel.setImageUri(null);
+    cropViewModel.setImageCropped(false);
+    cropViewModel.setImageBitmap(null);
+    cropViewModel.setOriginalImageBitmap(null);
+    cropViewModel.setImageLoaded(false);
+    if (exportSessionViewModel != null) exportSessionViewModel.setInitial(null);
+    Navigation.findNavController(requireView()).navigate(R.id.navigation_camera);
   }
 
   // Centralized default base-name derivation used for PDF/JPEG/ZIP/TXT
@@ -1420,9 +1489,14 @@ public class ExportFragment extends Fragment {
                         indexScanLibraryAsync(displayName, 1, exportUriFinal);
                         // End: index
                         if (includeOcr) {
-                          // Defer showing the assignment snackbar until TXT has been saved
-                          deferAssignUntilTxt = true;
-                          launchTxtFileCreation();
+                          if (inboxExportInProgress) {
+                            // Inbox Mode: export TXT directly to inbox without file picker
+                            exportTxtToInbox();
+                          } else {
+                            // Normal mode: show file picker for TXT
+                            deferAssignUntilTxt = true;
+                            launchTxtFileCreation();
+                          }
                         }
                       } else {
                         lastExportedDocumentUri = null;
@@ -1450,6 +1524,7 @@ public class ExportFragment extends Fragment {
                       exportViewModel.setExporting(false);
                       exportViewModel.setExportProgress(0);
                       exportViewModel.setExportProgressMax(0);
+                      maybeAutoNewScan();
                     });
               }
             })
@@ -1658,6 +1733,33 @@ public class ExportFragment extends Fragment {
     }
     String txtFileName = pdfName + ".txt";
     createTxtDocumentLauncher.launch(txtFileName);
+  }
+
+  /**
+   * Exports the OCR text as a TXT file directly into the Inbox directory, bypassing the file
+   * picker. Uses the same base name as the last exported PDF/JPEG with a {@code .txt} extension.
+   */
+  private void exportTxtToInbox() {
+    Context ctx = getContext();
+    if (ctx == null) return;
+    String inboxUriStr = ExportPrefsHelper.getInboxUri(ctx);
+    if (inboxUriStr == null) {
+      Log.w(TAG, "exportTxtToInbox: no inbox URI configured");
+      return;
+    }
+    Uri inboxTreeUri = Uri.parse(inboxUriStr);
+    String baseName = lastExportedPdfName;
+    if (baseName == null) {
+      baseName = buildDefaultBaseName();
+    } else {
+      baseName = stripOneExtension(baseName);
+    }
+    Uri txtUri = InboxExporter.createFileInInbox(ctx, inboxTreeUri, "text/plain", baseName, ".txt");
+    if (txtUri != null) {
+      exportOcrTextToTxt(txtUri);
+    } else {
+      Log.w(TAG, "exportTxtToInbox: failed to create TXT file in inbox");
+    }
   }
 
   /**
