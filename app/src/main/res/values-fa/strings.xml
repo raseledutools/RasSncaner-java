@@ -30,7 +30,7 @@
     <string name="image_to_crop">تصویر برای برش</string>
     <string name="cropped_image">تصویر برش‌خورده</string>
     <string name="document_preview">پیش‌نمایش سند</string>
-    <string name="include_ocr_text">شامل‌کردن متن OCR</string>
+    <string name="include_ocr_text">صادرکردن OCR به‌عنوان فایل TXT جداگانه</string>
     <string name="ocr_results_will_appear_here">نتایج OCR اینجا نمایش داده می‌شود</string>
     <string name="ocr_no_text_detected">هیچ متنی شناسایی نشد</string>
     <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">گوشه‌های ذوزنقه را

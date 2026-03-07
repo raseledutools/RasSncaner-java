@@ -31,7 +31,7 @@
     <string name="image_to_crop">Obrázek k oříznutí</string>
     <string name="cropped_image">Oříznutý obrázek</string>
     <string name="document_preview">Náhled dokumentu</string>
-    <string name="include_ocr_text">Zahrnout OCR text</string>
+    <string name="include_ocr_text">Exportovat OCR jako samostatný TXT</string>
     <string name="ocr_results_will_appear_here">Výsledky OCR se zobrazí zde</string>
     <string name="ocr_no_text_detected">Nebyl rozpoznán žádný text</string>
     <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Upravte rohy

@@ -30,7 +30,7 @@
     <string name="image_to_crop">Afbeelding om bij te snijden</string>
     <string name="cropped_image">Bijsneden afbeelding</string>
     <string name="document_preview">Documentvoorbeeld</string>
-    <string name="include_ocr_text">OCR‑tekst opnemen</string>
+    <string name="include_ocr_text">OCR als apart TXT-bestand exporteren</string>
     <string name="ocr_results_will_appear_here">OCR‑resultaten verschijnen hier</string>
     <string name="ocr_no_text_detected">Geen tekst gedetecteerd</string>
     <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Pas de hoeken van

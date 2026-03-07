@@ -31,7 +31,7 @@
     <string name="image_to_crop">Kırpılacak görüntü</string>
     <string name="cropped_image">Kırpılmış görüntü</string>
     <string name="document_preview">Belge önizleme</string>
-    <string name="include_ocr_text">OCR metnini dahil et</string>
+    <string name="include_ocr_text">OCR metnini ayrı TXT olarak dışa aktar</string>
     <string name="ocr_results_will_appear_here">OCR sonuçları burada görünecek</string>
     <string name="ocr_no_text_detected">Metin algılanamadı</string>
     <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Kırpılacak alanı

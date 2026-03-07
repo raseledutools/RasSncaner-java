@@ -31,7 +31,7 @@
     <string name="image_to_crop">Imagem a cortar</string>
     <string name="cropped_image">Imagem cortada</string>
     <string name="document_preview">Pré-visualização do documento</string>
-    <string name="include_ocr_text">Incluir texto OCR</string>
+    <string name="include_ocr_text">Exportar OCR como TXT separado</string>
     <string name="ocr_results_will_appear_here">Os resultados do OCR aparecerão aqui</string>
     <string name="ocr_no_text_detected">Nenhum texto detectado</string>
     <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Ajuste os cantos do

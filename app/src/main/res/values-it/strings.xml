@@ -32,7 +32,7 @@
     <string name="image_to_crop">Immagine da ritagliare</string>
     <string name="cropped_image">Immagine ritagliata</string>
     <string name="document_preview">Anteprima documento</string>
-    <string name="include_ocr_text">Includi testo OCR</string>
+    <string name="include_ocr_text">Esporta OCR come TXT separato</string>
     <string name="ocr_results_will_appear_here">I risultati OCR verranno visualizzati qui</string>
     <string name="ocr_no_text_detected">Nessun testo rilevato</string>
     <string name="adjust_the_trapezoid_corners_to_select_the_area_to_crop_then_tap_the_crop_button">Regola gli angoli

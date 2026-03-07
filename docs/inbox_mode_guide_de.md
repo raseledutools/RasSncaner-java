@@ -129,6 +129,12 @@ Du kannst den Inbox‑Modus jederzeit wieder aktivieren, indem du in den Export�
 
 Integrationsbeispiele
 
+### SambaLite
+
+    Scannen → Inbox‑Ordner → SambaLite überträgt auf SMB‑Freigabe → Netzwerkarchiv
+
+Richte den Inbox‑Ordner auf ein Verzeichnis, das von [SambaLite](https://egdels.github.io/SambaLite/) überwacht wird. Gescannte Dokumente werden automatisch auf deine SMB/CIFS‑Netzwerkfreigabe übertragen.
+
 ### paperless‑ngx
 
     Scannen → Inbox‑Ordner → paperless‑ngx importiert → OCR → Durchsuchbares Archiv

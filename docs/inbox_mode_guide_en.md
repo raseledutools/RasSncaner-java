@@ -129,6 +129,12 @@ You can re-enable Inbox Mode at any time by selecting a new folder in the export
 
 Integration examples
 
+### SambaLite
+
+    Scan → Inbox Folder → SambaLite transfers to SMB share → Network archive
+
+Point the Inbox folder to a directory monitored by [SambaLite](https://egdels.github.io/SambaLite/). Scanned documents are automatically transferred to your SMB/CIFS network share.
+
 ### paperless-ngx
 
     Scan → Inbox Folder → paperless-ngx imports → OCR → Searchable archive

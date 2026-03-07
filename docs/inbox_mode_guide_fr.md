@@ -129,6 +129,12 @@ Vous pouvez réactiver le mode Inbox à tout moment en sélectionnant un nouveau
 
 Exemples d'intégration
 
+### SambaLite
+
+    Numériser → Dossier Inbox → SambaLite transfère vers le partage SMB → Archive réseau
+
+Configurez le dossier Inbox vers un répertoire surveillé par [SambaLite](https://egdels.github.io/SambaLite/). Les documents numérisés sont automatiquement transférés vers votre partage réseau SMB/CIFS.
+
 ### paperless-ngx
 
     Numériser → Dossier Inbox → paperless-ngx importe → OCR → Archive consultable
