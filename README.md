@@ -1,6 +1,35 @@
 # MakeACopy
 
-MakeACopy is an open-source document scanner app for Android that allows you to digitize paper documents with OCR functionality. The app is designed to be privacy-friendly, working completely offline without any cloud connection or tracking.
+MakeACopy is an open-source **offline document scanner with OCR** for Android.
+
+It allows you to digitize paper documents into **searchable PDFs** while
+keeping the entire processing pipeline on your device. The app works
+completely offline and avoids any cloud services, telemetry, or tracking.
+
+MakeACopy is designed to be a **reliable building block for privacy-friendly
+document workflows**, especially when combined with self-hosted storage
+systems.
+
+## Mobile Document Pipeline
+
+MakeACopy can be combined with
+[SambaLite](https://github.com/egdels/SambaLite) to create a fully automated
+mobile document workflow:
+
+```
+Paper document
+      ↓
+Scan with MakeACopy
+      ↓
+Inbox folder
+      ↓
+SambaLite folder sync
+      ↓
+NAS / archive (e.g. paperless-ngx)
+```
+
+This setup effectively turns your smartphone into a **privacy-friendly mobile
+network scanner** for self-hosted document archives.
 
 ## Design Philosophy
 
@@ -324,6 +353,31 @@ MakeACopy respects your privacy:
 - Requires only camera and storage permissions
 
 See our [Privacy Policy](https://egdels.github.io/makeacopy/privacy) for details.
+
+## Related Projects
+
+### SambaLite
+
+[SambaLite](https://github.com/egdels/SambaLite) is a lightweight open-source
+SMB client for Android that provides secure access to NAS and network shares.
+
+When used together with MakeACopy, it enables a fully automated document
+workflow:
+
+```
+Paper
+   ↓
+Scan with MakeACopy
+   ↓
+Inbox folder
+   ↓
+SambaLite sync
+   ↓
+NAS / archive
+```
+
+This combination turns an Android phone into a **mobile document scanner
+for network-based archives**.
 
 ## Contributing
 
