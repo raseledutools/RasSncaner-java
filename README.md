@@ -223,13 +223,21 @@ MakeACopy follows the Single-Activity + Multi-Fragment pattern with MVVM archite
 ## Libraries Used
 
 | Purpose | Library / Model | License |
-|--------|-----------------|---------|
-| Image Processing | OpenCV for Android | Apache 2.0 |
+|---------|-----------------|--------|
+| Image Processing | [OpenCV](https://opencv.org) 4.13.0 | Apache 2.0 |
+| ML Inference | [ONNX Runtime](https://github.com/microsoft/onnxruntime) | MIT |
 | Document Corner Detection | Custom-trained ONNX model | Apache 2.0 |
-| OCR | tess-two (Tesseract JNI) | Apache 2.0 |
+| OCR | [Tesseract4Android](https://github.com/adaptech-cz/Tesseract4Android) 4.9.0 | Apache 2.0 |
+| OCR Language Data | [tessdata](https://github.com/tesseract-ocr/tessdata) | Apache 2.0 |
 | PDF | Android PdfDocument, pdfbox-android | Apache 2.0 |
+| Fonts (CJK) | [Noto Sans CJK](https://github.com/notofonts/noto-cjk) | OFL 1.1 |
+| Fonts (Latin) | [Noto Sans](https://github.com/notofonts/noto-fonts) | OFL 1.1 |
+| Fonts (Arabic) | [Noto Naskh Arabic](https://github.com/notofonts/arabic) | OFL 1.1 |
 | UI | Material Components | Apache 2.0 |
 | OCR Dictionaries | [FrequencyWords](https://github.com/hermitdave/FrequencyWords) | CC BY-SA 4.0 |
+
+Third-party license texts are included in the [`third_party_licenses/`](third_party_licenses/) directory.
+For full attribution details, see the [`NOTICE`](NOTICE) file.
 
 ### OCR Dictionaries
 

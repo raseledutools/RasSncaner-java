@@ -10,6 +10,9 @@ includes third-party components under their respective licenses as noted below.
     - Notes: Selected Java classes from the org.opencv.* packages have been
       copied into this project to enable OpenCV-based image processing.
       Original Apache 2.0 license headers are preserved in the vendored files.
+      The Apache 2.0 license text is included at
+      third_party_licenses/opencv_LICENSE.txt and the copyright notice at
+      third_party_licenses/opencv_COPYRIGHT.txt.
     - Modifications (compared to the upstream OpenCV 4.13.0 release):
       The following files were modified to remove unused classes, methods,
       imports, and native declarations:
@@ -39,7 +42,8 @@ includes third-party components under their respective licenses as noted below.
     - Notes: Built from source for Android (XNNPACK and NNAPI, Java bindings) via
       scripts/build_onnxruntime_android.sh. The resulting native libraries and
       Java JAR are integrated into app/jniLibs and app/libs respectively as part
-      of the required ONNX Runtime support.
+      of the required ONNX Runtime support. The MIT license text is included at
+      third_party_licenses/onnxruntime_LICENSE.txt.
 
 3) Noto Sans CJK (fonts; used for CJK PDF text layer)
     - Project: https://github.com/notofonts/noto-cjk
@@ -54,23 +58,32 @@ includes third-party components under their respective licenses as noted below.
     - Project: https://github.com/tesseract-ocr/tessdata
     - License: Apache License, Version 2.0
     - Notes: Extended to include chi_sim and chi_tra for Chinese OCR where
-      applicable.
+      applicable. The license notice is included at
+      third_party_licenses/tessdata_LICENSE.txt.
 
-5) Noto Sans (fonts; e.g., NotoSans-Regular.ttf)
+5) Tesseract4Android (Android Tesseract wrapper)
+    - Project: https://github.com/adaptech-cz/Tesseract4Android
+    - Version: 4.9.0
+    - License: Apache License, Version 2.0
+    - Notes: Used as a Gradle dependency (cz.adaptech.tesseract4android) to
+      provide Tesseract OCR functionality on Android. The Apache 2.0 license
+      text is included at third_party_licenses/Tesseract4Android_LICENSE.txt.
+
+6) Noto Sans (fonts; e.g., NotoSans-Regular.ttf)
     - Project: https://github.com/notofonts/noto-fonts
     - License: SIL Open Font License 1.1
     - Notes: Distributed under the OFL without modification and without changes
       to Reserved Font Names. When bundled, the OFL notice is included at
       third_party_licenses/OFL.txt.
 
-6) Noto Naskh Arabic (fonts; NotoNaskhArabic-Regular.ttf)
+7) Noto Naskh Arabic (fonts; NotoNaskhArabic-Regular.ttf)
     - Project: https://github.com/notofonts/arabic
     - License: SIL Open Font License 1.1
     - Notes: Used for Arabic and Persian (Farsi) script rendering in PDF text
       layers. Distributed under the OFL without modification. The OFL notice
       is included at third_party_licenses/OFL.txt.
 
-7) FrequencyWords (OCR dictionaries)
+8) FrequencyWords (OCR dictionaries)
     - Project: https://github.com/hermitdave/FrequencyWords
     - License: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
     - Notes: Word frequency dictionaries derived from Wikipedia are used for OCR
@@ -78,7 +91,7 @@ includes third-party components under their respective licenses as noted below.
       languages are included. The license notice is included at
       app/src/main/assets/dictionaries/LICENSE.txt.
 
-8) Training Datasets (not redistributed)
+9) Training Datasets (not redistributed)
 
 This project uses ideas and publicly available datasets for training and
 evaluation purposes only. No datasets, images, labels, or training
@@ -86,14 +99,14 @@ checkpoints/weights are included or redistributed in this repository.
 
 The following datasets were used:
 
-8.1) UVDoc Dataset
+9.1) UVDoc Dataset
      - Project: https://github.com/tanguymagne/UVDoc-Dataset
      - License: MIT License
      - Reference: Floor Verhoeven et al., "Neural Grid-based Document Unwarping"
        (SIGGRAPH Asia 2023)
      - Usage: Pretraining of document geometry and perspective.
 
-8.2) SmartDoc Dataset
+9.2) SmartDoc Dataset
      - Reference: Jean-Christophe Burie et al.,
        "ICDAR 2015 Competition on Smartphone Document Capture and OCR (SmartDoc)"
      - License: Creative Commons Attribution 4.0 International (CC BY 4.0)
@@ -102,7 +115,7 @@ The following datasets were used:
      - Notes: Original images remain the property of their respective authors.
        Attribution is provided here as required by the CC BY 4.0 license.
 
-8.3) Describable Textures Dataset (DTD)
+9.3) Describable Textures Dataset (DTD)
 
      - Project: https://www.robots.ox.ac.uk/~vgg/data/dtd/
      - Reference: M. Cimpoi et al., "Describing Textures in the Wild"
@@ -115,7 +128,7 @@ The following datasets were used:
        or redistributed as part of this repository or application.
        This project does not ship any DTD images or derivatives.
 
-8.4) CORD Dataset (Consolidated Receipt Dataset)
+9.4) CORD Dataset (Consolidated Receipt Dataset)
      - Project: https://github.com/clovaai/cord
      - Reference: Jaewook Kim et al.,
        "CORD: A Consolidated Receipt Dataset for Post-OCR Parsing"
