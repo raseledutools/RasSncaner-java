@@ -84,8 +84,8 @@ mkdir -p "$SRC_DIR"
 cp -a "$ORT_DIR_ORIG/." "$SRC_DIR"
 
 # Use pinned build-android.gradle and settings-android.gradle for reproducible Java/AAR builds
-PINNED_GRADLE="$REPO_DIR/external/onnxtuntime_pinned/build-android.gradle"
-PINNED_SETTINGS="$REPO_DIR/external/onnxtuntime_pinned/settings-android.gradle"
+PINNED_GRADLE="$REPO_DIR/external/onnxruntime_pinned/build-android.gradle"
+PINNED_SETTINGS="$REPO_DIR/external/onnxruntime_pinned/settings-android.gradle"
 if [ -f "$PINNED_GRADLE" ]; then
   cp -f "$PINNED_GRADLE" "$SRC_DIR/java/build-android.gradle"
   echo "Pinned build-android.gradle applied."
@@ -100,7 +100,7 @@ else
 fi
 
 # Use pinned gradle-wrapper.properties for reproducible Gradle version
-PINNED_WRAPPER="$REPO_DIR/external/onnxtuntime_pinned/gradle-wrapper.properties"
+PINNED_WRAPPER="$REPO_DIR/external/onnxruntime_pinned/gradle-wrapper.properties"
 ORT_WRAPPER_PROPS="$SRC_DIR/java/gradle/wrapper/gradle-wrapper.properties"
 if [ -f "$PINNED_WRAPPER" ]; then
   cp -f "$PINNED_WRAPPER" "$ORT_WRAPPER_PROPS"
