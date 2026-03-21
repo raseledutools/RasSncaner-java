@@ -44,6 +44,36 @@ includes third-party components under their respective licenses as noted below.
       Java JAR are integrated into app/jniLibs and app/libs respectively as part
       of the required ONNX Runtime support. The MIT license text is included at
       third_party_licenses/onnxruntime_LICENSE.txt.
+    - Pinned build files (external/onnxruntime_pinned/):
+      Three Gradle build files from the upstream ONNX Runtime repository
+      (java/build-android.gradle, java/settings-android.gradle,
+      java/gradle/wrapper/gradle-wrapper.properties) have been copied and
+      modified to enable building the Android AAR with JDK 21 and to keep
+      versions aligned with the Make a Copy host project. The following
+      changes were made compared to the upstream originals:
+        * build-android.gradle:
+          – Android Gradle Plugin updated from 7.4.2 to 8.12.0 (kept in sync
+            with makeacopy gradle/libs.versions.toml).
+          – compileSdkVersion raised from 34 to 36 (kept in sync with
+            makeacopy app/build.gradle).
+          – Nested `android { lintOptions }` block flattened to top-level
+            `lintOptions` inside the `android` block.
+          – Removed upstream code comments (QNN format notes, version-code
+            format documentation, artifact-id comment, publish-repo comment,
+            AAR header-packaging comment).
+          – Reformatted indentation from tabs to spaces for consistency.
+          – `task.doLast` closure in `whenTaskAdded` wrapped correctly to
+            reference `task.archivePath`.
+          – Added sync-marker comments referencing makeacopy configuration.
+        * settings-android.gradle:
+          – Added `pluginManagement` block with google(), mavenCentral(), and
+            gradlePluginPortal() repositories (required by AGP 8.x).
+          – Added sync-marker comment referencing makeacopy AGP version.
+        * gradle-wrapper.properties:
+          – Gradle distribution updated from 8.7 to 8.13 (kept in sync with
+            makeacopy gradle/wrapper/gradle-wrapper.properties).
+          – SHA-256 checksum updated accordingly.
+          – Added sync-marker comment referencing makeacopy wrapper.
 
 3) Noto Sans CJK (fonts; used for CJK PDF text layer)
     - Project: https://github.com/notofonts/noto-cjk

@@ -182,7 +182,7 @@ All automated builds are handled by a single GitHub Actions workflow:
 The workflow contains two parallel jobs:
 
 **Full build** (`build`):
-- Sets up JDK 17 (Temurin) and installs Android NDK 28.0.13004108
+- Sets up JDK 21 (Temurin) and installs Android NDK 28.0.13004108
 - Pins CMake 3.31.6 and Python 3.11.2 for deterministic native builds
 - Checks out submodules (external/opencv and external/onnxruntime)
 - Builds OpenCV native libraries from source via scripts/build_opencv_android.sh
@@ -193,7 +193,7 @@ The workflow contains two parallel jobs:
 
 **Light build** (`build-light`):
 - Depends on the Full build job and downloads the native libraries (jniLibs and JARs) built from source
-- Sets up JDK 17 only (no native build scripts needed)
+- Sets up JDK 21 only (no native build scripts needed)
 - Builds the Light edition: `./gradlew :app:assembleRelease -Pedition=light`
 - Produces per-ABI APKs named `MakeACopy-Light-vX.Y.Z-<abi>-release.apk`
 

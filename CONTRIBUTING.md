@@ -32,12 +32,12 @@ The project uses two Git submodules:
 - `external/opencv` — OpenCV 4.13.0
 - `external/onnxruntime` — ONNX Runtime v1.24.1
 
-## 2. Install JDK 17
+## 2. Install JDK 21
 
 ### macOS
 
 ```bash
-brew install openjdk@17
+brew install openjdk@21
 ```
 
 Or install [Eclipse Temurin](https://adoptium.net/) manually.
@@ -45,13 +45,13 @@ Or install [Eclipse Temurin](https://adoptium.net/) manually.
 ### Linux (Debian/Ubuntu)
 
 ```bash
-sudo apt-get install -y openjdk-17-jdk
+sudo apt-get install -y openjdk-21-jdk
 ```
 
 ### Linux (Fedora)
 
 ```bash
-sudo dnf install -y java-17-openjdk-devel
+sudo dnf install -y java-21-openjdk-devel
 ```
 
 Verify:
@@ -270,7 +270,7 @@ chmod +x gradlew
 2. Let Gradle sync complete.
 3. Ensure **annotation processing** is enabled (required for Lombok and Room):
    - **Settings → Build → Compiler → Annotation Processors → Enable annotation processing**
-4. The project uses **Java 17** — make sure your IDE JDK is set accordingly.
+4. The project uses **Java 21** — make sure your IDE JDK is set accordingly.
 
 ### Lombok
 
