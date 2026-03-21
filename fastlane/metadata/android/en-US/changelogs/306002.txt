@@ -1,0 +1,5 @@
+MakeACopy 3.6.0
+* Build: Migrated from JDK 17 to JDK 21 for improved performance and long-term support
+* Build: Updated Android Gradle Plugin, Gradle wrapper, and compileSdk to latest versions
+* Build: ONNX Runtime build files pinned and adapted for JDK 21 compatibility
+* Fully offline, no cloud or tracking
