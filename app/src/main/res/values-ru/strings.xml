@@ -394,6 +394,7 @@
 
     <!-- Page format selection (PDF export) -->
     <string name="page_format_label">Размер страницы</string>
+    <string name="dpi_settings_label">Настройки DPI</string>
     <string name="page_format_fit">По размеру изображения (рекомендуется)</string>
     <string name="page_format_a4">A4</string>
     <string name="page_format_letter">US Letter</string>
@@ -430,4 +431,5 @@
     <string name="inbox_filename_date_scan">Дата + Scan (2026-03-04_scan)</string>
     <string name="inbox_filename_date_time_scan">Дата + время + Scan (2026-03-04_143022_scan)</string>
     <string name="inbox_filename_date_only">Только дата (2026-03-04)</string>
+    <string name="pdf_bw_mode_none">Оригинал (без фильтра)</string>
 </resources>

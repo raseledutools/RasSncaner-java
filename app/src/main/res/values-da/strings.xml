@@ -390,6 +390,7 @@
 
     <!-- Page format selection (PDF export) -->
     <string name="page_format_label">Sidestørrelse</string>
+    <string name="dpi_settings_label">DPI-indstillinger</string>
     <string name="page_format_fit">Tilpas til billede (anbefalet)</string>
     <string name="page_format_a4">A4</string>
     <string name="page_format_letter">US Letter</string>
@@ -426,4 +427,5 @@
     <string name="inbox_filename_date_scan">Dato + Scan (2026-03-04_scan)</string>
     <string name="inbox_filename_date_time_scan">Dato + tid + Scan (2026-03-04_143022_scan)</string>
     <string name="inbox_filename_date_only">Kun dato (2026-03-04)</string>
+    <string name="pdf_bw_mode_none">Original (ingen filter)</string>
 </resources>

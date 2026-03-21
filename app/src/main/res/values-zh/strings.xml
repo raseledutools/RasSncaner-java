@@ -371,6 +371,7 @@
 
     <!-- Page format selection (PDF export) -->
     <string name="page_format_label">页面大小</string>
+    <string name="dpi_settings_label">DPI 设置</string>
     <string name="page_format_fit">适应图像（推荐）</string>
     <string name="page_format_a4">A4</string>
     <string name="page_format_letter">US Letter</string>
@@ -407,4 +408,5 @@
     <string name="inbox_filename_date_scan">日期 + Scan (2026-03-04_scan)</string>
     <string name="inbox_filename_date_time_scan">日期 + 时间 + Scan (2026-03-04_143022_scan)</string>
     <string name="inbox_filename_date_only">仅日期 (2026-03-04)</string>
+    <string name="pdf_bw_mode_none">原始（无滤镜）</string>
 </resources>

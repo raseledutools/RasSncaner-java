@@ -388,6 +388,7 @@
 
     <!-- Page format selection (PDF export) -->
     <string name="page_format_label">اندازه صفحه</string>
+    <string name="dpi_settings_label">تنظیمات DPI</string>
     <string name="page_format_fit">تناسب با تصویر (پیشنهادی)</string>
     <string name="page_format_a4">A4</string>
     <string name="page_format_letter">US Letter</string>
@@ -424,4 +425,5 @@
     <string name="inbox_filename_date_scan">تاریخ + اسکن (2026-03-04_scan)</string>
     <string name="inbox_filename_date_time_scan">تاریخ + زمان + اسکن (2026-03-04_143022_scan)</string>
     <string name="inbox_filename_date_only">فقط تاریخ (2026-03-04)</string>
+    <string name="pdf_bw_mode_none">اصلی (بدون فیلتر)</string>
 </resources>

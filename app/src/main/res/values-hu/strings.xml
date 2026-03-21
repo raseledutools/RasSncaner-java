@@ -394,6 +394,7 @@
 
     <!-- Page format selection (PDF export) -->
     <string name="page_format_label">Oldalméret</string>
+    <string name="dpi_settings_label">DPI beállítások</string>
     <string name="page_format_fit">Képhez igazítás (ajánlott)</string>
     <string name="page_format_a4">A4</string>
     <string name="page_format_letter">US Letter</string>
@@ -430,4 +431,5 @@
     <string name="inbox_filename_date_scan">Dátum + Scan (2026-03-04_scan)</string>
     <string name="inbox_filename_date_time_scan">Dátum + idő + Scan (2026-03-04_143022_scan)</string>
     <string name="inbox_filename_date_only">Csak dátum (2026-03-04)</string>
+    <string name="pdf_bw_mode_none">Eredeti (szűrő nélkül)</string>
 </resources>

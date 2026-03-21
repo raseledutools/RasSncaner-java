@@ -392,6 +392,7 @@
 
     <!-- Page format selection (PDF export) -->
     <string name="page_format_label">Velikost stránky</string>
+    <string name="dpi_settings_label">Nastavení DPI</string>
     <string name="page_format_fit">Přizpůsobit obrázku (doporučeno)</string>
     <string name="page_format_a4">A4</string>
     <string name="page_format_letter">US Letter</string>
@@ -428,4 +429,5 @@
     <string name="inbox_filename_date_scan">Datum + Scan (2026-03-04_scan)</string>
     <string name="inbox_filename_date_time_scan">Datum + čas + Scan (2026-03-04_143022_scan)</string>
     <string name="inbox_filename_date_only">Pouze datum (2026-03-04)</string>
+    <string name="pdf_bw_mode_none">Originál (bez filtru)</string>
 </resources>
