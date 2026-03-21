@@ -49,36 +49,43 @@
                 android:layout_height="wrap_content"
                 android:text="@string/pdf_quality_title" />
 
-            <LinearLayout
+            <RadioGroup
             android:id="@+id/dialog_pdf_bw_mode_group"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-                <CheckBox
+                <RadioButton
+                    android:id="@+id/dialog_pdf_bw_none"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="@string/pdf_bw_mode_none" />
+
+                <RadioButton
                     android:id="@+id/dialog_pdf_grayscale"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/convert_to_grayscale" />
 
-                <CheckBox
+                <RadioButton
                     android:id="@+id/dialog_pdf_bw_robust"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/pdf_bw_mode_robust" />
 
-                <CheckBox
+                <RadioButton
                     android:id="@+id/dialog_pdf_bw_classic"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/pdf_bw_mode_classic" />
 
-                <CheckBox
+                <RadioButton
                     android:id="@+id/dialog_pdf_ocr_robust"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/pdf_bw_mode_ocr_robust" />
-            </LinearLayout>
+            </RadioGroup>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -116,6 +123,12 @@
                     android:layout_height="wrap_content"
                     android:text="@string/page_format_legal" />
             </RadioGroup>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:text="@string/dpi_settings_label" />
 
             <RadioGroup
                 android:id="@+id/dialog_pdf_preset_group"
@@ -241,18 +254,22 @@
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/dialog_button_inbox_select"
                     style="@style/Widget.MakeACopy.Button.Outlined"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
                     android:layout_height="wrap_content"
                     android:text="@string/inbox_select_folder"
-                    android:textSize="12sp" />
+                    android:ellipsize="end"
+                    android:maxLines="2" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/dialog_button_inbox_clear"
                     style="@style/Widget.MakeACopy.Button.Outlined"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
                     android:layout_height="wrap_content"
                     android:text="@string/inbox_clear"
-                    android:textSize="12sp" />
+                    android:ellipsize="end"
+                    android:maxLines="2" />
             </LinearLayout>
 
             <TextView

@@ -130,10 +130,12 @@ public class ExportOptionsDialogFragment extends DialogFragment {
     RadioButton rbPageLetter = view.findViewById(R.id.dialog_radio_page_letter);
     RadioButton rbPageLegal = view.findViewById(R.id.dialog_radio_page_legal);
 
-    CheckBox rbPdfGray = view.findViewById(R.id.dialog_pdf_grayscale);
-    CheckBox rbPdfBwRobust = view.findViewById(R.id.dialog_pdf_bw_robust);
-    CheckBox rbPdfBwClassic = view.findViewById(R.id.dialog_pdf_bw_classic);
-    CheckBox rbPdfOcrRobust = view.findViewById(R.id.dialog_pdf_ocr_robust);
+    RadioGroup pdfBwModeGroup = view.findViewById(R.id.dialog_pdf_bw_mode_group);
+    RadioButton rbPdfBwNone = view.findViewById(R.id.dialog_pdf_bw_none);
+    RadioButton rbPdfGray = view.findViewById(R.id.dialog_pdf_grayscale);
+    RadioButton rbPdfBwRobust = view.findViewById(R.id.dialog_pdf_bw_robust);
+    RadioButton rbPdfBwClassic = view.findViewById(R.id.dialog_pdf_bw_classic);
+    RadioButton rbPdfOcrRobust = view.findViewById(R.id.dialog_pdf_ocr_robust);
 
     SharedPreferences prefs = ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE);
     boolean includeOcr = prefs.getBoolean("include_ocr", false);
@@ -182,11 +184,12 @@ public class ExportOptionsDialogFragment extends DialogFragment {
     else if (jpegMode == JpegExportOptions.Mode.BW_ROBUST) rbJpegBwRobust.setChecked(true);
     else if (jpegMode == JpegExportOptions.Mode.OCR_ROBUST) rbJpegOcrRobust.setChecked(true);
 
-    // Initialize PDF mode radios (none selected if no saved value)
+    // Initialize PDF mode radios ("none" selected if no saved value)
     if ("GRAYSCALE".equalsIgnoreCase(pdfBwModeSaved)) rbPdfGray.setChecked(true);
     else if ("CLASSIC".equalsIgnoreCase(pdfBwModeSaved)) rbPdfBwClassic.setChecked(true);
     else if ("ROBUST".equalsIgnoreCase(pdfBwModeSaved)) rbPdfBwRobust.setChecked(true);
     else if ("OCR_ROBUST".equalsIgnoreCase(pdfBwModeSaved)) rbPdfOcrRobust.setChecked(true);
+    else rbPdfBwNone.setChecked(true);
 
     // ── Inbox Mode UI ──
     View inboxGroup = view.findViewById(R.id.dialog_inbox_group);
@@ -280,22 +283,7 @@ public class ExportOptionsDialogFragment extends DialogFragment {
           });
     }
 
-    // PDF color mode via CheckBoxes: allow none, but enforce mutual exclusivity when one is checked
-    View.OnClickListener pdfModeClick =
-        v -> {
-          if (!(v instanceof CheckBox clicked)) return;
-          boolean nowChecked = clicked.isChecked();
-          if (nowChecked) {
-            if (clicked != rbPdfGray) rbPdfGray.setChecked(false);
-            if (clicked != rbPdfBwRobust) rbPdfBwRobust.setChecked(false);
-            if (clicked != rbPdfBwClassic) rbPdfBwClassic.setChecked(false);
-            if (clicked != rbPdfOcrRobust) rbPdfOcrRobust.setChecked(false);
-          }
-        };
-    rbPdfGray.setOnClickListener(pdfModeClick);
-    rbPdfBwRobust.setOnClickListener(pdfModeClick);
-    rbPdfBwClassic.setOnClickListener(pdfModeClick);
-    rbPdfOcrRobust.setOnClickListener(pdfModeClick);
+    // PDF color mode uses RadioGroup; mutual exclusivity is handled by the group.
 
     // JPEG modes use RadioGroup; mutual exclusivity is handled by the group.
 
@@ -321,12 +309,13 @@ public class ExportOptionsDialogFragment extends DialogFragment {
                   else if (jpegCheckedId == rbJpegOcrRobust.getId())
                     mode = JpegExportOptions.Mode.OCR_ROBUST;
 
-                  // determine PDF color mode (null = none selected)
+                  // determine PDF color mode from RadioGroup (null = none/original)
                   String pdfBwMode = null;
-                  if (rbPdfGray.isChecked()) pdfBwMode = "GRAYSCALE";
-                  else if (rbPdfBwClassic.isChecked()) pdfBwMode = "CLASSIC";
-                  else if (rbPdfBwRobust.isChecked()) pdfBwMode = "ROBUST";
-                  else if (rbPdfOcrRobust.isChecked()) pdfBwMode = "OCR_ROBUST";
+                  int pdfBwCheckedId = pdfBwModeGroup.getCheckedRadioButtonId();
+                  if (pdfBwCheckedId == rbPdfGray.getId()) pdfBwMode = "GRAYSCALE";
+                  else if (pdfBwCheckedId == rbPdfBwClassic.getId()) pdfBwMode = "CLASSIC";
+                  else if (pdfBwCheckedId == rbPdfBwRobust.getId()) pdfBwMode = "ROBUST";
+                  else if (pdfBwCheckedId == rbPdfOcrRobust.getId()) pdfBwMode = "OCR_ROBUST";
 
                   // determine pdf preset
                   PdfQualityPreset sel = PdfQualityPreset.STANDARD;
