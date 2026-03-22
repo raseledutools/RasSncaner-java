@@ -36,6 +36,7 @@ spotless = "6.25.0"
 errorprone = "4.1.0"
 errorproneCore = "2.31.0"
 hilt = "2.56.2"
+licenseReport = "2.9"
 
 [libraries]
 accessibility-test-framework = { module = "com.google.android.apps.common.testing.accessibility.framework:accessibility-test-framework", version.ref = "accessibilityTestFramework" }
@@ -96,4 +97,5 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 errorprone = { id = "net.ltgt.errorprone", version.ref = "errorprone" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+license-report = { id = "com.github.jk1.dependency-license-report", version.ref = "licenseReport" }
 

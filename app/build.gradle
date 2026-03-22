@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.spotless)
     alias(libs.plugins.errorprone)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.license.report)
     id 'jacoco'
 }
 
