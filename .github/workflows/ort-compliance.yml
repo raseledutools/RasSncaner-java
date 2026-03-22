@@ -28,7 +28,8 @@ jobs:
             | jq -r '.assets[] | select(.name | test("^ort-.*\\.tgz$")) | .browser_download_url')
           curl -L -o ort.tgz "$ORT_URL"
           tar -xzf ort.tgz
-          sudo mv ort-*/bin/ort /usr/local/bin/ort
+          sudo mv ort-*/ /opt/ort
+          sudo ln -s /opt/ort/bin/ort /usr/local/bin/ort
 
       - name: Run ORT
         run: |
