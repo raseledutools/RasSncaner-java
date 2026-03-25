@@ -12,7 +12,8 @@ ort:
     config:
       ScanCode:
         options:
-          commandLineNonConfig: "--processes, 4"
+          commandLine: "--copyright, --license, --info, --strip-root, --timeout, 60, --license-references"
+          commandLineNonConfig: "--processes, 4, --verbose"
     ignorePatterns:
       # ORT defaults (must be re-listed when overriding)
       - "**/*.ort.yml"
