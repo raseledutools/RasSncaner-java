@@ -120,6 +120,31 @@ excludes:
       reason: "DATA_FILE_OF"
       comment: "Image files, typically not license-relevant."
 
+    # ── Binary / large data files (not source code) ──
+    - pattern: "**/*.so"
+      reason: "DATA_FILE_OF"
+      comment: "Prebuilt native shared libraries. License info comes from source repos, not binaries."
+
+    - pattern: "**/*.ort"
+      reason: "DATA_FILE_OF"
+      comment: "ONNX Runtime model files (binary ML models)."
+
+    - pattern: "**/*.traineddata"
+      reason: "DATA_FILE_OF"
+      comment: "Tesseract OCR trained data files (binary)."
+
+    - pattern: "**/*.ttf"
+      reason: "DATA_FILE_OF"
+      comment: "Font files (binary)."
+
+    - pattern: "**/*.otf"
+      reason: "DATA_FILE_OF"
+      comment: "Font files (binary)."
+
+    - pattern: "**/*.gz"
+      reason: "DATA_FILE_OF"
+      comment: "Compressed data files (e.g. dictionary files)."
+
     # ── ScanCode output ──
     - pattern: "scancode_result.json"
       reason: "BUILD_TOOL_OF"

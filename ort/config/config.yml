@@ -13,6 +13,32 @@ ort:
       ScanCode:
         options:
           commandLineNonConfig: "--processes, 4"
+    ignorePatterns:
+      # ORT defaults (must be re-listed when overriding)
+      - "**/*.ort.yml"
+      - "**/*.spdx.yml"
+      - "**/*.spdx.yaml"
+      - "**/*.spdx.json"
+      - "**/META-INF/DEPENDENCIES"
+      - "**/META-INF/DEPENDENCIES.txt"
+      - "**/META-INF/NOTICE"
+      - "**/META-INF/NOTICE.txt"
+      # Binary files — not source code, scanning wastes time
+      - "**/*.so"
+      - "**/*.ort"
+      - "**/*.traineddata"
+      - "**/*.ttf"
+      - "**/*.otf"
+      - "**/*.gz"
+      - "**/*.png"
+      - "**/*.jpg"
+      - "**/*.jpeg"
+      - "**/*.webp"
+      - "**/*.pdf"
+      - "**/*.jar"
+      - "**/*.aar"
+      - "**/*.dex"
+      - "**/*.apk"
   packageConfigurationProviders:
     - type: Dir
       options:
