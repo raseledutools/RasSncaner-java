@@ -4,6 +4,10 @@ on:
   push:
     tags: [ 'langpack-latin-best-v*' ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
