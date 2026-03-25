@@ -351,7 +351,8 @@ if (isLight) {
 
 spotless {
     java {
-        target("src/*/java/**/*.java")
+        target("src/main/java/de/schliweb/**/*.java")
+        licenseHeaderFile(rootProject.file("HEADER"))
         googleJavaFormat("1.17.0")
         removeUnusedImports()
         trimTrailingWhitespace()
