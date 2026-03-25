@@ -22,7 +22,7 @@ ort --info --stacktrace --config "${ROOT_DIR}/ort/config/config.yml" \
   -i "${OUT_DIR}/analyzer/analyzer-result.yml" \
   -o "${OUT_DIR}/scan" \
   --skip-excluded \
-  --package-types=PROJECT \
+#  --package-types=PROJECT \
   || true
 
 if [ ! -f "${OUT_DIR}/scan/scan-result.yml" ]; then
