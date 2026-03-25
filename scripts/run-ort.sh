@@ -8,16 +8,6 @@ echo "==> Cleaning previous ORT output"
 rm -rf "${OUT_DIR}"
 mkdir -p "${OUT_DIR}"
 
-# Remove submodule references to prevent ORT from cloning large external repos
-# (opencv ~211MB, onnxruntime ~708MB+) during provenance resolution.
-# The external/ directories are excluded in .ort.yml and not needed for analysis.
-if [ -f "${ROOT_DIR}/.gitmodules" ]; then
-  echo "==> Temporarily removing .gitmodules to skip submodule provenance resolution"
-  cp "${ROOT_DIR}/.gitmodules" "${ROOT_DIR}/.gitmodules.ort-backup"
-  rm "${ROOT_DIR}/.gitmodules"
-  trap 'mv "${ROOT_DIR}/.gitmodules.ort-backup" "${ROOT_DIR}/.gitmodules" 2>/dev/null' EXIT
-fi
-
 echo "==> Running ORT analyze"
 ort --info --stacktrace --config "${ROOT_DIR}/ort/config/config.yml" \
   analyze \

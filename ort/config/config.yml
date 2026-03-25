@@ -24,6 +24,10 @@ ort:
       - "**/META-INF/DEPENDENCIES.txt"
       - "**/META-INF/NOTICE"
       - "**/META-INF/NOTICE.txt"
+      # Submodule directories — prevent ORT from cloning large external repos
+      # (onnxruntime ~708MB+, opencv ~211MB) during nested provenance resolution
+      - "external/onnxruntime/**"
+      - "external/opencv/**"
       # Binary files — not source code, scanning wastes time
       - "**/*.so"
       - "**/*.ort"
