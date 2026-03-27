@@ -642,6 +642,9 @@ public class OCRFragment extends Fragment {
       case "ara":
         two = "ar";
         break;
+      case "hin":
+        two = "hi";
+        break;
       case "tur":
         two = "tr";
         break;

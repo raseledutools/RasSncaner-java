@@ -95,9 +95,27 @@ public class OCRWhitelist {
   public static final String RU =
       "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя" + COMMON_BASE;
 
+  // Hindi (Devanagari: vowels, consonants, dependent vowel signs, Anusvara, Visarga, Chandrabindu,
+  // Nukta, Virama/Halant, common conjuncts, Devanagari digits, Danda/Double Danda)
+  private static final String DEVANAGARI_BASE =
+      "\u0901\u0902\u0903" // Chandrabindu, Anusvara, Visarga
+          + "\u0905\u0906\u0907\u0908\u0909\u090A\u090B\u090C\u090D\u090E\u090F\u0910\u0911\u0912\u0913\u0914" // independent vowels
+          + "\u0915\u0916\u0917\u0918\u0919\u091A\u091B\u091C\u091D\u091E" // consonants ka-nya
+          + "\u091F\u0920\u0921\u0922\u0923\u0924\u0925\u0926\u0927\u0928" // consonants tta-na
+          + "\u0929\u092A\u092B\u092C\u092D\u092E\u092F\u0930\u0931\u0932" // consonants nna-la
+          + "\u0933\u0934\u0935\u0936\u0937\u0938\u0939" // consonants lla-ha
+          + "\u093C" // Nukta
+          + "\u093E\u093F\u0940\u0941\u0942\u0943\u0944\u0945\u0946\u0947\u0948\u0949\u094A\u094B\u094C" // dependent vowel signs
+          + "\u094D" // Virama (Halant)
+          + "\u0950" // OM
+          + "\u0964\u0965" // Danda, Double Danda
+          + "\u0966\u0967\u0968\u0969\u096A\u096B\u096C\u096D\u096E\u096F"; // Devanagari digits 0-9
+
+  public static final String HI = DEVANAGARI_BASE + COMMON_BASE;
+
   // Default: Superset
   public static final String DEFAULT =
-      (DE + EN + ES + FR + IT + PT + NL + PL + CS + SK + HU + RO + DA + NO + SV + TR + RU);
+      (DE + EN + ES + FR + IT + PT + NL + PL + CS + SK + HU + RO + DA + NO + SV + TR + RU + HI);
 
   /**
    * Returns a predefined whitelist of allowed characters for a given language code. The whitelist
@@ -128,6 +146,7 @@ public class OCRWhitelist {
       case "swe" -> SV;
       case "tur" -> TR;
       case "rus" -> RU;
+      case "hin" -> HI;
       default -> DEFAULT;
     };
   }

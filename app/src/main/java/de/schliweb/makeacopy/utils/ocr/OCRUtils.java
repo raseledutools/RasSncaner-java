@@ -90,6 +90,8 @@ public class OCRUtils {
         return "fas";
       } else if ("ar".equalsIgnoreCase(sys)) {
         return "ara";
+      } else if ("hi".equalsIgnoreCase(sys)) {
+        return "hin";
       } else if ("tr".equalsIgnoreCase(sys)) {
         return "tur";
       } else {
@@ -130,6 +132,7 @@ public class OCRUtils {
       case "no", "nb", "nn" -> "nor";
       case "fa" -> "fas";
       case "ar" -> "ara";
+      case "hi" -> "hin";
       case "tr" -> "tur";
       case "zh" -> {
         // Map Chinese to Simplified or Traditional based on region, default to Simplified
@@ -157,13 +160,13 @@ public class OCRUtils {
    *     include "eng" (English), "deu" (German), "fra" (French), "ita" (Italian), "spa" (Spanish),
    *     "por" (Portuguese), "nld" (Dutch), "pol" (Polish), "ces" (Czech), "slk" (Slovak), "hun"
    *     (Hungarian), "ron" (Romanian), "dan" (Danish), "nor" (Norwegian), "swe" (Swedish), "rus"
-   *     (Russian), "tha" (Thai), "fas" (Persian/Farsi), "ara" (Arabic), "chi_sim" (Simplified
-   *     Chinese), and "chi_tra" (Traditional Chinese).
+   *     (Russian), "tha" (Thai), "fas" (Persian/Farsi), "ara" (Arabic), "hin" (Hindi), "tur"
+   *     (Turkish), "chi_sim" (Simplified Chinese), and "chi_tra" (Traditional Chinese).
    */
   public static String[] getLanguages() {
     return new String[] {
       "eng", "deu", "fra", "ita", "spa", "por", "nld", "pol", "ces", "slk", "hun", "ron", "dan",
-      "nor", "swe", "rus", "tha", "fas", "ara", "tur", "chi_sim", "chi_tra"
+      "nor", "swe", "rus", "tha", "fas", "ara", "hin", "tur", "chi_sim", "chi_tra"
     };
   }
 }
