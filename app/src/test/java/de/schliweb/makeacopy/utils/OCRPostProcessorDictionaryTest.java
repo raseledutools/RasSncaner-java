@@ -529,9 +529,10 @@ public class OCRPostProcessorDictionaryTest {
     assertTrue(DictionaryManager.isWordBasedLanguage("swe")); // Swedish
     assertTrue(DictionaryManager.isWordBasedLanguage("rus")); // Russian
 
-    // Persian and Arabic should be word-based (they use spaces between words)
+    // Persian, Arabic, and Hindi should be word-based (they use spaces between words)
     assertTrue(DictionaryManager.isWordBasedLanguage("fas")); // Persian
     assertTrue(DictionaryManager.isWordBasedLanguage("ara")); // Arabic
+    assertTrue(DictionaryManager.isWordBasedLanguage("hin")); // Hindi
 
     // CJK and Thai should NOT be word-based
     assertFalse(DictionaryManager.isWordBasedLanguage("chi_sim")); // Chinese Simplified

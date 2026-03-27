@@ -50,6 +50,11 @@ public class DictionaryManagerStaticTest {
   }
 
   @Test
+  public void isWordBasedLanguage_hin_returnsTrue() {
+    assertTrue(DictionaryManager.isWordBasedLanguage("hin"));
+  }
+
+  @Test
   public void isWordBasedLanguage_multiLang_anyWordBased_returnsTrue() {
     // "fas+eng" → eng is word-based → true
     assertTrue(DictionaryManager.isWordBasedLanguage("fas+eng"));

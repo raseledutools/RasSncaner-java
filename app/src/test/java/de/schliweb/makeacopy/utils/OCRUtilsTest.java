@@ -116,6 +116,11 @@ public class OCRUtilsTest {
   }
 
   @Test
+  public void mapSystemLanguageToTesseract_hindi_returnsHin() {
+    assertEquals("hin", OCRUtils.mapSystemLanguageToTesseract("hi"));
+  }
+
+  @Test
   public void mapSystemLanguageToTesseract_chineseDefault_returnsChiSim() {
     // Default Chinese should be Simplified
     assertEquals("chi_sim", OCRUtils.mapSystemLanguageToTesseract("zh"));
@@ -165,6 +170,13 @@ public class OCRUtilsTest {
 
     assertTrue("Should contain Arabic", containsLanguage(languages, "ara"));
     assertTrue("Should contain Persian/Farsi", containsLanguage(languages, "fas"));
+  }
+
+  @Test
+  public void getLanguages_containsIndicLanguages() {
+    String[] languages = OCRUtils.getLanguages();
+
+    assertTrue("Should contain Hindi", containsLanguage(languages, "hin"));
   }
 
   @Test

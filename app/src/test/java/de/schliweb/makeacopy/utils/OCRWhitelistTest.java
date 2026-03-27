@@ -224,6 +224,12 @@ public class OCRWhitelistTest {
     assertEquals(OCRWhitelist.DEFAULT, whitelist);
   }
 
+  @Test
+  public void getWhitelistForLanguage_hindi_returnsHI() {
+    String whitelist = OCRWhitelist.getWhitelistForLanguage("hin");
+    assertEquals(OCRWhitelist.HI, whitelist);
+  }
+
   // ==================== All Supported Languages Tests ====================
 
   @Test
