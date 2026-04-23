@@ -13,8 +13,10 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.provider.DocumentsContract;
 import android.provider.OpenableColumns;
 import android.util.Log;
+import androidx.annotation.NonNull;
 import lombok.experimental.UtilityClass;
 
 /**
@@ -192,5 +194,59 @@ public class FileUtils {
       // Best-effort; failure is non-critical
     }
     return null;
+  }
+
+  /**
+   * Checks whether a given display name is missing the expected file extension (case-insensitive).
+   *
+   * @param displayName The current display name of the file.
+   * @param expectedExtension The expected extension including the dot (e.g. {@code ".pdf"}).
+   * @return {@code true} if the display name is non-null and does not end with the expected
+   *     extension, {@code false} otherwise.
+   */
+  public static boolean needsExtension(String displayName, String expectedExtension) {
+    if (displayName == null || expectedExtension == null) return false;
+    return !displayName
+        .toLowerCase(java.util.Locale.ROOT)
+        .endsWith(expectedExtension.toLowerCase(java.util.Locale.ROOT));
+  }
+
+  /**
+   * Ensures that a SAF document URI has the expected file extension. Some document providers (e.g.
+   * Nextcloud) may strip the extension from the display name when creating a file via SAF. This
+   * method checks the current display name and, if the expected extension is missing, attempts to
+   * rename the document to include it.
+   *
+   * @param context The application context.
+   * @param uri The URI of the document to check.
+   * @param expectedExtension The expected extension including the dot (e.g. {@code ".pdf"}).
+   * @return The (possibly updated) URI after renaming, or the original URI if no rename was needed
+   *     or the rename failed.
+   */
+  @NonNull
+  public static Uri ensureExtension(
+      @NonNull Context context, @NonNull Uri uri, @NonNull String expectedExtension) {
+    try {
+      String displayName = getDisplayNameFromUri(context, uri);
+      if (displayName != null && needsExtension(displayName, expectedExtension)) {
+        Log.d(
+            TAG,
+            "ensureExtension: display name '"
+                + displayName
+                + "' missing extension '"
+                + expectedExtension
+                + "', attempting rename");
+        String newName = displayName + expectedExtension;
+        Uri renamed = DocumentsContract.renameDocument(context.getContentResolver(), uri, newName);
+        if (renamed != null) {
+          Log.d(TAG, "ensureExtension: renamed to " + renamed);
+          return renamed;
+        }
+        Log.w(TAG, "ensureExtension: renameDocument returned null");
+      }
+    } catch (Throwable t) {
+      Log.w(TAG, "ensureExtension: best-effort rename failed", t);
+    }
+    return uri;
   }
 }

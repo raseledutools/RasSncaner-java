@@ -592,12 +592,15 @@ public class ExportFragment extends Fragment {
             uri -> {
               Log.d(TAG, "createDocumentLauncher: Document creation result received");
               if (uri != null) {
+                Uri safeUri = FileUtils.ensureExtension(requireContext(), uri, ".pdf");
                 Uri folderHint =
-                    de.schliweb.makeacopy.utils.infra.DocumentUriUtils.deriveParentDocumentUri(uri);
+                    de.schliweb.makeacopy.utils.infra.DocumentUriUtils.deriveParentDocumentUri(
+                        safeUri);
                 ExportPrefsHelper.setLastExportUri(
-                    requireContext(), folderHint != null ? folderHint.toString() : uri.toString());
-                String displayName = FileUtils.getDisplayNameFromUri(requireContext(), uri);
-                exportViewModel.setSelectedFileLocation(uri);
+                    requireContext(),
+                    folderHint != null ? folderHint.toString() : safeUri.toString());
+                String displayName = FileUtils.getDisplayNameFromUri(requireContext(), safeUri);
+                exportViewModel.setSelectedFileLocation(safeUri);
                 exportViewModel.setSelectedFileLocationName(displayName);
                 lastExportedPdfName = displayName;
                 performExport();
@@ -611,13 +614,16 @@ public class ExportFragment extends Fragment {
             new CreateDocumentWithInitialUri("text/plain"),
             uri -> {
               if (uri != null) {
+                Uri safeUri = FileUtils.ensureExtension(requireContext(), uri, ".txt");
                 Uri folderHint =
-                    de.schliweb.makeacopy.utils.infra.DocumentUriUtils.deriveParentDocumentUri(uri);
+                    de.schliweb.makeacopy.utils.infra.DocumentUriUtils.deriveParentDocumentUri(
+                        safeUri);
                 ExportPrefsHelper.setLastExportUri(
-                    requireContext(), folderHint != null ? folderHint.toString() : uri.toString());
-                String displayName = FileUtils.getDisplayNameFromUri(requireContext(), uri);
+                    requireContext(),
+                    folderHint != null ? folderHint.toString() : safeUri.toString());
+                String displayName = FileUtils.getDisplayNameFromUri(requireContext(), safeUri);
                 Log.d(TAG, "createTxtDocumentLauncher: Display name from URI: " + displayName);
-                exportOcrTextToTxt(uri);
+                exportOcrTextToTxt(safeUri);
               } else {
                 Log.d(TAG, "createTxtDocumentLauncher: User cancelled TXT document creation");
               }
@@ -629,12 +635,15 @@ public class ExportFragment extends Fragment {
             uri -> {
               Log.d(TAG, "createJpegDocumentLauncher: JPEG creation result received");
               if (uri != null) {
+                Uri safeUri = FileUtils.ensureExtension(requireContext(), uri, ".jpg");
                 Uri folderHint =
-                    de.schliweb.makeacopy.utils.infra.DocumentUriUtils.deriveParentDocumentUri(uri);
+                    de.schliweb.makeacopy.utils.infra.DocumentUriUtils.deriveParentDocumentUri(
+                        safeUri);
                 ExportPrefsHelper.setLastExportUri(
-                    requireContext(), folderHint != null ? folderHint.toString() : uri.toString());
-                String displayName = FileUtils.getDisplayNameFromUri(requireContext(), uri);
-                exportViewModel.setSelectedFileLocation(uri);
+                    requireContext(),
+                    folderHint != null ? folderHint.toString() : safeUri.toString());
+                String displayName = FileUtils.getDisplayNameFromUri(requireContext(), safeUri);
+                exportViewModel.setSelectedFileLocation(safeUri);
                 exportViewModel.setSelectedFileLocationName(displayName);
                 performJpegExport();
               } else {
@@ -647,12 +656,15 @@ public class ExportFragment extends Fragment {
             uri -> {
               Log.d(TAG, "createZipDocumentLauncher: ZIP creation result received");
               if (uri != null) {
+                Uri safeUri = FileUtils.ensureExtension(requireContext(), uri, ".zip");
                 Uri folderHint =
-                    de.schliweb.makeacopy.utils.infra.DocumentUriUtils.deriveParentDocumentUri(uri);
+                    de.schliweb.makeacopy.utils.infra.DocumentUriUtils.deriveParentDocumentUri(
+                        safeUri);
                 ExportPrefsHelper.setLastExportUri(
-                    requireContext(), folderHint != null ? folderHint.toString() : uri.toString());
-                String displayName = FileUtils.getDisplayNameFromUri(requireContext(), uri);
-                exportViewModel.setSelectedFileLocation(uri);
+                    requireContext(),
+                    folderHint != null ? folderHint.toString() : safeUri.toString());
+                String displayName = FileUtils.getDisplayNameFromUri(requireContext(), safeUri);
+                exportViewModel.setSelectedFileLocation(safeUri);
                 exportViewModel.setSelectedFileLocationName(displayName);
                 performJpegZipExport();
               } else {
@@ -809,6 +821,7 @@ public class ExportFragment extends Fragment {
                     InboxExporter.createFileInInbox(
                         ctx, inboxTreeUri, mimeType, baseName, extension);
                 if (fileUri != null) {
+                  fileUri = FileUtils.ensureExtension(ctx, fileUri, extension);
                   String displayName =
                       de.schliweb.makeacopy.utils.infra.FileUtils.getDisplayNameFromUri(
                           ctx, fileUri);
@@ -1785,6 +1798,7 @@ public class ExportFragment extends Fragment {
     }
     Uri txtUri = InboxExporter.createFileInInbox(ctx, inboxTreeUri, "text/plain", baseName, ".txt");
     if (txtUri != null) {
+      txtUri = FileUtils.ensureExtension(ctx, txtUri, ".txt");
       exportOcrTextToTxt(txtUri);
     } else {
       Log.w(TAG, "exportTxtToInbox: failed to create TXT file in inbox");
