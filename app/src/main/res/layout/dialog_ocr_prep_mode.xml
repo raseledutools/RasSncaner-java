@@ -27,7 +27,8 @@
                 android:id="@+id/rbtn_mode_quick"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/ocr_mode_quick" />
+                android:text="@string/ocr_mode_quick"
+                android:visibility="gone" />
 
             <RadioButton
                 android:id="@+id/rbtn_mode_robust"

@@ -53,14 +53,24 @@ public final class OcrJsonWords {
         float bottom = top + height;
         RectF box = new RectF(left, top, right, bottom);
         float conf = w.c; // already 0..1 per schema; PdfCreator logic is robust
-        out.add(new RecognizedWord(text, box, conf));
+        RecognizedWord rw = new RecognizedWord(text, box, conf);
+        rw.setBlockId(w.k);
+        rw.setLineId(w.l);
+        out.add(rw);
       }
-      // Overlap/stability sorting: by top (y) then left (x)
+      // Sort by layout structure if available, otherwise by position (Y→X)
+      final boolean hasLayoutInfo = out.stream().anyMatch(rw -> rw.getBlockId() > 0);
       Collections.sort(
           out,
           new Comparator<RecognizedWord>() {
             @Override
             public int compare(RecognizedWord a, RecognizedWord b) {
+              if (hasLayoutInfo) {
+                int cb = Integer.compare(a.getBlockId(), b.getBlockId());
+                if (cb != 0) return cb;
+                int cl = Integer.compare(a.getLineId(), b.getLineId());
+                if (cl != 0) return cl;
+              }
               RectF ra = a.getBoundingBox();
               RectF rb = b.getBoundingBox();
               int cy = Float.compare(ra.top, rb.top);

@@ -55,8 +55,8 @@ public final class OcrDocMapper {
       if (c > 1f) c = 1f;
       w.c = c;
       w.e = false; // not edited initially
-      w.l = 0; // unknown line id for now (MVP stub)
-      w.k = 0; // unknown block id for now (MVP stub)
+      w.l = rw.getLineId(); // layout line index (0 if no layout)
+      w.k = rw.getBlockId(); // layout block/region index (0 if no layout)
       w.lang = rw.getLang(); // preserve language from reviewed words
       doc.words.add(w);
     }

@@ -63,9 +63,11 @@ import javax.inject.Provider;
 @AndroidEntryPoint
 public class OCRFragment extends Fragment {
   private static final String TAG = "OCRFragment";
-  // Early-exit threshold: if the first rotation attempt (extra=0) reaches this mean confidence,
-  // we skip trying further 90° rotations to save time. Adjust if needed.
-  private static final int OCR_EARLY_EXIT_MEAN_CONF_THRESHOLD = 55;
+  // Early-exit thresholds are now centralized in OcrEarlyExitPolicy. The previous
+  // "meanConf >= 55" gate was too lenient and would early-exit on tiny garbage
+  // results (e.g. 12 words / meanConf 55 / textLen 52), preventing recovery via
+  // further rotation attempts and the layout-analysis full-page fallback. The new
+  // policy also requires a minimum word count and a minimum text length.
 
   private FragmentOcrBinding binding;
   private OCRViewModel ocrViewModel;
@@ -758,13 +760,58 @@ public class OCRFragment extends Fragment {
     }
   }
 
+  /**
+   * Heuristic for the adaptive Quick→Robust switch: returns true when the input bitmap shows
+   * strongly uneven illumination (shadow/lighting gradient typical for phone photos), where global
+   * Otsu in Quick mode would likely clip and lose text.
+   *
+   * <p>The actual decision logic lives in {@link
+   * de.schliweb.makeacopy.utils.ocr.UnevenLightingPolicy} so it can be unit-tested without an
+   * Android device. This method only handles bitmap downsampling and pixel extraction.
+   */
+  private static boolean hasUnevenLighting(android.graphics.Bitmap b) {
+    if (b == null || b.isRecycled()) return false;
+    try {
+      int w = b.getWidth();
+      int h = b.getHeight();
+      if (w < 4 || h < 4) return false;
+      // Downsample to keep this cheap regardless of input size.
+      int target = 192;
+      int longSide = Math.max(w, h);
+      double scale = longSide > target ? (double) target / (double) longSide : 1.0;
+      int dw = Math.max(4, (int) Math.round(w * scale));
+      int dh = Math.max(4, (int) Math.round(h * scale));
+      android.graphics.Bitmap small =
+          (dw == w && dh == h) ? b : android.graphics.Bitmap.createScaledBitmap(b, dw, dh, true);
+      try {
+        int n = dw * dh;
+        int[] px = new int[n];
+        small.getPixels(px, 0, dw, 0, 0, dw, dh);
+        return de.schliweb.makeacopy.utils.ocr.UnevenLightingPolicy.isUneven(px, dw, dh);
+      } finally {
+        if (small != b && !small.isRecycled()) small.recycle();
+      }
+    } catch (Throwable t) {
+      // On any failure, be conservative and do not trigger the adaptive switch.
+      return false;
+    }
+  }
+
   private int getSelectedOcrMode() {
     try {
       android.content.SharedPreferences sp =
           requireContext().getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE);
-      return sp.getInt(PREF_KEY_OCR_MODE, OCR_MODE_QUICK);
+      // Migration: Quick is no longer a user-facing mode (FR#74 benchmark 2026-04-26b
+      // showed Quick == Robust for binaryOutput=false). Map any persisted Quick to Robust
+      // and default new installs to Robust.
+      int stored = sp.getInt(PREF_KEY_OCR_MODE, OCR_MODE_ROBUST);
+      if (stored == OCR_MODE_QUICK) {
+        stored = OCR_MODE_ROBUST;
+        sp.edit().putInt(PREF_KEY_OCR_MODE, stored).apply();
+      }
+      return stored;
     } catch (Throwable ignore) {
-      return OCR_MODE_QUICK;
+      return OCR_MODE_ROBUST;
     }
   }
 
@@ -786,7 +833,6 @@ public class OCRFragment extends Fragment {
 
     android.widget.RadioGroup rg = view.findViewById(R.id.rg_ocr_modes);
     android.widget.RadioButton rbOriginal = view.findViewById(R.id.rbtn_mode_original);
-    android.widget.RadioButton rbQuick = view.findViewById(R.id.rbtn_mode_quick);
     android.widget.RadioButton rbRobust = view.findViewById(R.id.rbtn_mode_robust);
     android.widget.CheckBox cbOcrAuto =
         view.findViewById(R.id.checkbox_ocr_auto_rotate_apply_export_dialog);
@@ -801,8 +847,10 @@ public class OCRFragment extends Fragment {
         layoutFeatureEnabled ? android.view.View.VISIBLE : android.view.View.GONE);
 
     int mode = Math.max(0, Math.min(2, getSelectedOcrMode()));
+    // Quick mode is hidden in the picker (see dialog_ocr_prep_mode.xml: rbtn_mode_quick
+    // is gone). Treat any lingering Quick selection as Robust for the UI state.
+    if (mode == OCR_MODE_QUICK) mode = OCR_MODE_ROBUST;
     if (mode == 0) rbOriginal.setChecked(true);
-    else if (mode == 1) rbQuick.setChecked(true);
     else rbRobust.setChecked(true);
 
     boolean ocrAutoRotateApply = false;
@@ -830,11 +878,11 @@ public class OCRFragment extends Fragment {
             .setPositiveButton(
                 R.string.ok,
                 (d, w) -> {
-                  int selectedMode = 1; // default Quick
+                  int selectedMode = OCR_MODE_ROBUST; // default Robust
                   int checkedId = rg.getCheckedRadioButtonId();
-                  if (checkedId == R.id.rbtn_mode_original) selectedMode = 0;
-                  else if (checkedId == R.id.rbtn_mode_quick) selectedMode = 1;
-                  else if (checkedId == R.id.rbtn_mode_robust) selectedMode = 2;
+                  if (checkedId == R.id.rbtn_mode_original) selectedMode = OCR_MODE_ORIGINAL;
+                  else if (checkedId == R.id.rbtn_mode_quick) selectedMode = OCR_MODE_ROBUST;
+                  else if (checkedId == R.id.rbtn_mode_robust) selectedMode = OCR_MODE_ROBUST;
 
                   setSelectedOcrMode(selectedMode);
                   try {
@@ -1269,19 +1317,62 @@ public class OCRFragment extends Fragment {
 
                     Bitmap rotated = (extra == 0) ? src : rotateBitmap(src, extra);
 
-                    // Apply selected recognition mode (preprocessing)
-                    Bitmap inputForOcr;
+                    // Apply selected recognition mode (preprocessing).
+                    // Adaptive behavior:
+                    //   1) QUICK + uneven lighting  -> upgrade to ROBUST (Quick is now a wrapper
+                    //      around the robust grayscale pipeline anyway, but the explicit upgrade
+                    //      keeps the intent clear and also activates path (2)).
+                    //   2) ROBUST + uneven lighting -> additionally trigger the Sauvola/Retinex
+                    //      binary branch (binaryOutput=true) at the page level AND for every
+                    //      region in the layout-analysis path (via OCRHelper.setForceBinaryRobust).
+                    //      Otsu clipping on heavy shadows is the dominant failure mode for
+                    //      grayscale-only preprocessing on phone photos; the binary branch with
+                    //      Sauvola/Retinex is the correct response.
+                    // ORIGINAL is always honored as-is.
                     int mode = getSelectedOcrMode();
-                    if (mode == OCR_MODE_ORIGINAL) {
+                    int effectiveMode = mode;
+                    boolean unevenLighting = hasUnevenLighting(rotated);
+                    if (mode == OCR_MODE_QUICK && unevenLighting) {
+                      effectiveMode = OCR_MODE_ROBUST;
+                      Log.d(
+                          TAG,
+                          LP
+                              + "Adaptive: QUICK -> ROBUST (uneven lighting detected, extraRot="
+                              + extra
+                              + ")");
+                    }
+                    boolean forceBinary = (effectiveMode == OCR_MODE_ROBUST) && unevenLighting;
+                    if (forceBinary) {
+                      Log.d(
+                          TAG,
+                          LP
+                              + "Adaptive: ROBUST forces binary preprocessing (uneven lighting,"
+                              + " extraRot="
+                              + extra
+                              + ")");
+                    }
+
+                    Bitmap inputForOcr;
+                    if (effectiveMode == OCR_MODE_ORIGINAL) {
                       inputForOcr = rotated;
-                    } else if (mode == OCR_MODE_QUICK) {
+                    } else if (effectiveMode == OCR_MODE_QUICK) {
                       inputForOcr = OpenCVUtils.prepareForOCRQuick(rotated);
                     } else { // OCR_MODE_ROBUST
-                      // Use grayscale output for Robust mode to preserve fine details and holes in
-                      // letters (e.g., 'o'),
-                      // avoiding over-aggressive binarization artifacts that can cause
-                      // substitutions like 'Oktober' → 'Okteber'.
-                      inputForOcr = OpenCVUtils.prepareForOCR(rotated, /*binaryOutput*/ false);
+                      // Default: grayscale output preserves fine details and holes in letters
+                      // (e.g. 'o'), avoiding over-aggressive binarization artifacts that can
+                      // cause substitutions like 'Oktober' → 'Okteber'. When the adaptive
+                      // heuristic detects uneven lighting we switch to the binary Sauvola/Retinex
+                      // branch which handles shadows much better.
+                      inputForOcr =
+                          OpenCVUtils.prepareForOCR(rotated, /*binaryOutput*/ forceBinary);
+                    }
+                    // Keep region-OCR (layout analysis path) in sync with the page-level mode and
+                    // the adaptive binary trigger.
+                    try {
+                      localHelper.setRecognitionMode(effectiveMode);
+                      localHelper.setForceBinaryRobust(forceBinary);
+                    } catch (Throwable ignore) {
+                      // Best-effort; failure is non-critical
                     }
                     if (inputForOcr == null) {
                       Log.w(
@@ -1321,17 +1412,65 @@ public class OCRFragment extends Fragment {
                     if (layoutAnalysisEnabled) {
                       OCRHelper.OcrResultWithLayout layoutResult =
                           localHelper.runOcrWithLayout(inputForOcr);
-                      // Collect all words from all regions
+                      // Collect all words from all regions, preserving layout structure
                       List<RecognizedWord> allWords = new ArrayList<>();
+                      int regionIdx = 1;
                       for (OCRHelper.RegionOcrResult regionResult : layoutResult.regionResults) {
                         if (regionResult.ocrResult() != null
                             && regionResult.ocrResult().words != null) {
+                          for (RecognizedWord w : regionResult.ocrResult().words) {
+                            w.setBlockId(regionIdx);
+                          }
                           allWords.addAll(regionResult.ocrResult().words);
                         }
+                        regionIdx++;
                       }
                       r =
                           new OCRHelper.OcrResultWords(
                               layoutResult.text, layoutResult.meanConfidence, allWords);
+
+                      // Full-page fallback: if layout analysis produced too few words or a
+                      // very low mean confidence, the page was likely mis-segmented (false
+                      // table detection, sparse-text PSM on the main body, …). Run one
+                      // additional full-page OCR pass with PSM=AUTO and keep whichever
+                      // result has more recognized words. This is a no-op cost on
+                      // documents where layout analysis works well, since the trigger
+                      // (OcrFallbackPolicy) does not fire there.
+                      int laWords0 = r.words != null ? r.words.size() : 0;
+                      int laConf0 = r.meanConfidence != null ? r.meanConfidence : 0;
+                      if (de.schliweb.makeacopy.utils.ocr.OcrFallbackPolicy
+                          .shouldRunFullPageFallback(laWords0, laConf0)) {
+                        Log.d(
+                            TAG,
+                            LP
+                                + "Layout-analysis poor (words="
+                                + laWords0
+                                + ", meanConf="
+                                + laConf0
+                                + "), running full-page fallback OCR");
+                        OCRHelper.OcrResultWords fb = localHelper.runOcrWithRetry(inputForOcr);
+                        if (fb != null) {
+                          int fbWords = fb.words != null ? fb.words.size() : 0;
+                          int fbConf = fb.meanConfidence != null ? fb.meanConfidence : 0;
+                          // Prefer the fallback if it found more words OR a clearly higher
+                          // mean confidence. Word count is the dominant signal because the
+                          // problem the fallback solves is "too few words".
+                          boolean fbBetter =
+                              fbWords > laWords0 || (fbWords >= laWords0 && fbConf > laConf0 + 1);
+                          Log.d(
+                              TAG,
+                              LP
+                                  + "Fallback result: words="
+                                  + fbWords
+                                  + ", meanConf="
+                                  + fbConf
+                                  + ", taken="
+                                  + fbBetter);
+                          if (fbBetter) {
+                            r = fb;
+                          }
+                        }
+                      }
                     } else {
                       r = localHelper.runOcrWithRetry(inputForOcr);
                     }
@@ -1343,13 +1482,14 @@ public class OCRFragment extends Fragment {
                     }
 
                     // Early-exit: if the first attempt (extra=0) is already strong enough, skip
-                    // other rotations
+                    // other rotations. Decision delegated to OcrEarlyExitPolicy so the gate is
+                    // unit-testable and tuned against real production samples.
                     if (extra == 0) {
                       int mc0 = (r.meanConfidence != null ? r.meanConfidence : 0);
-                      boolean hasWords0 = r.words != null && !r.words.isEmpty();
-                      boolean hasText0 = r.text != null && !r.text.trim().isEmpty();
-                      boolean hasContent0 = hasWords0 || hasText0;
-                      if (hasContent0 && mc0 >= OCR_EARLY_EXIT_MEAN_CONF_THRESHOLD) {
+                      int wc0 = (r.words != null ? r.words.size() : 0);
+                      int tl0 = (r.text != null ? r.text.length() : 0);
+                      if (de.schliweb.makeacopy.utils.ocr.OcrEarlyExitPolicy.shouldExit(
+                          mc0, wc0, tl0)) {
                         bestResult = r;
                         bestTx = tx;
                         bestRot = 0;
@@ -1358,13 +1498,20 @@ public class OCRFragment extends Fragment {
                             LP
                                 + "Early-exit: meanConf="
                                 + mc0
-                                + " >= "
-                                + OCR_EARLY_EXIT_MEAN_CONF_THRESHOLD
-                                + ", hasContent=true, words="
-                                + (r.words != null ? r.words.size() : 0)
-                                + ", textLen="
-                                + (r.text != null ? r.text.length() : 0)
-                                + ", skipping further rotations");
+                                + " (>= "
+                                + de.schliweb.makeacopy.utils.ocr.OcrEarlyExitPolicy
+                                    .DEFAULT_MIN_MEAN_CONF
+                                + "), words="
+                                + wc0
+                                + " (>= "
+                                + de.schliweb.makeacopy.utils.ocr.OcrEarlyExitPolicy
+                                    .DEFAULT_MIN_WORDS
+                                + "), textLen="
+                                + tl0
+                                + " (>= "
+                                + de.schliweb.makeacopy.utils.ocr.OcrEarlyExitPolicy
+                                    .DEFAULT_MIN_TEXT_LEN
+                                + "), skipping further rotations");
                         break;
                       }
                     }

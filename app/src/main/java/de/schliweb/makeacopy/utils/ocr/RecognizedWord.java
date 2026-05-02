@@ -50,6 +50,12 @@ public class RecognizedWord {
   /** Optional language code for this word (e.g., "eng", "deu"). May be null if not specified. */
   @Setter private String lang;
 
+  /** Layout block/region index (0 = unassigned). Set by layout-aware OCR pipeline. */
+  @Setter private int blockId;
+
+  /** Layout line index within block (0 = unassigned). Set by layout-aware OCR pipeline. */
+  @Setter private int lineId;
+
   /**
    * Constructs a new {@code RecognizedWord} instance with the given text, bounding box, and
    * confidence score.

@@ -2192,8 +2192,11 @@ public class OcrReviewFragment extends Fragment {
             android.graphics.RectF box =
                 new android.graphics.RectF(
                     word.b[0], word.b[1], word.b[0] + word.b[2], word.b[1] + word.b[3]);
-            reviewedWords.add(
-                new RecognizedWord(word.t != null ? word.t : "", box, word.c, word.lang));
+            RecognizedWord rw =
+                new RecognizedWord(word.t != null ? word.t : "", box, word.c, word.lang);
+            rw.setBlockId(word.k);
+            rw.setLineId(word.l);
+            reviewedWords.add(rw);
           }
         }
       }

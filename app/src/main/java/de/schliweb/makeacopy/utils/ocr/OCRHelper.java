@@ -101,6 +101,27 @@ public class OCRHelper {
   // Flag to indicate if Best model optimizations should be applied
   private boolean useBestModelSettings = false;
 
+  /** Recognition modes mirroring the user-facing setting in OCRFragment. */
+  public static final int OCR_MODE_ORIGINAL = 0;
+
+  public static final int OCR_MODE_QUICK = 1;
+  public static final int OCR_MODE_ROBUST = 2;
+
+  /**
+   * Selected recognition mode for region-OCR (layout analysis path). Defaults to ROBUST to preserve
+   * historical behavior; callers should set it from the user preference so that the region pipeline
+   * matches the page-level pipeline used in OCRFragment.
+   */
+  @Getter private int recognitionMode = OCR_MODE_ROBUST;
+
+  /**
+   * When true and recognitionMode == ROBUST, region-OCR forces useBinary=true for all region types
+   * (including TABLE/COLUMN/HEADER which would otherwise prefer grayscale). Used by the adaptive
+   * uneven-lighting heuristic in OCRFragment to trigger Sauvola/Retinex on photo-style inputs with
+   * strong shadows. Default false preserves prior behavior.
+   */
+  @Getter private boolean forceBinaryRobust = false;
+
   private String dpi = DEFAULT_DPI;
 
   /**
@@ -320,6 +341,30 @@ public class OCRHelper {
       Log.e(TAG, "Failed to set PSM on engine", t);
     }
     Log.i(TAG, "setPageSegMode: applied psm=" + mode);
+  }
+
+  /**
+   * Sets the preprocessing pipeline used by region-OCR in the layout-analysis path. Mirrors the
+   * user-facing OCR mode in OCRFragment so that region-OCR matches the page-level pipeline.
+   *
+   * @param mode one of {@link #OCR_MODE_ORIGINAL}, {@link #OCR_MODE_QUICK} or {@link
+   *     #OCR_MODE_ROBUST}. Unknown values fall back to ROBUST.
+   */
+  public void setRecognitionMode(int mode) {
+    if (mode != OCR_MODE_ORIGINAL && mode != OCR_MODE_QUICK && mode != OCR_MODE_ROBUST) {
+      mode = OCR_MODE_ROBUST;
+    }
+    this.recognitionMode = mode;
+    Log.i(TAG, "setRecognitionMode: " + mode);
+  }
+
+  /**
+   * Toggles forced binary preprocessing for region-OCR in ROBUST mode. See {@link
+   * #forceBinaryRobust}.
+   */
+  public void setForceBinaryRobust(boolean enable) {
+    this.forceBinaryRobust = enable;
+    Log.i(TAG, "setForceBinaryRobust: " + enable);
   }
 
   /**
@@ -960,6 +1005,15 @@ public class OCRHelper {
           continue;
         }
 
+        // Skip small regions – OpenCV native ops (warpAffine, convertTo, GaussianBlur,
+        // fastNlMeansDenoising) can trigger SIGILL on small images on some devices/emulators.
+        if (regionBitmap.getWidth() < 64 || regionBitmap.getHeight() < 64) {
+          if (regionBitmap != bitmap && !regionBitmap.isRecycled()) {
+            regionBitmap.recycle();
+          }
+          continue;
+        }
+
         // Apply preprocessing to improve OCR accuracy for this region
         Bitmap preprocessedRegion = null;
         try {
@@ -970,11 +1024,31 @@ public class OCRHelper {
               region.getType() != DocumentRegion.Type.TABLE
                   && region.getType() != DocumentRegion.Type.COLUMN
                   && region.getType() != DocumentRegion.Type.HEADER;
-          preprocessedRegion = OpenCVUtils.prepareForOCR(regionBitmap, useBinary);
+          // Adaptive override: when uneven lighting was detected at page level, force the
+          // Sauvola/Retinex/binary path for every region (incl. TABLE/COLUMN/HEADER) — Otsu
+          // clipping on shadows hurts those region types just as much as plain text.
+          if (forceBinaryRobust) {
+            useBinary = true;
+          }
+          // Respect the user-selected recognition mode so region-OCR matches the page-level
+          // pipeline. ORIGINAL skips preprocessing (the input bitmap is used as-is); QUICK uses
+          // the fast Otsu-based pipeline; ROBUST uses the full background-division/Sauvola path.
+          switch (recognitionMode) {
+            case OCR_MODE_ORIGINAL:
+              preprocessedRegion = regionBitmap;
+              break;
+            case OCR_MODE_QUICK:
+              preprocessedRegion = OpenCVUtils.prepareForOCRQuick(regionBitmap);
+              break;
+            case OCR_MODE_ROBUST:
+            default:
+              preprocessedRegion = OpenCVUtils.prepareForOCR(regionBitmap, useBinary);
+              break;
+          }
           if (preprocessedRegion == null) {
             preprocessedRegion = regionBitmap;
           }
-        } catch (Exception e) {
+        } catch (Throwable e) {
           Log.w(TAG, "runOcrWithLayout: preprocessing failed for region, using original", e);
           preprocessedRegion = regionBitmap;
         }
