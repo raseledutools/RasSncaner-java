@@ -22,8 +22,7 @@ public class ViewDump {
     if (v == null) return;
     indent(sb, depth);
     sb.append(nodeInfo(v)).append('\n');
-    if (v instanceof ViewGroup) {
-      ViewGroup vg = (ViewGroup) v;
+    if (v instanceof ViewGroup vg) {
       for (int i = 0; i < vg.getChildCount(); i++) {
         dumpNode(sb, vg.getChildAt(i), depth + 1);
       }

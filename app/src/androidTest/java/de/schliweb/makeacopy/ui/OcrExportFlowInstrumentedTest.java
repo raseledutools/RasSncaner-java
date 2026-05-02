@@ -260,14 +260,17 @@ public class OcrExportFlowInstrumentedTest {
    * Gets the selected OCR mode from SharedPreferences. This is the same logic as
    * OCRFragment.getSelectedOcrMode().
    *
-   * @return OCR mode: 0=Original, 1=Quick (default), 2=Robust
+   * @return OCR mode: 0=Original, 1=Quick (legacy, migrated to Robust), 2=Robust (default)
    */
   private int getSelectedOcrMode() {
     try {
       SharedPreferences sp = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-      return sp.getInt(PREF_KEY_OCR_MODE, OCR_MODE_QUICK);
+      int stored = sp.getInt(PREF_KEY_OCR_MODE, OCR_MODE_ROBUST);
+      // Migration: Quick is no longer a user-facing mode (FR#74 benchmark 2026-04-26b).
+      if (stored == OCR_MODE_QUICK) stored = OCR_MODE_ROBUST;
+      return stored;
     } catch (Throwable ignore) {
-      return OCR_MODE_QUICK;
+      return OCR_MODE_ROBUST;
     }
   }
 
