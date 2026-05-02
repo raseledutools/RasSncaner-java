@@ -111,7 +111,8 @@ public class DocumentRegionTest {
 
   @Test
   public void getOptimalPsm_table() {
-    assertEquals(11, new DocumentRegion(null, DocumentRegion.Type.TABLE).getOptimalPsm());
+    // TABLE uses PSM_SINGLE_BLOCK (6); see DocumentRegion#getOptimalPsm.
+    assertEquals(6, new DocumentRegion(null, DocumentRegion.Type.TABLE).getOptimalPsm());
   }
 
   @Test

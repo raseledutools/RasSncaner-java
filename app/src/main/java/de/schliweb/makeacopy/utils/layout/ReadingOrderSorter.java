@@ -143,6 +143,37 @@ public class ReadingOrderSorter {
       }
     }
 
+    // Determine the top of the column area to split unassigned regions
+    int columnTop = Integer.MAX_VALUE;
+    int columnBottom = Integer.MIN_VALUE;
+    for (List<DocumentRegion> group : columnGroups) {
+      for (DocumentRegion r : group) {
+        if (r.getBounds() != null) {
+          columnTop = Math.min(columnTop, r.getBounds().top);
+          columnBottom = Math.max(columnBottom, r.getBounds().bottom);
+        }
+      }
+    }
+
+    // Split unassigned into before-columns and after-columns based on position
+    List<DocumentRegion> beforeColumns = new ArrayList<>();
+    List<DocumentRegion> afterColumns = new ArrayList<>();
+    for (DocumentRegion r : otherUnassigned) {
+      if (r.getBounds() != null && r.getBounds().bottom <= columnTop) {
+        beforeColumns.add(r);
+      } else if (r.getBounds() != null && r.getBounds().top >= columnBottom) {
+        afterColumns.add(r);
+      } else {
+        // Overlaps with column area - use center Y to decide
+        int centerY = (r.getBounds().top + r.getBounds().bottom) / 2;
+        if (centerY < columnTop) {
+          beforeColumns.add(r);
+        } else {
+          afterColumns.add(r);
+        }
+      }
+    }
+
     // Sort headers by y position (top to bottom)
     Collections.sort(
         headers,
@@ -175,8 +206,9 @@ public class ReadingOrderSorter {
           });
     }
 
-    // Sort other unassigned regions normally
-    sort(otherUnassigned, direction);
+    // Sort before/after column regions by position
+    sort(beforeColumns, direction);
+    sort(afterColumns, direction);
 
     // Sort footers by y position
     Collections.sort(
@@ -195,9 +227,10 @@ public class ReadingOrderSorter {
 
     // Rebuild the list in correct reading order:
     // 1. Headers first
-    // 2. Columns (left to right or right to left)
-    // 3. Other unassigned regions
-    // 4. Footers last
+    // 2. Unassigned regions above columns
+    // 3. Columns (left to right or right to left)
+    // 4. Unassigned regions below columns
+    // 5. Footers last
     regions.clear();
     int readingOrder = 0;
 
@@ -207,9 +240,14 @@ public class ReadingOrderSorter {
       regions.add(header);
     }
 
-    // 2. Add columns in order based on text direction
+    // 2. Add regions above columns
+    for (DocumentRegion region : beforeColumns) {
+      region.setReadingOrder(readingOrder++);
+      regions.add(region);
+    }
+
+    // 3. Add columns in order based on text direction
     if (direction == TextDirection.RTL) {
-      // Right to left: start from rightmost column
       for (int i = columnGroups.size() - 1; i >= 0; i--) {
         for (DocumentRegion region : columnGroups.get(i)) {
           region.setReadingOrder(readingOrder++);
@@ -217,7 +255,6 @@ public class ReadingOrderSorter {
         }
       }
     } else {
-      // Left to right: start from leftmost column
       for (List<DocumentRegion> group : columnGroups) {
         for (DocumentRegion region : group) {
           region.setReadingOrder(readingOrder++);
@@ -226,13 +263,13 @@ public class ReadingOrderSorter {
       }
     }
 
-    // 3. Add other unassigned regions
-    for (DocumentRegion region : otherUnassigned) {
+    // 4. Add regions below columns
+    for (DocumentRegion region : afterColumns) {
       region.setReadingOrder(readingOrder++);
       regions.add(region);
     }
 
-    // 4. Add footers last
+    // 5. Add footers last
     for (DocumentRegion footer : footers) {
       footer.setReadingOrder(readingOrder++);
       regions.add(footer);
@@ -278,8 +315,10 @@ public class ReadingOrderSorter {
   }
 
   /**
-   * Sorts regions hierarchically: first by region type priority, then by position. Priority order:
-   * HEADER > BODY/COLUMN > TABLE > FIGURE > CAPTION > FOOTER
+   * Sorts regions hierarchically: HEADER regions are placed first, FOOTER regions last, and all
+   * other regions are sorted purely by position (top-to-bottom, then left-to-right or right-to-left
+   * based on text direction). This ensures that sidebars, tables, and other non-body regions are
+   * sorted by their actual position rather than by type priority.
    *
    * @param regions list of regions to sort
    * @param direction text direction
@@ -289,85 +328,51 @@ public class ReadingOrderSorter {
       return;
     }
 
-    // Calculate average height for line tolerance
-    int totalHeight = 0;
+    // Separate structural anchors (header/footer) from content regions
+    List<DocumentRegion> headers = new ArrayList<>();
+    List<DocumentRegion> footers = new ArrayList<>();
+    List<DocumentRegion> content = new ArrayList<>();
+
     for (DocumentRegion region : regions) {
-      if (region.getBounds() != null) {
-        totalHeight += region.getBounds().height();
+      if (region.getType() == DocumentRegion.Type.HEADER) {
+        headers.add(region);
+      } else if (region.getType() == DocumentRegion.Type.FOOTER) {
+        footers.add(region);
+      } else {
+        content.add(region);
       }
     }
-    final int avgHeight = regions.isEmpty() ? 100 : totalHeight / regions.size();
-    final int lineTolerance = (int) (avgHeight * LINE_TOLERANCE_RATIO);
-    final TextDirection dir = direction;
 
-    Collections.sort(
-        regions,
-        new Comparator<DocumentRegion>() {
-          @Override
-          public int compare(DocumentRegion r1, DocumentRegion r2) {
-            // First compare by type priority
-            int priority1 = getTypePriority(r1.getType());
-            int priority2 = getTypePriority(r2.getType());
+    // Sort headers by y position (top to bottom)
+    Comparator<DocumentRegion> byTop =
+        (r1, r2) -> {
+          Rect b1 = r1.getBounds();
+          Rect b2 = r2.getBounds();
+          if (b1 == null && b2 == null) return 0;
+          if (b1 == null) return 1;
+          if (b2 == null) return -1;
+          return Integer.compare(b1.top, b2.top);
+        };
+    Collections.sort(headers, byTop);
+    Collections.sort(footers, byTop);
 
-            if (priority1 != priority2) {
-              return Integer.compare(priority1, priority2);
-            }
+    // Sort content regions purely by position
+    sort(content, direction);
 
-            // Same type priority - sort by position
-            Rect b1 = r1.getBounds();
-            Rect b2 = r2.getBounds();
-
-            if (b1 == null && b2 == null) return 0;
-            if (b1 == null) return 1;
-            if (b2 == null) return -1;
-
-            // Check if on same line
-            if (Math.abs(b1.top - b2.top) <= lineTolerance) {
-              if (dir == TextDirection.RTL) {
-                return Integer.compare(b2.left, b1.left);
-              } else {
-                return Integer.compare(b1.left, b2.left);
-              }
-            }
-
-            return Integer.compare(b1.top, b2.top);
-          }
-        });
-
-    // Update reading order
-    for (int i = 0; i < regions.size(); i++) {
-      regions.get(i).setReadingOrder(i);
+    // Rebuild list: headers first, then content, then footers
+    regions.clear();
+    int readingOrder = 0;
+    for (DocumentRegion h : headers) {
+      h.setReadingOrder(readingOrder++);
+      regions.add(h);
     }
-  }
-
-  /**
-   * Gets the priority value for a region type. Lower values = higher priority (processed first).
-   *
-   * @param type region type
-   * @return priority value
-   */
-  private static int getTypePriority(DocumentRegion.Type type) {
-    if (type == null) return 100;
-
-    switch (type) {
-      case HEADER:
-        return 0;
-      case BODY:
-      case COLUMN:
-        return 10;
-      case TABLE:
-        return 20;
-      case FIGURE:
-        return 30;
-      case CAPTION:
-        return 40;
-      case SIDEBAR:
-      case MARGIN_NOTE:
-        return 50;
-      case FOOTER:
-        return 60;
-      default:
-        return 100;
+    for (DocumentRegion c : content) {
+      c.setReadingOrder(readingOrder++);
+      regions.add(c);
+    }
+    for (DocumentRegion f : footers) {
+      f.setReadingOrder(readingOrder++);
+      regions.add(f);
     }
   }
 

@@ -148,7 +148,11 @@ public class DocumentRegion {
       case FOOTER:
         return 7; // PSM_SINGLE_LINE - usually single line
       case TABLE:
-        return 11; // PSM_SPARSE_TEXT - non-contiguous text
+        // PSM_SINGLE_BLOCK - treat the table region as one uniform block.
+        // PSM_SPARSE_TEXT (11) consistently underperformed on real tables: it
+        // assumes non-contiguous, isolated tokens and yields very low word
+        // counts on actual table bodies (see OCR log analysis 2026-04-27).
+        return 6;
       case CAPTION:
         return 7; // PSM_SINGLE_LINE - short description
       case SIDEBAR:
