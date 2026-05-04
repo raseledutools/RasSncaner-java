@@ -276,6 +276,8 @@ public class CropViewModel extends BaseViewModel {
   private java.lang.ref.WeakReference<Bitmap> lastFreshPageBitmapRef =
       new java.lang.ref.WeakReference<>(null);
 
+  private boolean lastFreshPageBitmapFromReEdit = false;
+
   /** Returns the cached fresh-page bitmap (identity reference) or null when GC'ed/never set. */
   public Bitmap getLastFreshPageBitmap() {
     return lastFreshPageBitmapRef.get();
@@ -284,5 +286,17 @@ public class CropViewModel extends BaseViewModel {
   /** Sets the identity reference to the freshly produced crop bitmap (post-trim, post-rotate). */
   public void setLastFreshPageBitmap(Bitmap bmp) {
     this.lastFreshPageBitmapRef = new java.lang.ref.WeakReference<>(bmp);
+    this.lastFreshPageBitmapFromReEdit = false;
+  }
+
+  /** Sets the identity reference to a freshly re-edited crop bitmap. */
+  public void setLastFreshReEditPageBitmap(Bitmap bmp) {
+    this.lastFreshPageBitmapRef = new java.lang.ref.WeakReference<>(bmp);
+    this.lastFreshPageBitmapFromReEdit = true;
+  }
+
+  /** True when the current fresh-page bitmap came from Export → Crop Re-Edit. */
+  public boolean isLastFreshPageBitmapFromReEdit() {
+    return lastFreshPageBitmapFromReEdit;
   }
 }

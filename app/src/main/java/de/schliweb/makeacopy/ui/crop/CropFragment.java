@@ -60,6 +60,7 @@ public class CropFragment extends Fragment {
   // Guard: when we update the VM bitmap due to a user rotation, skip handling the immediate
   // imageBitmap observer callback to avoid re-triggering edge detection in the overlay.
   private boolean skipNextBitmapObserver = false;
+  private boolean reEditCornersRestored = false;
   // A11y: one-shot post-capture announcement
   private boolean cropA11yAnnounced = false;
   private long cropA11yLastAnnounceTs = 0L;
@@ -99,6 +100,16 @@ public class CropFragment extends Fragment {
     // imageBitmap observer takes the crop-mode branch (instead of immediately navigating).
     if (Boolean.TRUE.equals(cropViewModel.isCameFromExport().getValue())) {
       try {
+        Integer lastRot = cropViewModel.getLastAcceptedUserRotationDeg().getValue();
+        int lr = lastRot == null ? 0 : ((lastRot % 360) + 360) % 360;
+        if (lr != 0) {
+          // Rebuild the Re-Edit working bitmap from a known unrotated baseline. Otherwise a
+          // retained userRotationDegrees value equal to the last accepted rotation can make the
+          // bitmap observer apply persisted corners to the freshly reloaded original before the
+          // rotation observer has recreated the accepted working orientation.
+          cropViewModel.setUserRotationDegrees(0);
+        }
+        reEditCornersRestored = false;
         Bitmap original = cropViewModel.getOriginalImageBitmap().getValue();
         if (original == null || original.isRecycled()) {
           String path =
@@ -336,37 +347,28 @@ public class CropFragment extends Fragment {
                       Integer lastRot = cropViewModel.getLastAcceptedUserRotationDeg().getValue();
                       Integer curRot = cropViewModel.getUserRotationDegrees().getValue();
                       int lr = lastRot == null ? 0 : lastRot;
-                      int cr = curRot == null ? 0 : curRot;
+                      int cr = curRot == null ? 0 : ((curRot % 360) + 360) % 360;
                       if (lr != cr) {
-                        // Set rotation; the rotation observer rebuilds the working bitmap
-                        // and will keep userHasEdited via setCornersFromImageCoordinates
-                        // below (executed after layout via the view's post() fallback).
+                        // First rebuild the working bitmap in the same orientation in which the
+                        // corners were accepted. The persisted corners are already in that rotated
+                        // source coordinate space, so applying them before this rotation would put
+                        // a rotated trapezoid onto the wrong image.
+                        reEditCornersRestored = false;
                         cropViewModel.setUserRotationDegrees(lr);
+                        return;
                       }
-                      android.graphics.PointF[] persisted =
-                          cropViewModel.getLastAcceptedCornersOriginal().getValue();
-                      if (persisted != null && persisted.length == 4) {
-                        org.opencv.core.Point[] pts = new org.opencv.core.Point[4];
-                        for (int i = 0; i < 4; i++) {
-                          if (persisted[i] == null) {
-                            pts = null;
-                            break;
-                          }
-                          pts[i] = new org.opencv.core.Point(persisted[i].x, persisted[i].y);
-                        }
-                        if (pts != null) {
-                          binding.trapezoidSelection.setCornersFromImageCoordinates(pts);
-                          android.util.Log.d(
-                              TAG,
-                              "[FR72] Re-Edit: pre-populated trapezoid from persisted corners");
-                        }
-                      }
+                      applyPersistedReEditCornersIfNeeded();
                     } catch (Throwable t) {
                       android.util.Log.w(
                           TAG, "[FR72] Re-Edit: corner pre-population failed: " + t.getMessage());
                     }
                   }
-                  lastUserRotationDeg = 0; // reset rotation baseline for selection sync
+                  if (Boolean.TRUE.equals(cropViewModel.isCameFromExport().getValue())) {
+                    Integer curRot = cropViewModel.getUserRotationDegrees().getValue();
+                    lastUserRotationDeg = curRot == null ? 0 : ((curRot % 360) + 360) % 360;
+                  } else {
+                    lastUserRotationDeg = 0; // reset rotation baseline for selection sync
+                  }
                   // Disable rotation while edge detection likely runs, then re-enable shortly
                   setRotationButtonsEnabled(false);
                   binding.trapezoidSelection.postDelayed(
@@ -449,6 +451,9 @@ public class CropFragment extends Fragment {
               // own writeback
               skipNextBitmapObserver = true;
               cropViewModel.setImageBitmap(safe);
+              if (Boolean.TRUE.equals(cropViewModel.isCameFromExport().getValue())) {
+                applyPersistedReEditCornersIfNeeded();
+              }
               tryUpdateMagnifierMapping();
 
               // Dev-Overlay im Crop: nach Rotation neu mappen, wenn Flag aktiv
@@ -464,6 +469,16 @@ public class CropFragment extends Fragment {
             getViewLifecycleOwner(),
             uri -> {
               if (uri == null) return;
+              if (Boolean.TRUE.equals(cropViewModel.isCameFromExport().getValue())) {
+                Bitmap preparedReEditBitmap = cropViewModel.getImageBitmap().getValue();
+                if (preparedReEditBitmap != null) {
+                  // FR #72 Re-Edit prepares the working bitmap itself from the persisted original
+                  // and the last accepted rotation. The camera URI observer can fire afterwards and
+                  // would otherwise overwrite the rotated crop preview with the unrotated original,
+                  // leaving the persisted (rotated) trapezoid on top of the wrong image.
+                  return;
+                }
+              }
               // Do not reload the original image if we already have a cropped image.
               Boolean alreadyCropped = cropViewModel.isImageCropped().getValue();
               if (Boolean.TRUE.equals(alreadyCropped)) {
@@ -606,6 +621,26 @@ public class CropFragment extends Fragment {
           requireContext(),
           getString(R.string.error_displaying_image, "decode failed"),
           android.widget.Toast.LENGTH_SHORT);
+    }
+  }
+
+  private void applyPersistedReEditCornersIfNeeded() {
+    if (reEditCornersRestored || binding == null || cropViewModel == null) return;
+    try {
+      android.graphics.PointF[] persisted =
+          cropViewModel.getLastAcceptedCornersOriginal().getValue();
+      if (persisted == null || persisted.length != 4) return;
+
+      org.opencv.core.Point[] pts = new org.opencv.core.Point[4];
+      for (int i = 0; i < 4; i++) {
+        if (persisted[i] == null) return;
+        pts[i] = new org.opencv.core.Point(persisted[i].x, persisted[i].y);
+      }
+      binding.trapezoidSelection.setCornersFromImageCoordinates(pts);
+      reEditCornersRestored = true;
+      android.util.Log.d(TAG, "[FR72] Re-Edit: pre-populated trapezoid from persisted corners");
+    } catch (Throwable t) {
+      android.util.Log.w(TAG, "[FR72] Re-Edit: corner pre-population failed: " + t.getMessage());
     }
   }
 
@@ -924,7 +959,7 @@ public class CropFragment extends Fragment {
                         newCropped, 0, 0, newCropped.getWidth(), newCropped.getHeight(), m, true);
                 if (rotated != null) toSet = rotated;
               } catch (Throwable ignore) {
-                // fall through with un-rotated bitmap
+                // Fall through with the crop result; Export will keep the fresh Re-Edit identity.
               }
             }
             androidx.lifecycle.ViewModelProvider vmp2 =
@@ -936,7 +971,7 @@ public class CropFragment extends Fragment {
               // overlay only re-appears for THIS page (not for older pages selected via
               // the filmstrip).
               try {
-                cropViewModel.setLastFreshPageBitmap(toSet);
+                cropViewModel.setLastFreshReEditPageBitmap(toSet);
               } catch (Throwable ignore) {
                 // Best-effort; failure is non-critical
               }
@@ -970,7 +1005,7 @@ public class CropFragment extends Fragment {
                         new de.schliweb.makeacopy.ui.export.session.CompletedScan(
                             old.id(),
                             null,
-                            userDeg,
+                            0,
                             null,
                             null,
                             null,

@@ -96,6 +96,9 @@ public class ExportFragment extends Fragment {
   private CameraViewModel cameraViewModel;
   // Multipage session (v1 increment)
   private de.schliweb.makeacopy.ui.export.session.ExportSessionViewModel exportSessionViewModel;
+  private int activeSessionPageIndex = -1;
+  private Bitmap lastFreshMultipagePreviewBitmap;
+  private String lastFreshMultipagePageId;
 
   /**
    * A BroadcastReceiver to handle updates from OCR processing jobs. This receiver listens for
@@ -358,24 +361,34 @@ public class ExportFragment extends Fragment {
   }
 
   private boolean isActivePageReEditable() {
-    // FR #72 V1.3: strict identity check against the bitmap that CropFragment marked as
-    // "freshly produced". Filmstrip selection of any other page swaps documentBitmap to a
-    // different identity and therefore correctly hides the Edit overlay. Single-page
-    // workflow without a session entry yet (lastFresh==null and only the seed bitmap is
-    // visible) is treated as editable to keep the hot-workflow UX intact.
+    // FR #72 V1.3: in the single-page workflow, updateEditCropOverlayVisibility() already requires
+    // persisted corners and a reachable original source, so bitmap identity must not decide
+    // editability. Preview/rotation/filter paths may legitimately create a new Bitmap instance. In
+    // multi-page workflows, keep the strict identity check so selecting another filmstrip page
+    // hides
+    // the Edit overlay.
     try {
       if (exportViewModel == null || cropViewModel == null) return false;
       Bitmap cur = exportViewModel.getDocumentBitmap().getValue();
       if (cur == null) return false;
-      Bitmap fresh = cropViewModel.getLastFreshPageBitmap();
-      if (fresh != null) return cur == fresh;
-      // Fallback for sessions where lastFreshPageBitmap was never set (e.g. legacy state
-      // restored across process death): allow Re-Edit only when there is at most one page.
-      if (exportSessionViewModel == null) return true;
+      int n = 0;
+      if (exportSessionViewModel != null) {
+        List<de.schliweb.makeacopy.ui.export.session.CompletedScan> pages =
+            exportSessionViewModel.getPages().getValue();
+        n = (pages == null) ? 0 : pages.size();
+      }
+      if (n <= 1) return true;
+      if (activeSessionPageIndex < 0 || activeSessionPageIndex >= n) return false;
+      if (lastFreshMultipagePageId == null) return false;
       List<de.schliweb.makeacopy.ui.export.session.CompletedScan> pages =
           exportSessionViewModel.getPages().getValue();
-      int n = (pages == null) ? 0 : pages.size();
-      return n <= 1;
+      if (pages == null || activeSessionPageIndex >= pages.size()) return false;
+      de.schliweb.makeacopy.ui.export.session.CompletedScan activePage =
+          pages.get(activeSessionPageIndex);
+      if (activePage == null || !lastFreshMultipagePageId.equals(activePage.id())) return false;
+      Bitmap fresh = cropViewModel.getLastFreshPageBitmap();
+      if (fresh != null) return cur == fresh;
+      return false;
     } catch (Throwable ignore) {
       return false;
     }
@@ -574,6 +587,7 @@ public class ExportFragment extends Fragment {
                 if (cur == null || position < 0 || position >= cur.size()) return;
                 de.schliweb.makeacopy.ui.export.session.CompletedScan sel = cur.get(position);
                 if (sel == null) return;
+                activeSessionPageIndex = position;
                 int[] sz =
                     ViewSizeUtils.sizeOrDefault(
                         binding != null ? binding.documentPreview : null, 2048, 2048);
@@ -588,6 +602,15 @@ public class ExportFragment extends Fragment {
 
               @Override
               public void onReorder(int fromPosition, int toPosition) {
+                if (activeSessionPageIndex == fromPosition) {
+                  activeSessionPageIndex = toPosition;
+                } else if (fromPosition < activeSessionPageIndex
+                    && activeSessionPageIndex <= toPosition) {
+                  activeSessionPageIndex--;
+                } else if (toPosition <= activeSessionPageIndex
+                    && activeSessionPageIndex < fromPosition) {
+                  activeSessionPageIndex++;
+                }
                 exportSessionViewModel.move(fromPosition, toPosition);
                 // A11y: announce new position (1-based)
                 View rootV = getView();
@@ -663,6 +686,18 @@ public class ExportFragment extends Fragment {
                     break;
                   }
                 }
+                if (!found
+                    && lastFreshMultipagePageId != null
+                    && curPreview == lastFreshMultipagePreviewBitmap) {
+                  for (int i = 0; i < pages.size(); i++) {
+                    de.schliweb.makeacopy.ui.export.session.CompletedScan s = pages.get(i);
+                    if (s != null && lastFreshMultipagePageId.equals(s.id())) {
+                      activeSessionPageIndex = i;
+                      found = true;
+                      break;
+                    }
+                  }
+                }
               }
               if (!found && pages != null && !pages.isEmpty()) {
                 de.schliweb.makeacopy.ui.export.session.CompletedScan first = pages.get(0);
@@ -674,7 +709,15 @@ public class ExportFragment extends Fragment {
                   int reqH = sz[1];
                   Bitmap bmp = BitmapUtils.loadPreviewBitmapForCompletedScan(first, reqW, reqH);
                   if (bmp != null) {
+                    activeSessionPageIndex = 0;
                     exportViewModel.setDocumentBitmap(bmp);
+                    if (n <= 1) {
+                      try {
+                        cropViewModel.setLastFreshPageBitmap(bmp);
+                      } catch (Throwable ignore) {
+                        // Best-effort; failure is non-critical
+                      }
+                    }
                     exportViewModel.setDocumentReady(true);
                   }
                 }
@@ -727,6 +770,7 @@ public class ExportFragment extends Fragment {
             SessionIds.setCurrentScanId(c.getApplicationContext(), initial.id());
           }
         }
+        activeSessionPageIndex = 0;
         exportSessionViewModel.setInitial(initial);
         // FR #72 V1.3: mark this bitmap as the "fresh" page (re-editable). Older pages
         // selected later via the filmstrip will have a different bitmap identity and will
@@ -778,6 +822,7 @@ public class ExportFragment extends Fragment {
               SessionIds.setCurrentScanId(c2.getApplicationContext(), added.id());
             }
           }
+          activeSessionPageIndex = curSize;
           exportSessionViewModel.add(added);
           // FR #72 V1.3: the newly added page is the fresh one (its original capture is still
           // tracked by CameraViewModel). Mark it for the Edit-overlay identity check.
@@ -1198,6 +1243,7 @@ public class ExportFragment extends Fragment {
             getViewLifecycleOwner(),
             bitmap -> {
               if (bitmap != null) {
+                markSinglePageBitmapFreshForReEdit(bitmap);
                 renderPreview(bitmap);
               } else {
                 binding.documentPreview.setVisibility(View.INVISIBLE);
@@ -1211,6 +1257,44 @@ public class ExportFragment extends Fragment {
     checkDocumentReady();
 
     return root;
+  }
+
+  private void markSinglePageBitmapFreshForReEdit(Bitmap bitmap) {
+    if (bitmap == null || cropViewModel == null || exportSessionViewModel == null) return;
+    try {
+      List<de.schliweb.makeacopy.ui.export.session.CompletedScan> pages =
+          exportSessionViewModel.getPages().getValue();
+      int n = (pages == null) ? 0 : pages.size();
+      if (n <= 1) {
+        cropViewModel.setLastFreshPageBitmap(bitmap);
+        lastFreshMultipagePreviewBitmap = null;
+        lastFreshMultipagePageId = null;
+        return;
+      }
+
+      // FR #72 V1.3: in multi-page mode only the last freshly scanned/imported page is
+      // re-editable. Rotation and preview/filter rendering can replace that page's preview bitmap
+      // with derived Bitmap instances, so keep the fresh marker moving along that exact preview
+      // chain. Do not mark arbitrary filmstrip selections.
+      Bitmap fresh = cropViewModel.getLastFreshPageBitmap();
+      if (activeSessionPageIndex < 0 || activeSessionPageIndex >= n) return;
+      de.schliweb.makeacopy.ui.export.session.CompletedScan activePage =
+          pages.get(activeSessionPageIndex);
+      Bitmap activePageBitmap = activePage != null ? activePage.inMemoryBitmap() : null;
+      boolean activePageIsFresh =
+          activePage != null
+              && lastFreshMultipagePageId != null
+              && lastFreshMultipagePageId.equals(activePage.id());
+      if (activePageIsFresh
+          && ((fresh != null && fresh == activePageBitmap)
+              || (lastFreshMultipagePreviewBitmap != null
+                  && fresh == lastFreshMultipagePreviewBitmap))) {
+        cropViewModel.setLastFreshPageBitmap(bitmap);
+        lastFreshMultipagePreviewBitmap = bitmap;
+      }
+    } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical
+    }
   }
 
   /**
@@ -1229,17 +1313,25 @@ public class ExportFragment extends Fragment {
     Bitmap maybeBitmap = cropViewModel.getImageBitmap().getValue();
 
     if (Boolean.TRUE.equals(isCropped) && maybeBitmap != null) {
-      // Apply user rotation from CropViewModel to ensure the preview matches user's intent.
-      // In most cases, the crop result already includes this rotation; applying it again is a no-op
-      // for 0°
-      // and corrects cases where the rotation wasn't baked into the cropped bitmap on some
-      // devices/flows.
       Bitmap bmp = maybeBitmap;
-      int userDeg = 0;
       Integer v = cropViewModel.getUserRotationDegrees().getValue();
-      if (v != null) userDeg = v;
-      userDeg = ((userDeg % 360) + 360) % 360;
-      if (userDeg != 0) {
+      int userDeg = v == null ? 0 : ((v % 360) + 360) % 360;
+
+      // Re-Edit produces a fresh preview bitmap before returning to Export. Session/page observers
+      // can briefly replace ExportViewModel's current bitmap with another instance, so the stable
+      // signal is the explicit fresh Re-Edit marker plus its stored bitmap reference.
+      Bitmap freshReEditBitmap = cropViewModel.getLastFreshPageBitmap();
+      boolean keepFreshReEditBitmap =
+          cropViewModel.isLastFreshPageBitmapFromReEdit() && freshReEditBitmap != null;
+
+      if (keepFreshReEditBitmap) {
+        bmp = freshReEditBitmap;
+        Log.d(
+            TAG,
+            "[EXPORT_LOG] checkDocumentReady: keeping fresh Re-Edit bitmap as-is, user rotation="
+                + userDeg
+                + "°");
+      } else if (userDeg != 0) {
         Log.d(
             TAG,
             "[EXPORT_LOG] checkDocumentReady: applying user rotation="
@@ -1256,6 +1348,31 @@ public class ExportFragment extends Fragment {
             TAG,
             "[EXPORT_LOG] checkDocumentReady: user rotation is 0°, using cropped bitmap as-is");
       }
+
+      if (!keepFreshReEditBitmap) {
+        try {
+          cropViewModel.setLastFreshPageBitmap(bmp);
+          List<de.schliweb.makeacopy.ui.export.session.CompletedScan> pages =
+              exportSessionViewModel != null ? exportSessionViewModel.getPages().getValue() : null;
+          int n = (pages == null) ? 0 : pages.size();
+          if (n > 1 && activeSessionPageIndex == n - 1) {
+            lastFreshMultipagePreviewBitmap = bmp;
+            de.schliweb.makeacopy.ui.export.session.CompletedScan activePage =
+                pages != null
+                        && activeSessionPageIndex >= 0
+                        && activeSessionPageIndex < pages.size()
+                    ? pages.get(activeSessionPageIndex)
+                    : null;
+            lastFreshMultipagePageId = activePage != null ? activePage.id() : null;
+          } else {
+            lastFreshMultipagePreviewBitmap = null;
+            lastFreshMultipagePageId = null;
+          }
+        } catch (Throwable ignore) {
+          // Best-effort; failure is non-critical
+        }
+      }
+
       exportViewModel.setDocumentBitmap(bmp);
       exportViewModel.setDocumentReady(true);
     } else {
