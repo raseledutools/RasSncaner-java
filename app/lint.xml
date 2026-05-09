@@ -34,4 +34,8 @@
     <issue id="GradleDependency" severity="ignore" />
     <issue id="NewerVersionAvailable" severity="ignore" />
     <issue id="AndroidGradlePluginVersion" severity="ignore" />
+    <!-- Intentional: ASCII hyphens are required in user-facing examples that show
+         literal filename patterns (e.g. "2026-03-04_scan"). Replacing them with an
+         en-dash would misrepresent the actual filenames produced by Inbox Mode. -->
+    <issue id="TypographyDashes" severity="ignore" />
 </lint>

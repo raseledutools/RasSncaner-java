@@ -59,9 +59,9 @@ This significantly increases the app size, but avoids any cloud dependencies or 
 
 **100 MB are not a sign of excess, but of consistency.**
 
-### Editions
+### Editions and Flavors
 
-MakeACopy is available in two editions:
+MakeACopy is available in two editions (controlled via the Gradle property `edition`):
 
 | Edition | OCR Languages | Fonts | APK Size (arm64-v8a) |
 |---------|--------------|-------|---------------------|
@@ -70,7 +70,16 @@ MakeACopy is available in two editions:
 
 Both editions include the same ML-based document detection (ONNX model), OpenCV image processing, and full offline functionality. Both editions use an operator-stripped ONNX Runtime build that includes only the operators required for document detection. The Light edition additionally ships fewer OCR language models, fonts, and dictionaries, and uses a minimal ONNX Runtime AAR without XNNPACK and NNAPI to further reduce APK size.
 
-The Full edition is available on F-Droid and Google Play. The Light edition is available exclusively via [GitHub Releases](https://github.com/egdels/makeacopy/releases).
+In addition, MakeACopy is built in two product flavors (`ocr` flavor dimension):
+
+| Flavor | OCR Backend | Notes |
+|--------|-------------|-------|
+| **standard** | Tesseract only | Default flavor; used for F-Droid and Google Play. No PaddleOCR assets bundled. |
+| **paddle** | Tesseract (default) + experimental PaddleOCR V5 | Bundles ~75 MB of PaddleOCR V5 ORT models (1× detection + 8 language-group recognition models). Tesseract remains the default and silent fallback. Available only via [GitHub Releases](https://github.com/egdels/makeacopy/releases) with the `-paddle` suffix in the filename. |
+
+The Full + standard combination is what is published on F-Droid and Google Play. The Light edition and the `paddle` flavor are available exclusively via [GitHub Releases](https://github.com/egdels/makeacopy/releases).
+
+For details on the experimental PaddleOCR V5 multi-model architecture (language routing, recognition models, ABI behaviour, build pipeline), see [docs/paddleocr_v5_integration_concept.md](docs/paddleocr_v5_integration_concept.md).
 
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
@@ -190,13 +199,15 @@ The workflow contains two parallel jobs:
 - Builds OpenCV native libraries from source via scripts/build_opencv_android.sh
 - Collects reproducibility evidence for native builds (scripts/collect_repro_evidence.sh)
 - Integrates OpenCV artifacts into the app via scripts/prepare_opencv.sh
-- Builds ONNX Runtime for Android (XNNPACK and NNAPI, Java bindings) via scripts/build_onnxruntime_android.sh
-- Builds the Full edition Android app with Gradle (AAB and ABI-split APKs)
+- Builds ONNX Runtime for Android (XNNPACK and NNAPI, Java bindings) via scripts/build_onnxruntime_android.sh — the operator config is merged so a single `libonnxruntime.so` per ABI supports both DocQuad corner detection and PaddleOCR V5 inference
+- Builds the Full edition Android app with Gradle for both flavors (`standard` and `paddle`), producing AABs and ABI-split APKs for each flavor
+- Verifies that no test data leaks into release APKs via `:app:verifyNoTestDataInApk`
+- Renames artifacts to `MakeACopy-vX.Y.Z-<abi>-release.apk` (standard) and `MakeACopy-vX.Y.Z-<abi>-paddle-release.apk` (paddle), plus `MakeACopy-vX.Y.Z-release.aab` and `MakeACopy-vX.Y.Z-paddle-release.aab`
 
 **Light build** (`build-light`):
 - Depends on the Full build job and downloads the native libraries (jniLibs and JARs) built from source
 - Sets up JDK 21 only (no native build scripts needed)
-- Builds the Light edition: `./gradlew :app:assembleRelease -Pedition=light`
+- Builds the Light edition for the `standard` flavor only: `./gradlew :app:assembleStandardRelease -Pedition=light` (PaddleOCR is not part of the Light edition)
 - Produces per-ABI APKs named `MakeACopy-Light-vX.Y.Z-<abi>-release.apk`
 
 Behavior by event type:
@@ -206,10 +217,10 @@ Behavior by event type:
 - Tag (refs/tags/vX.Y.Z):
   - Optionally decodes a keystore from repository secrets and signs the builds
   - Verifies APK signatures using apksigner
-  - Renames artifacts to MakeACopy-vX.Y.Z-<abi>-release.apk, MakeACopy-Light-vX.Y.Z-<abi>-release.apk, and MakeACopy-vX.Y.Z-release.aab
+  - Renames artifacts to `MakeACopy-vX.Y.Z-<abi>-release.apk` (standard), `MakeACopy-vX.Y.Z-<abi>-paddle-release.apk` (paddle), `MakeACopy-Light-vX.Y.Z-<abi>-release.apk`, plus `MakeACopy-vX.Y.Z-release.aab` and `MakeACopy-vX.Y.Z-paddle-release.aab`
   - Generates SHA-256 checksum files for each artifact
   - Loads release notes from fastlane/metadata/android/en-US/changelogs/<versionCode>.txt
-  - Creates a GitHub Release and attaches all Full and Light APKs, the AAB, and their .sha256 files
+  - Creates a GitHub Release and attaches all Full (standard + paddle) and Light APKs, both AABs, and their .sha256 files
   - Uploads artifacts to the workflow as well
 
 How to trigger a release build:
@@ -247,7 +258,8 @@ MakeACopy follows the Single-Activity + Multi-Fragment pattern with MVVM archite
 | Image Processing | [OpenCV](https://opencv.org) 4.13.0 | Apache 2.0 |
 | ML Inference | [ONNX Runtime](https://github.com/microsoft/onnxruntime) | MIT |
 | Document Corner Detection | Custom-trained ONNX model | Apache 2.0 |
-| OCR | [Tesseract4Android](https://github.com/adaptech-cz/Tesseract4Android) 4.9.0 | Apache 2.0 |
+| OCR (default) | [Tesseract4Android](https://github.com/adaptech-cz/Tesseract4Android) 4.9.0 | Apache 2.0 |
+| OCR (experimental, `paddle` flavor only) | [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) PP-OCRv5 mobile (det + 8× rec, exported to ORT) | Apache 2.0 |
 | OCR Language Data | [tessdata](https://github.com/tesseract-ocr/tessdata) | Apache 2.0 |
 | PDF | Android PdfDocument, pdfbox-android | Apache 2.0 |
 | Fonts (CJK) | [Noto Sans CJK](https://github.com/notofonts/noto-cjk) | OFL 1.1 |
@@ -420,6 +432,7 @@ Contributions welcome!
 ## Future Enhancements
 
 - Add more languages to OCR detection
+- Stabilise and evaluate the experimental PaddleOCR V5 path in the `paddle` flavor (see [docs/paddleocr_v5_integration_concept.md](docs/paddleocr_v5_integration_concept.md))
 
 ## 🙌 Community Hall of Fame
 
