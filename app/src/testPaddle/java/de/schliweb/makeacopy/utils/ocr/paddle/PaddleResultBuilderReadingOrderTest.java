@@ -179,6 +179,142 @@ public class PaddleResultBuilderReadingOrderTest {
     }
 
     @Test
+    public void build_rtlLine_emitsTextInLogicalReadingOrder() throws Exception {
+        // Drei Quads in derselben Zeile (Center-Y identisch), erkannt als arabische
+        // Wörter. Paddle liefert pro Crop die Glyphen in **visueller** Reihenfolge
+        // (links→rechts auf dem Bild) — bei RTL-Schrift ist das die Spiegelung der
+        // logischen Codepoint-Reihenfolge. Der Builder muss daher (a) die Quads in
+        // umgekehrter Reihenfolge zusammensetzen und (b) jeden Snippet per
+        // Codepoints umdrehen.
+        Quad qLeft = rectQuad(10, 10, 80, 20, 1.0);
+        Quad qMid = rectQuad(110, 10, 80, 20, 2.0);
+        Quad qRight = rectQuad(210, 10, 80, 20, 3.0);
+
+        // Logisch korrekt:
+        //   rechtes Quad → "مستند"  (logisch erstes Wort)
+        //   mittleres   → "اختبار"
+        //   linkes      → "العربية" (logisch drittes Wort)
+        String aRightLogical = "مستند";
+        String aMidLogical = "اختبار";
+        String aLeftLogical = "العربية";
+
+        // Was Paddle Rec tatsächlich emittiert: pro Crop in visueller Glyphenreihenfolge,
+        // d.h. die logische Codepoint-Sequenz wird gespiegelt zurückgegeben.
+        String aRightVisual = PaddleResultBuilder.reverseByCodepoints(aRightLogical);
+        String aMidVisual = PaddleResultBuilder.reverseByCodepoints(aMidLogical);
+        String aLeftVisual = PaddleResultBuilder.reverseByCodepoints(aLeftLogical);
+
+        Map<Double, PaddleRecOrtRunner.RecOutput> byId = new HashMap<>();
+        byId.put(1.0, textOnly(aLeftVisual));
+        byId.put(2.0, textOnly(aMidVisual));
+        byId.put(3.0, textOnly(aRightVisual));
+
+        IdRec rec = new IdRec(byId);
+        PaddleResultBuilder.Cropper hook = (full, quad) -> {
+            rec.lastQuad = quad;
+            return null;
+        };
+        OCRHelper.OcrResultWords result =
+                PaddleResultBuilder.build(
+                        null, Arrays.asList(qLeft, qMid, qRight), rec, hook);
+
+        assertNotNull(result);
+        // Erwartet: logische Reihenfolge "rechts → mitte → links" UND jedes Wort
+        // per Codepoints zurückgedreht (also wieder logisch korrekt lesbar).
+        assertEquals(aRightLogical + " " + aMidLogical + " " + aLeftLogical, result.text);
+
+        // Recognition wird in visueller Reihenfolge aufgerufen (links→rechts);
+        // die Reihenfolge-Drehung und der Codepoint-Reverse passieren erst beim
+        // Aufbau des Text-Strings.
+        assertEquals(Arrays.asList(1.0, 2.0, 3.0), rec.callOrder);
+    }
+
+    @Test
+    public void reverseByCodepoints_isSurrogateSafe_andSelfInverse() {
+        // Surrogate-Paar (U+1F600 GRINNING FACE) zwischen ASCII.
+        String orig = "a\uD83D\uDE00b";
+        String reversed = PaddleResultBuilder.reverseByCodepoints(orig);
+        assertEquals("b\uD83D\uDE00a", reversed);
+        // Self-inverse.
+        assertEquals(orig, PaddleResultBuilder.reverseByCodepoints(reversed));
+        // Edge cases.
+        assertEquals("", PaddleResultBuilder.reverseByCodepoints(""));
+        assertEquals("x", PaddleResultBuilder.reverseByCodepoints("x"));
+    }
+
+    @Test
+    public void build_rtlSingleQuadWithMultipleWords_skipsWordSplitter_andReversesText() throws Exception {
+        // Regression: bei einem einzelnen Det-Quad, das eine ganze RTL-Zeile mit mehreren
+        // logischen Wörtern umfasst, würde WordSplitter den rec-Text linear nach Pixel-
+        // Spalten in feste Substring-Bereiche schneiden — bei RTL kappt das aber Codepoints
+        // mitten in Wörtern und erzeugt Buchstabensalat (zerrissene End-/Mittel-Formen).
+        // Daher wird WordSplitter bei RTL-Crops übersprungen; das gesamte Quad liefert ein
+        // Snippet, das per reverseByCodepoints in logische Reihenfolge gedreht wird.
+        Quad qLine = rectQuad(0, 0, 600, 30, 42.0);
+
+        // Logisch: "مستند اختبار العربية" — was Paddle visuell L→R emittiert ist die
+        // Codepoint-Spiegelung (mit Spaces an den visuellen Wortgrenzen).
+        String logical = "مستند اختبار العربية";
+        String visualFromRec = PaddleResultBuilder.reverseByCodepoints(logical);
+
+        Map<Double, PaddleRecOrtRunner.RecOutput> byId = new HashMap<>();
+        byId.put(42.0, textOnly(visualFromRec));
+
+        IdRec rec = new IdRec(byId);
+        // Cropper liefert null — WordSplitter würde damit gar nicht erst funktionieren.
+        // Der Test stellt sicher, dass der RTL-Skip greift, BEVOR WordSplitter mit null
+        // aufgerufen wird; sonst gäbe es einen NPE oder ein null-Result.
+        PaddleResultBuilder.Cropper hook = (full, quad) -> {
+            rec.lastQuad = quad;
+            return null;
+        };
+        OCRHelper.OcrResultWords result =
+                PaddleResultBuilder.build(
+                        null, java.util.Collections.singletonList(qLine), rec, hook);
+
+        assertNotNull(result);
+        // Logisch korrekte Reihenfolge ohne kaputt geschnittene Wörter.
+        assertEquals(logical, result.text);
+    }
+
+    @Test
+    public void isRtlText_codepointHeuristic_majorityWins() {
+        assertTrue(PaddleResultBuilder.isRtlText("مستند"));
+        assertTrue(PaddleResultBuilder.isRtlText("שלום"));
+        assertTrue(!PaddleResultBuilder.isRtlText("Hello World"));
+        // Gemischt: arabisch dominiert über LTR-Whitespace+ASCII-Komma.
+        assertTrue(PaddleResultBuilder.isRtlText("مستند, foo"));
+        // LTR-Mehrheit: ASCII-Buchstaben überwiegen einzelnes RTL-Zeichen.
+        assertTrue(!PaddleResultBuilder.isRtlText("Hello شي"));
+        assertTrue(!PaddleResultBuilder.isRtlText(""));
+        assertTrue(!PaddleResultBuilder.isRtlText(null));
+    }
+
+    @Test
+    public void build_ltrLineUnchanged_byRtlHeuristic() throws Exception {
+        // Sicherstellen, dass die RTL-Heuristik LTR-Zeilen nicht aus Versehen kippt.
+        Quad qA = rectQuad(0, 0, 50, 20, 1.0);
+        Quad qB = rectQuad(60, 0, 50, 20, 2.0);
+        Quad qC = rectQuad(120, 0, 50, 20, 3.0);
+
+        Map<Double, PaddleRecOrtRunner.RecOutput> byId = new HashMap<>();
+        byId.put(1.0, textOnly("Hello"));
+        byId.put(2.0, textOnly("nice"));
+        byId.put(3.0, textOnly("World"));
+
+        IdRec rec = new IdRec(byId);
+        PaddleResultBuilder.Cropper hook = (full, quad) -> {
+            rec.lastQuad = quad;
+            return null;
+        };
+        OCRHelper.OcrResultWords result =
+                PaddleResultBuilder.build(
+                        null, Arrays.asList(qA, qB, qC), rec, hook);
+
+        assertEquals("Hello nice World", result.text);
+    }
+
+    @Test
     public void groupQuadsIntoLines_directlyGroupsAndOrders() {
         // Direkter Test der Helfer-Methode.
         Quad q1Left = rectQuad(10, 10, 80, 20, 1.0);

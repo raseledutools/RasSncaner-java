@@ -86,7 +86,16 @@ final class PaddleResultBuilder {
             if (li > 0) {
                 textBuilder.append('\n');
             }
-            for (int qi = 0; qi < line.size(); qi++) {
+
+            // Phase 1: Recognition pro Quad in visueller Reihenfolge (links→rechts).
+            // Wir sammeln pro Quad den emittierten Text-Snippet sowie alle Sub-Words.
+            // Erst nach Abschluss der Zeile entscheiden wir per Codepoint-Heuristik
+            // (RTL vs. LTR) über die logische Reihenfolge — ohne sprachspezifisches
+            // Routing, konsistent mit PdfTextUtils.isRtlText/isRtlLine im PdfCreator.
+            int n = line.size();
+            String[] perQuadText = new String[n];
+            List<List<RecognizedWord>> perQuadWords = new ArrayList<>(n);
+            for (int qi = 0; qi < n; qi++) {
                 Quad q = line.get(qi);
                 Bitmap crop = null;
                 try {
@@ -100,10 +109,20 @@ final class PaddleResultBuilder {
                     // Space-/Token-Rekonstruktion: Recognition liefert keine Spaces.
                     // Versuche, den Crop per vertikalem Projection-Profile in Wort-Segmente
                     // zu trennen und den erkannten Text proportional zu verteilen.
+                    //
+                    // Bei RTL-Texten (Arabisch, Persisch, Hebräisch, …) ist diese Pixel-zu-
+                    // Codepoint-Verteilung nicht zuverlässig: WordSplitter schneidet den rec-
+                    // Output linear nach Pixel-Spalten in feste Substring-Bereiche, was die
+                    // Codepoints an falschen Positionen kappt und zu Buchstabensalat in
+                    // einzelnen Wörtern führt (zerrissene End-/Mittel-Formen). Wir skippen
+                    // den Splitter daher bei RTL-Crops und nehmen den rec-Text als ein Snippet
+                    // pro Quad; Sub-Word-Geometrie für den PDF-Layer kommt aus der CTC-Frame-
+                    // basierten buildSubWords (geometrisch korrekt unabhängig von Schriftrichtung).
                     float aggConf100 =
                             Math.max(0f, Math.min(100f, out.confidence() * 100f));
+                    boolean cropIsRtl = isRtlText(text);
                     List<RecognizedWord> subWords =
-                            WordSplitter.split(q, crop, text, aggConf100);
+                            cropIsRtl ? null : WordSplitter.split(q, crop, text, aggConf100);
                     String emittedText;
                     if (subWords != null && subWords.size() >= 2) {
                         StringBuilder sb = new StringBuilder();
@@ -116,25 +135,50 @@ final class PaddleResultBuilder {
                         subWords = buildSubWords(q, out);
                         emittedText = text;
                     }
-
-                    if (qi > 0 && textBuilder.length() > 0) {
-                        char last = textBuilder.charAt(textBuilder.length() - 1);
-                        if (last != ' ' && last != '\n' && !emittedText.isEmpty()
-                                && emittedText.charAt(0) != ' ') {
-                            textBuilder.append(' ');
-                        }
-                    }
-                    textBuilder.append(emittedText);
-
-                    for (RecognizedWord sw : subWords) {
-                        words.add(sw);
-                        confSum += sw.getConfidence();
-                        confCount++;
-                    }
+                    perQuadText[qi] = emittedText;
+                    perQuadWords.add(subWords);
                 } finally {
                     if (crop != null && crop != full && !crop.isRecycled()) {
                         crop.recycle();
                     }
+                }
+            }
+
+            // Phase 2: RTL-Detection für die Zeile anhand der erkannten Texte.
+            // Eine Zeile gilt als RTL, wenn mehr ihrer Wort-Codepoints RTL als LTR
+            // sind. Bei RTL kehren wir die Reihenfolge der Quads beim Aufbau des
+            // konkatenierten Textes um — die linke (visuell erste) Quad-Box ist
+            // logisch das letzte Wort der Zeile, die rechte das erste.
+            boolean rtl = isRtlLineByText(perQuadText);
+            for (int qi = 0; qi < n; qi++) {
+                int idx = rtl ? (n - 1 - qi) : qi;
+                String emittedText = perQuadText[idx];
+                if (emittedText == null) continue;
+                // Bei RTL liefert Paddle die Glyphen pro Crop in visueller (links→rechts)
+                // Reihenfolge — das ist die Spiegelung der logischen Codepoint-Reihenfolge.
+                // Für korrekten TXT-/BiDi-Output drehen wir jeden Snippet per Codepoints um.
+                if (rtl) {
+                    emittedText = reverseByCodepoints(emittedText);
+                }
+                if (qi > 0 && textBuilder.length() > 0) {
+                    char last = textBuilder.charAt(textBuilder.length() - 1);
+                    if (last != ' ' && last != '\n' && !emittedText.isEmpty()
+                            && emittedText.charAt(0) != ' ') {
+                        textBuilder.append(' ');
+                    }
+                }
+                textBuilder.append(emittedText);
+            }
+
+            // Sub-Words werden in visueller Reihenfolge der Zeile gesammelt: der
+            // PdfCreator macht seine eigene RTL-Sortierung anhand der Bounding-Boxes
+            // (siehe PdfTextUtils.isRtlLine + Sortierung in PdfCreator), daher hier
+            // bewusst keine Umkehrung.
+            for (List<RecognizedWord> subWords : perQuadWords) {
+                for (RecognizedWord sw : subWords) {
+                    words.add(sw);
+                    confSum += sw.getConfidence();
+                    confCount++;
                 }
             }
         }
@@ -206,6 +250,79 @@ final class PaddleResultBuilder {
 
     private static double centerX(Quad q) {
         return (q.minX() + q.maxX()) * 0.5;
+    }
+
+    /**
+     * Codepoint-basierte RTL-Erkennung für einen einzelnen String. Konsistent mit
+     * {@link #isRtlLineByText(String[])} und {@code PdfTextUtils.isRtlText} (im
+     * :main-Sourceset, hier bewusst dupliziert um eine Modul-Abhängigkeit zu vermeiden).
+     *
+     * @param s der zu prüfende Text
+     * @return {@code true}, wenn mehr RTL- als LTR-Codepoints vorkommen
+     */
+    @VisibleForTesting
+    static boolean isRtlText(String s) {
+        if (s == null || s.isEmpty()) return false;
+        int rtlCount = 0;
+        int ltrCount = 0;
+        for (int i = 0; i < s.length(); ) {
+            int cp = s.codePointAt(i);
+            byte d = Character.getDirectionality(cp);
+            if (d == Character.DIRECTIONALITY_RIGHT_TO_LEFT
+                    || d == Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC
+                    || d == Character.DIRECTIONALITY_RIGHT_TO_LEFT_EMBEDDING
+                    || d == Character.DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE) {
+                rtlCount++;
+            } else if (d == Character.DIRECTIONALITY_LEFT_TO_RIGHT
+                    || d == Character.DIRECTIONALITY_LEFT_TO_RIGHT_EMBEDDING
+                    || d == Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE) {
+                ltrCount++;
+            }
+            i += Character.charCount(cp);
+        }
+        return rtlCount > ltrCount;
+    }
+
+    @VisibleForTesting
+    static boolean isRtlLineByText(String[] perQuadText) {
+        if (perQuadText == null || perQuadText.length == 0) return false;
+        int rtlCount = 0;
+        int ltrCount = 0;
+        for (String s : perQuadText) {
+            if (s == null || s.isEmpty()) continue;
+            for (int i = 0; i < s.length(); ) {
+                int cp = s.codePointAt(i);
+                byte d = Character.getDirectionality(cp);
+                if (d == Character.DIRECTIONALITY_RIGHT_TO_LEFT
+                        || d == Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC
+                        || d == Character.DIRECTIONALITY_RIGHT_TO_LEFT_EMBEDDING
+                        || d == Character.DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE) {
+                    rtlCount++;
+                } else if (d == Character.DIRECTIONALITY_LEFT_TO_RIGHT
+                        || d == Character.DIRECTIONALITY_LEFT_TO_RIGHT_EMBEDDING
+                        || d == Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE) {
+                    ltrCount++;
+                }
+                i += Character.charCount(cp);
+            }
+        }
+        return rtlCount > ltrCount;
+    }
+
+    /**
+     * Dreht einen String per Codepoints um (Surrogate-Paar-sicher). Wird bei RTL-Zeilen im
+     * TXT-Output verwendet, weil Paddle die Glyphen pro Crop in visueller (links→rechts)
+     * Reihenfolge liefert — die logische Codepoint-Reihenfolge ist die Spiegelung davon.
+     */
+    @VisibleForTesting
+    static String reverseByCodepoints(String s) {
+        if (s == null || s.length() < 2) return s;
+        int[] cps = s.codePoints().toArray();
+        StringBuilder sb = new StringBuilder(s.length());
+        for (int i = cps.length - 1; i >= 0; i--) {
+            sb.appendCodePoint(cps[i]);
+        }
+        return sb.toString();
     }
 
     /**

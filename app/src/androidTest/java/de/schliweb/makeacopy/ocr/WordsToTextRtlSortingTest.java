@@ -35,6 +35,19 @@ public class WordsToTextRtlSortingTest {
   }
 
   /**
+   * Converts a logical-order RTL string to visual codepoint order. This mirrors the project-wide
+   * convention for {@code RecognizedWord.text}: OCR engines emit RTL text in visual codepoint
+   * order (left→right as on the screen). The text layer in the PDF and the TXT export both apply
+   * a single codepoint reverse to obtain logical reading order — see
+   * {@link de.schliweb.makeacopy.utils.export.PdfTextUtils#reorderRtlForPdf(String)} and
+   * {@link OCRPostProcessor#wordsToText(java.util.List)}.
+   */
+  private static String visual(String logical) {
+    if (logical == null) return null;
+    return new StringBuilder(logical).reverse().toString();
+  }
+
+  /**
    * Tests that wordsToText correctly sorts Persian words from right to left. Simulates OCR output
    * where Persian words have bounding boxes positioned RTL.
    *
@@ -50,12 +63,13 @@ public class WordsToTextRtlSortingTest {
 
     // Persian words positioned from right to left (as OCR would detect them)
     // Word positions: rightmost word first in visual order
-    words.add(createWordWithBounds("این", 500, 10, 550, 30)); // "This" - rightmost
-    words.add(createWordWithBounds("سند", 400, 10, 480, 30)); // "document"
-    words.add(createWordWithBounds("شامل", 300, 10, 380, 30)); // "contains"
-    words.add(createWordWithBounds("متن", 200, 10, 280, 30)); // "text"
-    words.add(createWordWithBounds("فارسی", 100, 10, 180, 30)); // "Persian"
-    words.add(createWordWithBounds("است", 10, 10, 80, 30)); // "is" - leftmost
+    // Inputs use visual codepoint order (RecognizedWord convention).
+    words.add(createWordWithBounds(visual("این"), 500, 10, 550, 30)); // "This" - rightmost
+    words.add(createWordWithBounds(visual("سند"), 400, 10, 480, 30)); // "document"
+    words.add(createWordWithBounds(visual("شامل"), 300, 10, 380, 30)); // "contains"
+    words.add(createWordWithBounds(visual("متن"), 200, 10, 280, 30)); // "text"
+    words.add(createWordWithBounds(visual("فارسی"), 100, 10, 180, 30)); // "Persian"
+    words.add(createWordWithBounds(visual("است"), 10, 10, 80, 30)); // "is" - leftmost
 
     String result = OCRPostProcessor.wordsToText(words);
 
@@ -120,9 +134,9 @@ public class WordsToTextRtlSortingTest {
     words.add(createWordWithBounds("Hello", 10, 10, 60, 30));
     words.add(createWordWithBounds("World", 70, 10, 130, 30));
 
-    // Line 2: Persian text (RTL) - y position 50-70
-    words.add(createWordWithBounds("سلام", 100, 50, 150, 70)); // "Hello" - rightmost
-    words.add(createWordWithBounds("جهان", 30, 50, 80, 70)); // "World" - leftmost
+    // Line 2: Persian text (RTL) - y position 50-70 (visual codepoint order)
+    words.add(createWordWithBounds(visual("سلام"), 100, 50, 150, 70)); // "Hello" - rightmost
+    words.add(createWordWithBounds(visual("جهان"), 30, 50, 80, 70)); // "World" - leftmost
 
     String result = OCRPostProcessor.wordsToText(words);
     String[] lines = Pattern.compile("\n").split(result);
@@ -151,9 +165,9 @@ public class WordsToTextRtlSortingTest {
     // (Hello World)
     List<RecognizedWord> words = new ArrayList<>();
 
-    // Arabic words positioned from right to left
-    words.add(createWordWithBounds("مرحبا", 100, 10, 180, 30)); // "Hello" - rightmost
-    words.add(createWordWithBounds("بالعالم", 10, 10, 90, 30)); // "World" - leftmost
+    // Arabic words positioned from right to left (visual codepoint order)
+    words.add(createWordWithBounds(visual("مرحبا"), 100, 10, 180, 30)); // "Hello" - rightmost
+    words.add(createWordWithBounds(visual("بالعالم"), 10, 10, 90, 30)); // "World" - leftmost
 
     String result = OCRPostProcessor.wordsToText(words);
 
@@ -174,16 +188,17 @@ public class WordsToTextRtlSortingTest {
   public void testWordsToText_MultiLinePersianDocument() {
     List<RecognizedWord> words = new ArrayList<>();
 
+    // Inputs use visual codepoint order (RecognizedWord convention).
     // Line 1: "این سند" (This document) - y: 10-30
-    words.add(createWordWithBounds("این", 150, 10, 200, 30)); // rightmost
-    words.add(createWordWithBounds("سند", 80, 10, 140, 30)); // leftmost
+    words.add(createWordWithBounds(visual("این"), 150, 10, 200, 30)); // rightmost
+    words.add(createWordWithBounds(visual("سند"), 80, 10, 140, 30)); // leftmost
 
     // Line 2: "متن فارسی" (Persian text) - y: 50-70
-    words.add(createWordWithBounds("متن", 150, 50, 200, 70)); // rightmost
-    words.add(createWordWithBounds("فارسی", 60, 50, 140, 70)); // leftmost
+    words.add(createWordWithBounds(visual("متن"), 150, 50, 200, 70)); // rightmost
+    words.add(createWordWithBounds(visual("فارسی"), 60, 50, 140, 70)); // leftmost
 
     // Line 3: "است" (is) - y: 90-110
-    words.add(createWordWithBounds("است", 150, 90, 200, 110));
+    words.add(createWordWithBounds(visual("است"), 150, 90, 200, 110));
 
     String result = OCRPostProcessor.wordsToText(words);
     String[] lines = Pattern.compile("\n").split(result);
@@ -209,9 +224,9 @@ public class WordsToTextRtlSortingTest {
     // (Hello World)
     List<RecognizedWord> words = new ArrayList<>();
 
-    // Hebrew words positioned from right to left
-    words.add(createWordWithBounds("שלום", 100, 10, 180, 30)); // "Hello" - rightmost
-    words.add(createWordWithBounds("עולם", 10, 10, 90, 30)); // "World" - leftmost
+    // Hebrew words positioned from right to left (visual codepoint order)
+    words.add(createWordWithBounds(visual("שלום"), 100, 10, 180, 30)); // "Hello" - rightmost
+    words.add(createWordWithBounds(visual("עולם"), 10, 10, 90, 30)); // "World" - leftmost
 
     String result = OCRPostProcessor.wordsToText(words);
 
@@ -231,8 +246,8 @@ public class WordsToTextRtlSortingTest {
     // Single English word
     words.add(createWordWithBounds("Hello", 10, 10, 60, 30));
 
-    // Single Persian word on next line
-    words.add(createWordWithBounds("سلام", 10, 50, 60, 70));
+    // Single Persian word on next line (visual codepoint order)
+    words.add(createWordWithBounds(visual("سلام"), 10, 50, 60, 70));
 
     String result = OCRPostProcessor.wordsToText(words);
     String[] lines = Pattern.compile("\n").split(result);
@@ -253,10 +268,10 @@ public class WordsToTextRtlSortingTest {
     List<RecognizedWord> words = new ArrayList<>();
 
     // Persian text with numbers: "قیمت 1000 تومان"
-    // (Price 1000 Toman)
-    words.add(createWordWithBounds("قیمت", 200, 10, 280, 30)); // "Price" - rightmost
+    // (Price 1000 Toman) — Persian words in visual codepoint order, digits unchanged.
+    words.add(createWordWithBounds(visual("قیمت"), 200, 10, 280, 30)); // "Price" - rightmost
     words.add(createWordWithBounds("1000", 120, 10, 180, 30)); // number
-    words.add(createWordWithBounds("تومان", 10, 10, 100, 30)); // "Toman" - leftmost
+    words.add(createWordWithBounds(visual("تومان"), 10, 10, 100, 30)); // "Toman" - leftmost
 
     String result = OCRPostProcessor.wordsToText(words);
 
