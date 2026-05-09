@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Utility class for handling language-to-model mappings and resolving recognition models
@@ -153,6 +154,8 @@ final class PaddleLanguageRouter {
         LANG_TO_MODEL = Collections.unmodifiableMap(m);
     }
 
+    private static final Pattern TOKEN_SPLITTER = Pattern.compile("[+,;]");
+
     private PaddleLanguageRouter() {
         // no instances
     }
@@ -176,7 +179,7 @@ final class PaddleLanguageRouter {
         s = s.toLowerCase(Locale.ROOT);
 
         // In Tesseract sind '+' Trennzeichen; wir akzeptieren zusätzlich ',' und ';'.
-        String[] tokens = s.split("[+,;]");
+        String[] tokens = TOKEN_SPLITTER.split(s, -1);
         Set<String> hits = new LinkedHashSet<>();
         for (String tok : tokens) {
             String t = tok.trim();

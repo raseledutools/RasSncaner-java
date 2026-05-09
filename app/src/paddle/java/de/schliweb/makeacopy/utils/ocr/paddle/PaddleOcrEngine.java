@@ -70,7 +70,6 @@ final class PaddleOcrEngine implements OcrEngine {
         }
     }
 
-    private final Context appContext;
     private final RunnerSupplier supplier;
     private volatile String language;
 
@@ -80,7 +79,6 @@ final class PaddleOcrEngine implements OcrEngine {
 
     @VisibleForTesting
     PaddleOcrEngine(Context context, RunnerSupplier supplier) {
-        this.appContext = (context == null) ? null : context.getApplicationContext();
         this.supplier = supplier;
     }
 
