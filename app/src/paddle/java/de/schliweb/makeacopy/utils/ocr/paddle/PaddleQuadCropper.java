@@ -46,13 +46,13 @@ final class PaddleQuadCropper {
         double dyW = y[1] - y[0];
         double dxH = x[3] - x[0];
         double dyH = y[3] - y[0];
-        int w = (int) Math.round(Math.hypot(dxW, dyW));
-        int h = (int) Math.round(Math.hypot(dxH, dyH));
-        if (w < 1) w = 1;
-        if (h < 1) h = 1;
+        int sourceW = (int) Math.round(Math.hypot(dxW, dyW));
+        int sourceH = (int) Math.round(Math.hypot(dxH, dyH));
+        if (sourceW < 1) sourceW = 1;
+        if (sourceH < 1) sourceH = 1;
 
         // Affine Transformation (Source→Dest) über 3 Punkte:
-        //   TL → (0,0), TR → (w,0), BL → (0,h)
+        //   TL → (0,0), TR → (sourceW,0), BL → (0,sourceH)
         float[] src = new float[] {
                 (float) x[0], (float) y[0],
                 (float) x[1], (float) y[1],
@@ -60,8 +60,8 @@ final class PaddleQuadCropper {
         };
         float[] dst = new float[] {
                 0f, 0f,
-                (float) w, 0f,
-                0f, (float) h
+                (float) sourceW, 0f,
+                0f, (float) sourceH
         };
 
         Matrix m = new Matrix();
@@ -76,7 +76,7 @@ final class PaddleQuadCropper {
             return Bitmap.createBitmap(full, x0, y0, bw, bh);
         }
 
-        Bitmap out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        Bitmap out = Bitmap.createBitmap(sourceW, sourceH, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(out);
         canvas.drawColor(Color.WHITE);
         Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG);

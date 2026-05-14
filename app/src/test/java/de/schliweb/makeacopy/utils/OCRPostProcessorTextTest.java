@@ -199,4 +199,21 @@ public class OCRPostProcessorTextTest {
     String result = OCRPostProcessor.wordsToText(words);
     assertEquals("don't", result);
   }
+
+  @Test
+  public void wordsToText_densePaddleBoxes_usesStableOrdering() {
+    List<RecognizedWord> words =
+        Arrays.asList(
+            new RecognizedWord("A", new RectF(30, 0, 40, 100), 90.0f),
+            new RecognizedWord("B", new RectF(10, 45, 20, 55), 90.0f),
+            new RecognizedWord("C", new RectF(20, 90, 30, 100), 90.0f),
+            new RecognizedWord("D", new RectF(0, 135, 10, 145), 90.0f));
+
+    String result = OCRPostProcessor.wordsToText(words);
+
+    assertTrue(result.contains("A"));
+    assertTrue(result.contains("B"));
+    assertTrue(result.contains("C"));
+    assertTrue(result.contains("D"));
+  }
 }

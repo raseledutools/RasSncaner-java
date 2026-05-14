@@ -71,6 +71,13 @@ public class PaddleLanguageRouterTest {
     }
 
     @Test
+    public void resolve_direct_model_group_keys() {
+        for (String mk : PaddleLanguageRouter.MODEL_KEYS) {
+            assertEquals(mk, PaddleLanguageRouter.resolveRecModel(mk));
+        }
+    }
+
+    @Test
     public void resolve_combined_priority_en_over_latin() {
         // en hat Vorrang vor latin
         assertEquals("en", PaddleLanguageRouter.resolveRecModel("eng+deu"));

@@ -87,6 +87,10 @@ final class PaddleLanguageRouter {
 
         Map<String, String> m = new HashMap<>();
 
+        for (String modelKey : MODEL_KEYS) {
+            m.put(modelKey, modelKey);
+        }
+
         // en
         m.put("eng", "en");
         m.put("en", "en");

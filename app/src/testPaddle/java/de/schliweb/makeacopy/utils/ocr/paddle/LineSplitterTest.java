@@ -60,6 +60,30 @@ public class LineSplitterTest {
     }
 
     @Test
+    public void splitWideQuads_noWideQuad_returnsSameListIdentity() {
+        List<Quad> qs =
+                Arrays.asList(
+                        rect(0, 0, 100, 20),
+                        rect(0, 30, 120, 20),
+                        rect(0, 60, 80, 20));
+        assertSame(qs, LineSplitter.splitWideQuads(qs));
+    }
+
+    @Test
+    public void splitWideQuads_veryWideQuad_splitsIntoOrderedStrips() {
+        Quad wide = rect(0, 0, 800, 20);
+        List<Quad> out = LineSplitter.splitWideQuads(Collections.singletonList(wide));
+
+        assertEquals(3, out.size());
+        assertEquals(0.0, out.get(0).minX(), 1e-9);
+        assertEquals(800.0 / 3.0, out.get(0).maxX(), 1e-9);
+        assertEquals(800.0 / 3.0, out.get(1).minX(), 1e-9);
+        assertEquals(1600.0 / 3.0, out.get(1).maxX(), 1e-9);
+        assertEquals(1600.0 / 3.0, out.get(2).minX(), 1e-9);
+        assertEquals(800.0, out.get(2).maxX(), 1e-9);
+    }
+
+    @Test
     public void splitTallQuads_tallQuadButNullCrop_keepsOriginal() {
         // Ein deutlich höherer Quad → Splitkandidat. Cropper liefert null → Fallback auf
         // Original-Quad. Liste muss unverändert in Größe und Inhalt bleiben.

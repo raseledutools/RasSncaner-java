@@ -86,6 +86,12 @@ class PaddleRecOrtRunner implements AutoCloseable {
     static final int REC_MIN_WIDTH = 16;
 
     /**
+     * Per-crop recognition logs are useful while tuning the recognizer, but they are emitted once
+     * for every detected quad and can dominate real-device measurements on dense pages.
+     */
+    @VisibleForTesting static final boolean ENABLE_PER_CROP_RECOGNITION_LOGS = true;
+
+    /**
      * Defines the maximum number of simultaneous live recognition sessions allowed.
      *
      * This constant imposes a hard cap on the number of active recognition sessions
@@ -240,8 +246,7 @@ class PaddleRecOrtRunner implements AutoCloseable {
      * other constructors that initialize the runner with appropriate context and model configuration.
      *
      * Annotation:
-     * - {@link com.google.common.annotations.VisibleForTesting}: Marks this constructor
-     *   as accessible solely for testing purposes.
+     * - {@link VisibleForTesting}: Marks this constructor as accessible solely for testing purposes.
      */
     @VisibleForTesting
     protected PaddleRecOrtRunner() {
@@ -528,7 +533,10 @@ class PaddleRecOrtRunner implements AutoCloseable {
                 CtcDecoder.Decoded dec = CtcDecoder.decode(logits, vocab);
 
                 int[] argmaxHead = null;
-                if (PaddleDebugDumper.isEnabled() && T > 0 && C > 0) {
+                if (PaddleResultBuilder.ENABLE_DEBUG_DUMPS
+                        && PaddleDebugDumper.isEnabled()
+                        && T > 0
+                        && C > 0) {
                     int n = Math.min(T, PaddleDebugDumper.ARGMAX_HEAD_FRAMES);
                     argmaxHead = new int[n];
                     for (int t = 0; t < n; t++) {
@@ -545,24 +553,26 @@ class PaddleRecOrtRunner implements AutoCloseable {
                     }
                 }
 
-                long tEnd = System.nanoTime();
-                Log.i(
-                        TAG,
-                        "recognize modelKey="
-                                + modelKey
-                                + " T="
-                                + T
-                                + " C="
-                                + C
-                                + " textLen="
-                                + dec.text().length()
-                                + " meanConf="
-                                + dec.meanConfidence()
-                                + " tokens="
-                                + dec.tokens().size()
-                                + " total="
-                                + ((tEnd - tStart) / 1_000_000L)
-                                + "ms");
+                if (ENABLE_PER_CROP_RECOGNITION_LOGS) {
+                    long tEnd = System.nanoTime();
+                    Log.i(
+                            TAG,
+                            "recognize modelKey="
+                                    + modelKey
+                                    + " T="
+                                    + T
+                                    + " C="
+                                    + C
+                                    + " textLen="
+                                    + dec.text().length()
+                                    + " meanConf="
+                                    + dec.meanConfidence()
+                                    + " tokens="
+                                    + dec.tokens().size()
+                                    + " total="
+                                    + ((tEnd - tStart) / 1_000_000L)
+                                    + "ms");
+                }
                 return new RecOutput(
                         dec.text(),
                         dec.meanConfidence(),

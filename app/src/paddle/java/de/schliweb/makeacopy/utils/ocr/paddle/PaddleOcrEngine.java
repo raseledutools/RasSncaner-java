@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
  * Key features of this implementation:
  * - Detection and recognition are performed using async runners.
  * - Supports language-based model selection.
- * - A fallback to Tesseract is available if no recognition model is found.
+ * - Returns an empty result if no recognition model is found.
  *
  * Thread Safety:
  * - This class is thread-safe.
@@ -157,16 +157,17 @@ final class PaddleOcrEngine implements OcrEngine {
         long tStart = System.nanoTime();
         String modelKey = PaddleLanguageRouter.resolveRecModel(language);
         if (modelKey == null) {
-            // Ohne Routing kein Paddle-Run → Tesseract-Fallback in OCRHelper.
-            Log.i(TAG, "no rec model for lang=" + language + " → empty result (Tesseract fallback)");
+            Log.i(TAG, "no rec model for lang=" + language + " → empty result");
             return new OCRHelper.OcrResultWords("", null, new java.util.ArrayList<>());
         }
         PaddleDetOrtRunner det = supplier.det();
         PaddleRecOrtRunner rec = supplier.rec(modelKey);
         long tInit = System.nanoTime();
 
-        PaddleDebugDumper.registerSample(
-                bitmap, "img_" + Integer.toHexString(System.identityHashCode(bitmap)));
+        if (PaddleResultBuilder.ENABLE_DEBUG_DUMPS) {
+            PaddleDebugDumper.registerSample(
+                    bitmap, "img_" + Integer.toHexString(System.identityHashCode(bitmap)));
+        }
 
         List<Quad> quads = det.detect(bitmap);
         OCRHelper.OcrResultWords result =

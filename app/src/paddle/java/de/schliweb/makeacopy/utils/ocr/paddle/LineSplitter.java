@@ -85,6 +85,9 @@ final class LineSplitter {
      */
     @VisibleForTesting static final int MIN_VALLEY_HEIGHT_PX = 2;
 
+    @VisibleForTesting static final double WIDE_QUAD_MIN_ASPECT = 8.0;
+    @VisibleForTesting static final int WIDE_QUAD_TARGET_SCALED_WIDTH = 768;
+
     private LineSplitter() {}
 
     /**
@@ -115,6 +118,27 @@ final class LineSplitter {
      */
     static List<Quad> splitTallQuads(Bitmap full, List<Quad> quads) {
         return splitTallQuads(full, quads, PaddleQuadCropper::crop);
+    }
+
+    @VisibleForTesting
+    static List<Quad> splitWideQuads(List<Quad> quads) {
+        if (quads == null || quads.isEmpty()) return quads;
+
+        List<Quad> out = null;
+        for (int i = 0; i < quads.size(); i++) {
+            Quad q = quads.get(i);
+            List<Quad> subs = splitOneWideQuad(q);
+            if (subs == null || subs.size() < 2) {
+                if (out != null) out.add(q);
+                continue;
+            }
+            if (out == null) {
+                out = new ArrayList<>(quads.size() + subs.size());
+                for (int j = 0; j < i; j++) out.add(quads.get(j));
+            }
+            out.addAll(subs);
+        }
+        return out != null ? out : quads;
     }
 
     /**
@@ -192,6 +216,47 @@ final class LineSplitter {
         }
         Arrays.sort(hs);
         return hs[hs.length / 2];
+    }
+
+    private static List<Quad> splitOneWideQuad(Quad q) {
+        double w = Math.max(1.0, q.maxX() - q.minX());
+        double h = Math.max(1.0, q.maxY() - q.minY());
+        double aspect = w / h;
+        double scaledW = w * PaddleRecOrtRunner.REC_INPUT_HEIGHT / h;
+        if (aspect < WIDE_QUAD_MIN_ASPECT || scaledW <= WIDE_QUAD_TARGET_SCALED_WIDTH) {
+            return null;
+        }
+
+        int parts = (int) Math.ceil(scaledW / WIDE_QUAD_TARGET_SCALED_WIDTH);
+        if (parts < 2) return null;
+        parts = Math.min(parts, 8);
+
+        List<Quad> out = new ArrayList<>(parts);
+        for (int i = 0; i < parts; i++) {
+            double u0 = (double) i / parts;
+            double u1 = (double) (i + 1) / parts;
+            out.add(verticalStrip(q, u0, u1));
+        }
+        return out;
+    }
+
+    private static Quad verticalStrip(Quad q, double u0, double u1) {
+        double topX0 = lerp(q.x[0], q.x[1], u0);
+        double topY0 = lerp(q.y[0], q.y[1], u0);
+        double topX1 = lerp(q.x[0], q.x[1], u1);
+        double topY1 = lerp(q.y[0], q.y[1], u1);
+        double bottomX1 = lerp(q.x[3], q.x[2], u1);
+        double bottomY1 = lerp(q.y[3], q.y[2], u1);
+        double bottomX0 = lerp(q.x[3], q.x[2], u0);
+        double bottomY0 = lerp(q.y[3], q.y[2], u0);
+        return new Quad(
+                new double[] {topX0, topX1, bottomX1, bottomX0},
+                new double[] {topY0, topY1, bottomY1, bottomY0},
+                q.score);
+    }
+
+    private static double lerp(double a, double b, double u) {
+        return a + (b - a) * u;
     }
 
     /**

@@ -11,12 +11,18 @@ package de.schliweb.makeacopy.utils.ocr.paddle;
 
 import android.graphics.Bitmap;
 import android.graphics.RectF;
+import android.util.Log;
 import androidx.annotation.VisibleForTesting;
 import de.schliweb.makeacopy.utils.ocr.OCRHelper;
 import de.schliweb.makeacopy.utils.ocr.RecognizedWord;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Utility class for constructing OCR result objects from image processing outputs.
@@ -31,6 +37,8 @@ import java.util.List;
  */
 final class PaddleResultBuilder {
 
+    private static final String TAG = "PaddleResultBuilder";
+
     /**
      * Tolerance factor used for grouping quads into lines during OCR result processing.
      * This factor determines the maximum allowable vertical overlap between the
@@ -38,8 +46,24 @@ final class PaddleResultBuilder {
      * Specifically, the tolerance is calculated as {@code LINE_TOLERANCE_FACTOR × median quad height}.
      */
     @VisibleForTesting static final double LINE_TOLERANCE_FACTOR = 0.6;
+    @VisibleForTesting static final int PARALLEL_RECOGNITION_MIN_QUADS = 8;
+    @VisibleForTesting static final int PARALLEL_RECOGNITION_THREADS = 1;
+    @VisibleForTesting static final boolean ENABLE_TALL_QUAD_SPLITTER = false;
+    @VisibleForTesting static final boolean ENABLE_BITMAP_WORD_SPLITTER = true;
+    @VisibleForTesting static final boolean ENABLE_WIDE_QUAD_SPLITTER = false;
+    @VisibleForTesting static final boolean ENABLE_DEBUG_DUMPS = false;
 
     private PaddleResultBuilder() {}
+
+    private static final class QuadRecognition {
+        final String text;
+        final List<RecognizedWord> words;
+
+        QuadRecognition(String text, List<RecognizedWord> words) {
+            this.text = text;
+            this.words = words;
+        }
+    }
 
     /**
      * A functional interface that defines a method for cropping a region of interest from an image.
@@ -63,12 +87,21 @@ final class PaddleResultBuilder {
             return new OCRHelper.OcrResultWords("", null, new ArrayList<>());
         }
         // Schritt 2 (Layout-Rekonstruktion v2): zu hohe Det-Quads vor Recognition per
-        // horizontalem Projection Profile in Zeilen-Sub-Quads zerlegen. Konservativ:
-        // greift nur, wenn Höhe deutlich über medianer Quad-Höhe liegt.
-        List<Quad> effectiveQuads = LineSplitter.splitTallQuads(full, quads);
+        // horizontalem Projection Profile in Zeilen-Sub-Quads zerlegen. Im normalen
+        // Paddle-Pfad bleibt das deaktiviert, weil reale Messungen gezeigt haben, dass
+        // zusätzliche Crops die serielle Recognition deutlich verlangsamen können.
+        List<Quad> effectiveQuads = ENABLE_TALL_QUAD_SPLITTER ? LineSplitter.splitTallQuads(full, quads) : quads;
+        if (ENABLE_WIDE_QUAD_SPLITTER && effectiveQuads.size() > 1) {
+            effectiveQuads = LineSplitter.splitWideQuads(effectiveQuads);
+        }
+        if (effectiveQuads.size() != quads.size()) {
+            Log.i(TAG, "effectiveQuads original=" + quads.size() + " effective=" + effectiveQuads.size());
+        }
 
         // Debug-Dumps (nur wenn aktiv und Bitmap registriert): Originalbild mit Det-Quads.
-        PaddleDebugDumper.dumpOriginalWithQuads(full, effectiveQuads);
+        if (ENABLE_DEBUG_DUMPS) {
+            PaddleDebugDumper.dumpOriginalWithQuads(full, effectiveQuads);
+        }
 
         // Reading-Order via Zeilen-Gruppierung: vertikales Center-Y-Overlap mit Toleranz
         // = LINE_TOLERANCE_FACTOR * mediane Quad-Höhe. Innerhalb der Zeile nach Center-X
@@ -80,7 +113,18 @@ final class PaddleResultBuilder {
         double confSum = 0.0;
         int confCount = 0;
 
-        int globalCropIndex = 0;
+        AtomicInteger globalCropIndex = new AtomicInteger();
+        int totalQuads = 0;
+        for (List<Quad> line : lines) {
+            totalQuads += line.size();
+        }
+        ExecutorService recognitionExecutor =
+                full != null
+                                && PARALLEL_RECOGNITION_THREADS > 1
+                                && totalQuads >= PARALLEL_RECOGNITION_MIN_QUADS
+                        ? Executors.newFixedThreadPool(PARALLEL_RECOGNITION_THREADS)
+                        : null;
+        try {
         for (int li = 0; li < lines.size(); li++) {
             List<Quad> line = lines.get(li);
             if (li > 0) {
@@ -95,52 +139,26 @@ final class PaddleResultBuilder {
             int n = line.size();
             String[] perQuadText = new String[n];
             List<List<RecognizedWord>> perQuadWords = new ArrayList<>(n);
-            for (int qi = 0; qi < n; qi++) {
-                Quad q = line.get(qi);
-                Bitmap crop = null;
-                try {
-                    crop = cropper.crop(full, q);
-                    PaddleRecOrtRunner.RecOutput out = rec.recognize(crop);
-                    String text = out.text() != null ? out.text() : "";
-
-                    // Debug-Dump pro Crop (nur wenn aktiv).
-                    PaddleDebugDumper.dumpCrop(full, globalCropIndex++, q, crop, out);
-
-                    // Space-/Token-Rekonstruktion: Recognition liefert keine Spaces.
-                    // Versuche, den Crop per vertikalem Projection-Profile in Wort-Segmente
-                    // zu trennen und den erkannten Text proportional zu verteilen.
-                    //
-                    // Bei RTL-Texten (Arabisch, Persisch, Hebräisch, …) ist diese Pixel-zu-
-                    // Codepoint-Verteilung nicht zuverlässig: WordSplitter schneidet den rec-
-                    // Output linear nach Pixel-Spalten in feste Substring-Bereiche, was die
-                    // Codepoints an falschen Positionen kappt und zu Buchstabensalat in
-                    // einzelnen Wörtern führt (zerrissene End-/Mittel-Formen). Wir skippen
-                    // den Splitter daher bei RTL-Crops und nehmen den rec-Text als ein Snippet
-                    // pro Quad; Sub-Word-Geometrie für den PDF-Layer kommt aus der CTC-Frame-
-                    // basierten buildSubWords (geometrisch korrekt unabhängig von Schriftrichtung).
-                    float aggConf100 =
-                            Math.max(0f, Math.min(100f, out.confidence() * 100f));
-                    boolean cropIsRtl = isRtlText(text);
-                    List<RecognizedWord> subWords =
-                            cropIsRtl ? null : WordSplitter.split(q, crop, text, aggConf100);
-                    String emittedText;
-                    if (subWords != null && subWords.size() >= 2) {
-                        StringBuilder sb = new StringBuilder();
-                        for (int wi = 0; wi < subWords.size(); wi++) {
-                            if (wi > 0) sb.append(' ');
-                            sb.append(subWords.get(wi).getText());
-                        }
-                        emittedText = sb.toString();
-                    } else {
-                        subWords = buildSubWords(q, out);
-                        emittedText = text;
-                    }
-                    perQuadText[qi] = emittedText;
-                    perQuadWords.add(subWords);
-                } finally {
-                    if (crop != null && crop != full && !crop.isRecycled()) {
-                        crop.recycle();
-                    }
+            if (recognitionExecutor != null && n >= 2) {
+                List<Future<QuadRecognition>> futures = new ArrayList<>(n);
+                for (int qi = 0; qi < n; qi++) {
+                    final Quad q = line.get(qi);
+                    futures.add(
+                            recognitionExecutor.submit(
+                                    (Callable<QuadRecognition>)
+                                            () -> recognizeQuad(full, q, rec, cropper, globalCropIndex)));
+                }
+                for (int qi = 0; qi < n; qi++) {
+                    QuadRecognition recognized = futures.get(qi).get();
+                    perQuadText[qi] = recognized.text;
+                    perQuadWords.add(recognized.words);
+                }
+            } else {
+                for (int qi = 0; qi < n; qi++) {
+                    QuadRecognition recognized =
+                            recognizeQuad(full, line.get(qi), rec, cropper, globalCropIndex);
+                    perQuadText[qi] = recognized.text;
+                    perQuadWords.add(recognized.words);
                 }
             }
 
@@ -182,12 +200,75 @@ final class PaddleResultBuilder {
                 }
             }
         }
+        } finally {
+            if (recognitionExecutor != null) {
+                recognitionExecutor.shutdownNow();
+            }
+        }
 
         Integer meanConf =
                 (confCount == 0) ? null : Integer.valueOf((int) Math.round(confSum / confCount));
         // Debug-Dump abschließen (nur wenn aktiv und für full registriert).
-        PaddleDebugDumper.finishSample(full, textBuilder.toString(), meanConf);
+        if (ENABLE_DEBUG_DUMPS) {
+            PaddleDebugDumper.finishSample(full, textBuilder.toString(), meanConf);
+        }
         return new OCRHelper.OcrResultWords(textBuilder.toString(), meanConf, words);
+    }
+
+    private static QuadRecognition recognizeQuad(
+            Bitmap full,
+            Quad q,
+            PaddleRecOrtRunner rec,
+            Cropper cropper,
+            AtomicInteger globalCropIndex)
+            throws Exception {
+        Bitmap crop = null;
+        try {
+            crop = cropper.crop(full, q);
+            PaddleRecOrtRunner.RecOutput out = rec.recognize(crop);
+            String text = out.text() != null ? out.text() : "";
+
+            // Debug-Dump pro Crop (nur wenn aktiv).
+            if (ENABLE_DEBUG_DUMPS) {
+                PaddleDebugDumper.dumpCrop(full, globalCropIndex.getAndIncrement(), q, crop, out);
+            }
+
+            // Space-/Token-Rekonstruktion: Recognition liefert keine Spaces.
+            // Versuche, den Crop per vertikalem Projection-Profile in Wort-Segmente
+            // zu trennen und den erkannten Text proportional zu verteilen.
+            //
+            // Bei RTL-Texten (Arabisch, Persisch, Hebräisch, …) ist diese Pixel-zu-
+            // Codepoint-Verteilung nicht zuverlässig: WordSplitter schneidet den rec-
+            // Output linear nach Pixel-Spalten in feste Substring-Bereiche, was die
+            // Codepoints an falschen Positionen kappt und zu Buchstabensalat in
+            // einzelnen Wörtern führt (zerrissene End-/Mittel-Formen). Wir skippen
+            // den Splitter daher bei RTL-Crops und nehmen den rec-Text als ein Snippet
+            // pro Quad; Sub-Word-Geometrie für den PDF-Layer kommt aus der CTC-Frame-
+            // basierten buildSubWords (geometrisch korrekt unabhängig von Schriftrichtung).
+            float aggConf100 = Math.max(0f, Math.min(100f, out.confidence() * 100f));
+            boolean cropIsRtl = isRtlText(text);
+            List<RecognizedWord> subWords =
+                    (!ENABLE_BITMAP_WORD_SPLITTER || cropIsRtl)
+                            ? null
+                            : WordSplitter.split(q, crop, text, aggConf100);
+            String emittedText;
+            if (subWords != null && subWords.size() >= 2) {
+                StringBuilder sb = new StringBuilder();
+                for (int wi = 0; wi < subWords.size(); wi++) {
+                    if (wi > 0) sb.append(' ');
+                    sb.append(subWords.get(wi).getText());
+                }
+                emittedText = sb.toString();
+            } else {
+                subWords = buildSubWords(q, out);
+                emittedText = text;
+            }
+            return new QuadRecognition(emittedText, subWords);
+        } finally {
+            if (crop != null && crop != full && !crop.isRecycled()) {
+                crop.recycle();
+            }
+        }
     }
 
     /**

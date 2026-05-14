@@ -697,17 +697,15 @@ public class OCRPostProcessor {
       return "";
     }
 
-    // Sort words by position: primarily by Y (top), secondarily by X (left)
+    // Sort words by position using a strict, transitive order. Line grouping below still decides
+    // which nearby words belong together; the initial sort must not use pair-dependent thresholds
+    // because TimSort rejects non-transitive comparators on dense Paddle OCR boxes.
     List<RecognizedWord> sorted = new ArrayList<>(words);
     sorted.sort(
-        (a, b) -> {
-          float ay = a.getBoundingBox().top;
-          float by = b.getBoundingBox().top;
-          if (Math.abs(ay - by) > Math.min(a.height(), b.height()) * 0.5f) {
-            return Float.compare(ay, by);
-          }
-          return Float.compare(a.getBoundingBox().left, b.getBoundingBox().left);
-        });
+        Comparator.comparingDouble((RecognizedWord word) -> word.getBoundingBox().top)
+            .thenComparingDouble(word -> word.getBoundingBox().left)
+            .thenComparingDouble(word -> word.getBoundingBox().bottom)
+            .thenComparingDouble(word -> word.getBoundingBox().right));
 
     // Group words into lines based on vertical proximity
     List<List<RecognizedWord>> lines = new ArrayList<>();
