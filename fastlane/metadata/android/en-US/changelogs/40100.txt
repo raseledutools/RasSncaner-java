@@ -1,0 +1,4 @@
+MakeACopy 4.1.0
+* Improved OCR architecture with separate Standard and Paddle implementations.
+* Enhanced Paddle OCR processing and safer crop validation.
+* Note: Paddle builds are currently available on GitHub only.

@@ -75,9 +75,9 @@ In addition, MakeACopy is built in two product flavors (`ocr` flavor dimension):
 | Flavor | OCR Backend | Notes |
 |--------|-------------|-------|
 | **standard** | Tesseract only | Default flavor; used for F-Droid and Google Play. No PaddleOCR assets bundled. |
-| **paddle** | Tesseract (default) + experimental PaddleOCR V5 | Bundles ~75 MB of PaddleOCR V5 ORT models (1× detection + 8 language-group recognition models). Tesseract remains the default and silent fallback. Available only via [GitHub Releases](https://github.com/egdels/makeacopy/releases) with the `-paddle` suffix in the filename. |
+| **paddle** | Experimental PaddleOCR V5 | Separate GitHub-only flavor for testing the PaddleOCR path. Bundles ~75 MB of PaddleOCR V5 ORT models (1× detection + 8 language-group recognition models) with the `-paddle` suffix in the filename. |
 
-The Full + standard combination is what is published on F-Droid and Google Play. The Light edition and the `paddle` flavor are available exclusively via [GitHub Releases](https://github.com/egdels/makeacopy/releases).
+The Full + standard combination is what is published on F-Droid and Google Play. The Light edition and the experimental `paddle` flavor are available exclusively via [GitHub Releases](https://github.com/egdels/makeacopy/releases).
 
 For details on the experimental PaddleOCR V5 multi-model architecture (language routing, recognition models, ABI behaviour, build pipeline), see [docs/paddleocr_v5_integration_concept.md](docs/paddleocr_v5_integration_concept.md).
 
@@ -199,10 +199,10 @@ The workflow contains two parallel jobs:
 - Builds OpenCV native libraries from source via scripts/build_opencv_android.sh
 - Collects reproducibility evidence for native builds (scripts/collect_repro_evidence.sh)
 - Integrates OpenCV artifacts into the app via scripts/prepare_opencv.sh
-- Builds ONNX Runtime for Android (XNNPACK and NNAPI, Java bindings) via scripts/build_onnxruntime_android.sh — the operator config is merged so a single `libonnxruntime.so` per ABI supports both DocQuad corner detection and PaddleOCR V5 inference
-- Builds the Full edition Android app with Gradle for both flavors (`standard` and `paddle`), producing AABs and ABI-split APKs for each flavor
+- Builds ONNX Runtime for Android (XNNPACK and NNAPI, Java bindings) via scripts/build_onnxruntime_android.sh — the operator config supports DocQuad corner detection and the experimental PaddleOCR V5 flavor
+- Builds the Full edition Android app with Gradle for both flavors (`standard` and `paddle`), producing standard release artifacts and GitHub-only Paddle artifacts
 - Verifies that no test data leaks into release APKs via `:app:verifyNoTestDataInApk`
-- Renames artifacts to `MakeACopy-vX.Y.Z-<abi>-release.apk` (standard) and `MakeACopy-vX.Y.Z-<abi>-paddle-release.apk` (paddle), plus `MakeACopy-vX.Y.Z-release.aab` and `MakeACopy-vX.Y.Z-paddle-release.aab`
+- Renames artifacts to `MakeACopy-vX.Y.Z-<abi>-release.apk` (standard) and `MakeACopy-vX.Y.Z-<abi>-paddle-release.apk` (paddle), plus release AABs
 
 **Light build** (`build-light`):
 - Depends on the Full build job and downloads the native libraries (jniLibs and JARs) built from source
@@ -217,10 +217,10 @@ Behavior by event type:
 - Tag (refs/tags/vX.Y.Z):
   - Optionally decodes a keystore from repository secrets and signs the builds
   - Verifies APK signatures using apksigner
-  - Renames artifacts to `MakeACopy-vX.Y.Z-<abi>-release.apk` (standard), `MakeACopy-vX.Y.Z-<abi>-paddle-release.apk` (paddle), `MakeACopy-Light-vX.Y.Z-<abi>-release.apk`, plus `MakeACopy-vX.Y.Z-release.aab` and `MakeACopy-vX.Y.Z-paddle-release.aab`
+  - Renames artifacts to `MakeACopy-vX.Y.Z-<abi>-release.apk` (standard), `MakeACopy-vX.Y.Z-<abi>-paddle-release.apk` (paddle), `MakeACopy-Light-vX.Y.Z-<abi>-release.apk`, plus release AABs
   - Generates SHA-256 checksum files for each artifact
   - Loads release notes from fastlane/metadata/android/en-US/changelogs/<versionCode>.txt
-  - Creates a GitHub Release and attaches all Full (standard + paddle) and Light APKs, both AABs, and their .sha256 files
+  - Creates a GitHub Release and attaches all Full standard, experimental Paddle, and Light APKs, release AABs, and their .sha256 files
   - Uploads artifacts to the workflow as well
 
 How to trigger a release build:
@@ -259,7 +259,7 @@ MakeACopy follows the Single-Activity + Multi-Fragment pattern with MVVM archite
 | ML Inference | [ONNX Runtime](https://github.com/microsoft/onnxruntime) | MIT |
 | Document Corner Detection | Custom-trained ONNX model | Apache 2.0 |
 | OCR (default) | [Tesseract4Android](https://github.com/adaptech-cz/Tesseract4Android) 4.9.0 | Apache 2.0 |
-| OCR (experimental, `paddle` flavor only) | [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) PP-OCRv5 mobile (det + 8× rec, exported to ORT) | Apache 2.0 |
+| OCR (experimental, GitHub-only `paddle` flavor) | [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) PP-OCRv5 mobile (det + 8× rec, exported to ORT) | Apache 2.0 |
 | OCR Language Data | [tessdata](https://github.com/tesseract-ocr/tessdata) | Apache 2.0 |
 | PDF | Android PdfDocument, pdfbox-android | Apache 2.0 |
 | Fonts (CJK) | [Noto Sans CJK](https://github.com/notofonts/noto-cjk) | OFL 1.1 |
