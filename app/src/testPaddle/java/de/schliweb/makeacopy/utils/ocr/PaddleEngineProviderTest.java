@@ -57,7 +57,7 @@ public class PaddleEngineProviderTest {
             // die Erreichbarkeit der Bridge im paddle-Flavor.
             assertNotNull(m);
         } catch (ReflectiveOperationException e) {
-            throw new AssertionError("Provider.create nicht gefunden", e);
+            throw new LinkageError("Provider.create nicht gefunden", e);
         }
     }
 

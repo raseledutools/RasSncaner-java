@@ -2462,9 +2462,8 @@ public class ExportFragment extends Fragment {
     if (words != null && !words.isEmpty()) return words;
     if (bitmap == null || text == null || text.trim().isEmpty()) return words;
 
-    String[] rawLines = text.replace('\r', '\n').split("\\n+");
     List<String> lines = new ArrayList<>();
-    for (String rawLine : rawLines) {
+    for (String rawLine : text.replace('\r', '\n').split("\\n+", -1)) {
       String line = rawLine != null ? rawLine.trim() : "";
       if (!line.isEmpty()) lines.add(line);
     }

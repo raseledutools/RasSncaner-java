@@ -43,7 +43,7 @@ public class OCRHelperSelectEngineTest {
             Object result = m.invoke(null, null, "eng");
             assertNull("Stub-Provider muss null zurückliefern", result);
         } catch (ReflectiveOperationException e) {
-            throw new AssertionError("Provider.create nicht erreichbar", e);
+            throw new LinkageError("Provider.create nicht erreichbar", e);
         }
     }
 
