@@ -184,7 +184,7 @@ android {
         // Flavor-Asset-Verzeichnisse explizit deklarieren, damit AGP sie zusätzlich
         // zu den oben überschriebenen main-Asset-Pfaden mergt.
         paddle {
-            assets.srcDirs += [isLight ? 'src/light/assets' : 'src/full/assets', 'src/paddle/assets']
+            assets.srcDirs += [layout.buildDirectory.dir("generated/assets/paddle_edition"), 'src/paddle/assets']
         }
         // Add test assets to the debug APK so target-context based asset loading works
         // (e.g. ApplicationProvider.getApplicationContext().getAssets()). The release build
@@ -311,6 +311,14 @@ tasks.register("copyNotices", Sync) {
 
 tasks.named("preBuild").configure {
     dependsOn("copyNotices")
+}
+
+tasks.register("copyPaddleEditionAssets", Sync) {
+    description = "Copies edition assets for the paddle flavor without Tesseract traineddata"
+    from(isLight ? 'src/light/assets' : 'src/full/assets') {
+        exclude 'tessdata/**'
+    }
+    into(layout.buildDirectory.dir("generated/assets/paddle_edition"))
 }
 
 // Copy Best model from langpack-latin-best to generated assets directory for instrumented tests
@@ -458,11 +466,58 @@ tasks.register("failOnPaddleOnnxAssets") {
     }
 }
 
+tasks.register("verifyNoTesseractModelsInPaddleApk") {
+    description = "Checks that paddle APKs do not contain bundled Tesseract traineddata assets"
+    group = "verification"
+    doLast {
+        def apkDir = layout.buildDirectory.dir("outputs/apk/paddle").get().asFile
+        if (!apkDir.exists()) {
+            logger.lifecycle("verifyNoTesseractModelsInPaddleApk: ${apkDir.absolutePath} does not exist (no paddle APKs assembled)")
+            return
+        }
+        def checked = 0
+        apkDir.eachFileRecurse { f ->
+            if (f.name.endsWith(".apk") && !f.name.contains("androidTest")) {
+                checked++
+                def offenders = []
+                def zip = new java.util.zip.ZipFile(f)
+                try {
+                    zip.entries().each { entry ->
+                        if (entry.name ==~ /assets\/tessdata\/.*\.traineddata/) {
+                            offenders << entry.name
+                        }
+                    }
+                } finally {
+                    zip.close()
+                }
+                if (!offenders.isEmpty()) {
+                    throw new GradleException(
+                        "Tesseract traineddata assets found in ${f.name}:\n" +
+                        "  - " + offenders.join("\n  - "))
+                }
+                logger.lifecycle("✓ ${f.name}: no Tesseract traineddata assets found")
+            }
+        }
+        if (checked == 0) {
+            logger.lifecycle("verifyNoTesseractModelsInPaddleApk: no paddle APKs found under ${apkDir.absolutePath} (nothing to check)")
+        } else {
+            logger.lifecycle("verifyNoTesseractModelsInPaddleApk: ${checked} paddle APK(s) verified clean")
+        }
+    }
+}
+
 // Hook the verify + onnx-gate tasks into the paddle-flavor asset merge so they run as
 // part of assemblePaddleDebug / assemblePaddleRelease without touching the standard flavor.
 tasks.whenTaskAdded { task ->
     if (task.name == "mergePaddleDebugAssets" || task.name == "mergePaddleReleaseAssets") {
-        task.dependsOn("failOnPaddleOnnxAssets", "verifyPaddleAssetSha256")
+        task.dependsOn("copyPaddleEditionAssets", "failOnPaddleOnnxAssets", "verifyPaddleAssetSha256")
+    }
+}
+
+tasks.configureEach { task ->
+    if (task.name.toLowerCase(Locale.ROOT).contains("paddle")
+            && task.name.toLowerCase(Locale.ROOT).contains("lint")) {
+        task.dependsOn("copyPaddleEditionAssets")
     }
 }
 
