@@ -23,6 +23,9 @@ if (enableAbiSplits) {
 }
 def edition = (project.findProperty("edition") ?: "full")
 def isLight = edition == "light"
+def isPaddleAndroidTestInvocation = gradle.startParameter.taskNames.any {
+    it.toLowerCase(Locale.ROOT).contains("paddle") && it.toLowerCase(Locale.ROOT).contains("androidtest")
+}
 def signingStorePassword = project.findProperty("SIGNING_STORE_PASSWORD") ?: System.getenv("SIGNING_STORE_PASSWORD")
 def signingKeyAlias = project.findProperty("SIGNING_KEY_ALIAS") ?: System.getenv("SIGNING_KEY_ALIAS")
 def signingKeyPassword = project.findProperty("SIGNING_KEY_PASSWORD") ?: System.getenv("SIGNING_KEY_PASSWORD")
@@ -181,7 +184,7 @@ android {
         // Flavor-Asset-Verzeichnisse explizit deklarieren, damit AGP sie zusätzlich
         // zu den oben überschriebenen main-Asset-Pfaden mergt.
         paddle {
-            assets.srcDirs += ['src/paddle/assets']
+            assets.srcDirs += [isLight ? 'src/light/assets' : 'src/full/assets', 'src/paddle/assets']
         }
         // Add test assets to the debug APK so target-context based asset loading works
         // (e.g. ApplicationProvider.getApplicationContext().getAssets()). The release build
@@ -191,6 +194,19 @@ android {
                     layout.buildDirectory.dir("generated/assets/test_assets").get().asFile,
                     'src/androidTest/assets'
             ]
+        }
+        if (isPaddleAndroidTestInvocation) {
+            // Paddle instrumentation tests must stay Tesseract-free. The shared
+            // androidTest source set contains Tesseract-only tests and is therefore
+            // excluded only for explicit paddle AndroidTest invocations.
+            androidTest {
+                java.srcDirs = []
+                assets.srcDirs = []
+            }
+            androidTestPaddle {
+                java.srcDirs = ['src/androidTestPaddle/java']
+                assets.srcDirs = ['src/androidTestPaddle/assets']
+            }
         }
     }
 }

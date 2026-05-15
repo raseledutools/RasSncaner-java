@@ -223,6 +223,13 @@ public class PaddleResultBuilderReadingOrderTest {
         // per Codepoints zurückgedreht (also wieder logisch korrekt lesbar).
         assertEquals(aRightLogical + " " + aMidLogical + " " + aLeftLogical, result.text);
 
+        // Word-basierte Consumers (OCRReview Layout-/Textansicht, PDF-Textlayer)
+        // bekommen dieselben logischen Token-Texte. Regression: früher war nur
+        // result.text korrigiert, während die RecognizedWord-Texte gespiegelt blieben.
+        assertEquals(aLeftLogical, result.words.get(0).getText());
+        assertEquals(aMidLogical, result.words.get(1).getText());
+        assertEquals(aRightLogical, result.words.get(2).getText());
+
         // Recognition wird in visueller Reihenfolge aufgerufen (links→rechts);
         // die Reihenfolge-Drehung und der Codepoint-Reverse passieren erst beim
         // Aufbau des Text-Strings.
@@ -275,6 +282,7 @@ public class PaddleResultBuilderReadingOrderTest {
         assertNotNull(result);
         // Logisch korrekte Reihenfolge ohne kaputt geschnittene Wörter.
         assertEquals(logical, result.text);
+        assertEquals(logical, result.words.get(0).getText());
     }
 
     @Test
