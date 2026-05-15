@@ -790,17 +790,9 @@ public class OCRPostProcessor {
         if (j > 0) {
           result.append(" ");
         }
-        // Decode HTML entities in the word text.
-        // For RTL lines, the per-word text from the OCR engine is in visual codepoint
-        // order (project-wide convention shared with the PDF text layer; see
-        // PdfTextUtils.reorderRtlForPdf which the PdfCreator applies for the same reason).
-        // Reverse it here so the TXT export uses logical reading order — required for
-        // both BiDi-aware editors and downstream text processing.
-        String wordText = decodeHtmlEntities(line.get(j).getText());
-        if (isRtlLine) {
-          wordText = de.schliweb.makeacopy.utils.export.PdfTextUtils.reorderRtlForPdf(wordText);
-        }
-        result.append(wordText);
+        // Decode HTML entities in the word text. RecognizedWord.text is expected to be stored in
+        // logical Unicode order; RTL handling here is limited to line ordering by geometry.
+        result.append(decodeHtmlEntities(line.get(j).getText()));
       }
 
       if (i < lines.size() - 1) {

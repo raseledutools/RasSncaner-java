@@ -191,9 +191,16 @@ final class PaddleResultBuilder {
             // Sub-Words werden in visueller Reihenfolge der Zeile gesammelt: der
             // PdfCreator macht seine eigene RTL-Sortierung anhand der Bounding-Boxes
             // (siehe PdfTextUtils.isRtlLine + Sortierung in PdfCreator), daher hier
-            // bewusst keine Umkehrung.
+            // bewusst keine Umkehrung. Bei RTL müssen aber auch die Wort-Texte selbst
+            // in dieselbe logische Codepoint-Reihenfolge gebracht werden wie der oben
+            // aufgebaute Gesamttext; sonst zeigen word-basierte Views (OCRReview) die
+            // einzelnen Wörter gespiegelt an.
             for (List<RecognizedWord> subWords : perQuadWords) {
                 for (RecognizedWord sw : subWords) {
+                    if (sw == null) continue;
+                    if (rtl && isRtlText(sw.getText())) {
+                        sw.setText(reverseByCodepoints(sw.getText()));
+                    }
                     words.add(sw);
                     confSum += sw.getConfidence();
                     confCount++;

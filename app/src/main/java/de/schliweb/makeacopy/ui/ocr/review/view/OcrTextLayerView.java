@@ -18,6 +18,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import androidx.annotation.Nullable;
 import de.schliweb.makeacopy.ui.ocr.review.model.OcrDoc;
+import de.schliweb.makeacopy.ui.ocr.review.model.OcrDocReadingOrder;
 
 /**
  * Renders the OCR text positioned exactly at the word bounding boxes. Uses the same transform math
@@ -94,7 +95,7 @@ public class OcrTextLayerView extends View {
             == android.content.res.Configuration.UI_MODE_NIGHT_YES;
     textPaint.setColor(isNight ? Color.WHITE : Color.BLACK);
 
-    for (OcrDoc.Word w : doc.words) {
+    for (OcrDoc.Word w : OcrDocReadingOrder.sortedWordsForReading(doc)) {
       if (w == null) continue;
       if (w.t == null || w.t.isEmpty()) continue;
       toViewRect(w, tmp);
@@ -102,11 +103,16 @@ public class OcrTextLayerView extends View {
       if (h <= dp(6f)) continue;
       float size = Math.max(dp(8f), h * 0.8f);
       textPaint.setTextSize(size);
-      float x = tmp.left + dp(2f);
+      boolean rtl = OcrDocReadingOrder.isRtlText(w.t);
+      float x = rtl ? tmp.right - dp(2f) : tmp.left + dp(2f);
       float y = tmp.top + h * 0.85f; // rough baseline inside box
       int save = canvas.save();
       canvas.clipRect(tmp);
-      canvas.drawText(w.t, x, y, textPaint);
+      if (rtl) {
+        canvas.drawTextRun(w.t, 0, w.t.length(), 0, w.t.length(), x, y, true, textPaint);
+      } else {
+        canvas.drawText(w.t, x, y, textPaint);
+      }
       canvas.restoreToCount(save);
     }
   }

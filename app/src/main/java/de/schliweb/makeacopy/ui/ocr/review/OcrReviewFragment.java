@@ -31,10 +31,12 @@ import de.schliweb.makeacopy.BuildConfig;
 import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.ui.crop.CropViewModel;
 import de.schliweb.makeacopy.ui.ocr.review.model.OcrDoc;
+import de.schliweb.makeacopy.ui.ocr.review.model.OcrDocReadingOrder;
 import de.schliweb.makeacopy.ui.ocr.review.view.MinimapView;
 import de.schliweb.makeacopy.ui.ocr.review.view.OcrOverlayView;
 import de.schliweb.makeacopy.utils.ocr.DictionaryManager;
 import de.schliweb.makeacopy.utils.ocr.OCRHelper;
+import de.schliweb.makeacopy.utils.ocr.OCRPostProcessor;
 import de.schliweb.makeacopy.utils.ocr.OCRUtils;
 import de.schliweb.makeacopy.utils.ocr.OcrPageSegmentationMode;
 import de.schliweb.makeacopy.utils.ocr.RecognizedWord;
@@ -2059,48 +2061,42 @@ public class OcrReviewFragment extends Fragment {
    */
   private String buildFullText(@Nullable OcrDoc doc) {
     if (doc == null) return "";
+    java.util.List<RecognizedWord> words = toRecognizedWords(doc);
+    String text = OCRPostProcessor.wordsToText(words);
+    if (text != null && !text.isEmpty()) return text;
+
     StringBuilder sb = new StringBuilder();
     try {
-      // Prefer explicit line ordering if available
-      if (doc.lines != null && !doc.lines.isEmpty()) {
-        java.util.HashMap<Integer, OcrDoc.Word> byId = new java.util.HashMap<>();
-        if (doc.words != null) {
-          for (OcrDoc.Word w : doc.words) {
-            if (w != null) byId.put(w.id, w);
-          }
-        }
-        for (OcrDoc.Line ln : doc.lines) {
-          if (ln == null || ln.w == null || ln.w.length == 0) continue;
-          boolean first = true;
-          for (int wid : ln.w) {
-            OcrDoc.Word w = byId.get(wid);
-            if (w == null) continue;
-            String t = w.t == null ? "" : w.t.trim();
-            if (t.isEmpty()) continue;
-            if (!first) sb.append(' ');
-            sb.append(t);
-            first = false;
-          }
-          if (sb.length() > 0) sb.append('\n');
-        }
-        return sb.toString().trim();
-      }
-      // Fallback: concatenate words in current order
-      if (doc.words != null) {
-        boolean first = true;
-        for (OcrDoc.Word w : doc.words) {
-          if (w == null) continue;
-          String t = w.t == null ? "" : w.t.trim();
-          if (t.isEmpty()) continue;
-          if (!first) sb.append(' ');
-          sb.append(t);
-          first = false;
-        }
+      boolean first = true;
+      for (OcrDoc.Word w : OcrDocReadingOrder.sortedWordsForReading(doc)) {
+        String t = w.t == null ? "" : w.t.trim();
+        if (t.isEmpty()) continue;
+        if (!first) sb.append(' ');
+        sb.append(t);
+        first = false;
       }
       return sb.toString();
     } catch (Throwable ignore) {
       return sb.toString();
     }
+  }
+
+  private java.util.List<RecognizedWord> toRecognizedWords(@Nullable OcrDoc doc) {
+    java.util.List<RecognizedWord> reviewedWords = new java.util.ArrayList<>();
+    if (doc == null || doc.words == null) return reviewedWords;
+    for (OcrDoc.Word word : doc.words) {
+      if (word != null && word.b != null && word.b.length >= 4) {
+        android.graphics.RectF box =
+            new android.graphics.RectF(
+                word.b[0], word.b[1], word.b[0] + word.b[2], word.b[1] + word.b[3]);
+        RecognizedWord rw =
+            new RecognizedWord(word.t != null ? word.t : "", box, word.c, word.lang);
+        rw.setBlockId(word.k);
+        rw.setLineId(word.l);
+        reviewedWords.add(rw);
+      }
+    }
+    return reviewedWords;
   }
 
   /**
@@ -2174,31 +2170,14 @@ public class OcrReviewFragment extends Fragment {
       }
     }
 
-    // Build reviewed text from document
-    String reviewedText = buildFullText(doc);
-
     // Apply to OCRViewModel
     try {
       de.schliweb.makeacopy.ui.ocr.OCRViewModel ocrViewModel =
           new ViewModelProvider(requireActivity())
               .get(de.schliweb.makeacopy.ui.ocr.OCRViewModel.class);
-      // Convert OcrDoc.Word list to RecognizedWord list
-      java.util.List<RecognizedWord> reviewedWords = new java.util.ArrayList<>();
-      if (doc.words != null) {
-        for (OcrDoc.Word word : doc.words) {
-          if (word != null && word.b != null && word.b.length >= 4) {
-            // b[] is [x, y, width, height] - convert to RectF [left, top, right, bottom]
-            android.graphics.RectF box =
-                new android.graphics.RectF(
-                    word.b[0], word.b[1], word.b[0] + word.b[2], word.b[1] + word.b[3]);
-            RecognizedWord rw =
-                new RecognizedWord(word.t != null ? word.t : "", box, word.c, word.lang);
-            rw.setBlockId(word.k);
-            rw.setLineId(word.l);
-            reviewedWords.add(rw);
-          }
-        }
-      }
+      java.util.List<RecognizedWord> reviewedWords = toRecognizedWords(doc);
+      String reviewedText = OCRPostProcessor.wordsToText(reviewedWords);
+      if (reviewedText == null || reviewedText.isEmpty()) reviewedText = buildFullText(doc);
       ocrViewModel.applyReviewResult(reviewedText, reviewedWords);
     } catch (Throwable t) {
       dbgWarn("Failed to apply review result to OCRViewModel", t);

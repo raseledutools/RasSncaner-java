@@ -22,6 +22,7 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import androidx.core.view.ViewCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
@@ -1465,7 +1466,10 @@ public class ExportFragment extends Fragment {
     if (wordsTmp != null && wordsTmp.isEmpty()) {
       wordsTmp = null;
     }
-    final List<RecognizedWord> recognizedWords = wordsTmp;
+    final String recognizedText = getOcrTextFromState();
+    final List<RecognizedWord> recognizedWords =
+        ensurePdfTextLayerWords(
+            wordsTmp, recognizedText, exportViewModel.getDocumentBitmap().getValue());
 
     final Context appContext = requireContext().getApplicationContext();
     exportViewModel.setTxtExportUri(null);
@@ -2450,6 +2454,41 @@ public class ExportFragment extends Fragment {
   private List<RecognizedWord> getOcrWordsFromState() {
     OCRViewModel.OcrUiState s = ocrViewModel.getState().getValue();
     return (s != null) ? s.getEffectiveWords() : null;
+  }
+
+  @VisibleForTesting
+  static List<RecognizedWord> ensurePdfTextLayerWords(
+      List<RecognizedWord> words, String text, Bitmap bitmap) {
+    if (words != null && !words.isEmpty()) return words;
+    if (bitmap == null || text == null || text.trim().isEmpty()) return words;
+
+    String[] rawLines = text.replace('\r', '\n').split("\\n+");
+    List<String> lines = new ArrayList<>();
+    for (String rawLine : rawLines) {
+      String line = rawLine != null ? rawLine.trim() : "";
+      if (!line.isEmpty()) lines.add(line);
+    }
+    if (lines.isEmpty()) return words;
+
+    int width = Math.max(1, bitmap.getWidth());
+    int height = Math.max(1, bitmap.getHeight());
+    float marginX = width * 0.08f;
+    float top = height * 0.10f;
+    float usableHeight = height * 0.80f;
+    float lineHeight = Math.max(24f, usableHeight / Math.max(lines.size(), 1));
+    float boxHeight = Math.max(16f, lineHeight * 0.70f);
+    List<RecognizedWord> fallback = new ArrayList<>(lines.size());
+    for (int i = 0; i < lines.size(); i++) {
+      float lineTop = Math.min(height - 1f, top + i * lineHeight);
+      float lineBottom = Math.min(height, lineTop + boxHeight);
+      fallback.add(
+          new RecognizedWord(
+              lines.get(i),
+              new android.graphics.RectF(marginX, lineTop, width - marginX, lineBottom),
+              0f));
+    }
+    Log.w(TAG, "Using OCR text fallback for PDF text layer, lines=" + fallback.size());
+    return fallback;
   }
 
   private void indexScanLibraryAsync(String title, int pageCount, Uri exportUri) {

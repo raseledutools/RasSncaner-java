@@ -513,12 +513,12 @@ public class PdfCreator {
         String tokenRaw = safeText(w.getText());
         if (tokenRaw.trim().isEmpty()) continue;
 
-        // For RTL text, reorder from visual to logical order for correct copy/paste
-        String tokenReordered = reorderRtlForPdf(tokenRaw);
-
-        // NFC + trailing space improves selection/copy
+        // PDFBox writes each token as a positioned PDF text run. For RTL scripts the extracted
+        // text order depends on the encoded glyph order, so keep the PDF-specific reordering here
+        // isolated from the logical text used by OCRFragment/OCRReview/TXT export.
         String token =
-            java.text.Normalizer.normalize(tokenReordered + " ", java.text.Normalizer.Form.NFC);
+            java.text.Normalizer.normalize(
+                PdfTextUtils.reorderRtlForPdf(tokenRaw) + " ", java.text.Normalizer.Form.NFC);
 
         RectF b = w.getBoundingBox();
         float boxH = b.height();
@@ -804,10 +804,6 @@ public class PdfCreator {
 
   private static boolean containsRtlText(List<RecognizedWord> words) {
     return PdfTextUtils.containsRtlText(words);
-  }
-
-  private static String reorderRtlForPdf(String text) {
-    return PdfTextUtils.reorderRtlForPdf(text);
   }
 
   /**
