@@ -14,7 +14,7 @@ systems.
 
 With the discontinuation of Microsoft Lens, many users are looking for a reliable way to scan documents on Android.
 
-MakeACopy offers the same core building blocks - document scanning, OCR, and searchable PDF export - while following a fundamentally different design:
+MakeACopy offers the same core building blocks — document scanning, OCR, and searchable PDF export — while following a fundamentally different design:
 
 - **Fully offline** – no cloud services required
 - **No tracking or telemetry**
@@ -74,13 +74,10 @@ In addition, MakeACopy is built in two product flavors (`ocr` flavor dimension):
 
 | Flavor | OCR Backend | Notes |
 |--------|-------------|-------|
-| **standard** | Tesseract only | Default flavor; used for F-Droid and Google Play. No PaddleOCR assets bundled. |
-| **paddle** | Experimental PaddleOCR V5 | Separate GitHub-only flavor for testing the PaddleOCR path. Bundles ~75 MB of PaddleOCR V5 ORT models (1× detection + 8 language-group recognition models) with the `-paddle` suffix in the filename. |
+| **paddle** | PaddleOCR V5 | Published flavor for F-Droid and Google Play. Uses PaddleOCR only, without Tesseract runtime or Tesseract language data. |
+| **standard** | Tesseract only | Legacy flavor for existing Tesseract language data and workflows. Available via GitHub Releases. No PaddleOCR assets bundled. |
 
-The Full + standard combination is what is published on F-Droid and Google Play. The Light edition and the experimental `paddle` flavor are available exclusively via [GitHub Releases](https://github.com/egdels/makeacopy/releases).
-
-For details on the experimental PaddleOCR V5 multi-model architecture (language routing, recognition models, ABI behaviour, build pipeline), see [docs/paddleocr_v5_integration_concept.md](docs/paddleocr_v5_integration_concept.md).
-
+The Full + `paddle` combination is what is published on F-Droid and Google Play. The `standard` Tesseract flavor and the Light edition are available via [GitHub Releases](https://github.com/egdels/makeacopy/releases).
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
 alt="Get it on F-Droid"
@@ -117,7 +114,7 @@ apksigner verify --print-certs MakeACopy-vX.Y.Z.apk
 - **Edge Detection**: Automatic document edge detection using OpenCV, enhanced with a custom-trained machine learning model (ONNX, Apache 2.0)
 - **Perspective Correction**: Adjust and crop documents with manual or automatic perspective correction
 - **Image Enhancement**: Apply filters (grayscale, contrast, sharpening)
-- **OCR**: Offline text recognition with Tesseract (fast models included, optional best models via Language-Pack APKs)
+- **OCR**: Offline text recognition with PaddleOCR in the published `paddle` flavor
 - **OCR Review**: Interactive review and correction of OCR results with word-level editing, dictionary-based suggestions, confidence highlighting, and re-OCR for individual words
 - **PDF Export**: Save as searchable PDF with recognized text
 - **JPEG Export**: Export scans as high-quality JPEG images (configurable quality, color/BW)
@@ -144,13 +141,29 @@ apksigner verify --print-certs MakeACopy-vX.Y.Z.apk
 
 ### OCR Languages
 
-MakeACopy supports OCR via Tesseract. You can choose the OCR language during the OCR step.
+MakeACopy supports fully offline OCR. The published `paddle` flavor uses PaddleOCR; choose the closest script or language group in the OCR language selector during the OCR step.
 
 Supported out of the box:
-- English (eng), German (deu), French (fra), Italian (ita), Spanish (spa), Portuguese (por), Dutch (nld), Polish (pol), Czech (ces), Slovak (slk), Hungarian (hun), Romanian (ron), Danish (dan), Norwegian (nor), Swedish (swe), Turkish (tur), Russian (rus), Thai (tha)
-- Chinese (Simplified) — chi_sim, Chinese (Traditional) — chi_tra
-- Arabic (ara), Persian/Farsi (fas)
-- Hindi (hin)
+- English (English)
+- German (Latin), French (Latin), Italian (Latin), Spanish (Latin), Portuguese (Latin), Dutch (Latin), Polish (Latin), Czech (Latin), Slovak (Latin), Hungarian (Latin), Romanian (Latin), Danish (Latin), Norwegian (Latin), Swedish (Latin), Turkish (Latin)
+- Chinese (Simplified) (Chinese), Chinese (Traditional) (Chinese)
+- Russian (East Slavic), Thai (Thai)
+- Arabic (Arabic), Persian/Farsi (Arabic)
+- Hindi (Devanagari)
+
+In the `paddle` flavor, select the visible OCR language group for your document:
+
+| Document language | Choose in the OCR language selector |
+|-------------------|-------------------------------------|
+| English | English |
+| German, French, Italian, Spanish, Portuguese, Dutch, Polish, Czech, Slovak, Hungarian, Romanian, Danish, Norwegian, Swedish, Turkish | Latin |
+| Chinese Simplified or Traditional | Chinese |
+| Russian | East Slavic |
+| Thai | Thai |
+| Arabic and Persian/Farsi | Arabic |
+| Hindi | Devanagari |
+
+The F-Droid and Google Play links point to the `paddle` flavor. Use GitHub Releases if you need the `standard` Tesseract flavor.
 
 Notes:
 - All OCR runs fully offline on-device.
@@ -171,7 +184,7 @@ Notes:
 
 ### F-Droid
 
-MakeACopy is F-Droid compliant. The app builds all required native components from source during CI/local builds:
+MakeACopy is F-Droid compliant. The F-Droid listing provides the `paddle` flavor. The app builds all required native components from source during CI/local builds:
 
 1. **OpenCV Java Classes**: The required OpenCV Java wrapper classes are directly included in the app's source tree (copied from OpenCV but now part of this project). They are no longer used from the submodule.
 2. **OpenCV Native Libraries**: All OpenCV native libraries are built from source using the official OpenCV code provided via the Git submodule at `external/opencv`.
@@ -181,7 +194,7 @@ This approach ensures F-Droid compatibility by not including any pre-compiled bi
 
 ### GitHub Releases
 
-You can download the latest APK from the [Releases](https://github.com/egdels/makeacopy/releases) page.
+You can download the latest APKs from the [Releases](https://github.com/egdels/makeacopy/releases) page. Use GitHub Releases if you need the `standard` Tesseract flavor or the Light edition.
 
 #### Automated Builds
 
@@ -199,8 +212,8 @@ The workflow contains two parallel jobs:
 - Builds OpenCV native libraries from source via scripts/build_opencv_android.sh
 - Collects reproducibility evidence for native builds (scripts/collect_repro_evidence.sh)
 - Integrates OpenCV artifacts into the app via scripts/prepare_opencv.sh
-- Builds ONNX Runtime for Android (XNNPACK and NNAPI, Java bindings) via scripts/build_onnxruntime_android.sh — the operator config supports DocQuad corner detection and the experimental PaddleOCR V5 flavor
-- Builds the Full edition Android app with Gradle for both flavors (`standard` and `paddle`), producing standard release artifacts and GitHub-only Paddle artifacts
+- Builds ONNX Runtime for Android (XNNPACK and NNAPI, Java bindings) via scripts/build_onnxruntime_android.sh — the operator config supports DocQuad corner detection and PaddleOCR V5
+- Builds the Full edition Android app with Gradle for both flavors (`paddle` and `standard`), producing the published Paddle artifacts and the Tesseract legacy artifacts
 - Verifies that no test data leaks into release APKs via `:app:verifyNoTestDataInApk`
 - Renames artifacts to `MakeACopy-vX.Y.Z-<abi>-release.apk` (standard) and `MakeACopy-vX.Y.Z-<abi>-paddle-release.apk` (paddle), plus release AABs
 
@@ -220,7 +233,7 @@ Behavior by event type:
   - Renames artifacts to `MakeACopy-vX.Y.Z-<abi>-release.apk` (standard), `MakeACopy-vX.Y.Z-<abi>-paddle-release.apk` (paddle), `MakeACopy-Light-vX.Y.Z-<abi>-release.apk`, plus release AABs
   - Generates SHA-256 checksum files for each artifact
   - Loads release notes from fastlane/metadata/android/en-US/changelogs/<versionCode>.txt
-  - Creates a GitHub Release and attaches all Full standard, experimental Paddle, and Light APKs, release AABs, and their .sha256 files
+  - Creates a GitHub Release and attaches all Full `paddle`, Full `standard`, and Light APKs, release AABs, and their .sha256 files
   - Uploads artifacts to the workflow as well
 
 How to trigger a release build:
@@ -248,7 +261,7 @@ MakeACopy follows the Single-Activity + Multi-Fragment pattern with MVVM archite
 
 - **Camera Fragment**: Capture via CameraX/Camera2
 - **Crop Fragment**: Perspective correction
-- **OCR Fragment**: Tesseract-based recognition
+- **OCR Fragment**: Engine-specific offline recognition via PaddleOCR in the published `paddle` flavor or Tesseract in the `standard` legacy flavor
 - **Export Fragment**: PDF/text export
 
 ## Libraries Used
@@ -258,9 +271,9 @@ MakeACopy follows the Single-Activity + Multi-Fragment pattern with MVVM archite
 | Image Processing | [OpenCV](https://opencv.org) 4.13.0 | Apache 2.0 |
 | ML Inference | [ONNX Runtime](https://github.com/microsoft/onnxruntime) | MIT |
 | Document Corner Detection | Custom-trained ONNX model | Apache 2.0 |
-| OCR (default) | [Tesseract4Android](https://github.com/adaptech-cz/Tesseract4Android) 4.9.0 | Apache 2.0 |
-| OCR (experimental, GitHub-only `paddle` flavor) | [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) PP-OCRv5 mobile (det + 8× rec, exported to ORT) | Apache 2.0 |
-| OCR Language Data | [tessdata](https://github.com/tesseract-ocr/tessdata) | Apache 2.0 |
+| OCR (`paddle` flavor) | [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) PP-OCRv5 mobile (det + 8× rec, exported to ORT) | Apache 2.0 |
+| OCR (`standard` legacy flavor) | [Tesseract4Android](https://github.com/adaptech-cz/Tesseract4Android) 4.9.0 | Apache 2.0 |
+| OCR Language Data (`standard` legacy flavor) | [tessdata](https://github.com/tesseract-ocr/tessdata) | Apache 2.0 |
 | PDF | Android PdfDocument, pdfbox-android | Apache 2.0 |
 | Fonts (CJK) | [Noto Sans CJK](https://github.com/notofonts/noto-cjk) | OFL 1.1 |
 | Fonts (Latin) | [Noto Sans](https://github.com/notofonts/noto-fonts) | OFL 1.1 |
@@ -292,10 +305,9 @@ Included dictionaries cover 23 languages: Arabic (ara), Czech (ces), Danish (dan
   - Artifacts integrated into app/src/main/jniLibs/<ABI>/ (libonnxruntime.so, libonnxruntime4j_jni.so) and app/libs/ (onnxruntime-*.jar).
   - See [NOTICE](NOTICE) for attributions.
 
-### Optional OCR Language-Packs
+### Optional OCR Language-Packs for the `standard` Tesseract flavor
 
-MakeACopy includes fast, compact Tesseract models by default.  
-If you want **higher accuracy OCR**, you can install optional *Language-Pack APKs*:
+The published `paddle` flavor uses PaddleOCR models and does not use Tesseract Language-Pack APKs. If you use the `standard` Tesseract flavor from GitHub Releases and want **higher accuracy OCR**, you can install optional *Language-Pack APKs*:
 
 - **MakeACopy OCR Latin (Best)** → Includes best-quality models for  
   English (eng), German (deu), French (fra), Italian (ita), Spanish (spa), Portuguese (por), Dutch (nld), Polish (pol), Czech (ces), Slovak (slk), Hungarian (hun), Romanian (ron), Danish (dan), Norwegian (nor), Swedish (swe).
@@ -432,8 +444,7 @@ Contributions welcome!
 ## Future Enhancements
 
 - Add more languages to OCR detection
-- Stabilise and evaluate the experimental PaddleOCR V5 path in the `paddle` flavor (see [docs/paddleocr_v5_integration_concept.md](docs/paddleocr_v5_integration_concept.md))
-
+- Extend and refine the PaddleOCR V5 path in the published `paddle` flavor
 ## 🙌 Community Hall of Fame
 
 A big thank you to the people who make *MakeACopy* better:
