@@ -30,6 +30,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 import dagger.hilt.android.AndroidEntryPoint;
 import de.schliweb.makeacopy.R;
@@ -202,9 +203,7 @@ public class OCRFragment extends Fragment {
               binding.buttonOcrOptions.setAlpha(processing ? 0.4f : 1f);
 
               // Proceed to Export
-              binding.buttonProcess.setOnClickListener(
-                  v ->
-                      Navigation.findNavController(requireView()).navigate(R.id.navigation_export));
+              binding.buttonProcess.setOnClickListener(v -> navigateToExport());
             });
 
     // Error events
@@ -588,9 +587,18 @@ public class OCRFragment extends Fragment {
       binding.buttonProcess.setOnClickListener(v -> performOCR());
     } else if (processed) {
       binding.buttonProcess.setText(R.string.next);
-      binding.buttonProcess.setOnClickListener(
-          v -> Navigation.findNavController(requireView()).navigate(R.id.navigation_export));
+      binding.buttonProcess.setOnClickListener(v -> navigateToExport());
     }
+  }
+
+  /** Navigates to Export without retaining intermediate scan workflow fragments. */
+  private void navigateToExport() {
+    NavOptions navOptions =
+        new NavOptions.Builder()
+            .setLaunchSingleTop(true)
+            .setPopUpTo(R.id.navigation_camera, false)
+            .build();
+    Navigation.findNavController(requireView()).navigate(R.id.navigation_export, null, navOptions);
   }
 
   /** Builds the language specification string from selected languages (e.g., "deu+eng"). */

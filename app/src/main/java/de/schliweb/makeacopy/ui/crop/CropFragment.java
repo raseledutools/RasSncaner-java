@@ -27,6 +27,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.view.ViewCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.databinding.FragmentCropBinding;
@@ -286,7 +287,10 @@ public class CropFragment extends Fragment {
             // Best-effort; failure is non-critical
           }
           // Navigate back to Camera
-          Navigation.findNavController(requireView()).navigate(R.id.navigation_camera);
+          NavOptions navOptions =
+              new NavOptions.Builder().setPopUpTo(R.id.navigation_camera, true).build();
+          Navigation.findNavController(requireView())
+              .navigate(R.id.navigation_camera, null, navOptions);
         });
 
     // Crop-Button
@@ -1060,7 +1064,12 @@ public class CropFragment extends Fragment {
               .getSharedPreferences("export_options", android.content.Context.MODE_PRIVATE);
       boolean skipOcr = prefs.getBoolean("skip_ocr", false);
       int dest = skipOcr ? R.id.navigation_export : R.id.navigation_ocr;
-      Navigation.findNavController(requireView()).navigate(dest);
+      NavOptions.Builder navOptionsBuilder = new NavOptions.Builder().setLaunchSingleTop(true);
+      if (skipOcr) {
+        navOptionsBuilder.setPopUpTo(R.id.navigation_camera, false);
+      }
+      NavOptions navOptions = navOptionsBuilder.build();
+      Navigation.findNavController(requireView()).navigate(dest, null, navOptions);
     } catch (Throwable ignored) {
       // Best-effort; failure is non-critical
     }

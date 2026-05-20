@@ -1213,7 +1213,10 @@ public class ExportFragment extends Fragment {
           cropViewModel.setImageBitmap(null);
           cropViewModel.setOriginalImageBitmap(null);
           cropViewModel.setImageLoaded(false);
-          Navigation.findNavController(requireView()).navigate(R.id.navigation_camera);
+          NavOptions navOptions =
+              new NavOptions.Builder().setPopUpTo(R.id.navigation_camera, true).build();
+          Navigation.findNavController(requireView())
+              .navigate(R.id.navigation_camera, null, navOptions);
         });
     binding.buttonShareSmall.setOnClickListener(v -> shareDocument());
 

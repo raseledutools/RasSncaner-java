@@ -51,6 +51,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 import com.google.common.util.concurrent.ListenableFuture;
 import de.schliweb.makeacopy.BuildConfig;
@@ -537,7 +538,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             ocrVm.resetForNewImage();
           }
           try {
-            Navigation.findNavController(requireView()).navigate(dest);
+            Navigation.findNavController(requireView()).navigate(dest, null, scanFlowNavOptions());
           } catch (IllegalArgumentException | IllegalStateException ignored) {
             // Best-effort; failure is non-critical
           }
@@ -1280,7 +1281,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                       ? (skipOcr ? R.id.navigation_export : R.id.navigation_ocr)
                       : R.id.navigation_crop;
               try {
-                Navigation.findNavController(requireView()).navigate(dest);
+                Navigation.findNavController(requireView())
+                    .navigate(dest, null, scanFlowNavOptions());
               } catch (IllegalArgumentException | IllegalStateException ignored) {
                 // Best-effort; failure is non-critical
               }
@@ -1319,6 +1321,13 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     if (isAccessibilityModeEnabled()) {
       announce(R.string.a11y_capture_failed);
     }
+  }
+
+  private NavOptions scanFlowNavOptions() {
+    return new NavOptions.Builder()
+        .setLaunchSingleTop(true)
+        .setPopUpTo(R.id.navigation_camera, false)
+        .build();
   }
 
   /**
