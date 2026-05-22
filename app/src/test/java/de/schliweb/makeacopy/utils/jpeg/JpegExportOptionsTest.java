@@ -20,10 +20,10 @@ public class JpegExportOptionsTest {
 
   @Test
   public void threeArgConstructor_setsValues() {
-    JpegExportOptions opts = new JpegExportOptions(90, 2048, JpegExportOptions.Mode.AUTO);
+    JpegExportOptions opts = new JpegExportOptions(90, 2048, JpegExportOptions.Mode.BW_TEXT);
     assertEquals(90, opts.quality);
     assertEquals(2048, opts.longEdgePx);
-    assertEquals(JpegExportOptions.Mode.AUTO, opts.mode);
+    assertEquals(JpegExportOptions.Mode.BW_TEXT, opts.mode);
   }
 
   @Test
@@ -74,14 +74,9 @@ public class JpegExportOptionsTest {
   @Test
   public void modeEnum_allValues() {
     JpegExportOptions.Mode[] modes = JpegExportOptions.Mode.values();
-    assertEquals(7, modes.length);
+    assertEquals(2, modes.length);
     assertEquals(JpegExportOptions.Mode.NONE, JpegExportOptions.Mode.valueOf("NONE"));
-    assertEquals(JpegExportOptions.Mode.AUTO, JpegExportOptions.Mode.valueOf("AUTO"));
     assertEquals(JpegExportOptions.Mode.BW_TEXT, JpegExportOptions.Mode.valueOf("BW_TEXT"));
-    assertEquals(JpegExportOptions.Mode.BW_ROBUST, JpegExportOptions.Mode.valueOf("BW_ROBUST"));
-    assertEquals(JpegExportOptions.Mode.OCR_ROBUST, JpegExportOptions.Mode.valueOf("OCR_ROBUST"));
-    assertEquals(JpegExportOptions.Mode.GRAY_CLEAN, JpegExportOptions.Mode.valueOf("GRAY_CLEAN"));
-    assertEquals(JpegExportOptions.Mode.COLOR_CLEAN, JpegExportOptions.Mode.valueOf("COLOR_CLEAN"));
   }
 
   @Test

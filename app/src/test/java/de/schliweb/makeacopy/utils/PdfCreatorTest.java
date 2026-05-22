@@ -1,8 +1,13 @@
 package de.schliweb.makeacopy.utils;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import de.schliweb.makeacopy.utils.export.PdfCreator;
+import de.schliweb.makeacopy.utils.export.PdfCreator.PdfImageOutput;
+import de.schliweb.makeacopy.utils.image.DocumentCleanupMode;
+import de.schliweb.makeacopy.utils.image.DocumentCleanupOptions;
 import java.lang.reflect.Field;
 import org.junit.Before;
 import org.junit.Test;
@@ -100,5 +105,57 @@ public class PdfCreatorTest {
 
     float expectedPageY = 412.5f;
     assertEquals("Page Y after transform should match", expectedPageY, pageY, 0.001f);
+  }
+
+  @Test
+  public void pdfOutputKeepsColorWhenNoOutputFilterIsRequested() {
+    assertEquals(PdfImageOutput.COLOR, PdfCreator.resolvePdfImageOutput(false, false));
+  }
+
+  @Test
+  public void pdfOutputAppliesGrayscaleAfterCleanupWhenRequested() {
+    assertEquals(PdfImageOutput.GRAYSCALE, PdfCreator.resolvePdfImageOutput(true, false));
+  }
+
+  @Test
+  public void pdfOutputAppliesBlackWhiteAfterCleanupWhenRequested() {
+    assertEquals(PdfImageOutput.BLACK_WHITE, PdfCreator.resolvePdfImageOutput(false, true));
+  }
+
+  @Test
+  public void pdfOutputBlackWhiteDominatesGrayscaleForNormalizedCleanTextAndBwCombinations() {
+    assertEquals(PdfImageOutput.BLACK_WHITE, PdfCreator.resolvePdfImageOutput(true, true));
+  }
+
+  @Test
+  public void pdfCleanTextGrayscaleDoesNotUseOcrBinarization() {
+    DocumentCleanupOptions options =
+        PdfCreator.buildCleanupOptions(DocumentCleanupMode.CLEAN_TEXT, PdfImageOutput.GRAYSCALE);
+
+    assertEquals(DocumentCleanupMode.CLEAN_TEXT, options.mode);
+    assertFalse(options.preserveColor);
+    assertFalse(options.optimizeForOcr);
+  }
+
+  @Test
+  public void pdfCleanTextBlackWhiteDoesNotUseOcrBinarizationBeforeFinalOutput() {
+    DocumentCleanupOptions options =
+        PdfCreator.buildCleanupOptions(DocumentCleanupMode.CLEAN_TEXT, PdfImageOutput.BLACK_WHITE);
+
+    assertEquals(DocumentCleanupMode.CLEAN_TEXT, options.mode);
+    assertFalse(options.preserveColor);
+    assertFalse(options.optimizeForOcr);
+  }
+
+  @Test
+  public void pdfBlackWhiteOutputUsesNonColorCleanupOptionsForAllCleanupModes() {
+    for (DocumentCleanupMode mode : DocumentCleanupMode.values()) {
+      DocumentCleanupOptions options =
+          PdfCreator.buildCleanupOptions(mode, PdfImageOutput.BLACK_WHITE);
+
+      assertEquals(mode, options.mode);
+      assertFalse(options.preserveColor);
+      assertEquals(mode != DocumentCleanupMode.CLEAN_TEXT, options.optimizeForOcr);
+    }
   }
 }
