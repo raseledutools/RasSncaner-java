@@ -57,7 +57,7 @@ class PaddleDetOrtRunner implements AutoCloseable {
      * processes inputs within a consistent and optimal size range, balancing performance
      * and accuracy.
      */
-    static final int DEFAULT_MAX_SIDE = 960;
+    static final int DEFAULT_MAX_SIDE = 1280;
 
     /**
      * Precomputed mean values for the BGR (Blue, Green, Red) color channels used in image normalization.

@@ -59,7 +59,7 @@ final class DbPostProcessor {
      * detections.
      */
     static final double DEFAULT_DB_THRESH = 0.3;
-    static final double DEFAULT_BOX_THRESH = 0.6;
+    static final double DEFAULT_BOX_THRESH = 0.5;
     static final double DEFAULT_UNCLIP_RATIO = 1.6;
     /**
      * Defines the minimum area threshold for regions to be considered during
@@ -80,7 +80,7 @@ final class DbPostProcessor {
      * A higher value allows for more elongated text boxes, whereas a lower value
      * enforces stricter aspect ratio constraints.
      */
-    static final double DEFAULT_MAX_ASPECT_RATIO = 25.0;
+    static final double DEFAULT_MAX_ASPECT_RATIO = 40.0;
 
     /**
      * Specifies the default minimum vertical ink variance threshold used in text detection or
