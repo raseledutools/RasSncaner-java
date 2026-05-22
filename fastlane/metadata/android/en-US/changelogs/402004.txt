@@ -1,0 +1,6 @@
+MakeACopy 4.2.0
+* Redesigned export: Color / Grayscale / B&W for JPEG and PDF.
+* New document cleanup options for crisper scans.
+* Improved binarization and bitmap processing.
+* PaddleOCR: better detection of long and small text lines.
+* More robust PDF creation, with additional tests.
