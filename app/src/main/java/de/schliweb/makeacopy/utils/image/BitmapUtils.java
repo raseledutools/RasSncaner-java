@@ -15,11 +15,7 @@ import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.util.Size;
 import de.schliweb.makeacopy.ui.export.session.CompletedScan;
-import de.schliweb.makeacopy.utils.export.jpeg.JpegExportOptions;
 import lombok.experimental.UtilityClass;
-import org.opencv.android.Utils;
-import org.opencv.core.Mat;
-import org.opencv.imgproc.Imgproc;
 
 /**
  * Utility class providing methods for handling and optimizing {@code Bitmap} instances,
@@ -234,36 +230,29 @@ public final class BitmapUtils {
       boolean toGray = prefs.getBoolean("convert_to_grayscale", false);
       boolean toBw = false;
       boolean exportAsJpeg = prefs.getBoolean("export_as_jpeg", false);
-      boolean doAuto = false;
-      boolean doOcrRobustGray = false;
-      boolean doGrayClean = false;
-      boolean doColorClean = false;
+      DocumentCleanupMode cleanupMode = DocumentCleanupMode.ORIGINAL;
+      try {
+        cleanupMode =
+            DocumentCleanupMode.valueOf(
+                prefs.getString("document_cleanup_mode", DocumentCleanupMode.ORIGINAL.name()));
+      } catch (Throwable ignored) {
+        cleanupMode = DocumentCleanupMode.ORIGINAL;
+      }
 
       if (exportAsJpeg) {
-        // Preview reflects JPEG options only
         toGray = false;
-        toBw = false;
+        toBw = prefs.getBoolean("jpeg_force_bw", false);
+        toGray = prefs.getBoolean("jpeg_output_grayscale", false);
         try {
-          JpegExportOptions.Mode mode =
-              JpegExportOptions.Mode.valueOf(
-                  prefs.getString("jpeg_mode", JpegExportOptions.Mode.NONE.name()));
-          if (mode == JpegExportOptions.Mode.BW_TEXT || mode == JpegExportOptions.Mode.BW_ROBUST) {
+          String mode = prefs.getString("jpeg_mode", "NONE");
+          if ("BW_TEXT".equalsIgnoreCase(mode)) {
             toBw = true;
-          } else if (mode == JpegExportOptions.Mode.OCR_ROBUST) {
-            // Preview should mirror OCR preprocessing (grayscale), not binary
-            doOcrRobustGray = true;
-          } else if (mode == JpegExportOptions.Mode.GRAY_CLEAN) {
-            doGrayClean = true;
-          } else if (mode == JpegExportOptions.Mode.COLOR_CLEAN) {
-            doColorClean = true;
-          } else if (mode == JpegExportOptions.Mode.AUTO) {
-            doAuto = true;
+            toGray = false;
           }
-        } catch (Exception ignored) {
+        } catch (Throwable ignored) {
           // Best-effort; failure is non-critical
         }
       } else {
-        // PDF path: determine mode solely from selected pdf_bw_mode
         try {
           String mode = prefs.getString("pdf_bw_mode", null);
           if ("GRAYSCALE".equalsIgnoreCase(mode)) {
@@ -272,22 +261,8 @@ public final class BitmapUtils {
           } else if ("ROBUST".equalsIgnoreCase(mode) || "CLASSIC".equalsIgnoreCase(mode)) {
             toBw = true;
             toGray = false;
-          } else if ("OCR_ROBUST".equalsIgnoreCase(mode)) {
-            // Preview should mirror OCR preprocessing (grayscale), not binary
-            doOcrRobustGray = true;
-            toGray = false;
-            toBw = false;
-          } else if ("GRAYSCALE_CLEAN".equalsIgnoreCase(mode)) {
-            doGrayClean = true;
-            toGray = false;
-            toBw = false;
-          } else if ("COLOR_CLEAN".equalsIgnoreCase(mode)) {
-            doColorClean = true;
-            toGray = false;
-            toBw = false;
           } else {
             toBw = false;
-            // keep toGray as-is (legacy or preset preview)
           }
         } catch (Throwable ignored) {
           toBw = false;
@@ -297,7 +272,27 @@ public final class BitmapUtils {
       Bitmap safe = BitmapUtils.ensureDisplaySafe(source);
       Bitmap out = safe;
 
-      if (toBw || toGray || doAuto || doOcrRobustGray || doGrayClean || doColorClean) {
+      if (cleanupMode != DocumentCleanupMode.ORIGINAL
+          && !(toBw && cleanupMode == DocumentCleanupMode.CLEAN_TEXT)) {
+        try {
+          if (!OpenCVUtils.isInitialized()) {
+            OpenCVUtils.init(ctx.getApplicationContext());
+          }
+        } catch (Throwable ignored) {
+          // Best-effort; failure is non-critical
+        }
+        try {
+          DocumentCleanupOptions cleanupOptions = new DocumentCleanupOptions(cleanupMode);
+          cleanupOptions.preserveColor = !toGray && !toBw;
+          cleanupOptions.optimizeForOcr = toBw && cleanupMode != DocumentCleanupMode.CLEAN_TEXT;
+          Bitmap cleaned = DocumentCleanupProcessor.apply(ctx, safe, cleanupOptions);
+          if (cleaned != null) out = cleaned;
+        } catch (Throwable ignored) {
+          // Best-effort; failure is non-critical
+        }
+      }
+
+      if (toBw || toGray) {
         try {
           if (!OpenCVUtils.isInitialized()) {
             OpenCVUtils.init(ctx.getApplicationContext());
@@ -307,73 +302,22 @@ public final class BitmapUtils {
         }
         try {
           if (toBw) {
-            boolean classicBw = false;
-            try {
-              if (exportAsJpeg) {
-                JpegExportOptions.Mode mode =
-                    JpegExportOptions.Mode.valueOf(
-                        prefs.getString("jpeg_mode", JpegExportOptions.Mode.AUTO.name()));
-                classicBw = (mode == JpegExportOptions.Mode.BW_TEXT);
-              } else {
-                String bw = prefs.getString("pdf_bw_mode", "ROBUST");
-                classicBw = "CLASSIC".equalsIgnoreCase(bw);
-              }
-            } catch (Throwable ignored2) {
-              // Best-effort; failure is non-critical
-            }
+            String bwMode = exportAsJpeg ? "ROBUST" : prefs.getString("pdf_bw_mode", "ROBUST");
+            boolean classicBw = "CLASSIC".equalsIgnoreCase(bwMode);
             Bitmap bw;
             if (classicBw) {
               BinarizationUtils.BwOptions opt = new BinarizationUtils.BwOptions();
               opt.mode = BinarizationUtils.BwOptions.Mode.OTSU_ONLY;
               opt.useClahe = true;
               opt.removeShadows = true;
-              bw = OpenCVUtils.toBw(safe, opt);
+              bw = OpenCVUtils.toBw(out, opt);
             } else {
-              bw = OpenCVUtils.toBw(safe);
+              bw = OpenCVUtils.toBw(out);
             }
             if (bw != null) out = bw;
           } else if (toGray) {
-            Bitmap gr = OpenCVUtils.toGray(safe);
+            Bitmap gr = OpenCVUtils.toGray(out);
             if (gr != null) out = gr;
-          } else if (doOcrRobustGray) {
-            // Mirror OCR robust preprocessing used in export (grayscale, not binary)
-            Bitmap pre = OpenCVUtils.prepareForOCR(safe, /*binaryOutput*/ false);
-            if (pre != null) out = pre;
-          } else if (doGrayClean) {
-            // High-pass grayscale clean filter (mirrors GRAY_CLEAN / GRAYSCALE_CLEAN export).
-            Bitmap hp = HighPassUtils.applyHighPassGray(safe, /*applyClahe*/ true);
-            if (hp != null) out = hp;
-          } else if (doColorClean) {
-            // High-pass color clean filter (mirrors COLOR_CLEAN export); preserves color.
-            Bitmap hp = HighPassUtils.applyHighPassColor(safe, /*applyClahe*/ true);
-            if (hp != null) out = hp;
-          } else if (doAuto) {
-            // Apply JPEG Auto enhance for preview: RGBA -> BGR, enhance, back to RGBA
-            Mat rgba = new Mat();
-            Mat bgr = new Mat();
-            try {
-              Utils.bitmapToMat(safe, rgba);
-              Imgproc.cvtColor(rgba, bgr, Imgproc.COLOR_RGBA2BGR);
-              OpenCVUtils.autoEnhance(bgr);
-              Imgproc.cvtColor(bgr, rgba, Imgproc.COLOR_BGR2RGBA);
-              Bitmap enhanced =
-                  Bitmap.createBitmap(safe.getWidth(), safe.getHeight(), Bitmap.Config.ARGB_8888);
-              Utils.matToBitmap(rgba, enhanced);
-              out = enhanced;
-            } catch (Throwable ignore) {
-              // Best-effort; failure is non-critical
-            } finally {
-              try {
-                rgba.release();
-              } catch (Throwable ignore) {
-                // Best-effort; failure is non-critical
-              }
-              try {
-                bgr.release();
-              } catch (Throwable ignore) {
-                // Best-effort; failure is non-critical
-              }
-            }
           }
         } catch (Throwable ignored) {
           // Best-effort; failure is non-critical

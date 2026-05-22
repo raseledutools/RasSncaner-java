@@ -15,7 +15,9 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.util.Log;
 import de.schliweb.makeacopy.utils.image.BinarizationUtils;
-import de.schliweb.makeacopy.utils.image.HighPassUtils;
+import de.schliweb.makeacopy.utils.image.DocumentCleanupMode;
+import de.schliweb.makeacopy.utils.image.DocumentCleanupOptions;
+import de.schliweb.makeacopy.utils.image.DocumentCleanupProcessor;
 import de.schliweb.makeacopy.utils.image.OpenCVUtils;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -28,8 +30,8 @@ import org.opencv.imgproc.Imgproc;
 /**
  * JPEG exporter with optional downscale and document enhancement modes.
  *
- * <p>Modes: - NONE: optional downscale only. - AUTO: L-channel equalization + mild unsharp mask. -
- * BW_TEXT: grayscale binarization (Otsu) optimized for text; exported as grayscale-like JPEG.
+ * <p>Modes: - NONE: optional downscale only. - BW_TEXT: black/white output. Document cleanup is
+ * configured separately via {@link JpegExportOptions#cleanupMode}.
  *
  * <p>Notes: - Uses an optional long-edge guard (from options) to avoid OOM on huge images. - Can
  * round resize targets to multiples of 8 (helps JPEG block alignment). - Fast path: for "NONE +
@@ -39,6 +41,7 @@ import org.opencv.imgproc.Imgproc;
 public final class JpegExporter {
 
   private static final String TAG = "JpegExporter";
+  private static final int JPEG_BLOCK_SIZE = 8;
 
   /**
    * Exports the given (already perspective-corrected) bitmap to the provided targetUri as JPEG.
@@ -58,7 +61,10 @@ public final class JpegExporter {
     if (options == null) options = new JpegExportOptions();
 
     // Quick decisions without OpenCV allocation
-    final boolean enhancementNone = options.mode == JpegExportOptions.Mode.NONE;
+    final boolean outputModeNone = options.mode == JpegExportOptions.Mode.NONE;
+    final JpegImageOutput imageOutput = resolveJpegImageOutput(options);
+    final boolean cleanupNone =
+        options.cleanupMode == null || options.cleanupMode == DocumentCleanupMode.ORIGINAL;
     final int srcW = bitmap.getWidth();
     final int srcH = bitmap.getHeight();
     final int curLong = Math.max(srcW, srcH);
@@ -66,22 +72,22 @@ public final class JpegExporter {
     final int targetLong = computeTargetLongEdge(curLong, options);
     final boolean needsResize = targetLong > 0 && targetLong < curLong;
 
-    // Shortcut 1: no resize + no enhancement → compress original bitmap
-    if (!needsResize && enhancementNone) {
+    // Shortcut 1: no resize + no cleanup/output conversion → compress original bitmap
+    if (!needsResize && outputModeNone && cleanupNone && !options.forceGrayscaleJpeg) {
       return compressToUri(context, bitmap, options.quality, targetUri);
     }
 
     // Shortcut 2: ONLY resize (mode NONE) → fast path w/o OpenCV
     // (only if we don't force grayscale JPEG, which needs OpenCV here)
-    if (needsResize && enhancementNone && !options.forceGrayscaleJpeg) {
+    if (needsResize && outputModeNone && cleanupNone && !options.forceGrayscaleJpeg) {
       final double scale = targetLong / (double) curLong;
       int newW = (int) Math.round(srcW * scale);
       int newH = (int) Math.round(srcH * scale);
-      newW = roundToMultiple(newW, 8, options.roundResizeToMultipleOf8);
-      newH = roundToMultiple(newH, 8, options.roundResizeToMultipleOf8);
+      newW = roundToJpegBlockSize(newW, options.roundResizeToMultipleOf8);
+      newH = roundToJpegBlockSize(newH, options.roundResizeToMultipleOf8);
       newW = Math.max(8, newW);
       newH = Math.max(8, newH);
-      Bitmap scaled = null;
+      Bitmap scaled;
       try {
         scaled = Bitmap.createScaledBitmap(bitmap, newW, newH, true);
         return compressToUri(context, scaled, options.quality, targetUri);
@@ -100,7 +106,7 @@ public final class JpegExporter {
     } catch (Throwable t) {
       Log.w(TAG, "export: OpenCV init failed or not available", t);
     }
-    Bitmap outBitmap = null;
+    Bitmap outBitmap;
     Mat srcRgba = new Mat();
     Mat work = new Mat();
     Mat tmp = new Mat();
@@ -114,8 +120,8 @@ public final class JpegExporter {
         final double scale = targetLong / (double) curLong;
         int newW = (int) Math.round(srcW * scale);
         int newH = (int) Math.round(srcH * scale);
-        newW = roundToMultiple(newW, 8, options.roundResizeToMultipleOf8);
-        newH = roundToMultiple(newH, 8, options.roundResizeToMultipleOf8);
+        newW = roundToJpegBlockSize(newW, options.roundResizeToMultipleOf8);
+        newH = roundToJpegBlockSize(newH, options.roundResizeToMultipleOf8);
         newW = Math.max(8, newW);
         newH = Math.max(8, newH);
         Imgproc.resize(srcRgba, tmp, new Size(newW, newH), 0, 0, Imgproc.INTER_AREA);
@@ -125,134 +131,18 @@ public final class JpegExporter {
       // Convert RGBA -> BGR for processing
       Imgproc.cvtColor(current, work, Imgproc.COLOR_RGBA2BGR);
 
-      switch (options.mode) {
-        case AUTO:
-          applyAutoEnhancement(work);
-          // back to RGBA (color); grayscale may still be forced below
-          Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2RGBA);
-          break;
+      applyCleanup(
+          context,
+          work,
+          options.cleanupMode,
+          imageOutput == JpegImageOutput.COLOR,
+          imageOutput == JpegImageOutput.BLACK_WHITE
+              && options.cleanupMode != DocumentCleanupMode.CLEAN_TEXT);
 
-        case BW_TEXT:
-          // Fast, native Otsu binarization for documents
-          applyBwText(work); // B/W content in BGR
-          // Export as grayscale-like JPEG: Gray -> RGBA
-          Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2GRAY);
-          Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-          break;
-        case BW_ROBUST:
-          // Convert to Bitmap, use OpenCVUtils robust BW (with defaults), and convert back
-          try {
-            Bitmap tmpIn = Bitmap.createBitmap(work.cols(), work.rows(), Bitmap.Config.ARGB_8888);
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2RGBA);
-            Utils.matToBitmap(work, tmpIn);
-            Bitmap bw = OpenCVUtils.toBw(tmpIn); // defaults = robust
-            if (bw != null) {
-              Utils.bitmapToMat(bw, work);
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_RGBA2GRAY);
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-            } else {
-              // Fallback to classic BW
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_RGBA2BGR);
-              applyBwText(work);
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2GRAY);
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-            }
-          } catch (Throwable t) {
-            // Fallback to classic BW in case of any error
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2GRAY);
-            Imgproc.GaussianBlur(work, work, new Size(0, 0), 1.2);
-            Imgproc.threshold(work, work, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-          }
-          break;
-        case OCR_ROBUST:
-          // Use robust OCR preprocessing pipeline with binaryOutput=false (analog zur
-          // OCR-Vorverarbeitung)
-          try {
-            Bitmap tmpIn = Bitmap.createBitmap(work.cols(), work.rows(), Bitmap.Config.ARGB_8888);
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2RGBA);
-            Utils.matToBitmap(work, tmpIn);
-            Bitmap pre = OpenCVUtils.prepareForOCR(tmpIn, /*binaryOutput*/ false);
-            if (pre != null) {
-              Utils.bitmapToMat(pre, work);
-              // Ensure grayscale-like JPEG container
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_RGBA2GRAY);
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-            } else {
-              // Fallback to robust BW, then classic
-              Bitmap bw = OpenCVUtils.toBw(tmpIn);
-              if (bw != null) {
-                Utils.bitmapToMat(bw, work);
-                Imgproc.cvtColor(work, work, Imgproc.COLOR_RGBA2GRAY);
-                Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-              } else {
-                Imgproc.cvtColor(work, work, Imgproc.COLOR_RGBA2BGR);
-                applyBwText(work);
-                Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2GRAY);
-                Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-              }
-            }
-          } catch (Throwable t) {
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2GRAY);
-            Imgproc.GaussianBlur(work, work, new Size(0, 0), 1.2);
-            Imgproc.threshold(work, work, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-          }
-          break;
-
-        case GRAY_CLEAN:
-          // High-pass grayscale filter: background-division + mild CLAHE. Preserves grayscale
-          // edges on small text instead of hard binarization.
-          try {
-            Bitmap tmpIn = Bitmap.createBitmap(work.cols(), work.rows(), Bitmap.Config.ARGB_8888);
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2RGBA);
-            Utils.matToBitmap(work, tmpIn);
-            Bitmap hp = HighPassUtils.applyHighPassGray(tmpIn, /*applyClahe*/ true);
-            if (hp != null) {
-              Utils.bitmapToMat(hp, work);
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_RGBA2GRAY);
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-            } else {
-              // Fallback: plain grayscale
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_RGBA2GRAY);
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-            }
-          } catch (Throwable t) {
-            Log.w(TAG, "GRAY_CLEAN failed, falling back to plain grayscale", t);
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2GRAY);
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-          }
-          break;
-
-        case COLOR_CLEAN:
-          // High-pass color filter: background-division on LAB L-channel, a/b preserved.
-          // Flattens uneven lighting while keeping colors.
-          try {
-            Bitmap tmpIn = Bitmap.createBitmap(work.cols(), work.rows(), Bitmap.Config.ARGB_8888);
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2RGBA);
-            Utils.matToBitmap(work, tmpIn);
-            Bitmap hp = HighPassUtils.applyHighPassColor(tmpIn, /*applyClahe*/ true);
-            if (hp != null) {
-              Utils.bitmapToMat(hp, work); // RGBA, color preserved
-            }
-            // else: work already in RGBA (fallback keeps original colors)
-          } catch (Throwable t) {
-            Log.w(TAG, "COLOR_CLEAN failed, falling back to plain RGBA", t);
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2RGBA);
-          }
-          break;
-
-        case NONE:
-        default:
-          // shouldn't reach here because NONE handled in shortcuts
-          Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2RGBA);
-          break;
-      }
-
-      // If grayscale JPEG is explicitly forced for non-BW_TEXT modes, convert now
-      if (options.forceGrayscaleJpeg && options.mode != JpegExportOptions.Mode.BW_TEXT) {
-        Imgproc.cvtColor(work, work, Imgproc.COLOR_RGBA2GRAY);
-        Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
+      if (imageOutput == JpegImageOutput.BLACK_WHITE) {
+        applyBlackWhiteOutput(work);
+      } else if (imageOutput == JpegImageOutput.GRAYSCALE) {
+        applyGrayscaleOutput(work);
       }
 
       // Convert back to Bitmap and compress
@@ -289,51 +179,6 @@ public final class JpegExporter {
         // Best-effort; failure is non-critical
       }
       // outBitmap dem GC überlassen
-    }
-  }
-
-  // === Image ops ===
-
-  private static void applyAutoEnhancement(Mat bgr) {
-    // Delegate implementation to OpenCVUtils to keep logic centralized
-    OpenCVUtils.autoEnhance(bgr);
-  }
-
-  /**
-   * B/W binarization optimized for documents: - Convert to gray - Light Gaussian blur to stabilize
-   * noise - Otsu threshold → binary (0/255) Writes result back into the provided BGR Mat (content
-   * becomes black/white).
-   */
-  private static void applyBwText(Mat bgr) {
-    // Delegate B/W conversion to OpenCVUtils with OTSU-only mode to keep behavior consistent
-    Mat rgba = new Mat();
-    try {
-      Imgproc.cvtColor(bgr, rgba, Imgproc.COLOR_BGR2RGBA);
-      Bitmap tmpIn = Bitmap.createBitmap(rgba.cols(), rgba.rows(), Bitmap.Config.ARGB_8888);
-      Utils.matToBitmap(rgba, tmpIn);
-
-      BinarizationUtils.BwOptions opt = new BinarizationUtils.BwOptions();
-      opt.mode =
-          BinarizationUtils.BwOptions.Mode.OTSU_ONLY; // classic Otsu binarization per export option
-      // Keep mild CLAHE/shadow handling defaults from OpenCVUtils where applicable
-
-      Bitmap bw = OpenCVUtils.toBw(tmpIn, opt);
-      if (bw != null) {
-        Utils.bitmapToMat(bw, rgba); // rgba now contains binary image
-      } else {
-        // Fallback: simple Otsu on gray
-        Imgproc.cvtColor(bgr, rgba, Imgproc.COLOR_BGR2GRAY);
-        Imgproc.threshold(rgba, rgba, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
-        Imgproc.cvtColor(rgba, rgba, Imgproc.COLOR_GRAY2RGBA);
-      }
-      // Convert back into provided BGR Mat
-      Imgproc.cvtColor(rgba, bgr, Imgproc.COLOR_RGBA2BGR);
-    } finally {
-      try {
-        rgba.release();
-      } catch (Throwable ignore) {
-        // Best-effort; failure is non-critical
-      }
     }
   }
 
@@ -374,7 +219,10 @@ public final class JpegExporter {
     }
     if (options == null) options = new JpegExportOptions();
 
-    final boolean enhancementNone = options.mode == JpegExportOptions.Mode.NONE;
+    final boolean outputModeNone = options.mode == JpegExportOptions.Mode.NONE;
+    final JpegImageOutput imageOutput = resolveJpegImageOutput(options);
+    final boolean cleanupNone =
+        options.cleanupMode == null || options.cleanupMode == DocumentCleanupMode.ORIGINAL;
     final int srcW = bitmap.getWidth();
     final int srcH = bitmap.getHeight();
     final int curLong = Math.max(srcW, srcH);
@@ -382,19 +230,19 @@ public final class JpegExporter {
     final boolean needsResize = targetLong > 0 && targetLong < curLong;
 
     // Shortcut 1
-    if (!needsResize && enhancementNone && !options.forceGrayscaleJpeg) {
+    if (!needsResize && outputModeNone && cleanupNone && !options.forceGrayscaleJpeg) {
       return bitmap.compress(Bitmap.CompressFormat.JPEG, clampQuality(options.quality), out);
     }
     // Shortcut 2: ONLY resize
-    if (needsResize && enhancementNone && !options.forceGrayscaleJpeg) {
+    if (needsResize && outputModeNone && cleanupNone && !options.forceGrayscaleJpeg) {
       final double scale = targetLong / (double) curLong;
       int newW = (int) Math.round(srcW * scale);
       int newH = (int) Math.round(srcH * scale);
-      newW = roundToMultiple(newW, 8, options.roundResizeToMultipleOf8);
-      newH = roundToMultiple(newH, 8, options.roundResizeToMultipleOf8);
+      newW = roundToJpegBlockSize(newW, options.roundResizeToMultipleOf8);
+      newH = roundToJpegBlockSize(newH, options.roundResizeToMultipleOf8);
       newW = Math.max(8, newW);
       newH = Math.max(8, newH);
-      Bitmap scaled = null;
+      Bitmap scaled;
       try {
         scaled = Bitmap.createScaledBitmap(bitmap, newW, newH, true);
         return scaled.compress(Bitmap.CompressFormat.JPEG, clampQuality(options.quality), out);
@@ -411,7 +259,7 @@ public final class JpegExporter {
       Log.w(TAG, "exportToStream: OpenCV init failed or not available", t);
     }
 
-    Bitmap outBitmap = null;
+    Bitmap outBitmap;
     Mat srcRgba = new Mat();
     Mat work = new Mat();
     Mat tmp = new Mat();
@@ -422,127 +270,25 @@ public final class JpegExporter {
         final double scale = targetLong / (double) curLong;
         int newW = (int) Math.round(srcW * scale);
         int newH = (int) Math.round(srcH * scale);
-        newW = roundToMultiple(newW, 8, options.roundResizeToMultipleOf8);
-        newH = roundToMultiple(newH, 8, options.roundResizeToMultipleOf8);
+        newW = roundToJpegBlockSize(newW, options.roundResizeToMultipleOf8);
+        newH = roundToJpegBlockSize(newH, options.roundResizeToMultipleOf8);
         newW = Math.max(8, newW);
         newH = Math.max(8, newH);
         Imgproc.resize(srcRgba, tmp, new Size(newW, newH), 0, 0, Imgproc.INTER_AREA);
         current = tmp;
       }
       Imgproc.cvtColor(current, work, Imgproc.COLOR_RGBA2BGR);
-      switch (options.mode) {
-        case AUTO:
-          applyAutoEnhancement(work);
-          Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2RGBA);
-          break;
-        case BW_TEXT:
-          applyBwText(work);
-          Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2GRAY);
-          Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-          break;
-        case BW_ROBUST:
-          // Convert to Bitmap, use OpenCVUtils robust BW (with defaults), and convert back
-          try {
-            Bitmap tmpIn = Bitmap.createBitmap(work.cols(), work.rows(), Bitmap.Config.ARGB_8888);
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2RGBA);
-            Utils.matToBitmap(work, tmpIn);
-            Bitmap bw = OpenCVUtils.toBw(tmpIn); // defaults = robust
-            if (bw != null) {
-              Utils.bitmapToMat(bw, work);
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_RGBA2GRAY);
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-            } else {
-              // Fallback to classic BW
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_RGBA2BGR);
-              applyBwText(work);
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2GRAY);
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-            }
-          } catch (Throwable t) {
-            // Fallback to classic BW in case of any error
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2GRAY);
-            Imgproc.GaussianBlur(work, work, new Size(0, 0), 1.2);
-            Imgproc.threshold(work, work, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-          }
-          break;
-        case OCR_ROBUST:
-          // Use robust OCR preprocessing pipeline with binaryOutput=false (analog zur
-          // OCR-Vorverarbeitung)
-          try {
-            Bitmap tmpIn = Bitmap.createBitmap(work.cols(), work.rows(), Bitmap.Config.ARGB_8888);
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2RGBA);
-            Utils.matToBitmap(work, tmpIn);
-            Bitmap pre = OpenCVUtils.prepareForOCR(tmpIn, /*binaryOutput*/ false);
-            if (pre != null) {
-              Utils.bitmapToMat(pre, work);
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_RGBA2GRAY);
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-            } else {
-              Bitmap bw = OpenCVUtils.toBw(tmpIn);
-              if (bw != null) {
-                Utils.bitmapToMat(bw, work);
-                Imgproc.cvtColor(work, work, Imgproc.COLOR_RGBA2GRAY);
-                Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-              } else {
-                Imgproc.cvtColor(work, work, Imgproc.COLOR_RGBA2BGR);
-                applyBwText(work);
-                Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2GRAY);
-                Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-              }
-            }
-          } catch (Throwable t) {
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2GRAY);
-            Imgproc.GaussianBlur(work, work, new Size(0, 0), 1.2);
-            Imgproc.threshold(work, work, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-          }
-          break;
-        case GRAY_CLEAN:
-          // High-pass grayscale filter (see HighPassUtils).
-          try {
-            Bitmap tmpIn = Bitmap.createBitmap(work.cols(), work.rows(), Bitmap.Config.ARGB_8888);
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2RGBA);
-            Utils.matToBitmap(work, tmpIn);
-            Bitmap hp = HighPassUtils.applyHighPassGray(tmpIn, /*applyClahe*/ true);
-            if (hp != null) {
-              Utils.bitmapToMat(hp, work);
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_RGBA2GRAY);
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-            } else {
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_RGBA2GRAY);
-              Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-            }
-          } catch (Throwable t) {
-            Log.w(TAG, "GRAY_CLEAN failed, falling back to plain grayscale", t);
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2GRAY);
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
-          }
-          break;
-        case COLOR_CLEAN:
-          // High-pass color filter (see HighPassUtils).
-          try {
-            Bitmap tmpIn = Bitmap.createBitmap(work.cols(), work.rows(), Bitmap.Config.ARGB_8888);
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2RGBA);
-            Utils.matToBitmap(work, tmpIn);
-            Bitmap hp = HighPassUtils.applyHighPassColor(tmpIn, /*applyClahe*/ true);
-            if (hp != null) {
-              Utils.bitmapToMat(hp, work);
-            }
-            // else: work is already RGBA
-          } catch (Throwable t) {
-            Log.w(TAG, "COLOR_CLEAN failed, falling back to plain RGBA", t);
-            Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2RGBA);
-          }
-          break;
-        case NONE:
-        default:
-          Imgproc.cvtColor(work, work, Imgproc.COLOR_BGR2RGBA);
-          break;
-      }
-      if (options.forceGrayscaleJpeg && options.mode != JpegExportOptions.Mode.BW_TEXT) {
-        Imgproc.cvtColor(work, work, Imgproc.COLOR_RGBA2GRAY);
-        Imgproc.cvtColor(work, work, Imgproc.COLOR_GRAY2RGBA);
+      applyCleanup(
+          context,
+          work,
+          options.cleanupMode,
+          imageOutput == JpegImageOutput.COLOR,
+          imageOutput == JpegImageOutput.BLACK_WHITE
+              && options.cleanupMode != DocumentCleanupMode.CLEAN_TEXT);
+      if (imageOutput == JpegImageOutput.BLACK_WHITE) {
+        applyBlackWhiteOutput(work);
+      } else if (imageOutput == JpegImageOutput.GRAYSCALE) {
+        applyGrayscaleOutput(work);
       }
       outBitmap = Bitmap.createBitmap(work.cols(), work.rows(), Bitmap.Config.ARGB_8888);
       Utils.matToBitmap(work, outBitmap);
@@ -575,9 +321,109 @@ public final class JpegExporter {
 
   // === utils ===
 
-  private static int roundToMultiple(int value, int multiple, boolean enabled) {
-    if (!enabled || multiple <= 1) return value;
-    return (value / multiple) * multiple;
+  private static int roundToJpegBlockSize(int value, boolean enabled) {
+    if (!enabled) return value;
+    return (value / JPEG_BLOCK_SIZE) * JPEG_BLOCK_SIZE;
+  }
+
+  private static void applyCleanup(
+      Context context,
+      Mat bgr,
+      DocumentCleanupMode cleanupMode,
+      boolean preserveColor,
+      boolean optimizeForOcr) {
+    DocumentCleanupOptions cleanupOptions =
+        buildCleanupOptions(cleanupMode, preserveColor, optimizeForOcr);
+    if (cleanupOptions.mode == DocumentCleanupMode.ORIGINAL) {
+      Imgproc.cvtColor(bgr, bgr, Imgproc.COLOR_BGR2RGBA);
+      return;
+    }
+    if (cleanupOptions.mode == DocumentCleanupMode.NATURAL
+        || (cleanupOptions.mode == DocumentCleanupMode.ENHANCED && cleanupOptions.preserveColor)) {
+      DocumentCleanupProcessor.applyInPlace(bgr, cleanupOptions);
+      Imgproc.cvtColor(bgr, bgr, Imgproc.COLOR_BGR2RGBA);
+      return;
+    }
+
+    Imgproc.cvtColor(bgr, bgr, Imgproc.COLOR_BGR2RGBA);
+    Bitmap cleanupInput = Bitmap.createBitmap(bgr.cols(), bgr.rows(), Bitmap.Config.ARGB_8888);
+    Bitmap cleaned = null;
+    try {
+      Utils.matToBitmap(bgr, cleanupInput);
+      cleaned = DocumentCleanupProcessor.apply(context, cleanupInput, cleanupOptions);
+      if (cleaned != null) {
+        Utils.bitmapToMat(cleaned, bgr);
+      }
+    } finally {
+      if (cleaned != null && cleaned != cleanupInput) {
+        try {
+          cleaned.recycle();
+        } catch (Throwable ignore) {
+          // Best-effort; failure is non-critical
+        }
+      }
+      try {
+        cleanupInput.recycle();
+      } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
+      }
+    }
+  }
+
+  static DocumentCleanupOptions buildCleanupOptions(
+      DocumentCleanupMode cleanupMode, boolean preserveColor, boolean optimizeForOcr) {
+    DocumentCleanupOptions cleanupOptions =
+        cleanupMode != null
+            ? new DocumentCleanupOptions(cleanupMode)
+            : DocumentCleanupOptions.original();
+    cleanupOptions.preserveColor = preserveColor;
+    cleanupOptions.optimizeForOcr =
+        optimizeForOcr && cleanupOptions.mode != DocumentCleanupMode.CLEAN_TEXT;
+    return cleanupOptions;
+  }
+
+  static JpegImageOutput resolveJpegImageOutput(JpegExportOptions options) {
+    if (options != null && options.mode == JpegExportOptions.Mode.BW_TEXT) {
+      return JpegImageOutput.BLACK_WHITE;
+    }
+    if (options != null && options.forceGrayscaleJpeg) {
+      return JpegImageOutput.GRAYSCALE;
+    }
+    return JpegImageOutput.COLOR;
+  }
+
+  enum JpegImageOutput {
+    COLOR,
+    GRAYSCALE,
+    BLACK_WHITE
+  }
+
+  private static void applyGrayscaleOutput(Mat rgba) {
+    Mat gray = new Mat();
+    try {
+      Imgproc.cvtColor(rgba, gray, Imgproc.COLOR_RGBA2GRAY);
+      Imgproc.cvtColor(gray, rgba, Imgproc.COLOR_GRAY2RGBA);
+    } finally {
+      gray.release();
+    }
+  }
+
+  private static void applyBlackWhiteOutput(Mat rgba) {
+    Bitmap input = null;
+    Bitmap bw = null;
+    try {
+      input = Bitmap.createBitmap(rgba.cols(), rgba.rows(), Bitmap.Config.ARGB_8888);
+      Utils.matToBitmap(rgba, input);
+      BinarizationUtils.BwOptions opt = new BinarizationUtils.BwOptions();
+      opt.gentleMode = true;
+      bw = OpenCVUtils.toBw(input, opt);
+      if (bw != null) {
+        Utils.bitmapToMat(bw, rgba);
+      }
+    } finally {
+      if (bw != null && bw != input) bw.recycle();
+      if (input != null) input.recycle();
+    }
   }
 
   private static int clampQuality(int q) {

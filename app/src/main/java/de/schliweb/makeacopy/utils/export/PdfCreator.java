@@ -26,6 +26,9 @@ import com.tom_roush.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import com.tom_roush.pdfbox.pdmodel.graphics.state.RenderingMode;
 import com.tom_roush.pdfbox.util.Matrix;
 import de.schliweb.makeacopy.utils.image.BinarizationUtils;
+import de.schliweb.makeacopy.utils.image.DocumentCleanupMode;
+import de.schliweb.makeacopy.utils.image.DocumentCleanupOptions;
+import de.schliweb.makeacopy.utils.image.DocumentCleanupProcessor;
 import de.schliweb.makeacopy.utils.image.OpenCVUtils;
 import de.schliweb.makeacopy.utils.ocr.RecognizedWord;
 import java.io.OutputStream;
@@ -44,6 +47,12 @@ public class PdfCreator {
   // Text sizing (relative to OCR box height in image space)
   private static final float TEXT_SIZE_RATIO = 0.70f;
   private static final float MIN_FONT_PT = 2f; // lower bound for tiny boxes
+
+  public enum PdfImageOutput {
+    COLOR,
+    GRAYSCALE,
+    BLACK_WHITE
+  }
 
   /**
    * Creates a searchable PDF document from a bitmap and a list of recognized words. The resulting
@@ -185,6 +194,32 @@ public class PdfCreator {
       int targetDpi,
       BwMode bwMode,
       PageFormat pageFormat) {
+    return createSearchablePdf(
+        context,
+        bitmap,
+        words,
+        outputUri,
+        jpegQuality,
+        convertToGrayscale,
+        convertToBlackWhite,
+        targetDpi,
+        bwMode,
+        pageFormat,
+        DocumentCleanupMode.ORIGINAL);
+  }
+
+  public static Uri createSearchablePdf(
+      Context context,
+      Bitmap bitmap,
+      List<RecognizedWord> words,
+      Uri outputUri,
+      int jpegQuality,
+      boolean convertToGrayscale,
+      boolean convertToBlackWhite,
+      int targetDpi,
+      BwMode bwMode,
+      PageFormat pageFormat,
+      DocumentCleanupMode cleanupMode) {
     Log.d(
         TAG,
         "createSearchablePdf: uri="
@@ -220,7 +255,8 @@ public class PdfCreator {
               targetDpi,
               bwMode,
               useGentleMode,
-              pageFormat);
+              pageFormat,
+              cleanupMode);
       if (prepared == null) {
         Log.e(TAG, "Image preparation via OpenCV failed");
         return null;
@@ -612,6 +648,26 @@ public class PdfCreator {
       BwMode bwMode,
       boolean gentleMode,
       PageFormat pageFormat) {
+    return processImageForPdf(
+        original,
+        toGray,
+        toBw,
+        targetDpi,
+        bwMode,
+        gentleMode,
+        pageFormat,
+        DocumentCleanupMode.ORIGINAL);
+  }
+
+  private static Bitmap processImageForPdf(
+      Bitmap original,
+      boolean toGray,
+      boolean toBw,
+      int targetDpi,
+      BwMode bwMode,
+      boolean gentleMode,
+      PageFormat pageFormat,
+      DocumentCleanupMode cleanupMode) {
     if (original == null) return null;
     if (pageFormat == null) pageFormat = PageFormat.A4;
 
@@ -650,25 +706,28 @@ public class PdfCreator {
       }
     }
 
-    if (toBw) {
-      Bitmap viaCv;
-      if (bwMode == null || bwMode == BwMode.ROBUST) {
-        // Use gentle mode for RTL scripts (Arabic, Persian, Hebrew) to preserve fine strokes
-        BinarizationUtils.BwOptions opt = new BinarizationUtils.BwOptions();
-        opt.gentleMode = gentleMode;
-        opt.targetDpi = targetDpi > 0 ? targetDpi : 300;
-        viaCv = OpenCVUtils.toBw(base, opt);
-      } else {
-        // CLASSIC: use Otsu thresholding but with shadow removal and CLAHE
-        // to avoid heavy shadows and improve text contrast
-        BinarizationUtils.BwOptions opt = new BinarizationUtils.BwOptions();
-        opt.mode = BinarizationUtils.BwOptions.Mode.OTSU_ONLY;
-        opt.useClahe = true;
-        opt.removeShadows = true;
-        opt.gentleMode = gentleMode;
-        opt.targetDpi = targetDpi > 0 ? targetDpi : 300;
-        viaCv = OpenCVUtils.toBw(base, opt);
+    PdfImageOutput output = resolvePdfImageOutput(toGray, toBw);
+
+    if (cleanupMode != null
+        && cleanupMode != DocumentCleanupMode.ORIGINAL
+        && !(output == PdfImageOutput.BLACK_WHITE
+            && cleanupMode == DocumentCleanupMode.CLEAN_TEXT)) {
+      DocumentCleanupOptions cleanupOptions = buildCleanupOptions(cleanupMode, output);
+      Bitmap pre = DocumentCleanupProcessor.apply(null, base, cleanupOptions);
+      if (pre != null) {
+        if (base != original) {
+          try {
+            base.recycle();
+          } catch (Throwable ignore) {
+            // Best-effort; failure is non-critical
+          }
+        }
+        base = pre;
       }
+    }
+
+    if (output == PdfImageOutput.BLACK_WHITE) {
+      Bitmap viaCv = applyPdfBwCleanup(base, bwMode, targetDpi, gentleMode);
       if (base != original) {
         try {
           base.recycle();
@@ -679,57 +738,7 @@ public class PdfCreator {
       return viaCv; // may be null → caller will handle
     }
 
-    // OCR-robust preprocessing for PDF: use binary output to ensure B/W embedding (preview may
-    // remain grayscale)
-    if (bwMode == BwMode.OCR_ROBUST) {
-      Bitmap pre = OpenCVUtils.prepareForOCR(base, /*binaryOutput*/ false);
-      if (base != original) {
-        try {
-          base.recycle();
-        } catch (Throwable ignore) {
-          // Best-effort; failure is non-critical
-        }
-      }
-      if (pre != null) return pre;
-      // Fallback: keep base as-is
-      return base;
-    }
-
-    // Grayscale Clean: high-pass filter producing a flat-lit grayscale document that preserves
-    // small-text edges. See HighPassUtils.
-    if (bwMode == BwMode.GRAYSCALE_CLEAN) {
-      Bitmap pre =
-          de.schliweb.makeacopy.utils.image.HighPassUtils.applyHighPassGray(
-              base, /*applyClahe*/ true);
-      if (base != original) {
-        try {
-          base.recycle();
-        } catch (Throwable ignore) {
-          // Best-effort; failure is non-critical
-        }
-      }
-      if (pre != null) return pre;
-      return base;
-    }
-
-    // Color Clean: high-pass filter on LAB L-channel while preserving a/b chroma. Produces an
-    // evenly lit color document. See HighPassUtils.
-    if (bwMode == BwMode.COLOR_CLEAN) {
-      Bitmap pre =
-          de.schliweb.makeacopy.utils.image.HighPassUtils.applyHighPassColor(
-              base, /*applyClahe*/ true);
-      if (base != original) {
-        try {
-          base.recycle();
-        } catch (Throwable ignore) {
-          // Best-effort; failure is non-critical
-        }
-      }
-      if (pre != null) return pre;
-      return base;
-    }
-
-    if (!toGray) return base;
+    if (output == PdfImageOutput.COLOR) return base;
 
     Bitmap viaCvGray = OpenCVUtils.toGray(base);
     if (base != original) {
@@ -742,13 +751,38 @@ public class PdfCreator {
     return viaCvGray; // may be null → caller will handle
   }
 
-  /**
-   * Calculates the median height of bounding boxes from a list of recognized words.
-   *
-   * @param line a list of RecognizedWord objects, each containing a bounding box with a height
-   *     value
-   * @return the median height of the bounding boxes; returns 0 if the list is empty
-   */
+  public static PdfImageOutput resolvePdfImageOutput(boolean toGray, boolean toBw) {
+    if (toBw) return PdfImageOutput.BLACK_WHITE;
+    if (toGray) return PdfImageOutput.GRAYSCALE;
+    return PdfImageOutput.COLOR;
+  }
+
+  public static DocumentCleanupOptions buildCleanupOptions(
+      DocumentCleanupMode cleanupMode, PdfImageOutput output) {
+    DocumentCleanupOptions cleanupOptions = new DocumentCleanupOptions(cleanupMode);
+    cleanupOptions.preserveColor = output == PdfImageOutput.COLOR;
+    cleanupOptions.optimizeForOcr =
+        output == PdfImageOutput.BLACK_WHITE && cleanupMode != DocumentCleanupMode.CLEAN_TEXT;
+    return cleanupOptions;
+  }
+
+  private static Bitmap applyPdfBwCleanup(
+      Bitmap base, BwMode bwMode, int targetDpi, boolean gentleMode) {
+    if (bwMode == null || bwMode == BwMode.ROBUST) {
+      BinarizationUtils.BwOptions opt = new BinarizationUtils.BwOptions();
+      opt.gentleMode = gentleMode;
+      opt.targetDpi = targetDpi > 0 ? targetDpi : 300;
+      return OpenCVUtils.toBw(base, opt);
+    }
+    BinarizationUtils.BwOptions opt = new BinarizationUtils.BwOptions();
+    opt.mode = BinarizationUtils.BwOptions.Mode.OTSU_ONLY;
+    opt.useClahe = true;
+    opt.removeShadows = true;
+    opt.gentleMode = gentleMode;
+    opt.targetDpi = targetDpi > 0 ? targetDpi : 300;
+    return OpenCVUtils.toBw(base, opt);
+  }
+
   /**
    * Returns an opaque copy of the bitmap (no alpha channel) to prevent {@link
    * JPEGFactory#createFromImage} from allocating a large alpha-extraction buffer that can cause
@@ -982,6 +1016,34 @@ public class PdfCreator {
       ProgressListener listener,
       BwMode bwMode,
       PageFormat pageFormat) {
+    return createSearchablePdf(
+        context,
+        bitmaps,
+        perPageWords,
+        outputUri,
+        jpegQuality,
+        convertToGrayscale,
+        convertToBlackWhite,
+        targetDpi,
+        listener,
+        bwMode,
+        pageFormat,
+        DocumentCleanupMode.ORIGINAL);
+  }
+
+  public static Uri createSearchablePdf(
+      Context context,
+      List<Bitmap> bitmaps,
+      List<List<RecognizedWord>> perPageWords,
+      Uri outputUri,
+      int jpegQuality,
+      boolean convertToGrayscale,
+      boolean convertToBlackWhite,
+      int targetDpi,
+      ProgressListener listener,
+      BwMode bwMode,
+      PageFormat pageFormat,
+      DocumentCleanupMode cleanupMode) {
     if (bitmaps == null || bitmaps.isEmpty() || outputUri == null) return null;
     if (pageFormat == null) pageFormat = PageFormat.A4;
     try {
@@ -1033,7 +1095,8 @@ public class PdfCreator {
                   targetDpi,
                   bwMode,
                   useGentleMode,
-                  pageFormat);
+                  pageFormat,
+                  cleanupMode);
           if (prepared == null) {
             Log.e(TAG, "Image preparation via OpenCV failed for page " + (i + 1));
             return null;
@@ -1147,20 +1210,7 @@ public class PdfCreator {
 
   public enum BwMode {
     ROBUST,
-    CLASSIC,
-    OCR_ROBUST,
-    /**
-     * High-pass grayscale filter: background-division normalization + mild CLAHE, produces a clean
-     * grayscale document that preserves small-text edges. See {@link
-     * de.schliweb.makeacopy.utils.image.HighPassUtils}.
-     */
-    GRAYSCALE_CLEAN,
-    /**
-     * High-pass color filter: background-division on LAB L-channel while preserving a/b chroma.
-     * Produces an evenly lit color document. See {@link
-     * de.schliweb.makeacopy.utils.image.HighPassUtils}.
-     */
-    COLOR_CLEAN
+    CLASSIC
   }
 
   /**

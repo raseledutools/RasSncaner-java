@@ -50,6 +50,8 @@ import de.schliweb.makeacopy.utils.ui.ViewSizeUtils;
 import java.io.File;
 import java.io.OutputStream;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.inject.Inject;
 
 /**
@@ -100,6 +102,8 @@ public class ExportFragment extends Fragment {
   private int activeSessionPageIndex = -1;
   private Bitmap lastFreshMultipagePreviewBitmap;
   private String lastFreshMultipagePageId;
+  private final ExecutorService previewExecutor = Executors.newSingleThreadExecutor();
+  private int previewRenderGeneration = 0;
 
   /**
    * A BroadcastReceiver to handle updates from OCR processing jobs. This receiver listens for
@@ -210,11 +214,20 @@ public class ExportFragment extends Fragment {
     if (binding == null || source == null) return;
     Context ctx = getContext();
     if (ctx == null) return;
-    Bitmap out = BitmapUtils.processForPreview(source, ctx);
-    binding.documentPreview.setImageBitmap(out);
-    binding.documentPreview.setVisibility(View.VISIBLE);
-    updateEditCropOverlayVisibility();
-    updatePreviewOcrBadge();
+    Context appContext = ctx.getApplicationContext();
+    final int generation = ++previewRenderGeneration;
+    previewExecutor.execute(
+        () -> {
+          Bitmap out = BitmapUtils.processForPreview(source, appContext);
+          mainHandler.post(
+              () -> {
+                if (!isAdded() || binding == null || generation != previewRenderGeneration) return;
+                binding.documentPreview.setImageBitmap(out);
+                binding.documentPreview.setVisibility(View.VISIBLE);
+                updateEditCropOverlayVisibility();
+                updatePreviewOcrBadge();
+              });
+        });
   }
 
   /**
@@ -1506,6 +1519,8 @@ public class ExportFragment extends Fragment {
                 final boolean convertBwEffective = grayBw[1];
                 final int jpegQuality = preset.jpegQuality;
                 final PdfCreator.BwMode bwMode = ExportPrefsHelper.resolveBwMode(appContext);
+                final de.schliweb.makeacopy.utils.image.DocumentCleanupMode cleanupMode =
+                    ExportPrefsHelper.resolveCleanupMode(appContext);
                 final PageFormat pageFormat = ExportPrefsHelper.resolvePageFormat(appContext);
 
                 Uri exportUri;
@@ -1634,7 +1649,8 @@ public class ExportFragment extends Fragment {
                                       exportViewModel.setExportProgress(
                                           Math.max(0, Math.min(pageIndex, total)))),
                           bwMode,
-                          pageFormat);
+                          pageFormat,
+                          cleanupMode);
                   // Recycle any temporary bitmaps we created (those not part of the session's
                   // in-memory references)
                   final HashSet<Bitmap> sessionBitmaps = new HashSet<>();
@@ -1664,7 +1680,8 @@ public class ExportFragment extends Fragment {
                           convertBwEffective,
                           preset.targetDpi,
                           bwMode,
-                          pageFormat);
+                          pageFormat,
+                          cleanupMode);
                 }
 
                 final Uri finalUri = exportUri;
@@ -1904,6 +1921,8 @@ public class ExportFragment extends Fragment {
                 JpegExportOptions options =
                     new JpegExportOptions(); // defaults (quality=85, no resize)
                 options.mode = (chosenMode != null) ? chosenMode : JpegExportOptions.Mode.NONE;
+                options.forceGrayscaleJpeg = ExportPrefsHelper.isJpegOutputGrayscale(appContext);
+                options.cleanupMode = ExportPrefsHelper.resolveCleanupMode(appContext);
 
                 // For single-image JPEG, the preview bitmap is already oriented (rotated) for
                 // display.
@@ -2028,6 +2047,8 @@ public class ExportFragment extends Fragment {
 
                 JpegExportOptions options = new JpegExportOptions();
                 options.mode = finalMode;
+                options.forceGrayscaleJpeg = ExportPrefsHelper.isJpegOutputGrayscale(appContext);
+                options.cleanupMode = ExportPrefsHelper.resolveCleanupMode(appContext);
 
                 OutputStream os =
                     requireContext().getContentResolver().openOutputStream(selectedLocation, "w");
@@ -2427,8 +2448,15 @@ public class ExportFragment extends Fragment {
 
   @Override
   public void onDestroyView() {
+    previewRenderGeneration++;
     super.onDestroyView();
     binding = null;
+  }
+
+  @Override
+  public void onDestroy() {
+    previewExecutor.shutdownNow();
+    super.onDestroy();
   }
 
   /**

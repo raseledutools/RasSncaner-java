@@ -10,6 +10,7 @@
 package de.schliweb.makeacopy.utils.export.jpeg;
 
 import androidx.annotation.IntRange;
+import de.schliweb.makeacopy.utils.image.DocumentCleanupMode;
 
 /**
  * Options for JPEG export. Keep fields simple/primitive to stay parcel-agnostic and easy to extend.
@@ -19,29 +20,8 @@ public class JpegExportOptions {
   public enum Mode {
     /** No enhancement, optional downscale only. */
     NONE,
-    /** Auto document enhancement (L-channel equalization + mild unsharp). */
-    AUTO,
     /** Black/White mode optimized for text via Otsu binarization. */
-    BW_TEXT,
-    /** Black/White robust mode (adaptive threshold + shadow removal + CLAHE). */
-    BW_ROBUST,
-    /**
-     * Use the same robust preprocessing pipeline as OCR (prepareForOCR with binaryOutput=false).
-     * This yields the same grayscale-optimized input used for OCR.
-     */
-    OCR_ROBUST,
-    /**
-     * Grayscale "clean" mode: high-pass filter (background-division normalization + mild CLAHE).
-     * Preserves grayscale edges on small text instead of hard binarization. See {@link
-     * de.schliweb.makeacopy.utils.image.HighPassUtils}.
-     */
-    GRAY_CLEAN,
-    /**
-     * Color "clean" mode: high-pass filter on the L channel in LAB color space (a/b chroma
-     * preserved). Flattens uneven lighting/shadows while keeping colors. See {@link
-     * de.schliweb.makeacopy.utils.image.HighPassUtils}.
-     */
-    COLOR_CLEAN
+    BW_TEXT
   }
 
   /** JPEG quality (0..100). Default 85. */
@@ -53,6 +33,9 @@ public class JpegExportOptions {
 
   /** Enhancement mode. Default NONE. */
   public Mode mode = Mode.NONE;
+
+  /** Document cleanup mode applied before JPEG-specific export filters. Default ORIGINAL. */
+  public DocumentCleanupMode cleanupMode = DocumentCleanupMode.ORIGINAL;
 
   /**
    * Export as grayscale JPEG (single channel). - Recommended for B/W text to reduce size and chroma

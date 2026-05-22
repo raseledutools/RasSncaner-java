@@ -16,6 +16,7 @@ import de.schliweb.makeacopy.utils.export.PageFormat;
 import de.schliweb.makeacopy.utils.export.PdfCreator;
 import de.schliweb.makeacopy.utils.export.PdfQualityPreset;
 import de.schliweb.makeacopy.utils.export.jpeg.JpegExportOptions;
+import de.schliweb.makeacopy.utils.image.DocumentCleanupMode;
 import lombok.experimental.UtilityClass;
 
 /**
@@ -75,9 +76,6 @@ public final class ExportPrefsHelper {
     String bw = getPdfBwMode(context);
     if ("CLASSIC".equalsIgnoreCase(bw)) return PdfCreator.BwMode.CLASSIC;
     if ("ROBUST".equalsIgnoreCase(bw)) return PdfCreator.BwMode.ROBUST;
-    if ("OCR_ROBUST".equalsIgnoreCase(bw)) return PdfCreator.BwMode.OCR_ROBUST;
-    if ("GRAYSCALE_CLEAN".equalsIgnoreCase(bw)) return PdfCreator.BwMode.GRAYSCALE_CLEAN;
-    if ("COLOR_CLEAN".equalsIgnoreCase(bw)) return PdfCreator.BwMode.COLOR_CLEAN;
     return null;
   }
 
@@ -100,13 +98,6 @@ public final class ExportPrefsHelper {
     } else if ("CLASSIC".equalsIgnoreCase(pdfModeSel) || "ROBUST".equalsIgnoreCase(pdfModeSel)) {
       convertGray = false;
       convertBw = true;
-    } else if ("OCR_ROBUST".equalsIgnoreCase(pdfModeSel)
-        || "GRAYSCALE_CLEAN".equalsIgnoreCase(pdfModeSel)
-        || "COLOR_CLEAN".equalsIgnoreCase(pdfModeSel)) {
-      // The preprocessing is handled inside processImageForPdf based on the resolved BwMode;
-      // keep both flags false so the generic gray/bw paths don't run first.
-      convertGray = false;
-      convertBw = false;
     }
     return new boolean[] {convertGray, convertBw};
   }
@@ -117,6 +108,20 @@ public final class ExportPrefsHelper {
       return JpegExportOptions.Mode.valueOf(saved);
     } catch (IllegalArgumentException ex) {
       return JpegExportOptions.Mode.NONE;
+    }
+  }
+
+  public static boolean isJpegOutputGrayscale(Context context) {
+    return getPrefs(context).getBoolean("jpeg_output_grayscale", false);
+  }
+
+  public static DocumentCleanupMode resolveCleanupMode(Context context) {
+    String saved =
+        getPrefs(context).getString("document_cleanup_mode", DocumentCleanupMode.ORIGINAL.name());
+    try {
+      return DocumentCleanupMode.valueOf(saved);
+    } catch (IllegalArgumentException ex) {
+      return DocumentCleanupMode.ORIGINAL;
     }
   }
 
