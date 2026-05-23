@@ -315,9 +315,10 @@ tasks.named("preBuild").configure {
 }
 
 tasks.register("copyPaddleEditionAssets", Sync) {
-    description = "Copies edition assets for the paddle flavor without Tesseract traineddata"
+    description = "Copies edition assets for the paddle flavor without Tesseract traineddata or OCR dictionaries"
     from(isLight ? 'src/light/assets' : 'src/full/assets') {
         exclude 'tessdata/**'
+        exclude 'dictionaries/**'
     }
     into(layout.buildDirectory.dir("generated/assets/paddle_edition"))
 }
@@ -468,7 +469,7 @@ tasks.register("failOnPaddleOnnxAssets") {
 }
 
 tasks.register("verifyNoTesseractModelsInPaddleApk") {
-    description = "Checks that paddle APKs do not contain bundled Tesseract traineddata assets"
+    description = "Checks that paddle APKs do not contain bundled Tesseract traineddata or OCR dictionary assets"
     group = "verification"
     doLast {
         def apkDir = layout.buildDirectory.dir("outputs/apk/paddle").get().asFile
@@ -484,7 +485,8 @@ tasks.register("verifyNoTesseractModelsInPaddleApk") {
                 def zip = new java.util.zip.ZipFile(f)
                 try {
                     zip.entries().each { entry ->
-                        if (entry.name ==~ /assets\/tessdata\/.*\.traineddata/) {
+                        if (entry.name ==~ /assets\/tessdata\/.*\.traineddata/
+                                || entry.name ==~ /assets\/dictionaries\/.*/) {
                             offenders << entry.name
                         }
                     }
@@ -493,10 +495,10 @@ tasks.register("verifyNoTesseractModelsInPaddleApk") {
                 }
                 if (!offenders.isEmpty()) {
                     throw new GradleException(
-                        "Tesseract traineddata assets found in ${f.name}:\n" +
+                        "Tesseract traineddata/OCR dictionary assets found in ${f.name}:\n" +
                         "  - " + offenders.join("\n  - "))
                 }
-                logger.lifecycle("✓ ${f.name}: no Tesseract traineddata assets found")
+                logger.lifecycle("✓ ${f.name}: no Tesseract traineddata or OCR dictionary assets found")
             }
         }
         if (checked == 0) {

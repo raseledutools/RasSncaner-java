@@ -1100,18 +1100,20 @@ public class OcrReviewFragment extends Fragment {
         new android.widget.LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
-    // Suggestions section (ChipGroup with dictionary suggestions)
-    com.google.android.material.chip.ChipGroup suggestionsGroup =
-        new com.google.android.material.chip.ChipGroup(requireContext());
-    suggestionsGroup.setSingleLine(false);
-    android.widget.LinearLayout.LayoutParams suggestionsLp =
-        new android.widget.LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-    suggestionsLp.topMargin = (int) (8 * getResources().getDisplayMetrics().density);
-    root.addView(suggestionsGroup, suggestionsLp);
+    if (!BuildConfig.FEATURE_PADDLE_OCR) {
+      // Suggestions section (ChipGroup with dictionary suggestions)
+      com.google.android.material.chip.ChipGroup suggestionsGroup =
+          new com.google.android.material.chip.ChipGroup(requireContext());
+      suggestionsGroup.setSingleLine(false);
+      android.widget.LinearLayout.LayoutParams suggestionsLp =
+          new android.widget.LinearLayout.LayoutParams(
+              ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+      suggestionsLp.topMargin = (int) (8 * getResources().getDisplayMetrics().density);
+      root.addView(suggestionsGroup, suggestionsLp);
 
-    // Load suggestions asynchronously
-    loadSuggestionsAsync(word.t, suggestionsGroup, input);
+      // Load suggestions asynchronously
+      loadSuggestionsAsync(word.t, suggestionsGroup, input);
+    }
 
     // Actions row
     android.widget.LinearLayout actions = new android.widget.LinearLayout(requireContext());
@@ -1191,6 +1193,9 @@ public class OcrReviewFragment extends Fragment {
       String wordText,
       com.google.android.material.chip.ChipGroup suggestionsGroup,
       com.google.android.material.textfield.TextInputEditText input) {
+    if (BuildConfig.FEATURE_PADDLE_OCR) {
+      return;
+    }
     if (getContext() == null || wordText == null || wordText.isEmpty()) {
       return;
     }
