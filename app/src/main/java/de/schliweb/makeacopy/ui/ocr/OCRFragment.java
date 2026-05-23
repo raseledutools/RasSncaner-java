@@ -92,6 +92,7 @@ public class OCRFragment extends Fragment {
 
   public static final String BUNDLE_OCR_AUTO_ROTATE_APPLY_EXPORT = "ocr_auto_rotate_apply_export";
   public static final String BUNDLE_OCR_POST_PROCESSING = "ocr_post_processing";
+  public static final String BUNDLE_PADDLE_BEST_OCR = "paddle_best_ocr";
 
   @Override
   public View onCreateView(
@@ -916,6 +917,8 @@ public class OCRFragment extends Fragment {
         view.findViewById(R.id.checkbox_ocr_post_processing_dialog);
     android.widget.CheckBox cbLayoutAnalysis =
         view.findViewById(R.id.checkbox_layout_analysis_dialog);
+    android.widget.CheckBox cbPaddleBestOcr =
+        view.findViewById(R.id.checkbox_paddle_best_ocr_dialog);
     android.widget.RadioButton rbPaddle = view.findViewById(R.id.rbtn_mode_paddle);
     final boolean fixedPaddleMode = de.schliweb.makeacopy.BuildConfig.FEATURE_PADDLE_OCR;
 
@@ -927,6 +930,8 @@ public class OCRFragment extends Fragment {
     boolean layoutFeatureEnabled = FeatureFlags.isLayoutAnalysisEnabled();
     cbLayoutAnalysis.setVisibility(
         layoutFeatureEnabled ? android.view.View.VISIBLE : android.view.View.GONE);
+    cbPaddleBestOcr.setVisibility(
+        fixedPaddleMode ? android.view.View.VISIBLE : android.view.View.GONE);
 
     // PaddleOCR (experimental): visible as third radio option only when feature flag
     // is enabled and ABI is arm64-v8a (see PaddleOcrPrefs.isToggleVisible).
@@ -939,14 +944,18 @@ public class OCRFragment extends Fragment {
     // is gone). Treat any lingering Quick selection as Robust for the UI state.
     if (mode == OCR_MODE_QUICK) mode = OCR_MODE_ROBUST;
     // PaddleOCR is only valid when the toggle is visible; otherwise fall back to Robust.
-    if (mode == OCR_MODE_PADDLE && !paddleToggleVisible) mode = OCR_MODE_ROBUST;
+    if (mode == OCR_MODE_PADDLE && !fixedPaddleMode && !paddleToggleVisible) {
+      mode = OCR_MODE_ROBUST;
+    }
     if (mode == OCR_MODE_ORIGINAL) rbOriginal.setChecked(true);
     else if (mode == OCR_MODE_PADDLE) rbPaddle.setChecked(true);
     else rbRobust.setChecked(true);
+    final int initialMode = mode;
 
     boolean ocrAutoRotateApply = false;
     boolean ocrPostProcessing = true; // default ON
     boolean layoutAnalysis = false; // default OFF
+    boolean paddleBestOcr = false; // default OFF
     try {
       android.content.SharedPreferences p =
           requireContext()
@@ -954,12 +963,22 @@ public class OCRFragment extends Fragment {
       ocrAutoRotateApply = p.getBoolean(BUNDLE_OCR_AUTO_ROTATE_APPLY_EXPORT, false);
       ocrPostProcessing = p.getBoolean(BUNDLE_OCR_POST_PROCESSING, true);
       layoutAnalysis = p.getBoolean(BUNDLE_LAYOUT_ANALYSIS, false);
+      paddleBestOcr = p.getBoolean(BUNDLE_PADDLE_BEST_OCR, false);
     } catch (Throwable ignore) {
       // Best-effort; failure is non-critical
     }
     cbOcrAuto.setChecked(ocrAutoRotateApply);
     cbOcrPostProc.setChecked(ocrPostProcessing);
+    cbOcrPostProc.setVisibility(
+        initialMode == OCR_MODE_PADDLE ? android.view.View.GONE : android.view.View.VISIBLE);
     cbLayoutAnalysis.setChecked(layoutAnalysis && layoutFeatureEnabled);
+    cbPaddleBestOcr.setChecked(fixedPaddleMode && paddleBestOcr);
+    rg.setOnCheckedChangeListener(
+        (group, checkedId) ->
+            cbOcrPostProc.setVisibility(
+                checkedId == R.id.rbtn_mode_paddle
+                    ? android.view.View.GONE
+                    : android.view.View.VISIBLE));
 
     AlertDialog dlg =
         new AlertDialog.Builder(requireContext())
@@ -983,16 +1002,25 @@ public class OCRFragment extends Fragment {
                     setSelectedOcrMode(selectedMode);
                   }
 
+                  boolean postProcessingVisible = selectedMode != OCR_MODE_PADDLE;
+                  boolean postProcessingSelected =
+                      postProcessingVisible && cbOcrPostProc.isChecked();
                   try {
                     android.content.SharedPreferences p =
                         requireContext()
                             .getSharedPreferences(
                                 "export_options", android.content.Context.MODE_PRIVATE);
-                    p.edit()
-                        .putBoolean(BUNDLE_OCR_AUTO_ROTATE_APPLY_EXPORT, cbOcrAuto.isChecked())
-                        .putBoolean(BUNDLE_OCR_POST_PROCESSING, cbOcrPostProc.isChecked())
-                        .putBoolean(BUNDLE_LAYOUT_ANALYSIS, cbLayoutAnalysis.isChecked())
-                        .apply();
+                    android.content.SharedPreferences.Editor editor =
+                        p.edit()
+                            .putBoolean(BUNDLE_OCR_AUTO_ROTATE_APPLY_EXPORT, cbOcrAuto.isChecked())
+                            .putBoolean(BUNDLE_LAYOUT_ANALYSIS, cbLayoutAnalysis.isChecked())
+                            .putBoolean(
+                                BUNDLE_PADDLE_BEST_OCR,
+                                fixedPaddleMode && cbPaddleBestOcr.isChecked());
+                    if (postProcessingVisible) {
+                      editor.putBoolean(BUNDLE_OCR_POST_PROCESSING, postProcessingSelected);
+                    }
+                    editor.apply();
                   } catch (Throwable ignore) {
                     // Best-effort; failure is non-critical
                   }
@@ -1023,22 +1051,30 @@ public class OCRFragment extends Fragment {
                   String autoLabel = getString(R.string.opt_ocr_auto_rotate_apply_export);
                   String autoState = cbOcrAuto.isChecked() ? "[ON]" : "[OFF]";
                   String postProcLabel = getString(R.string.opt_ocr_post_processing);
-                  String postProcState = cbOcrPostProc.isChecked() ? "[ON]" : "[OFF]";
+                  String postProcState = postProcessingSelected ? "[ON]" : "[OFF]";
                   StringBuilder toastMsg =
                       new StringBuilder(modeMsg)
                           .append("\n")
                           .append(autoLabel)
                           .append(": ")
-                          .append(autoState)
-                          .append("\n")
-                          .append(postProcLabel)
-                          .append(": ")
-                          .append(postProcState);
+                          .append(autoState);
+                  if (postProcessingVisible) {
+                    toastMsg.append("\n").append(postProcLabel).append(": ").append(postProcState);
+                  }
                   // Only show layout analysis in toast if feature is enabled
                   if (FeatureFlags.isLayoutAnalysisEnabled()) {
                     String layoutLabel = getString(R.string.opt_layout_analysis);
                     String layoutState = cbLayoutAnalysis.isChecked() ? "[ON]" : "[OFF]";
                     toastMsg.append("\n").append(layoutLabel).append(": ").append(layoutState);
+                  }
+                  if (fixedPaddleMode) {
+                    String paddleBestLabel = getString(R.string.opt_paddle_best_ocr);
+                    String paddleBestState = cbPaddleBestOcr.isChecked() ? "[ON]" : "[OFF]";
+                    toastMsg
+                        .append("\n")
+                        .append(paddleBestLabel)
+                        .append(": ")
+                        .append(paddleBestState);
                   }
                   UIUtils.showToast(requireContext(), toastMsg.toString(), Toast.LENGTH_SHORT);
                   prepareReprocessAfterModelChange();
@@ -1347,6 +1383,20 @@ public class OCRFragment extends Fragment {
                     Log.d(TAG, LP + "Best model settings enabled=" + useBest + " for lang=" + lang);
                   } catch (Throwable t) {
                     Log.w(TAG, LP + "Failed to detect/set Best model settings", t);
+                  }
+
+                  try {
+                    android.content.SharedPreferences p =
+                        requireContext()
+                            .getSharedPreferences(
+                                "export_options", android.content.Context.MODE_PRIVATE);
+                    boolean paddleBestOcr =
+                        de.schliweb.makeacopy.BuildConfig.FEATURE_PADDLE_OCR
+                            && p.getBoolean(BUNDLE_PADDLE_BEST_OCR, false);
+                    localHelper.setPaddleHighQualityDetectionEnabled(paddleBestOcr);
+                    Log.d(TAG, LP + "Paddle best OCR enabled=" + paddleBestOcr);
+                  } catch (Throwable t) {
+                    Log.w(TAG, LP + "Failed to detect/set Paddle best OCR", t);
                   }
 
                   long tInit0 = System.nanoTime();
@@ -1718,7 +1768,8 @@ public class OCRFragment extends Fragment {
                   } catch (Throwable ignore) {
                     // Best-effort; failure is non-critical
                   }
-                  if (postProcessingEnabled) {
+                  boolean selectedPaddleMode = getSelectedOcrMode() == OCR_MODE_PADDLE;
+                  if (postProcessingEnabled && !selectedPaddleMode) {
                     try {
                       // Process words with dictionary - this is the single source of truth
                       ocrWords =
@@ -1734,7 +1785,12 @@ public class OCRFragment extends Fragment {
                       Log.w(TAG, LP + "Post-processing failed", t);
                     }
                   } else {
-                    Log.d(TAG, LP + "OCR post-processing disabled by user preference");
+                    Log.d(
+                        TAG,
+                        LP
+                            + (selectedPaddleMode
+                                ? "OCR post-processing skipped for PaddleOCR"
+                                : "OCR post-processing disabled by user preference"));
                     // Even without post-processing, derive text from words for consistency
                     ocrText = OCRPostProcessor.wordsToText(ocrWords); // TODO
                     if (ocrText == null || ocrText.trim().isEmpty()) ocrText = "";

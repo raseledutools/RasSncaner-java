@@ -424,6 +424,10 @@ public class OCRHelper {
     return useBestModelSettings;
   }
 
+  public void setPaddleHighQualityDetectionEnabled(boolean enable) {
+    // Standard flavor does not include PaddleOCR; keep API parity with the paddle flavor.
+  }
+
   /**
    * Sets the language for the OCR engine. If the specified language is null or empty, a default
    * language value is used. If the given language differs from the currently set language and the

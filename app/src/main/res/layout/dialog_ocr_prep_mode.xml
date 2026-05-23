@@ -65,5 +65,13 @@
             android:layout_marginTop="8dp"
             android:text="@string/opt_layout_analysis" />
 
+        <CheckBox
+            android:id="@+id/checkbox_paddle_best_ocr_dialog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/opt_paddle_best_ocr"
+            android:visibility="gone" />
+
     </LinearLayout>
 </ScrollView>

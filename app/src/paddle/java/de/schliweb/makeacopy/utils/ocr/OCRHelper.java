@@ -13,6 +13,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import de.schliweb.makeacopy.utils.layout.DocumentLayoutAnalyzer.AnalysisResult;
 import de.schliweb.makeacopy.utils.layout.DocumentRegion;
+import de.schliweb.makeacopy.utils.ocr.paddle.PaddleOcrEngine;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +33,7 @@ public class OCRHelper implements AutoCloseable {
   private final Context context;
   private String language = "eng";
   private OcrPageSegmentationMode pageSegmentationMode = OcrPageSegmentationMode.SINGLE_BLOCK;
+  private boolean paddleHighQualityDetectionEnabled;
 
   public OCRHelper(Context context) {
     this.context = context != null ? context.getApplicationContext() : null;
@@ -104,6 +106,10 @@ public class OCRHelper implements AutoCloseable {
     return false;
   }
 
+  public void setPaddleHighQualityDetectionEnabled(boolean enable) {
+    paddleHighQualityDetectionEnabled = enable;
+  }
+
   public void setLanguage(String language) {
     if (language != null && !language.isBlank()) this.language = language;
   }
@@ -139,6 +145,9 @@ public class OCRHelper implements AutoCloseable {
   public OcrResultWords runOcrWithWords(Bitmap bitmap) {
     try (OcrEngine engine = PaddleEngineProvider.create(context, language)) {
       if (engine == null) return new OcrResultWords("", null, new ArrayList<>());
+      if (engine instanceof PaddleOcrEngine paddleEngine) {
+        paddleEngine.setHighQualityDetectionEnabled(paddleHighQualityDetectionEnabled);
+      }
       return engine.run(bitmap);
     } catch (Exception e) {
       return new OcrResultWords("", null, new ArrayList<>());
