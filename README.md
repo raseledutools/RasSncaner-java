@@ -68,13 +68,13 @@ MakeACopy is available in two editions (controlled via the Gradle property `edit
 | **Full** | 23 languages (incl. CJK, Arabic, Hindi, Thai, Turkish) | 5 fonts (incl. CJK, Devanagari) | ~99 MB |
 | **Light** | English + German | 1 font (NotoSans) | ~58 MB |
 
-Both editions include the same ML-based document detection (ONNX model), OpenCV image processing, and full offline functionality. Both editions use an operator-stripped ONNX Runtime build that includes only the operators required for document detection. The Light edition additionally ships fewer OCR language models, fonts, and dictionaries, and uses a minimal ONNX Runtime AAR without XNNPACK and NNAPI to further reduce APK size.
+Both editions include the same ML-based document detection (ONNX model), OpenCV image processing, and full offline functionality. Both editions use an operator-stripped ONNX Runtime build that includes only the operators required for document detection. The Light edition additionally ships fewer OCR language models and fonts, and uses a minimal ONNX Runtime AAR without XNNPACK and NNAPI to further reduce APK size.
 
 In addition, MakeACopy is built in two product flavors (`ocr` flavor dimension):
 
 | Flavor | OCR Backend | Notes |
 |--------|-------------|-------|
-| **paddle** | PaddleOCR V5 | Published flavor for F-Droid and Google Play. Uses PaddleOCR only, without Tesseract runtime or Tesseract language data. |
+| **paddle** | PaddleOCR V5 | Published flavor for F-Droid and Google Play. Uses PaddleOCR only, without Tesseract runtime, Tesseract language data, or OCR dictionaries. |
 | **standard** | Tesseract only | Legacy flavor for existing Tesseract language data and workflows. Available via GitHub Releases. No PaddleOCR assets bundled. |
 
 The Full + `paddle` combination is what is published on F-Droid and Google Play. The `standard` Tesseract flavor and the Light edition are available via [GitHub Releases](https://github.com/egdels/makeacopy/releases).
