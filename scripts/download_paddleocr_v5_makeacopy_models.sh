@@ -17,6 +17,11 @@ MODELS=(
   # Detection
   "PP-OCRv5_mobile_det"
 
+  # Layout
+  "PP-DocLayout-S"
+  "PP-DocLayout-M"
+  "PP-DocLayout-L"
+
   # Recognition
   "en_PP-OCRv5_mobile_rec"           # eng
   "latin_PP-OCRv5_mobile_rec"        # deu/fra/spa/ita/por/nld/pol/ces/slk/hun/ron/dan/nor/swe/tur
@@ -26,6 +31,8 @@ MODELS=(
   "arabic_PP-OCRv5_mobile_rec"       # ara/fas
   "devanagari_PP-OCRv5_mobile_rec"   # hin
   "PP-OCRv5_mobile_rec"              # chi_sim/chi_tra, generic multilingual
+  "korean_PP-OCRv5_mobile_rec"       # korean
+  "el_PP-OCRv5_mobile_rec"           # greek
 )
 
 echo "Output dir: $BASE_DIR"
@@ -63,6 +70,9 @@ import os
 
 models = [
     "PP-OCRv5_mobile_det",
+    "PP-DocLayout-S",
+    "PP-DocLayout-M",
+    "PP-DocLayout-L",
     "en_PP-OCRv5_mobile_rec",
     "latin_PP-OCRv5_mobile_rec",
     "eslav_PP-OCRv5_mobile_rec",
@@ -71,6 +81,8 @@ models = [
     "arabic_PP-OCRv5_mobile_rec",
     "devanagari_PP-OCRv5_mobile_rec",
     "PP-OCRv5_mobile_rec",
+    "korean_PP-OCRv5_mobile_rec",
+    "el_PP-OCRv5_mobile_rec",
 ]
 
 out = Path(os.environ["BASE_DIR"]).expanduser().resolve()

@@ -25,9 +25,9 @@ def find_models(src_dir: Path) -> list[Path]:
     if not any(p.name == "det.onnx" for p in models):
         raise SystemExit(f"missing det.onnx in {src_dir}")
 
-    recs = [p for p in models if p.name != "det.onnx"]
-    if not recs:
-        raise SystemExit(f"no recognition ONNX models found in {src_dir}")
+    others = [p for p in models if p.name != "det.onnx"]
+    if not others:
+        raise SystemExit(f"no additional ONNX models found in {src_dir}")
 
     return models
 
@@ -55,7 +55,7 @@ def main() -> int:
         "dir",
         default="paddle-spike/onnx",
         nargs="?",
-        help="Directory containing det.onnx and *_PP-OCRv5_mobile_rec.onnx",
+        help="Directory containing det.onnx, recognition ONNX models, and optional layout.onnx",
     )
     args = parser.parse_args()
 

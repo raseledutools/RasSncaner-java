@@ -22,6 +22,7 @@ PADDLEX_CACHE="${PADDLEX_CACHE:-$HOME/.paddlex/official_models}"
 OPSET="${OPSET:-11}"
 
 DET_NAME="PP-OCRv5_mobile_det"
+LAYOUT_NAME="PP-DocLayout-S"
 
 REC_MODELS=(
   "en_PP-OCRv5_mobile_rec"
@@ -32,6 +33,8 @@ REC_MODELS=(
   "arabic_PP-OCRv5_mobile_rec"
   "devanagari_PP-OCRv5_mobile_rec"
   "PP-OCRv5_mobile_rec"
+  "korean_PP-OCRv5_mobile_rec"
+  "el_PP-OCRv5_mobile_rec"
 )
 
 log() { printf '[paddleocr-v5] %s\n' "$*"; }
@@ -55,6 +58,7 @@ from paddlex import create_model
 
 models = [
     "$DET_NAME",
+    "$LAYOUT_NAME",
 $(printf '    "%s",\n' "${REC_MODELS[@]}")
 ]
 
@@ -154,6 +158,12 @@ PY
 # -----------------------------------------------------------------------------
 DET_DIR="$PADDLEX_CACHE/$DET_NAME"
 convert_one "$DET_DIR" "$OUT_DIR/det.onnx"
+
+# -----------------------------------------------------------------------------
+# Layout
+# -----------------------------------------------------------------------------
+LAYOUT_DIR="$PADDLEX_CACHE/$LAYOUT_NAME"
+convert_one "$LAYOUT_DIR" "$OUT_DIR/layout.onnx"
 
 # -----------------------------------------------------------------------------
 # Recognition models
