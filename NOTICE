@@ -190,8 +190,8 @@ The following datasets were used:
       the default `standard` / F-Droid flavor). The shipped artifacts under
       app/src/paddle/assets/paddleocr/v5/ are:
         * 1× detection model: PP-OCRv5_mobile_det.ort
-        * 8× recognition models: en_, latin_, eslav_, cyrillic_, arabic_,
-          devanagari_, th_, and the generic PP-OCRv5_mobile_rec.ort
+        * 9× recognition models: en_, latin_, eslav_, cyrillic_, arabic_,
+          devanagari_, th_, el_, and the generic PP-OCRv5_mobile_rec.ort
         * Per-model character dictionaries (*_dict.txt)
         * paddleocr_v5.required_operators.config (reduced ORT op-list)
         * SHA256SUMS, SUMMARY.txt

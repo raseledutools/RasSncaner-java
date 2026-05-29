@@ -150,6 +150,7 @@ Supported out of the box:
 - Russian (East Slavic), Thai (Thai)
 - Arabic (Arabic), Persian/Farsi (Arabic)
 - Hindi (Devanagari)
+- Greek (Greek)
 
 In the `paddle` flavor, select the visible OCR language group for your document:
 
@@ -162,6 +163,7 @@ In the `paddle` flavor, select the visible OCR language group for your document:
 | Thai | Thai |
 | Arabic and Persian/Farsi | Arabic |
 | Hindi | Devanagari |
+| Greek | Greek |
 
 The F-Droid and Google Play links point to the `paddle` flavor. Use GitHub Releases if you need the `standard` Tesseract flavor.
 

@@ -20,7 +20,7 @@ Detection (1 model):
 
 - `PP-OCRv5_mobile_det`
 
-Recognition (8 language-group models, lazily loaded per OCR run):
+Recognition (9 language-group models, lazily loaded per OCR run):
 
 - `en_PP-OCRv5_mobile_rec`        — English
 - `latin_PP-OCRv5_mobile_rec`     — Latin-script languages (deu, fra, spa, ita, por, nld, …)
@@ -29,6 +29,7 @@ Recognition (8 language-group models, lazily loaded per OCR run):
 - `arabic_PP-OCRv5_mobile_rec`    — Arabic / Persian
 - `devanagari_PP-OCRv5_mobile_rec`— Devanagari (hin, mar, …)
 - `th_PP-OCRv5_mobile_rec`        — Thai
+- `el_PP-OCRv5_mobile_rec`        — Greek
 - `PP-OCRv5_mobile_rec`           — generic multilingual / Chinese fallback
 
 Each recognition model is paired with its own dictionary file
@@ -71,14 +72,14 @@ What is actually packaged into the `paddle` flavor APK under
 `assets/paddleocr/v5/`:
 
 - `PP-OCRv5_mobile_det.ort` (≈ 4.7 MB) — detection
-- `<lang>_PP-OCRv5_mobile_rec.ort` × 7 + `PP-OCRv5_mobile_rec.ort`
-  (≈ 7.6–7.8 MB each, generic multilingual ≈ 16 MB) — recognition
-- `<lang>_PP-OCRv5_mobile_rec_dict.txt` × 7 + `PP-OCRv5_mobile_rec_dict.txt`
+- `<lang>_PP-OCRv5_mobile_rec.ort` × 8 + `PP-OCRv5_mobile_rec.ort`
+  (≈ 7.6–7.9 MB each, generic multilingual ≈ 16 MB) — recognition
+- `<lang>_PP-OCRv5_mobile_rec_dict.txt` × 8 + `PP-OCRv5_mobile_rec_dict.txt`
   — per-model character dictionaries
 - `paddleocr_v5.required_operators.config` — pinned operator set used by the
   reduced ONNX Runtime build (includes `com.microsoft;1;FusedConv,FusedMatMul,QuickGelu,SkipLayerNormalization`)
 - `SHA256SUMS` — asset-internal pin file (consumed by `verifyPaddleAssetSha256`
-  at build time and by `PaddleAssets` at runtime; pins the 8 dict files only)
+  at build time and by `PaddleAssets` at runtime; pins the 9 dict files only)
 - `SUMMARY.txt` — human-readable provenance summary
 
 The `standard` (F-Droid) flavor contains **none** of these files; Paddle
