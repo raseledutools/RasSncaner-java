@@ -1129,6 +1129,14 @@ public class TrapezoidSelectionView extends View {
               relX, relY, imgW, imgH, CropEdgeGeometry.IMG_OOB_TOL_DEFAULT);
       cx = soft[0] + imgRect.left;
       cy = soft[1] + imgRect.top;
+
+      // Keep the handle's centre inside this view even when the soft image-space tolerance would
+      // place it beyond the overlay bounds. Android does not deliver a fresh ACTION_DOWN outside
+      // the view, so a released off-view corner could no longer be grabbed. The corner may still
+      // be outside the displayed image rect (and therefore still trigger the off-image warning),
+      // but it remains touchable after the user lifts the finger.
+      cx = Math.max(0f, Math.min(cx, width));
+      cy = Math.max(0f, Math.min(cy, height));
     } else {
       // Clamp the target position to the displayed image bounds (or view bounds if image unknown)
       float[] clamped = clampToImageBounds(x, y, width, height);
