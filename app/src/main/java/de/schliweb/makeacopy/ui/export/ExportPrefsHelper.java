@@ -79,6 +79,17 @@ public final class ExportPrefsHelper {
     return null;
   }
 
+  public static PdfCreator.TextLayerMode resolveTextLayerMode(Context context) {
+    String saved = getPrefs(context).getString("pdf_text_layer_mode", null);
+    try {
+      return saved == null
+          ? PdfCreator.TextLayerMode.LINE_BASED
+          : PdfCreator.TextLayerMode.valueOf(saved);
+    } catch (IllegalArgumentException ex) {
+      return PdfCreator.TextLayerMode.LINE_BASED;
+    }
+  }
+
   /**
    * Resolves effective grayscale and BW flags based on the pdf_bw_mode preference and the preset.
    *

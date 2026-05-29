@@ -47,11 +47,18 @@ public class PdfCreator {
   // Text sizing (relative to OCR box height in image space)
   private static final float TEXT_SIZE_RATIO = 0.70f;
   private static final float MIN_FONT_PT = 2f; // lower bound for tiny boxes
+  private static final float MIN_LINE_TEXT_SCALE_X = 0.50f;
+  private static final float MAX_LINE_TEXT_SCALE_X = 2.00f;
 
   public enum PdfImageOutput {
     COLOR,
     GRAYSCALE,
     BLACK_WHITE
+  }
+
+  public enum TextLayerMode {
+    LINE_BASED,
+    WORD_POSITIONED
   }
 
   /**
@@ -220,6 +227,34 @@ public class PdfCreator {
       BwMode bwMode,
       PageFormat pageFormat,
       DocumentCleanupMode cleanupMode) {
+    return createSearchablePdf(
+        context,
+        bitmap,
+        words,
+        outputUri,
+        jpegQuality,
+        convertToGrayscale,
+        convertToBlackWhite,
+        targetDpi,
+        bwMode,
+        pageFormat,
+        cleanupMode,
+        TextLayerMode.LINE_BASED);
+  }
+
+  public static Uri createSearchablePdf(
+      Context context,
+      Bitmap bitmap,
+      List<RecognizedWord> words,
+      Uri outputUri,
+      int jpegQuality,
+      boolean convertToGrayscale,
+      boolean convertToBlackWhite,
+      int targetDpi,
+      BwMode bwMode,
+      PageFormat pageFormat,
+      DocumentCleanupMode cleanupMode,
+      TextLayerMode textLayerMode) {
     Log.d(
         TAG,
         "createSearchablePdf: uri="
@@ -230,6 +265,7 @@ public class PdfCreator {
             + pageFormat);
     if (bitmap == null || outputUri == null) return null;
     if (pageFormat == null) pageFormat = PageFormat.A4;
+    if (textLayerMode == null) textLayerMode = TextLayerMode.LINE_BASED;
 
     try {
       PDFBoxResourceLoader.init(context);
@@ -344,7 +380,8 @@ public class PdfCreator {
             }
             Log.d(TAG, "createSearchablePdf: " + normWords.size() + " OCR words");
             // now output text in IMAGE coordinates (0..imgW / 0..imgH)
-            addTextLayerImageSpace(cs, normWords, fonts, prepared.getWidth(), prepared.getHeight());
+            addTextLayerImageSpace(
+                cs, normWords, fonts, prepared.getWidth(), prepared.getHeight(), textLayerMode);
             cs.restoreGraphicsState();
           }
         }
@@ -401,9 +438,11 @@ public class PdfCreator {
       List<RecognizedWord> words,
       List<PDFont> fonts,
       int imageWidth,
-      int imageHeight)
+      int imageHeight,
+      TextLayerMode textLayerMode)
       throws Exception {
     if (words == null || words.isEmpty()) return;
+    if (textLayerMode == null) textLayerMode = TextLayerMode.LINE_BASED;
 
     // --- 1) Clean and validate ---
     List<RecognizedWord> clean = new ArrayList<>(words.size());
@@ -510,9 +549,13 @@ public class PdfCreator {
           return Float.compare(avgYA, avgYB);
         });
 
-    // --- 4) Render words in logical reading order (for correct copy/paste and search) ---
-    // Each word is positioned independently via setTextMatrix, so the order in the PDF stream
-    // determines the copy/paste order, not the visual layout.
+    if (textLayerMode == TextLayerMode.WORD_POSITIONED) {
+      addWordPositionedTextLayerImageSpace(cs, lines, fonts, imageWidth, imageHeight, idx);
+      return;
+    }
+
+    // --- 4) Render lines in logical reading order (for correct copy/paste and search) ---
+    // Each OCR line is written as one text run and horizontally scaled to the OCR line box.
     // For RTL scripts: words must be written in logical order (first word of sentence first),
     // which means sorting by X position from RIGHT to LEFT (rightmost word = first in sentence).
     // For LTR scripts: words are sorted LEFT to RIGHT (leftmost word = first in sentence).
@@ -545,37 +588,146 @@ public class PdfCreator {
       float medianH = medianHeight(line); // px in image
       float fontSize = Math.max(MIN_FONT_PT, medianH * TEXT_SIZE_RATIO);
 
+      StringBuilder lineText = new StringBuilder();
+      RecognizedWord anchor = null;
+      for (RecognizedWord w : line) {
+        String tokenRaw = safeText(w.getText()).trim();
+        if (tokenRaw.isEmpty()) continue;
+        if (anchor == null) anchor = w;
+        if (lineText.length() > 0) lineText.append(' ');
+
+        // PDFBox writes the complete line as one positioned PDF text run. Positioning every word
+        // independently makes some PDF extractors interpret the visual gaps as multiple spaces or
+        // line breaks. For RTL scripts the encoded glyph order still needs PDF-specific reordering,
+        // isolated from the logical text used by OCRFragment/OCRReview/TXT export.
+        lineText.append(PdfTextUtils.reorderRtlForPdf(tokenRaw));
+      }
+      if (anchor == null || lineText.length() == 0) continue;
+
+      String token =
+          java.text.Normalizer.normalize(lineText.toString(), java.text.Normalizer.Form.NFC);
+
+      RectF lineBox = getLineBoundingBox(line);
+      float boxH = lineBox.height();
+      float targetTextWidth = Math.max(1f, lineBox.width());
+      float measuredTextWidth = measureTextWidth(token, fontSize, fonts);
+      float scaleX =
+          measuredTextWidth > 0f
+              ? clamp(
+                  targetTextWidth / measuredTextWidth, MIN_LINE_TEXT_SCALE_X, MAX_LINE_TEXT_SCALE_X)
+              : 1f;
+
+      // Baseline inside the OCR line box (image Y increases downward). Placing it below the box
+      // makes the selectable text layer hang under the visible scan text.
+      float baselineImgY = lineBox.bottom - boxH * 0.20f;
+
+      // Invert Y (image space → PDF Y-up)
+      float x_img = clamp(lineBox.left, 0f, imageWidth);
+      float y_img = clamp((imageHeight - baselineImgY), 0f, imageHeight);
+
+      cs.beginText();
+      try {
+        cs.setRenderingMode(RenderingMode.NEITHER); // unsichtbar aber auswählbar
+        cs.setTextMatrix(new Matrix(scaleX, 0f, 0f, 1f, x_img, y_img));
+        showTextWithFallbacks(cs, token, fontSize, fonts);
+      } finally {
+        cs.endText();
+      }
+    }
+  }
+
+  private static void addWordPositionedTextLayerImageSpace(
+      PDPageContentStream cs,
+      List<List<RecognizedWord>> lines,
+      List<PDFont> fonts,
+      int imageWidth,
+      int imageHeight,
+      java.util.IdentityHashMap<RecognizedWord, Integer> idx)
+      throws Exception {
+    for (List<RecognizedWord> line : lines) {
+      if (line == null || line.isEmpty()) continue;
+      boolean isRtl = isRtlLine(line);
+      line.sort(
+          (a, b) -> {
+            int c =
+                isRtl
+                    ? Float.compare(b.getBoundingBox().left, a.getBoundingBox().left)
+                    : Float.compare(a.getBoundingBox().left, b.getBoundingBox().left);
+            if (c != 0) return c;
+            c = Float.compare(a.getBoundingBox().top, b.getBoundingBox().top);
+            if (c != 0) return c;
+            return Integer.compare(idx.get(a), idx.get(b));
+          });
+
+      float medianH = medianHeight(line);
+      float fontSize = Math.max(MIN_FONT_PT, medianH * TEXT_SIZE_RATIO);
+
       for (RecognizedWord w : line) {
         String tokenRaw = safeText(w.getText());
         if (tokenRaw.trim().isEmpty()) continue;
-
-        // PDFBox writes each token as a positioned PDF text run. For RTL scripts the extracted
-        // text order depends on the encoded glyph order, so keep the PDF-specific reordering here
-        // isolated from the logical text used by OCRFragment/OCRReview/TXT export.
         String token =
             java.text.Normalizer.normalize(
                 PdfTextUtils.reorderRtlForPdf(tokenRaw) + " ", java.text.Normalizer.Form.NFC);
-
         RectF b = w.getBoundingBox();
         float boxH = b.height();
-
-        // Baseline roughly at the lower quarter of the box area (image Y increases downward)
         float baselineImgY = b.bottom + boxH * 0.25f;
-
-        // Invert Y (image space → PDF Y-up)
         float x_img = clamp(b.left, 0f, imageWidth);
         float y_img = clamp((imageHeight - baselineImgY), 0f, imageHeight);
 
         cs.beginText();
         try {
-          cs.setRenderingMode(RenderingMode.NEITHER); // unsichtbar aber auswählbar
-          cs.setTextMatrix(com.tom_roush.pdfbox.util.Matrix.getTranslateInstance(x_img, y_img));
+          cs.setRenderingMode(RenderingMode.NEITHER);
+          cs.setTextMatrix(Matrix.getTranslateInstance(x_img, y_img));
           showTextWithFallbacks(cs, token, fontSize, fonts);
         } finally {
           cs.endText();
         }
       }
     }
+  }
+
+  private static RectF getLineBoundingBox(List<RecognizedWord> line) {
+    RectF result = null;
+    for (RecognizedWord w : line) {
+      if (w == null || w.getBoundingBox() == null || safeText(w.getText()).trim().isEmpty()) {
+        continue;
+      }
+      RectF b = w.getBoundingBox();
+      if (result == null) {
+        result = new RectF(b);
+      } else {
+        result.left = Math.min(result.left, b.left);
+        result.top = Math.min(result.top, b.top);
+        result.right = Math.max(result.right, b.right);
+        result.bottom = Math.max(result.bottom, b.bottom);
+      }
+    }
+    return result != null ? result : new RectF(0f, 0f, 1f, 1f);
+  }
+
+  private static float measureTextWidth(String text, float fontSize, List<PDFont> fonts) {
+    if (text == null || text.isEmpty() || fonts == null || fonts.isEmpty()) return 0f;
+
+    float width = 0f;
+    for (int i = 0; i < text.length(); ) {
+      int cp = text.codePointAt(i);
+      String ch = new String(Character.toChars(cp));
+      width += measureCharacterWidth(ch, fontSize, fonts);
+      i += Character.charCount(cp);
+    }
+    return width;
+  }
+
+  private static float measureCharacterWidth(String ch, float fontSize, List<PDFont> fonts) {
+    for (PDFont font : fonts) {
+      try {
+        font.encode(ch);
+        return font.getStringWidth(ch) / 1000f * fontSize;
+      } catch (Exception ignore) {
+        // Try the next fallback font, matching showTextWithFallbacks behavior.
+      }
+    }
+    return fontSize * 0.5f;
   }
 
   /**
@@ -1044,8 +1196,39 @@ public class PdfCreator {
       BwMode bwMode,
       PageFormat pageFormat,
       DocumentCleanupMode cleanupMode) {
+    return createSearchablePdf(
+        context,
+        bitmaps,
+        perPageWords,
+        outputUri,
+        jpegQuality,
+        convertToGrayscale,
+        convertToBlackWhite,
+        targetDpi,
+        listener,
+        bwMode,
+        pageFormat,
+        cleanupMode,
+        TextLayerMode.LINE_BASED);
+  }
+
+  public static Uri createSearchablePdf(
+      Context context,
+      List<Bitmap> bitmaps,
+      List<List<RecognizedWord>> perPageWords,
+      Uri outputUri,
+      int jpegQuality,
+      boolean convertToGrayscale,
+      boolean convertToBlackWhite,
+      int targetDpi,
+      ProgressListener listener,
+      BwMode bwMode,
+      PageFormat pageFormat,
+      DocumentCleanupMode cleanupMode,
+      TextLayerMode textLayerMode) {
     if (bitmaps == null || bitmaps.isEmpty() || outputUri == null) return null;
     if (pageFormat == null) pageFormat = PageFormat.A4;
+    if (textLayerMode == null) textLayerMode = TextLayerMode.LINE_BASED;
     try {
       PDFBoxResourceLoader.init(context);
       try {
@@ -1169,7 +1352,7 @@ public class PdfCreator {
                 normWords = words;
               }
               addTextLayerImageSpace(
-                  cs, normWords, fonts, prepared.getWidth(), prepared.getHeight());
+                  cs, normWords, fonts, prepared.getWidth(), prepared.getHeight(), textLayerMode);
               cs.restoreGraphicsState();
             }
           }

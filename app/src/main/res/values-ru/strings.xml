@@ -165,6 +165,9 @@
     <string name="pdf_preset_standard">Стандартное (200 dpi, q72)</string>
     <string name="pdf_preset_small">Небольшое (150 dpi, q62)</string>
     <string name="pdf_preset_very_small">Очень маленькое (110 dpi, q52)</string>
+    <string name="pdf_text_layer_mode_title">Текстовый слой PDF</string>
+    <string name="pdf_text_layer_mode_line_based">По строкам (рекомендуется)</string>
+    <string name="pdf_text_layer_mode_word_positioned">По позициям слов (совместимость)</string>
     <string name="export_options_title">Параметры экспорта</string>
     <string name="jpeg_enhancement_title">Цвет вывода JPEG</string>
     <string name="btn_options">Параметры</string>

@@ -207,6 +207,37 @@ public class PdfCreatorInstrumentedTest {
     }
   }
 
+  @Test
+  public void searchablePdfExtractsLineWithSingleSpaces() throws Exception {
+    Context ctx = ApplicationProvider.getApplicationContext();
+
+    int imgW = 2200, imgH = 400;
+    Bitmap bmp = Bitmap.createBitmap(imgW, imgH, Bitmap.Config.ARGB_8888);
+    bmp.eraseColor(Color.WHITE);
+
+    try {
+      List<RecognizedWord> words = new ArrayList<>();
+      words.add(new RecognizedWord("In", new RectF(100, 100, 150, 145), 0.99f));
+      words.add(new RecognizedWord("a", new RectF(260, 100, 285, 145), 0.99f));
+      words.add(new RecognizedWord("bid", new RectF(390, 100, 455, 145), 0.99f));
+      words.add(new RecognizedWord("to", new RectF(620, 100, 660, 145), 0.99f));
+      words.add(new RecognizedWord("diversify", new RectF(830, 100, 1010, 145), 0.99f));
+
+      File out = new File(ctx.getCacheDir(), "test_single_spaces_text_layer.pdf");
+      Uri uri = Uri.fromFile(out);
+
+      Uri res = PdfCreator.createSearchablePdf(ctx, bmp, words, uri, 90, false);
+      assertNotNull("PDF creation failed", res);
+
+      try (PDDocument doc = PDDocument.load(out)) {
+        String txt = new PDFTextStripper().getText(doc).trim();
+        assertEquals("In a bid to diversify", txt);
+      }
+    } finally {
+      bmp.recycle();
+    }
+  }
+
   /**
    * Tests the alignment and overlay correctness of OCR text regions within a generated searchable
    * PDF.

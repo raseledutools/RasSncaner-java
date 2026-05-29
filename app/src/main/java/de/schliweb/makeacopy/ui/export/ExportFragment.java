@@ -1522,6 +1522,8 @@ public class ExportFragment extends Fragment {
                 final de.schliweb.makeacopy.utils.image.DocumentCleanupMode cleanupMode =
                     ExportPrefsHelper.resolveCleanupMode(appContext);
                 final PageFormat pageFormat = ExportPrefsHelper.resolvePageFormat(appContext);
+                final PdfCreator.TextLayerMode textLayerMode =
+                    ExportPrefsHelper.resolveTextLayerMode(appContext);
 
                 Uri exportUri;
                 if (isMulti) {
@@ -1650,7 +1652,8 @@ public class ExportFragment extends Fragment {
                                           Math.max(0, Math.min(pageIndex, total)))),
                           bwMode,
                           pageFormat,
-                          cleanupMode);
+                          cleanupMode,
+                          textLayerMode);
                   // Recycle any temporary bitmaps we created (those not part of the session's
                   // in-memory references)
                   final HashSet<Bitmap> sessionBitmaps = new HashSet<>();
@@ -1681,7 +1684,8 @@ public class ExportFragment extends Fragment {
                           preset.targetDpi,
                           bwMode,
                           pageFormat,
-                          cleanupMode);
+                          cleanupMode,
+                          textLayerMode);
                 }
 
                 final Uri finalUri = exportUri;

@@ -29,6 +29,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.utils.export.PageFormat;
+import de.schliweb.makeacopy.utils.export.PdfCreator;
 import de.schliweb.makeacopy.utils.export.PdfQualityPreset;
 import de.schliweb.makeacopy.utils.export.jpeg.JpegExportOptions;
 import de.schliweb.makeacopy.utils.image.DocumentCleanupMode;
@@ -69,6 +70,7 @@ public class ExportOptionsDialogFragment extends DialogFragment {
   public static final String BUNDLE_JPEG_MODE = "jpeg_mode"; // enum name
   public static final String BUNDLE_PDF_PRESET = "pdf_preset"; // enum name
   public static final String BUNDLE_PAGE_FORMAT = "page_format"; // enum name
+  public static final String BUNDLE_PDF_TEXT_LAYER_MODE = "pdf_text_layer_mode"; // enum name
 
   public static void show(@NonNull FragmentManager fm) {
     new ExportOptionsDialogFragment().show(fm, "ExportOptionsDialogFragment");
@@ -141,6 +143,11 @@ public class ExportOptionsDialogFragment extends DialogFragment {
     RadioButton rbPageLetter = view.findViewById(R.id.dialog_radio_page_letter);
     RadioButton rbPageLegal = view.findViewById(R.id.dialog_radio_page_legal);
 
+    RadioGroup pdfTextLayerModeGroup = view.findViewById(R.id.dialog_pdf_text_layer_mode_group);
+    RadioButton rbPdfTextLayerLineBased = view.findViewById(R.id.dialog_pdf_text_layer_line_based);
+    RadioButton rbPdfTextLayerWordPositioned =
+        view.findViewById(R.id.dialog_pdf_text_layer_word_positioned);
+
     RadioGroup pdfBwModeGroup = view.findViewById(R.id.dialog_pdf_bw_mode_group);
     RadioButton rbPdfBwNone = view.findViewById(R.id.dialog_pdf_bw_none);
     RadioButton rbPdfGray = view.findViewById(R.id.dialog_pdf_grayscale);
@@ -164,6 +171,7 @@ public class ExportOptionsDialogFragment extends DialogFragment {
     String presetSaved = prefs.getString("pdf_preset", null);
     String pageFormatSaved = prefs.getString("page_format", PageFormat.FIT_TO_IMAGE.name());
     PageFormat pageFormat = PageFormat.fromName(pageFormatSaved, PageFormat.FIT_TO_IMAGE);
+    PdfCreator.TextLayerMode textLayerMode = ExportPrefsHelper.resolveTextLayerMode(ctx);
 
     cbIncludeOcr.setChecked(includeOcr);
     // Initialize format selection from preference (PDF default)
@@ -184,6 +192,12 @@ public class ExportOptionsDialogFragment extends DialogFragment {
     else if (pageFormat == PageFormat.A4) rbPageA4.setChecked(true);
     else if (pageFormat == PageFormat.US_LETTER) rbPageLetter.setChecked(true);
     else if (pageFormat == PageFormat.LEGAL) rbPageLegal.setChecked(true);
+
+    if (textLayerMode == PdfCreator.TextLayerMode.WORD_POSITIONED) {
+      rbPdfTextLayerWordPositioned.setChecked(true);
+    } else {
+      rbPdfTextLayerLineBased.setChecked(true);
+    }
 
     // pick default preset if none saved: High for single page, Standard for multi (ExportFragment
     // will compute page count; here fallback Standard)
@@ -359,6 +373,12 @@ public class ExportOptionsDialogFragment extends DialogFragment {
                     selFormat = PageFormat.US_LETTER;
                   else if (pageFormatCheckedId == rbPageLegal.getId()) selFormat = PageFormat.LEGAL;
 
+                  PdfCreator.TextLayerMode selTextLayerMode = PdfCreator.TextLayerMode.LINE_BASED;
+                  int textLayerCheckedId = pdfTextLayerModeGroup.getCheckedRadioButtonId();
+                  if (textLayerCheckedId == rbPdfTextLayerWordPositioned.getId()) {
+                    selTextLayerMode = PdfCreator.TextLayerMode.WORD_POSITIONED;
+                  }
+
                   // persist
                   SharedPreferences.Editor editor =
                       prefs
@@ -369,7 +389,8 @@ public class ExportOptionsDialogFragment extends DialogFragment {
                           .putBoolean("jpeg_output_grayscale", jpegGray)
                           .putString("document_cleanup_mode", cleanupMode.name())
                           .putString("pdf_preset", sel.name())
-                          .putString("page_format", selFormat.name());
+                          .putString("page_format", selFormat.name())
+                          .putString("pdf_text_layer_mode", selTextLayerMode.name());
                   if (pdfBwMode != null) editor.putString("pdf_bw_mode", pdfBwMode);
                   else editor.remove("pdf_bw_mode");
                   editor.apply();
@@ -384,6 +405,7 @@ public class ExportOptionsDialogFragment extends DialogFragment {
                   else result.remove("pdf_bw_mode");
                   result.putString(BUNDLE_PDF_PRESET, sel.name());
                   result.putString(BUNDLE_PAGE_FORMAT, selFormat.name());
+                  result.putString(BUNDLE_PDF_TEXT_LAYER_MODE, selTextLayerMode.name());
                   getParentFragmentManager().setFragmentResult(REQUEST_KEY, result);
                 })
             .create();

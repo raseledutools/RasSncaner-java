@@ -164,6 +164,9 @@
     <string name="pdf_preset_standard">Standaard (200 dpi, q72)</string>
     <string name="pdf_preset_small">Klein (150 dpi, q62)</string>
     <string name="pdf_preset_very_small">Zeer klein (110 dpi, q52)</string>
+    <string name="pdf_text_layer_mode_title">PDF-tekstlaag</string>
+    <string name="pdf_text_layer_mode_line_based">Regelgebaseerd (aanbevolen)</string>
+    <string name="pdf_text_layer_mode_word_positioned">Woordgepositioneerd (compatibiliteit)</string>
     <string name="export_options_title">Exportopties</string>
     <string name="jpeg_enhancement_title">JPEG‑uitvoerkleur</string>
     <string name="btn_options">Opties</string>
