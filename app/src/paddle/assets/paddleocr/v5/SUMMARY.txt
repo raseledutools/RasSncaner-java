@@ -12,6 +12,8 @@ cyrillic_PP-OCRv5_mobile_rec.ort                   8155912
 cyrillic_PP-OCRv5_mobile_rec_dict.txt                 2783
 devanagari_PP-OCRv5_mobile_rec.ort                 8019424
 devanagari_PP-OCRv5_mobile_rec_dict.txt               1945
+el_PP-OCRv5_mobile_rec.ort                         7915848
+el_PP-OCRv5_mobile_rec_dict.txt                       1105
 en_PP-OCRv5_mobile_rec.ort                         7955536
 en_PP-OCRv5_mobile_rec_dict.txt                       1418
 eslav_PP-OCRv5_mobile_rec.ort                      7994744
