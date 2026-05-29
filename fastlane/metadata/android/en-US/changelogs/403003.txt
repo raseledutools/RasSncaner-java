@@ -1,0 +1,5 @@
+MakeACopy 4.3.0
+* Improved searchable PDFs with a new line-based text layer for cleaner copy & paste.
+* Added a compatibility option for word-positioned PDF text layers.
+* Export options now remember the selected PDF text-layer mode.
+* More robust OCR/PDF tests for text extraction spacing.
