@@ -54,6 +54,7 @@ final class PaddleLanguageRouter {
      * - "arabic": Arabic script
      * - "devanagari": Devanagari script
      * - "th": Thai language
+     * - "el": Greek language
      * - "zh": Chinese language
      *
      * This list is unmodifiable to ensure thread-safety and to prevent
@@ -61,7 +62,7 @@ final class PaddleLanguageRouter {
      */
     static final List<String> MODEL_KEYS =
             Collections.unmodifiableList(Arrays.asList(
-                    "en", "latin", "eslav", "cyrillic", "arabic", "devanagari", "th", "zh"));
+                    "en", "latin", "eslav", "cyrillic", "arabic", "devanagari", "th", "el", "zh"));
 
     /**
      * A mapping between language specification codes (e.g., "eng", "deu+eng")
@@ -82,6 +83,7 @@ final class PaddleLanguageRouter {
         base.put("arabic", "arabic_PP-OCRv5_mobile_rec");
         base.put("devanagari", "devanagari_PP-OCRv5_mobile_rec");
         base.put("th", "th_PP-OCRv5_mobile_rec");
+        base.put("el", "el_PP-OCRv5_mobile_rec");
         base.put("zh", "PP-OCRv5_mobile_rec");
         ASSET_BASENAME = Collections.unmodifiableMap(base);
 
@@ -143,6 +145,11 @@ final class PaddleLanguageRouter {
         // th
         m.put("tha", "th");
         m.put("th", "th");
+
+        // el
+        m.put("ell", "el");
+        m.put("gre", "el");
+        m.put("el", "el");
 
         // zh (generic / multilingual / chinesisch)
         m.put("chi_sim", "zh");

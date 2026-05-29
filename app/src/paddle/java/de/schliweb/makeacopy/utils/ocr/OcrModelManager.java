@@ -22,7 +22,7 @@ public final class OcrModelManager {
   public static final String ACTION_TESSDATA = "de.schliweb.makeacopy.ACTION_TESSDATA";
   public static final long MAX_FILE_SIZE_BYTES = 50L * 1024L * 1024L;
   private static final String[] AVAILABLE_LANGUAGE_CODES =
-      new String[] {"en", "latin", "eslav", "cyrillic", "arabic", "devanagari", "th", "zh"};
+      new String[] {"en", "latin", "eslav", "cyrillic", "arabic", "devanagari", "th", "el", "zh"};
 
   private OcrModelManager() {
     // no instances

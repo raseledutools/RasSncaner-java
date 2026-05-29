@@ -63,6 +63,13 @@ public class PaddleLanguageRouterTest {
     }
 
     @Test
+    public void resolve_greek() {
+        assertEquals("el", PaddleLanguageRouter.resolveRecModel("ell"));
+        assertEquals("el", PaddleLanguageRouter.resolveRecModel("gre"));
+        assertEquals("el", PaddleLanguageRouter.resolveRecModel("el"));
+    }
+
+    @Test
     public void resolve_chinese_japanese_korean_to_zh() {
         assertEquals("zh", PaddleLanguageRouter.resolveRecModel("chi_sim"));
         assertEquals("zh", PaddleLanguageRouter.resolveRecModel("chi_tra"));
@@ -100,6 +107,8 @@ public class PaddleLanguageRouterTest {
         assertEquals("eslav", PaddleLanguageRouter.resolveRecModel("tha+ara+rus"));
         // ohne eslav: arabic gewinnt vor th
         assertEquals("arabic", PaddleLanguageRouter.resolveRecModel("tha+ara"));
+        // ohne arabic: th gewinnt vor el
+        assertEquals("th", PaddleLanguageRouter.resolveRecModel("ell+tha"));
     }
 
     @Test
@@ -131,6 +140,7 @@ public class PaddleLanguageRouterTest {
         assertEquals("arabic_PP-OCRv5_mobile_rec", PaddleLanguageRouter.assetBaseName("arabic"));
         assertEquals("devanagari_PP-OCRv5_mobile_rec", PaddleLanguageRouter.assetBaseName("devanagari"));
         assertEquals("th_PP-OCRv5_mobile_rec", PaddleLanguageRouter.assetBaseName("th"));
+        assertEquals("el_PP-OCRv5_mobile_rec", PaddleLanguageRouter.assetBaseName("el"));
         assertEquals("PP-OCRv5_mobile_rec", PaddleLanguageRouter.assetBaseName("zh"));
     }
 

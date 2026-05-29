@@ -453,6 +453,7 @@ public class OCRFragment extends Fragment {
       case "ar", "fa", "ur", "ps" -> "arabic";
       case "hi", "mr", "ne", "sa" -> "devanagari";
       case "th" -> "th";
+      case "el" -> "el";
       case "zh", "ja", "ko" -> "zh";
       default -> "latin";
     };
@@ -678,6 +679,7 @@ public class OCRFragment extends Fragment {
         case "arabic" -> "Arabic script (Paddle)";
         case "devanagari" -> "Devanagari script (Paddle)";
         case "th" -> "Thai (Paddle)";
+        case "el" -> "Greek (Paddle)";
         case "zh" -> "Chinese/Japanese/Korean (Paddle)";
         default -> code + " (Paddle)";
       };
