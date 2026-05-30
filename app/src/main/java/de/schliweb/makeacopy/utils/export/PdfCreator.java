@@ -484,7 +484,7 @@ public class PdfCreator {
 
     // Compute dynamic tolerance based on median word height.
     // Words within this Y-distance are considered on the same line.
-    final float lineToleranceY = Math.max(6f, medianHeight(clean));
+    final float lineToleranceY = calculateLineToleranceY(clean);
 
     // Stable tie-breaker: original index
     java.util.IdentityHashMap<RecognizedWord, Integer> idx = new java.util.IdentityHashMap<>();
@@ -958,6 +958,11 @@ public class PdfCreator {
     if (n == 0) return 0;
     if (n % 2 == 1) return heights.get(n / 2);
     return (heights.get(n / 2 - 1) + heights.get(n / 2)) / 2f;
+  }
+
+  static float calculateLineToleranceY(List<RecognizedWord> words) {
+    float medianH = medianHeight(words);
+    return Math.max(4f, medianH * 0.45f);
   }
 
   /**

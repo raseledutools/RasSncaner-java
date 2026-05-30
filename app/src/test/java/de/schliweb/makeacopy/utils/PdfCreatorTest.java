@@ -4,11 +4,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import android.graphics.RectF;
 import de.schliweb.makeacopy.utils.export.PdfCreator;
 import de.schliweb.makeacopy.utils.export.PdfCreator.PdfImageOutput;
 import de.schliweb.makeacopy.utils.image.DocumentCleanupMode;
 import de.schliweb.makeacopy.utils.image.DocumentCleanupOptions;
+import de.schliweb.makeacopy.utils.ocr.RecognizedWord;
+import java.lang.reflect.Method;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -105,6 +109,22 @@ public class PdfCreatorTest {
 
     float expectedPageY = 412.5f;
     assertEquals("Page Y after transform should match", expectedPageY, pageY, 0.001f);
+  }
+
+  @Test
+  public void lineToleranceKeepsAdjacentTextLinesSeparate() throws Exception {
+    Method method = PdfCreator.class.getDeclaredMethod("calculateLineToleranceY", java.util.List.class);
+    method.setAccessible(true);
+
+    float tolerance =
+        (float)
+            method.invoke(
+                null,
+                Arrays.asList(
+                    new RecognizedWord("Falls", new RectF(10f, 100f, 50f, 120f), 1f),
+                    new RecognizedWord("Sie", new RectF(10f, 124f, 40f, 144f), 1f)));
+
+    assertTrue("Line tolerance must be smaller than a normal adjacent line offset", tolerance < 24f);
   }
 
   @Test
