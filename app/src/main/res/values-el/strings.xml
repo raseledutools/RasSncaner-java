@@ -80,6 +80,21 @@
     <string name="exposure_compensation_label">EV %1$s</string>
     <string name="exposure_compensation_cd">Ρυθμιστικό αντιστάθμισης έκθεσης</string>
     <string name="exposure_compensation_option">Αντιστάθμιση έκθεσης</string>
+    <string name="manual_focus_auto">AF</string>
+    <string name="manual_focus_label">MF %1$d%%</string>
+    <string name="manual_focus_cd">Ρυθμιστικό χειροκίνητης εστίασης</string>
+    <string name="manual_focus_locked">Η χειροκίνητη εστίαση κλειδώθηκε</string>
+    <string name="manual_focus_option">Χειροκίνητη εστίαση</string>
+    <string name="tap_to_focus_started">Εστίαση…</string>
+    <string name="tap_to_focus_done">Η εστίαση προσαρμόστηκε</string>
+    <string name="tap_to_focus_requested">Ζητήθηκε εστίαση</string>
+    <string name="tap_to_focus_not_locked">Δεν ήταν δυνατό το κλείδωμα εστίασης εδώ</string>
+    <string name="tap_to_focus_not_supported">Η εστίαση με πάτημα δεν υποστηρίζεται εδώ</string>
+    <string name="tap_to_focus_failed">Δεν ήταν δυνατή η εστίαση εδώ</string>
+    <string name="camera_zoom_title">Ζουμ / φακός</string>
+    <string name="camera_zoom_cd">Επιλογή ζουμ ή φακού</string>
+    <string name="camera_zoom_ratio">%1$s×</string>
+    <string name="camera_zoom_not_available">Το ζουμ δεν είναι διαθέσιμο σε αυτήν τη συσκευή</string>
     <!-- JPEG mode labels -->
     <string name="jpeg_mode_none">Χρώμα</string>
     <string name="jpeg_mode_auto">Κλίμακα του γκρι</string>

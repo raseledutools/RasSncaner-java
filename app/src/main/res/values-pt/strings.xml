@@ -89,6 +89,21 @@
     <string name="exposure_compensation_label">EV %1$s</string>
     <string name="exposure_compensation_cd">Controle deslizante de compensação de exposição</string>
     <string name="exposure_compensation_option">Compensação de exposição</string>
+    <string name="manual_focus_auto">AF</string>
+    <string name="manual_focus_label">MF %1$d%%</string>
+    <string name="manual_focus_cd">Controle deslizante de foco manual</string>
+    <string name="manual_focus_locked">Foco manual bloqueado</string>
+    <string name="manual_focus_option">Foco manual</string>
+    <string name="tap_to_focus_started">Focando…</string>
+    <string name="tap_to_focus_done">Foco ajustado</string>
+    <string name="tap_to_focus_requested">Foco solicitado</string>
+    <string name="tap_to_focus_not_locked">Não foi possível bloquear o foco aqui</string>
+    <string name="tap_to_focus_not_supported">Foco por toque não é suportado aqui</string>
+    <string name="tap_to_focus_failed">Não foi possível focar aqui</string>
+    <string name="camera_zoom_title">Zoom / lente</string>
+    <string name="camera_zoom_cd">Escolher zoom ou lente</string>
+    <string name="camera_zoom_ratio">%1$s×</string>
+    <string name="camera_zoom_not_available">O zoom não está disponível neste dispositivo</string>
 
     <!-- JPEG mode labels -->
     <string name="jpeg_mode_none">Cor</string>

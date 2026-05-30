@@ -84,6 +84,21 @@
     <string name="exposure_compensation_label">EV %1$s</string>
     <string name="exposure_compensation_cd">แถบเลื่อนชดเชยแสง</string>
     <string name="exposure_compensation_option">การชดเชยแสง</string>
+    <string name="manual_focus_auto">AF</string>
+    <string name="manual_focus_label">MF %1$d%%</string>
+    <string name="manual_focus_cd">แถบเลื่อนโฟกัสด้วยตนเอง</string>
+    <string name="manual_focus_locked">ล็อกโฟกัสด้วยตนเองแล้ว</string>
+    <string name="manual_focus_option">โฟกัสด้วยตนเอง</string>
+    <string name="tap_to_focus_started">กำลังโฟกัส…</string>
+    <string name="tap_to_focus_done">ปรับโฟกัสแล้ว</string>
+    <string name="tap_to_focus_requested">ส่งคำขอโฟกัสแล้ว</string>
+    <string name="tap_to_focus_not_locked">ไม่สามารถล็อกโฟกัสที่นี่ได้</string>
+    <string name="tap_to_focus_not_supported">ไม่รองรับการแตะเพื่อโฟกัสที่นี่</string>
+    <string name="tap_to_focus_failed">ไม่สามารถโฟกัสที่นี่ได้</string>
+    <string name="camera_zoom_title">ซูม / เลนส์</string>
+    <string name="camera_zoom_cd">เลือกซูมหรือเลนส์</string>
+    <string name="camera_zoom_ratio">%1$s×</string>
+    <string name="camera_zoom_not_available">อุปกรณ์นี้ไม่รองรับการซูม</string>
 
     <!-- JPEG mode labels -->
     <string name="jpeg_mode_none">สี</string>

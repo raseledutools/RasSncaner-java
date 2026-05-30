@@ -87,6 +87,21 @@
     <string name="exposure_compensation_label">EV %1$s</string>
     <string name="exposure_compensation_cd">Expozíció-kompenzáció csúszka</string>
     <string name="exposure_compensation_option">Expozíció-kompenzáció</string>
+    <string name="manual_focus_auto">AF</string>
+    <string name="manual_focus_label">MF %1$d%%</string>
+    <string name="manual_focus_cd">Kézi fókusz csúszka</string>
+    <string name="manual_focus_locked">Kézi fókusz rögzítve</string>
+    <string name="manual_focus_option">Kézi fókusz</string>
+    <string name="tap_to_focus_started">Fókuszálás…</string>
+    <string name="tap_to_focus_done">Fókusz beállítva</string>
+    <string name="tap_to_focus_requested">Fókusz kérése elküldve</string>
+    <string name="tap_to_focus_not_locked">Itt nem sikerült rögzíteni a fókuszt</string>
+    <string name="tap_to_focus_not_supported">A koppintásos fókusz itt nem támogatott</string>
+    <string name="tap_to_focus_failed">Itt nem sikerült fókuszálni</string>
+    <string name="camera_zoom_title">Zoom / objektív</string>
+    <string name="camera_zoom_cd">Zoom vagy objektív kiválasztása</string>
+    <string name="camera_zoom_ratio">%1$s×</string>
+    <string name="camera_zoom_not_available">A zoom nem érhető el ezen az eszközön</string>
 
     <!-- JPEG mode labels -->
     <string name="jpeg_mode_none">Színes</string>

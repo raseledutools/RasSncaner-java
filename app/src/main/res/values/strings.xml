@@ -91,6 +91,21 @@
     <string name="exposure_compensation_label">EV %1$s</string>
     <string name="exposure_compensation_cd">Exposure compensation slider</string>
     <string name="exposure_compensation_option">Exposure compensation</string>
+    <string name="manual_focus_auto">AF</string>
+    <string name="manual_focus_label">MF %1$d%%</string>
+    <string name="manual_focus_cd">Manual focus slider</string>
+    <string name="manual_focus_locked">Manual focus locked</string>
+    <string name="manual_focus_option">Manual focus</string>
+    <string name="tap_to_focus_started">Focusing…</string>
+    <string name="tap_to_focus_done">Focus adjusted</string>
+    <string name="tap_to_focus_requested">Focus requested</string>
+    <string name="tap_to_focus_not_locked">Focus could not lock here</string>
+    <string name="tap_to_focus_not_supported">Tap focus is not supported here</string>
+    <string name="tap_to_focus_failed">Could not focus here</string>
+    <string name="camera_zoom_title">Zoom / lens</string>
+    <string name="camera_zoom_cd">Choose zoom or lens</string>
+    <string name="camera_zoom_ratio">%1$s×</string>
+    <string name="camera_zoom_not_available">Zoom is not available on this device</string>
     <!-- JPEG mode labels -->
     <string name="jpeg_mode_none">Color</string>
     <string name="jpeg_mode_auto">Grayscale</string>

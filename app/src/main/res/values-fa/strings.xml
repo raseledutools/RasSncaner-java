@@ -87,6 +87,21 @@
     <string name="exposure_compensation_label">جبران نوردهی %1$s</string>
     <string name="exposure_compensation_cd">لغزنده جبران نوردهی</string>
     <string name="exposure_compensation_option">جبران نوردهی</string>
+    <string name="manual_focus_auto">AF</string>
+    <string name="manual_focus_label">MF %1$d%%</string>
+    <string name="manual_focus_cd">لغزندهٔ فوکوس دستی</string>
+    <string name="manual_focus_locked">فوکوس دستی قفل شد</string>
+    <string name="manual_focus_option">فوکوس دستی</string>
+    <string name="tap_to_focus_started">در حال فوکوس…</string>
+    <string name="tap_to_focus_done">فوکوس تنظیم شد</string>
+    <string name="tap_to_focus_requested">درخواست فوکوس ثبت شد</string>
+    <string name="tap_to_focus_not_locked">فوکوس در اینجا قفل نشد</string>
+    <string name="tap_to_focus_not_supported">فوکوس با لمس در اینجا پشتیبانی نمی‌شود</string>
+    <string name="tap_to_focus_failed">امکان فوکوس در اینجا نبود</string>
+    <string name="camera_zoom_title">زوم / لنز</string>
+    <string name="camera_zoom_cd">زوم یا لنز را انتخاب کنید</string>
+    <string name="camera_zoom_ratio">%1$s×</string>
+    <string name="camera_zoom_not_available">زوم در این دستگاه در دسترس نیست</string>
     <!-- JPEG mode labels -->
     <string name="jpeg_mode_none">رنگی</string>
     <string name="jpeg_mode_auto">خاکستری</string>

@@ -87,6 +87,21 @@
     <string name="exposure_compensation_label">EV %1$s</string>
     <string name="exposure_compensation_cd">Pozlama telafisi kaydırıcısı</string>
     <string name="exposure_compensation_option">Pozlama telafisi</string>
+    <string name="manual_focus_auto">AF</string>
+    <string name="manual_focus_label">MF %1$d%%</string>
+    <string name="manual_focus_cd">Manuel odak kaydırıcısı</string>
+    <string name="manual_focus_locked">Manuel odak kilitlendi</string>
+    <string name="manual_focus_option">Manuel odak</string>
+    <string name="tap_to_focus_started">Odaklanıyor…</string>
+    <string name="tap_to_focus_done">Odak ayarlandı</string>
+    <string name="tap_to_focus_requested">Odak istendi</string>
+    <string name="tap_to_focus_not_locked">Odak burada kilitlenemedi</string>
+    <string name="tap_to_focus_not_supported">Dokunarak odaklama burada desteklenmiyor</string>
+    <string name="tap_to_focus_failed">Burada odaklanılamadı</string>
+    <string name="camera_zoom_title">Yakınlaştırma / lens</string>
+    <string name="camera_zoom_cd">Yakınlaştırma veya lens seç</string>
+    <string name="camera_zoom_ratio">%1$s×</string>
+    <string name="camera_zoom_not_available">Yakınlaştırma bu cihazda kullanılamıyor</string>
     <!-- JPEG mode labels -->
     <string name="jpeg_mode_none">Renkli</string>
     <string name="jpeg_mode_auto">Gri tonlamalı</string>

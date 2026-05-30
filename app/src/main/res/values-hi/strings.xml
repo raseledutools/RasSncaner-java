@@ -79,6 +79,21 @@
     <string name="exposure_compensation_label">EV %1$s</string>
     <string name="exposure_compensation_cd">एक्सपोज़र कम्पेंसेशन स्लाइडर</string>
     <string name="exposure_compensation_option">एक्सपोज़र कम्पेंसेशन</string>
+    <string name="manual_focus_auto">AF</string>
+    <string name="manual_focus_label">MF %1$d%%</string>
+    <string name="manual_focus_cd">मैन्युअल फ़ोकस स्लाइडर</string>
+    <string name="manual_focus_locked">मैन्युअल फ़ोकस लॉक किया गया</string>
+    <string name="manual_focus_option">मैन्युअल फ़ोकस</string>
+    <string name="tap_to_focus_started">फ़ोकस कर रहा है…</string>
+    <string name="tap_to_focus_done">फ़ोकस समायोजित किया गया</string>
+    <string name="tap_to_focus_requested">फ़ोकस का अनुरोध किया गया</string>
+    <string name="tap_to_focus_not_locked">यहाँ फ़ोकस लॉक नहीं हो सका</string>
+    <string name="tap_to_focus_not_supported">यहाँ टैप फ़ोकस समर्थित नहीं है</string>
+    <string name="tap_to_focus_failed">यहाँ फ़ोकस नहीं हो सका</string>
+    <string name="camera_zoom_title">ज़ूम / लेंस</string>
+    <string name="camera_zoom_cd">ज़ूम या लेंस चुनें</string>
+    <string name="camera_zoom_ratio">%1$s×</string>
+    <string name="camera_zoom_not_available">इस डिवाइस पर ज़ूम उपलब्ध नहीं है</string>
     <!-- JPEG mode labels -->
     <string name="jpeg_mode_none">रंगीन</string>
     <string name="jpeg_mode_auto">ग्रेस्केल</string>

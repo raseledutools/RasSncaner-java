@@ -88,6 +88,21 @@
     <string name="exposure_compensation_label">EV %1$s</string>
     <string name="exposure_compensation_cd">Schuifregelaar belichtingscompensatie</string>
     <string name="exposure_compensation_option">Belichtingscompensatie</string>
+    <string name="manual_focus_auto">AF</string>
+    <string name="manual_focus_label">MF %1$d%%</string>
+    <string name="manual_focus_cd">Schuifregelaar voor handmatige focus</string>
+    <string name="manual_focus_locked">Handmatige focus vergrendeld</string>
+    <string name="manual_focus_option">Handmatige focus</string>
+    <string name="tap_to_focus_started">Scherpstellen…</string>
+    <string name="tap_to_focus_done">Focus aangepast</string>
+    <string name="tap_to_focus_requested">Focus aangevraagd</string>
+    <string name="tap_to_focus_not_locked">Focus kon hier niet worden vergrendeld</string>
+    <string name="tap_to_focus_not_supported">Tikfocus wordt hier niet ondersteund</string>
+    <string name="tap_to_focus_failed">Kon hier niet scherpstellen</string>
+    <string name="camera_zoom_title">Zoom / lens</string>
+    <string name="camera_zoom_cd">Zoom of lens kiezen</string>
+    <string name="camera_zoom_ratio">%1$s×</string>
+    <string name="camera_zoom_not_available">Zoom is niet beschikbaar op dit apparaat</string>
 
     <!-- JPEG mode labels -->
     <string name="jpeg_mode_none">Kleur</string>

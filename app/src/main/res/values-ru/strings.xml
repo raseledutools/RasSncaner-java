@@ -88,6 +88,21 @@
     <string name="exposure_compensation_label">EV %1$s</string>
     <string name="exposure_compensation_cd">Ползунок компенсации экспозиции</string>
     <string name="exposure_compensation_option">Компенсация экспозиции</string>
+    <string name="manual_focus_auto">AF</string>
+    <string name="manual_focus_label">MF %1$d%%</string>
+    <string name="manual_focus_cd">Ползунок ручной фокусировки</string>
+    <string name="manual_focus_locked">Ручная фокусировка зафиксирована</string>
+    <string name="manual_focus_option">Ручная фокусировка</string>
+    <string name="tap_to_focus_started">Фокусировка…</string>
+    <string name="tap_to_focus_done">Фокус настроен</string>
+    <string name="tap_to_focus_requested">Фокусировка запрошена</string>
+    <string name="tap_to_focus_not_locked">Не удалось зафиксировать фокус здесь</string>
+    <string name="tap_to_focus_not_supported">Фокусировка касанием здесь не поддерживается</string>
+    <string name="tap_to_focus_failed">Не удалось сфокусироваться здесь</string>
+    <string name="camera_zoom_title">Зум / объектив</string>
+    <string name="camera_zoom_cd">Выбрать зум или объектив</string>
+    <string name="camera_zoom_ratio">%1$s×</string>
+    <string name="camera_zoom_not_available">Зум недоступен на этом устройстве</string>
 
     <!-- JPEG mode labels -->
     <string name="jpeg_mode_none">Цвет</string>

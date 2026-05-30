@@ -90,6 +90,21 @@
     <string name="exposure_compensation_label">EV %1$s</string>
     <string name="exposure_compensation_cd">Cursore compensazione esposizione</string>
     <string name="exposure_compensation_option">Compensazione esposizione</string>
+    <string name="manual_focus_auto">AF</string>
+    <string name="manual_focus_label">MF %1$d%%</string>
+    <string name="manual_focus_cd">Cursore della messa a fuoco manuale</string>
+    <string name="manual_focus_locked">Messa a fuoco manuale bloccata</string>
+    <string name="manual_focus_option">Messa a fuoco manuale</string>
+    <string name="tap_to_focus_started">Messa a fuoco…</string>
+    <string name="tap_to_focus_done">Messa a fuoco regolata</string>
+    <string name="tap_to_focus_requested">Messa a fuoco richiesta</string>
+    <string name="tap_to_focus_not_locked">Impossibile bloccare la messa a fuoco qui</string>
+    <string name="tap_to_focus_not_supported">La messa a fuoco con tocco non è supportata qui</string>
+    <string name="tap_to_focus_failed">Impossibile mettere a fuoco qui</string>
+    <string name="camera_zoom_title">Zoom / obiettivo</string>
+    <string name="camera_zoom_cd">Scegli zoom o obiettivo</string>
+    <string name="camera_zoom_ratio">%1$s×</string>
+    <string name="camera_zoom_not_available">Lo zoom non è disponibile su questo dispositivo</string>
 
     <!-- JPEG mode labels -->
     <string name="jpeg_mode_none">Colore</string>

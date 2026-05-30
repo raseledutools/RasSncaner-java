@@ -87,6 +87,21 @@
     <string name="exposure_compensation_label">EV %1$s</string>
     <string name="exposure_compensation_cd">Suwak kompensacji ekspozycji</string>
     <string name="exposure_compensation_option">Kompensacja ekspozycji</string>
+    <string name="manual_focus_auto">AF</string>
+    <string name="manual_focus_label">MF %1$d%%</string>
+    <string name="manual_focus_cd">Suwak ręcznego ustawiania ostrości</string>
+    <string name="manual_focus_locked">Ręczna ostrość zablokowana</string>
+    <string name="manual_focus_option">Ręczne ustawianie ostrości</string>
+    <string name="tap_to_focus_started">Ustawianie ostrości…</string>
+    <string name="tap_to_focus_done">Ostrość dostosowana</string>
+    <string name="tap_to_focus_requested">Zażądano ustawienia ostrości</string>
+    <string name="tap_to_focus_not_locked">Nie udało się zablokować ostrości tutaj</string>
+    <string name="tap_to_focus_not_supported">Ustawianie ostrości dotknięciem nie jest tutaj obsługiwane</string>
+    <string name="tap_to_focus_failed">Nie udało się ustawić ostrości tutaj</string>
+    <string name="camera_zoom_title">Zoom / obiektyw</string>
+    <string name="camera_zoom_cd">Wybierz zoom lub obiektyw</string>
+    <string name="camera_zoom_ratio">%1$s×</string>
+    <string name="camera_zoom_not_available">Zoom nie jest dostępny na tym urządzeniu</string>
 
     <!-- Tryby JPEG -->
     <string name="jpeg_mode_none">Kolor</string>

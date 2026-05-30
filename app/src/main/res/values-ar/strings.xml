@@ -84,6 +84,21 @@
     <string name="exposure_compensation_label">تعويض التعريض %1$s</string>
     <string name="exposure_compensation_cd">شريط تمرير تعويض التعريض</string>
     <string name="exposure_compensation_option">تعويض التعريض</string>
+    <string name="manual_focus_auto">AF</string>
+    <string name="manual_focus_label">MF %1$d%%</string>
+    <string name="manual_focus_cd">شريط تمرير التركيز اليدوي</string>
+    <string name="manual_focus_locked">تم تثبيت التركيز اليدوي</string>
+    <string name="manual_focus_option">التركيز اليدوي</string>
+    <string name="tap_to_focus_started">جارٍ التركيز…</string>
+    <string name="tap_to_focus_done">تم ضبط التركيز</string>
+    <string name="tap_to_focus_requested">تم طلب التركيز</string>
+    <string name="tap_to_focus_not_locked">تعذر تثبيت التركيز هنا</string>
+    <string name="tap_to_focus_not_supported">التركيز باللمس غير مدعوم هنا</string>
+    <string name="tap_to_focus_failed">تعذر التركيز هنا</string>
+    <string name="camera_zoom_title">التكبير / العدسة</string>
+    <string name="camera_zoom_cd">اختر التكبير أو العدسة</string>
+    <string name="camera_zoom_ratio">%1$s×</string>
+    <string name="camera_zoom_not_available">التكبير غير متاح على هذا الجهاز</string>
 
     <!-- JPEG mode labels -->
     <string name="jpeg_mode_none">ملون</string>

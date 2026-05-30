@@ -89,6 +89,21 @@
     <string name="exposure_compensation_label">EV %1$s</string>
     <string name="exposure_compensation_cd">Curseur de compensation d\'exposition</string>
     <string name="exposure_compensation_option">Compensation d\'exposition</string>
+    <string name="manual_focus_auto">AF</string>
+    <string name="manual_focus_label">MF %1$d%%</string>
+    <string name="manual_focus_cd">Curseur de mise au point manuelle</string>
+    <string name="manual_focus_locked">Mise au point manuelle verrouillée</string>
+    <string name="manual_focus_option">Mise au point manuelle</string>
+    <string name="tap_to_focus_started">Mise au point…</string>
+    <string name="tap_to_focus_done">Mise au point ajustée</string>
+    <string name="tap_to_focus_requested">Mise au point demandée</string>
+    <string name="tap_to_focus_not_locked">Impossible de verrouiller la mise au point ici</string>
+    <string name="tap_to_focus_not_supported">La mise au point tactile n’est pas prise en charge ici</string>
+    <string name="tap_to_focus_failed">Impossible de faire la mise au point ici</string>
+    <string name="camera_zoom_title">Zoom / objectif</string>
+    <string name="camera_zoom_cd">Choisir le zoom ou l\'objectif</string>
+    <string name="camera_zoom_ratio">%1$s×</string>
+    <string name="camera_zoom_not_available">Le zoom n\'est pas disponible sur cet appareil</string>
     <!-- JPEG mode labels -->
     <string name="jpeg_mode_none">Couleur</string>
     <string name="jpeg_mode_auto">Niveaux de gris</string>

@@ -86,6 +86,21 @@
     <string name="exposure_compensation_label">EV %1$s</string>
     <string name="exposure_compensation_cd">Reglage för exponeringskompensation</string>
     <string name="exposure_compensation_option">Exponeringskompensation</string>
+    <string name="manual_focus_auto">AF</string>
+    <string name="manual_focus_label">MF %1$d%%</string>
+    <string name="manual_focus_cd">Reglage för manuell fokus</string>
+    <string name="manual_focus_locked">Manuell fokus låst</string>
+    <string name="manual_focus_option">Manuell fokus</string>
+    <string name="tap_to_focus_started">Fokuserar…</string>
+    <string name="tap_to_focus_done">Fokus justerad</string>
+    <string name="tap_to_focus_requested">Fokus begärd</string>
+    <string name="tap_to_focus_not_locked">Fokus kunde inte låsas här</string>
+    <string name="tap_to_focus_not_supported">Tryckfokus stöds inte här</string>
+    <string name="tap_to_focus_failed">Kunde inte fokusera här</string>
+    <string name="camera_zoom_title">Zoom / objektiv</string>
+    <string name="camera_zoom_cd">Välj zoom eller objektiv</string>
+    <string name="camera_zoom_ratio">%1$s×</string>
+    <string name="camera_zoom_not_available">Zoom är inte tillgänglig på den här enheten</string>
 
     <!-- JPEG mode labels -->
     <string name="jpeg_mode_none">Färg</string>

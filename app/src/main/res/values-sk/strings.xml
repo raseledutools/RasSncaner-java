@@ -90,6 +90,21 @@
     <string name="exposure_compensation_label">EV %1$s</string>
     <string name="exposure_compensation_cd">Posuvník kompenzácie expozície</string>
     <string name="exposure_compensation_option">Kompenzácia expozície</string>
+    <string name="manual_focus_auto">AF</string>
+    <string name="manual_focus_label">MF %1$d%%</string>
+    <string name="manual_focus_cd">Posuvník manuálneho zaostrenia</string>
+    <string name="manual_focus_locked">Manuálne zaostrenie uzamknuté</string>
+    <string name="manual_focus_option">Manuálne zaostrenie</string>
+    <string name="tap_to_focus_started">Zaostrovanie…</string>
+    <string name="tap_to_focus_done">Zaostrenie upravené</string>
+    <string name="tap_to_focus_requested">Zaostrenie vyžiadané</string>
+    <string name="tap_to_focus_not_locked">Tu sa nepodarilo uzamknúť zaostrenie</string>
+    <string name="tap_to_focus_not_supported">Zaostrenie klepnutím tu nie je podporované</string>
+    <string name="tap_to_focus_failed">Tu sa nepodarilo zaostriť</string>
+    <string name="camera_zoom_title">Priblíženie / objektív</string>
+    <string name="camera_zoom_cd">Vybrať priblíženie alebo objektív</string>
+    <string name="camera_zoom_ratio">%1$s×</string>
+    <string name="camera_zoom_not_available">Priblíženie nie je na tomto zariadení dostupné</string>
 
     <!-- JPEG mode labels -->
     <string name="jpeg_mode_none">Farba</string>
