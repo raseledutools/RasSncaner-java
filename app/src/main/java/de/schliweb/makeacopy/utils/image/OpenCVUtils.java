@@ -107,6 +107,7 @@ public final class OpenCVUtils {
     try {
       System.loadLibrary("opencv_java4");
       Log.i(TAG, "OpenCV loaded manually via System.loadLibrary");
+      configureRuntime();
       configureSafeMode();
       isInitialized = true;
     } catch (Throwable t) {
@@ -114,6 +115,14 @@ public final class OpenCVUtils {
     }
 
     return isInitialized;
+  }
+
+  private static void configureRuntime() {
+    try {
+      org.opencv.core.Core.setNumThreads(1);
+    } catch (Throwable ignore) {
+      // Best-effort; failure is non-critical.
+    }
   }
 
   /**
