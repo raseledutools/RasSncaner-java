@@ -68,6 +68,7 @@ import de.schliweb.makeacopy.utils.ui.DialogUtils;
 import de.schliweb.makeacopy.utils.ui.HapticsUtils;
 import de.schliweb.makeacopy.utils.ui.UIUtils;
 import java.io.File;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
@@ -109,6 +110,10 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
   private static final String TAG = "CameraFragment";
   private static final String PREF_EXPOSURE_INDEX = "exposure_compensation_index";
+  private static final String PREF_CAMERA_ZOOM_RATIO = "camera_zoom_ratio";
+  private static final String PREF_MANUAL_FOCUS_PROGRESS = "manual_focus_progress";
+  private static final int FOCUS_SLIDER_MAX = 100;
+  private static final float TAP_TO_FOCUS_POINT_SIZE = 0.3f;
 
   // Live corner detection: cache detector instance to make DocQuad caching/throttle effective.
   // Important: we must NOT instantiate any DocQuad/ORT objects when the prod flag is OFF.
@@ -165,6 +170,10 @@ public class CameraFragment extends Fragment implements SensorEventListener {
   private ProcessCameraProvider cameraProvider;
   private Camera camera;
   private Preview preview;
+  private float selectedZoomRatio = CameraZoomOptions.DEFAULT_ZOOM_RATIO;
+  private float minimumFocusDistanceDiopters = 0f;
+  private boolean manualFocusSupported = false;
+  private int tapToFocusRequestId = 0;
   private boolean isFlashlightOn = false;
   private boolean hasFlash = false;
   // Live corner preview (document trapezoid)
@@ -357,6 +366,11 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     // Set up flashlight button
     binding.buttonFlash.setOnClickListener(v -> toggleFlashlight());
 
+    selectedZoomRatio = readPersistedZoomRatio();
+    updateZoomButtonLabel(selectedZoomRatio);
+    binding.buttonCameraZoom.setOnClickListener(v -> showZoomPicker());
+    setupTapToFocus();
+
     // Set up pick image button (supports images and PDFs)
     binding.buttonPickImage.setOnClickListener(
         v -> {
@@ -403,6 +417,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                     boolean exposurePref =
                         bundle.getBoolean(
                             CameraOptionsDialogFragment.BUNDLE_EXPOSURE_COMPENSATION, false);
+                    boolean manualFocusPref =
+                        bundle.getBoolean(CameraOptionsDialogFragment.BUNDLE_MANUAL_FOCUS, false);
                     Context ctx = getContext();
                     if (ctx != null) {
                       android.content.SharedPreferences prefs =
@@ -429,6 +445,11 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                         // Reset EV to 0 when feature is disabled
                         applyExposureCompensation(0);
                         persistExposureIndex(0);
+                      }
+                      if (manualFocusPref) {
+                        setupManualFocusControl();
+                      } else {
+                        resetManualFocusControl();
                       }
                       // Re-assert focus so volume keys are captured again after closing dialog
                       binding.getRoot().setFocusableInTouchMode(true);
@@ -676,50 +697,12 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             binding.buttonFlash.setVisibility(hasFlash ? View.VISIBLE : View.GONE);
             isFlashlightOn = false;
             binding.buttonFlash.setImageResource(R.drawable.ic_flash_off);
+            applySelectedZoomRatio();
             binding.textCamera.setText(R.string.camera_ready_tap_the_button_to_scan_a_document);
             logCameraCapabilities();
             setupExposureCompensation();
-
-            // Touch to focus
-            binding.viewFinder.setOnTouchListener(
-                (v, event) -> {
-                  if (event.getAction() == MotionEvent.ACTION_UP && camera != null) {
-                    MeteringPointFactory mpf = binding.viewFinder.getMeteringPointFactory();
-                    MeteringPoint pt = mpf.createPoint(event.getX(), event.getY());
-                    FocusMeteringAction action =
-                        new FocusMeteringAction.Builder(
-                                pt,
-                                FocusMeteringAction.FLAG_AF
-                                    | FocusMeteringAction.FLAG_AE
-                                    | FocusMeteringAction.FLAG_AWB)
-                            .setAutoCancelDuration(3, TimeUnit.SECONDS)
-                            .build();
-                    camera.getCameraControl().startFocusAndMetering(action);
-                    v.performClick();
-                    return true;
-                  }
-                  return false;
-                });
-            // Overlay tap → same focus
-            binding.cornerOverlay.setOnTouchListener(
-                (ov, ev) -> {
-                  if (ev.getAction() == MotionEvent.ACTION_UP && camera != null) {
-                    MeteringPointFactory mpf = binding.viewFinder.getMeteringPointFactory();
-                    MeteringPoint pt = mpf.createPoint(ev.getX(), ev.getY());
-                    FocusMeteringAction a =
-                        new FocusMeteringAction.Builder(
-                                pt,
-                                FocusMeteringAction.FLAG_AF
-                                    | FocusMeteringAction.FLAG_AE
-                                    | FocusMeteringAction.FLAG_AWB)
-                            .setAutoCancelDuration(3, TimeUnit.SECONDS)
-                            .build();
-                    camera.getCameraControl().startFocusAndMetering(a);
-                    ov.performClick();
-                    return true;
-                  }
-                  return false;
-                });
+            setupManualFocusControl();
+            setupTapToFocus();
           } catch (Exception e) {
             handleCameraInitializationError(e);
           }
@@ -958,6 +941,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       if (isFlashlightOn) {
         // no-op
       }
+      applySelectedZoomRatio();
+      setupManualFocusControl();
 
     } catch (IllegalArgumentException e) {
       Log.e(TAG, "bindToLifecycle failed: " + e.getMessage(), e);
@@ -1019,6 +1004,320 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             + cap
             + ", Analysis="
             + ana);
+  }
+
+  private float readPersistedZoomRatio() {
+    Context ctx = getContext();
+    if (ctx == null) return CameraZoomOptions.DEFAULT_ZOOM_RATIO;
+    return ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE)
+        .getFloat(PREF_CAMERA_ZOOM_RATIO, CameraZoomOptions.DEFAULT_ZOOM_RATIO);
+  }
+
+  private void persistZoomRatio(float ratio) {
+    Context ctx = getContext();
+    if (ctx == null) return;
+    ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE)
+        .edit()
+        .putFloat(PREF_CAMERA_ZOOM_RATIO, ratio)
+        .apply();
+  }
+
+  private void showZoomPicker() {
+    if (camera == null) {
+      UIUtils.showToast(requireContext(), R.string.camera_zoom_not_available, Toast.LENGTH_SHORT);
+      return;
+    }
+    ZoomState state = camera.getCameraInfo().getZoomState().getValue();
+    if (state == null || state.getMaxZoomRatio() <= state.getMinZoomRatio()) {
+      UIUtils.showToast(requireContext(), R.string.camera_zoom_not_available, Toast.LENGTH_SHORT);
+      return;
+    }
+    float[] ratios =
+        CameraZoomOptions.buildPresetRatios(state.getMinZoomRatio(), state.getMaxZoomRatio());
+    String[] labels = new String[ratios.length];
+    for (int i = 0; i < ratios.length; i++) labels[i] = formatZoomRatio(ratios[i]);
+    int checked = CameraZoomOptions.indexOfClosest(ratios, selectedZoomRatio);
+
+    AlertDialog dialog =
+        new AlertDialog.Builder(requireContext())
+            .setTitle(R.string.camera_zoom_title)
+            .setSingleChoiceItems(
+                labels,
+                checked,
+                (d, which) -> {
+                  selectedZoomRatio = ratios[which];
+                  persistZoomRatio(selectedZoomRatio);
+                  applySelectedZoomRatio();
+                  d.dismiss();
+                })
+            .setNegativeButton(R.string.cancel, (d, w) -> d.dismiss())
+            .create();
+    dialog.setOnShowListener(
+        dlg -> {
+          try {
+            DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext());
+          } catch (Throwable ignore) {
+            // Dialog contrast improvement is best-effort
+          }
+        });
+    dialog.show();
+  }
+
+  private void applySelectedZoomRatio() {
+    if (camera == null) return;
+    ZoomState state = camera.getCameraInfo().getZoomState().getValue();
+    if (state == null) return;
+    float normalized =
+        CameraZoomOptions.normalize(
+            selectedZoomRatio, state.getMinZoomRatio(), state.getMaxZoomRatio());
+    selectedZoomRatio = normalized;
+    camera.getCameraControl().setZoomRatio(normalized);
+    updateZoomButtonLabel(normalized);
+  }
+
+  private void updateZoomButtonLabel(float ratio) {
+    if (binding == null) return;
+    binding.buttonCameraZoom.setText(getString(R.string.camera_zoom_ratio, formatZoomRatio(ratio)));
+  }
+
+  private void setupTapToFocus() {
+    if (binding == null) return;
+    View.OnTouchListener listener =
+        (view, event) -> {
+          if (event.getAction() != MotionEvent.ACTION_UP) return true;
+          startTapToFocus(view, event.getX(), event.getY());
+          return true;
+        };
+    binding.viewFinder.setOnTouchListener(listener);
+    binding.cornerOverlay.setOnTouchListener(listener);
+  }
+
+  private void startTapToFocus(View sourceView, float x, float y) {
+    if (camera == null || binding == null || !isAdded()) return;
+    try {
+      int requestId = ++tapToFocusRequestId;
+      float viewFinderX = x;
+      float viewFinderY = y;
+      if (sourceView != binding.viewFinder) {
+        int[] sourceLocation = new int[2];
+        int[] viewFinderLocation = new int[2];
+        sourceView.getLocationOnScreen(sourceLocation);
+        binding.viewFinder.getLocationOnScreen(viewFinderLocation);
+        viewFinderX = sourceLocation[0] + x - viewFinderLocation[0];
+        viewFinderY = sourceLocation[1] + y - viewFinderLocation[1];
+      }
+      viewFinderX = Math.max(0f, Math.min(binding.viewFinder.getWidth(), viewFinderX));
+      viewFinderY = Math.max(0f, Math.min(binding.viewFinder.getHeight(), viewFinderY));
+      if (manualFocusSupported && binding.focusSlider.getProgress() > 0) {
+        Log.d(
+            TAG,
+            "Tap-to-focus resetting manual focus before AF, progress="
+                + binding.focusSlider.getProgress());
+        binding.focusSlider.setProgress(0);
+        persistManualFocusProgress(0);
+        applyManualFocus(0);
+        float delayedX = viewFinderX;
+        float delayedY = viewFinderY;
+        new Handler(Looper.getMainLooper())
+            .postDelayed(() -> startTapToFocusMetering(requestId, delayedX, delayedY), 150);
+        return;
+      }
+      startTapToFocusMetering(requestId, viewFinderX, viewFinderY);
+    } catch (Exception e) {
+      Log.w(TAG, "Tap-to-focus could not be started", e);
+    }
+  }
+
+  private void startTapToFocusMetering(int requestId, float x, float y) {
+    if (camera == null || binding == null || !isAdded() || requestId != tapToFocusRequestId) return;
+    MeteringPointFactory factory = binding.viewFinder.getMeteringPointFactory();
+    MeteringPoint point = factory.createPoint(x, y, TAP_TO_FOCUS_POINT_SIZE);
+    int meteringFlags = FocusMeteringAction.FLAG_AF;
+    FocusMeteringAction action =
+        new FocusMeteringAction.Builder(point, meteringFlags)
+            .setAutoCancelDuration(5, TimeUnit.SECONDS)
+            .build();
+    boolean meteringSupported = camera.getCameraInfo().isFocusMeteringSupported(action);
+    Log.d(
+        TAG,
+        "Tap-to-focus start: x="
+            + x
+            + ", y="
+            + y
+            + ", preview="
+            + binding.viewFinder.getWidth()
+            + "x"
+            + binding.viewFinder.getHeight()
+            + ", manualFocusSupported="
+            + manualFocusSupported
+            + ", manualFocusProgress="
+            + binding.focusSlider.getProgress()
+            + ", meteringFlags=AF, pointSize="
+            + TAP_TO_FOCUS_POINT_SIZE
+            + ", supported="
+            + meteringSupported);
+    if (!meteringSupported) {
+      Log.d(TAG, "Tap-to-focus not supported by camera for this point/action");
+      UIUtils.showToast(requireContext(), R.string.tap_to_focus_not_supported, Toast.LENGTH_SHORT);
+      return;
+    }
+    UIUtils.showToast(requireContext(), R.string.tap_to_focus_started, Toast.LENGTH_SHORT);
+    ListenableFuture<FocusMeteringResult> future =
+        camera.getCameraControl().startFocusAndMetering(action);
+    future.addListener(
+        () -> {
+          if (!isAdded()) return;
+          try {
+            if (requestId != tapToFocusRequestId) return;
+            FocusMeteringResult result = future.get();
+            Log.d(TAG, "Tap-to-focus result: success=" + result.isFocusSuccessful());
+            UIUtils.showToast(
+                requireContext(),
+                result.isFocusSuccessful()
+                    ? R.string.tap_to_focus_done
+                    : R.string.tap_to_focus_requested,
+                Toast.LENGTH_SHORT);
+          } catch (Exception e) {
+            if (requestId != tapToFocusRequestId || isFocusMeteringCancellation(e)) {
+              Log.d(TAG, "Tap-to-focus request was superseded", e);
+              return;
+            }
+            Log.w(TAG, "Tap-to-focus failed", e);
+            UIUtils.showToast(requireContext(), R.string.tap_to_focus_failed, Toast.LENGTH_SHORT);
+          }
+        },
+        ContextCompat.getMainExecutor(requireContext()));
+  }
+
+  private boolean isFocusMeteringCancellation(Throwable throwable) {
+    Throwable current = throwable;
+    while (current != null) {
+      if (current instanceof androidx.camera.core.CameraControl.OperationCanceledException) {
+        return true;
+      }
+      current = current.getCause();
+    }
+    return false;
+  }
+
+  @OptIn(markerClass = ExperimentalCamera2Interop.class)
+  private void setupManualFocusControl() {
+    if (camera == null || binding == null || !isAdded()) return;
+    Context ctx = getContext();
+    if (ctx == null
+        || !ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE)
+            .getBoolean(CameraOptionsDialogFragment.BUNDLE_MANUAL_FOCUS, false)) {
+      resetManualFocusControl();
+      return;
+    }
+    manualFocusSupported = false;
+    minimumFocusDistanceDiopters = 0f;
+    try {
+      Float minFocus =
+          androidx.camera.camera2.interop.Camera2CameraInfo.from(camera.getCameraInfo())
+              .getCameraCharacteristic(
+                  android.hardware.camera2.CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);
+      manualFocusSupported = minFocus != null && minFocus > 0f;
+      minimumFocusDistanceDiopters = manualFocusSupported ? minFocus : 0f;
+    } catch (Exception e) {
+      Log.w(TAG, "Manual focus capability lookup failed", e);
+    }
+    if (!manualFocusSupported) {
+      binding.focusControl.setVisibility(View.GONE);
+      return;
+    }
+    binding.focusSlider.setMax(FOCUS_SLIDER_MAX);
+    int savedProgress = readPersistedManualFocusProgress();
+    binding.focusSlider.setProgress(savedProgress);
+    updateManualFocusLabel(savedProgress);
+    binding.focusSlider.setOnSeekBarChangeListener(
+        new SeekBar.OnSeekBarChangeListener() {
+          @Override
+          public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            if (!fromUser) return;
+            updateManualFocusLabel(progress);
+          }
+
+          @Override
+          public void onStartTrackingTouch(SeekBar seekBar) {}
+
+          @Override
+          public void onStopTrackingTouch(SeekBar seekBar) {
+            applyManualFocus(seekBar.getProgress());
+            persistManualFocusProgress(seekBar.getProgress());
+          }
+        });
+    binding.focusControl.setVisibility(View.VISIBLE);
+    applyManualFocus(savedProgress);
+  }
+
+  private int readPersistedManualFocusProgress() {
+    Context ctx = getContext();
+    if (ctx == null) return 0;
+    int saved =
+        ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE)
+            .getInt(PREF_MANUAL_FOCUS_PROGRESS, 0);
+    return Math.max(0, Math.min(FOCUS_SLIDER_MAX, saved));
+  }
+
+  private void persistManualFocusProgress(int progress) {
+    Context ctx = getContext();
+    if (ctx == null) return;
+    ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE)
+        .edit()
+        .putInt(PREF_MANUAL_FOCUS_PROGRESS, Math.max(0, Math.min(FOCUS_SLIDER_MAX, progress)))
+        .apply();
+  }
+
+  private void updateManualFocusLabel(int progress) {
+    if (binding == null) return;
+    binding.focusLabel.setText(
+        progress <= 0
+            ? getString(R.string.manual_focus_auto)
+            : getString(R.string.manual_focus_label, progress));
+  }
+
+  @OptIn(markerClass = ExperimentalCamera2Interop.class)
+  private void applyManualFocus(int progress) {
+    if (camera == null || !manualFocusSupported) return;
+    int clamped = Math.max(0, Math.min(FOCUS_SLIDER_MAX, progress));
+    updateManualFocusLabel(clamped);
+    androidx.camera.camera2.interop.CaptureRequestOptions.Builder options =
+        new androidx.camera.camera2.interop.CaptureRequestOptions.Builder();
+    if (clamped <= 0) {
+      options.setCaptureRequestOption(
+          android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE,
+          android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+    } else {
+      float focusDistance = minimumFocusDistanceDiopters * clamped / FOCUS_SLIDER_MAX;
+      options
+          .setCaptureRequestOption(
+              android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE,
+              android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE_OFF)
+          .setCaptureRequestOption(
+              android.hardware.camera2.CaptureRequest.LENS_FOCUS_DISTANCE, focusDistance);
+      if (isAdded()) {
+        UIUtils.showToast(requireContext(), R.string.manual_focus_locked, Toast.LENGTH_SHORT);
+      }
+    }
+    androidx.camera.camera2.interop.Camera2CameraControl.from(camera.getCameraControl())
+        .setCaptureRequestOptions(options.build());
+  }
+
+  private void resetManualFocusControl() {
+    if (binding != null) {
+      binding.focusControl.setVisibility(View.GONE);
+      binding.focusSlider.setProgress(0);
+      updateManualFocusLabel(0);
+    }
+    persistManualFocusProgress(0);
+    applyManualFocus(0);
+  }
+
+  private String formatZoomRatio(float ratio) {
+    DecimalFormat format =
+        new DecimalFormat(ratio < 10f && ratio != Math.round(ratio) ? "0.#" : "0");
+    return format.format(ratio);
   }
 
   private void attachWatchdogs() {

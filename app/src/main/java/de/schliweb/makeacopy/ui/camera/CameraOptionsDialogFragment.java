@@ -40,6 +40,7 @@ public class CameraOptionsDialogFragment extends DialogFragment {
   public static final String BUNDLE_SKIP_CROPPING = "skip_cropping";
   public static final String BUNDLE_ACCESSIBILITY_MODE = "accessibility_mode";
   public static final String BUNDLE_EXPOSURE_COMPENSATION = "exposure_compensation_enabled";
+  public static final String BUNDLE_MANUAL_FOCUS = "manual_focus_enabled";
 
   public static void show(@NonNull FragmentManager fm) {
     new CameraOptionsDialogFragment().show(fm, "CameraOptionsDialogFragment");
@@ -273,6 +274,7 @@ public class CameraOptionsDialogFragment extends DialogFragment {
     CheckBox cbAnalysis = view.findViewById(R.id.dialog_checkbox_analysis_enabled);
     CheckBox cbAccessibility = view.findViewById(R.id.dialog_checkbox_accessibility_mode);
     CheckBox cbExposure = view.findViewById(R.id.dialog_checkbox_exposure_compensation);
+    CheckBox cbManualFocus = view.findViewById(R.id.dialog_checkbox_manual_focus);
     // Auto‑Capture/Auto‑Torch options removed to keep it simple
 
     SharedPreferences prefs = ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE);
@@ -281,11 +283,13 @@ public class CameraOptionsDialogFragment extends DialogFragment {
     boolean analysisEnabled = prefs.getBoolean(BUNDLE_ANALYSIS_ENABLED, false);
     boolean accessibilityMode = prefs.getBoolean(BUNDLE_ACCESSIBILITY_MODE, false);
     boolean exposureEnabled = prefs.getBoolean(BUNDLE_EXPOSURE_COMPENSATION, false);
+    boolean manualFocusEnabled = prefs.getBoolean(BUNDLE_MANUAL_FOCUS, false);
     cbSkip.setChecked(skipOcr);
     if (cbSkipCropping != null) cbSkipCropping.setChecked(skipPerspective);
     if (cbAnalysis != null) cbAnalysis.setChecked(analysisEnabled);
     if (cbAccessibility != null) cbAccessibility.setChecked(accessibilityMode);
     if (cbExposure != null) cbExposure.setChecked(exposureEnabled);
+    if (cbManualFocus != null) cbManualFocus.setChecked(manualFocusEnabled);
 
     // Wire up the Share Logs button placed under the options
     View shareBtn = view.findViewById(R.id.button_share_logs);
@@ -306,6 +310,7 @@ public class CameraOptionsDialogFragment extends DialogFragment {
                   boolean analysis = cbAnalysis != null && cbAnalysis.isChecked();
                   boolean accessibility = cbAccessibility != null && cbAccessibility.isChecked();
                   boolean exposure = cbExposure != null && cbExposure.isChecked();
+                  boolean manualFocus = cbManualFocus != null && cbManualFocus.isChecked();
                   // No extra A11y options persisted
 
                   // Persist and keep legacy/new flags in sync
@@ -317,6 +322,7 @@ public class CameraOptionsDialogFragment extends DialogFragment {
                       .putBoolean(BUNDLE_ANALYSIS_ENABLED, analysis)
                       .putBoolean(BUNDLE_ACCESSIBILITY_MODE, accessibility)
                       .putBoolean(BUNDLE_EXPOSURE_COMPENSATION, exposure)
+                      .putBoolean(BUNDLE_MANUAL_FOCUS, manualFocus)
                       .apply();
 
                   Bundle result = new Bundle();
@@ -325,6 +331,7 @@ public class CameraOptionsDialogFragment extends DialogFragment {
                   result.putBoolean(BUNDLE_ANALYSIS_ENABLED, analysis);
                   result.putBoolean(BUNDLE_ACCESSIBILITY_MODE, accessibility);
                   result.putBoolean(BUNDLE_EXPOSURE_COMPENSATION, exposure);
+                  result.putBoolean(BUNDLE_MANUAL_FOCUS, manualFocus);
                   getParentFragmentManager().setFragmentResult(REQUEST_KEY, result);
                 })
             .create();
