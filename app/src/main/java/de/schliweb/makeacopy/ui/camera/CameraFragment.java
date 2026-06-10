@@ -117,11 +117,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
   // AF uses a small region so focus really locks on the tapped spot; AE uses a larger
   // region for stable document exposure. AWB is intentionally not metered to avoid
   // white-balance jumps on paper.
-  // Note: very small AF regions (e.g. 0.07) frequently fail to lock on documents because a
-  // tapped spot on blank paper has no contrast for the AF algorithm — the HAL then reports
-  // CONTROL_AF_STATE_NOT_FOCUSED_LOCKED almost immediately ("result: success=false" within
-  // ~200 ms in logs). 0.15 keeps the focus point-local but usually includes some text/edges.
-  private static final float TAP_TO_FOCUS_AF_POINT_SIZE = 0.15f;
+  private static final float TAP_TO_FOCUS_AF_POINT_SIZE = 0.07f;
   private static final float TAP_TO_FOCUS_AE_POINT_SIZE = 0.25f;
 
   // Live corner detection: cache detector instance to make DocQuad caching/throttle effective.
