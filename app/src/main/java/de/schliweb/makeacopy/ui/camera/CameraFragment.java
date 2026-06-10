@@ -113,7 +113,12 @@ public class CameraFragment extends Fragment implements SensorEventListener {
   private static final String PREF_CAMERA_ZOOM_RATIO = "camera_zoom_ratio";
   private static final String PREF_MANUAL_FOCUS_PROGRESS = "manual_focus_progress";
   private static final int FOCUS_SLIDER_MAX = 100;
-  private static final float TAP_TO_FOCUS_POINT_SIZE = 0.3f;
+  // Tap-to-focus metering point sizes (fraction of the preview's narrower dimension).
+  // AF uses a small region so focus really locks on the tapped spot; AE uses a larger
+  // region for stable document exposure. AWB is intentionally not metered to avoid
+  // white-balance jumps on paper.
+  private static final float TAP_TO_FOCUS_AF_POINT_SIZE = 0.07f;
+  private static final float TAP_TO_FOCUS_AE_POINT_SIZE = 0.25f;
 
   // Live corner detection: cache detector instance to make DocQuad caching/throttle effective.
   // Important: we must NOT instantiate any DocQuad/ORT objects when the prod flag is OFF.
@@ -1131,10 +1136,11 @@ public class CameraFragment extends Fragment implements SensorEventListener {
   private void startTapToFocusMetering(int requestId, float x, float y) {
     if (camera == null || binding == null || !isAdded() || requestId != tapToFocusRequestId) return;
     MeteringPointFactory factory = binding.viewFinder.getMeteringPointFactory();
-    MeteringPoint point = factory.createPoint(x, y, TAP_TO_FOCUS_POINT_SIZE);
-    int meteringFlags = FocusMeteringAction.FLAG_AF;
+    MeteringPoint afPoint = factory.createPoint(x, y, TAP_TO_FOCUS_AF_POINT_SIZE);
+    MeteringPoint aePoint = factory.createPoint(x, y, TAP_TO_FOCUS_AE_POINT_SIZE);
     FocusMeteringAction action =
-        new FocusMeteringAction.Builder(point, meteringFlags)
+        new FocusMeteringAction.Builder(afPoint, FocusMeteringAction.FLAG_AF)
+            .addPoint(aePoint, FocusMeteringAction.FLAG_AE)
             .setAutoCancelDuration(5, TimeUnit.SECONDS)
             .build();
     boolean meteringSupported = camera.getCameraInfo().isFocusMeteringSupported(action);
@@ -1152,8 +1158,10 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             + manualFocusSupported
             + ", manualFocusProgress="
             + binding.focusSlider.getProgress()
-            + ", meteringFlags=AF, pointSize="
-            + TAP_TO_FOCUS_POINT_SIZE
+            + ", meteringFlags=AF+AE, afPointSize="
+            + TAP_TO_FOCUS_AF_POINT_SIZE
+            + ", aePointSize="
+            + TAP_TO_FOCUS_AE_POINT_SIZE
             + ", supported="
             + meteringSupported);
     if (!meteringSupported) {
