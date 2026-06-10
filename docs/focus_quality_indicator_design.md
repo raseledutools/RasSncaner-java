@@ -1,6 +1,13 @@
 # Design note: Live focus-quality (sharpness) indicator
 
-Status: **planned / not implemented** (follow-up to GitHub issue #78 "Manual focus").
+Status: **implemented, feature-flagged (disabled by default)** (follow-up to GitHub issue #78 "Manual focus").
+
+Implementation: `FocusQualityAnalyzer` (Laplacian variance, ThreadLocal Mats), `FocusQualityMeter`
+(decaying rolling-max normalization + EMA + 5-segment mapping, JVM-unit-tested), and
+`FocusQualityIndicatorView` (5-segment bar near the shutter button), wired into
+`CameraFragment#analyzeFrameForCorners` behind `FeatureFlags.isFocusQualityIndicatorEnabled()`
+(`FEATURE_FOCUS_QUALITY_INDICATOR`, default `false`; runtime override via
+`FeatureFlags.setFocusQualityIndicatorOverride`).
 
 ## Goal
 
