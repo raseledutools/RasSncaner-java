@@ -178,6 +178,11 @@ public class CameraFragment extends Fragment implements SensorEventListener {
   private float selectedZoomRatio = CameraZoomOptions.DEFAULT_ZOOM_RATIO;
   private float minimumFocusDistanceDiopters = 0f;
   private boolean manualFocusSupported = false;
+  // Live manual-focus updates while dragging the slider (throttled to avoid flooding the
+  // capture session with Camera2 interop requests).
+  private static final long MANUAL_FOCUS_LIVE_UPDATE_INTERVAL_MS = 100L;
+  private int pendingFocusProgress = 0;
+  private boolean focusUpdateScheduled = false;
   private int tapToFocusRequestId = 0;
   private boolean isFlashlightOn = false;
   private boolean hasFlash = false;
@@ -1078,6 +1083,11 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     selectedZoomRatio = normalized;
     camera.getCameraControl().setZoomRatio(normalized);
     updateZoomButtonLabel(normalized);
+    // On multi-camera devices a zoom change may switch the active physical camera; re-apply
+    // the manual focus distance so it does not silently become stale.
+    if (manualFocusSupported && binding != null && binding.focusSlider.getProgress() > 0) {
+      applyManualFocus(binding.focusSlider.getProgress(), true);
+    }
   }
 
   private void updateZoomButtonLabel(float ratio) {
@@ -1131,11 +1141,18 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 + binding.focusSlider.getProgress());
         binding.focusSlider.setProgress(0);
         persistManualFocusProgress(0);
-        applyManualFocus(0);
-        float delayedX = viewFinderX;
-        float delayedY = viewFinderY;
-        new Handler(Looper.getMainLooper())
-            .postDelayed(() -> startTapToFocusMetering(requestId, delayedX, delayedY), 150);
+        // Chain AF on the manual-focus reset request instead of a fixed delay: start the
+        // metering only after the Camera2 interop options have actually been applied.
+        ListenableFuture<Void> resetFuture = applyManualFocus(0, false);
+        float chainedX = viewFinderX;
+        float chainedY = viewFinderY;
+        if (resetFuture != null) {
+          resetFuture.addListener(
+              () -> startTapToFocusMetering(requestId, chainedX, chainedY),
+              ContextCompat.getMainExecutor(requireContext()));
+        } else {
+          startTapToFocusMetering(requestId, chainedX, chainedY);
+        }
         return;
       }
       startTapToFocusMetering(requestId, viewFinderX, viewFinderY);
@@ -1241,6 +1258,34 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                   android.hardware.camera2.CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);
       manualFocusSupported = minFocus != null && minFocus > 0f;
       minimumFocusDistanceDiopters = manualFocusSupported ? minFocus : 0f;
+      // Diagnostics: uncalibrated devices report LENS_FOCUS_DISTANCE in arbitrary units, so
+      // the slider is only a relative near/far control there. Logged for bug reports.
+      Integer calibration =
+          androidx.camera.camera2.interop.Camera2CameraInfo.from(camera.getCameraInfo())
+              .getCameraCharacteristic(
+                  android.hardware.camera2.CameraCharacteristics
+                      .LENS_INFO_FOCUS_DISTANCE_CALIBRATION);
+      String calibrationName =
+          calibration == null
+              ? "unknown"
+              : switch (calibration) {
+                case android.hardware.camera2.CameraCharacteristics
+                        .LENS_INFO_FOCUS_DISTANCE_CALIBRATION_CALIBRATED ->
+                    "CALIBRATED";
+                case android.hardware.camera2.CameraCharacteristics
+                        .LENS_INFO_FOCUS_DISTANCE_CALIBRATION_APPROXIMATE ->
+                    "APPROXIMATE";
+                case android.hardware.camera2.CameraCharacteristics
+                        .LENS_INFO_FOCUS_DISTANCE_CALIBRATION_UNCALIBRATED ->
+                    "UNCALIBRATED";
+                default -> String.valueOf(calibration);
+              };
+      Log.i(
+          TAG,
+          "Manual focus capability: minFocusDistance="
+              + minFocus
+              + " diopters, calibration="
+              + calibrationName);
     } catch (Exception e) {
       Log.w(TAG, "Manual focus capability lookup failed", e);
     }
@@ -1258,6 +1303,17 @@ public class CameraFragment extends Fragment implements SensorEventListener {
           public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
             if (!fromUser) return;
             updateManualFocusLabel(progress);
+            // Live focus while dragging, throttled to one interop request per interval.
+            pendingFocusProgress = progress;
+            if (!focusUpdateScheduled) {
+              focusUpdateScheduled = true;
+              seekBar.postDelayed(
+                  () -> {
+                    focusUpdateScheduled = false;
+                    applyManualFocus(pendingFocusProgress, true);
+                  },
+                  MANUAL_FOCUS_LIVE_UPDATE_INTERVAL_MS);
+            }
           }
 
           @Override
@@ -1265,12 +1321,12 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
           @Override
           public void onStopTrackingTouch(SeekBar seekBar) {
-            applyManualFocus(seekBar.getProgress());
+            applyManualFocus(seekBar.getProgress(), false);
             persistManualFocusProgress(seekBar.getProgress());
           }
         });
     binding.focusControl.setVisibility(View.VISIBLE);
-    applyManualFocus(savedProgress);
+    applyManualFocus(savedProgress, true);
   }
 
   private int readPersistedManualFocusProgress() {
@@ -1299,9 +1355,17 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             : getString(R.string.manual_focus_label, progress));
   }
 
+  /**
+   * Applies the manual focus value via Camera2 interop.
+   *
+   * @param progress slider progress; {@code 0} restores continuous autofocus
+   * @param liveUpdate {@code true} for throttled updates while dragging (suppresses the
+   *     "focus locked" toast)
+   * @return the future of the interop request, or {@code null} if nothing was applied
+   */
   @OptIn(markerClass = ExperimentalCamera2Interop.class)
-  private void applyManualFocus(int progress) {
-    if (camera == null || !manualFocusSupported) return;
+  private ListenableFuture<Void> applyManualFocus(int progress, boolean liveUpdate) {
+    if (camera == null || !manualFocusSupported) return null;
     int clamped = Math.max(0, Math.min(FOCUS_SLIDER_MAX, progress));
     updateManualFocusLabel(clamped);
     androidx.camera.camera2.interop.CaptureRequestOptions.Builder options =
@@ -1318,11 +1382,11 @@ public class CameraFragment extends Fragment implements SensorEventListener {
               android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE_OFF)
           .setCaptureRequestOption(
               android.hardware.camera2.CaptureRequest.LENS_FOCUS_DISTANCE, focusDistance);
-      if (isAdded()) {
+      if (!liveUpdate && isAdded()) {
         UIUtils.showToast(requireContext(), R.string.manual_focus_locked, Toast.LENGTH_SHORT);
       }
     }
-    androidx.camera.camera2.interop.Camera2CameraControl.from(camera.getCameraControl())
+    return androidx.camera.camera2.interop.Camera2CameraControl.from(camera.getCameraControl())
         .setCaptureRequestOptions(options.build());
   }
 
@@ -1333,7 +1397,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       updateManualFocusLabel(0);
     }
     persistManualFocusProgress(0);
-    applyManualFocus(0);
+    applyManualFocus(0, true);
   }
 
   private String formatZoomRatio(float ratio) {
