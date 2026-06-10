@@ -242,6 +242,11 @@ public class CameraFragment extends Fragment implements SensorEventListener {
   @SuppressWarnings("UnusedVariable") // explicit init required for volatile field
   private volatile float lastFocusDistanceDiopters = 0f;
 
+  // Lens diagnostics: last reported active physical camera id (logical multi-camera, API 29+)
+  // and last reported focal length. Used to log lens switches when the zoom ratio changes.
+  private volatile String lastActivePhysicalCameraId = null;
+  private volatile float lastLensFocalLength = 0f;
+
   /**
    * Converts a given surface rotation value to its corresponding degree representation.
    *
@@ -720,6 +725,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             applySelectedZoomRatio();
             binding.textCamera.setText(R.string.camera_ready_tap_the_button_to_scan_a_document);
             logCameraCapabilities();
+            logLensDiagnostics();
             setupExposureCompensation();
             setupManualFocusControl();
             setupTapToFocus();
@@ -829,6 +835,19 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     Camera2Interop.Extender<Preview> pExt = new Camera2Interop.Extender<>(previewBuilder);
     Camera2Interop.Extender<ImageCapture> cExt = new Camera2Interop.Extender<>(captureBuilder);
 
+    // Lens diagnostics on the Preview stream: works independently of the live-analysis setting,
+    // so lens switches caused by zoom changes are always visible in the logs.
+    pExt.setSessionCaptureCallback(
+        new android.hardware.camera2.CameraCaptureSession.CaptureCallback() {
+          @Override
+          public void onCaptureCompleted(
+              @NonNull android.hardware.camera2.CameraCaptureSession session,
+              @NonNull android.hardware.camera2.CaptureRequest request,
+              @NonNull android.hardware.camera2.TotalCaptureResult result) {
+            trackLensFromCaptureResult(result);
+          }
+        });
+
     // Some Sony devices reject sessions when an explicit AE_TARGET_FPS_RANGE is set.
     // To avoid "Unsupported set of inputs/outputs provided" (endConfigure) we skip forcing FPS on
     // Sony.
@@ -848,13 +867,11 @@ public class CameraFragment extends Fragment implements SensorEventListener {
               + ")");
     }
 
-    // AF continuous picture is generally safe and expected; keep for all OEMs
-    pExt.setCaptureRequestOption(
-        android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE,
-        android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-    cExt.setCaptureRequestOption(
-        android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE,
-        android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+    // Do NOT force CONTROL_AF_MODE via Camera2Interop: interop options override CameraX's own
+    // 3A management, so tap-to-focus could never switch the repeating request from
+    // CONTINUOUS_PICTURE to AUTO (the AF trigger then only locked the current lens position
+    // instead of scanning the tapped region — observed on Pixel 7a). CameraX already uses
+    // CONTINUOUS_PICTURE as default AF mode when no focus/metering action is active.
 
     if (!isSony && !isEmulator) {
       // High-quality post-processing and ZSL toggles can cause session config failures on some Sony
@@ -1091,6 +1108,18 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         CameraZoomOptions.normalize(
             selectedZoomRatio, state.getMinZoomRatio(), state.getMaxZoomRatio());
     selectedZoomRatio = normalized;
+    Log.i(
+        TAG,
+        "LensDiag: applying zoomRatio="
+            + normalized
+            + " (range="
+            + state.getMinZoomRatio()
+            + ".."
+            + state.getMaxZoomRatio()
+            + "), activePhysicalId="
+            + lastActivePhysicalCameraId
+            + ", focalLength="
+            + lastLensFocalLength);
     camera.getCameraControl().setZoomRatio(normalized);
     updateZoomButtonLabel(normalized);
     // On multi-camera devices a zoom change may switch the active physical camera; re-apply
@@ -1179,6 +1208,10 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     FocusMeteringAction action =
         new FocusMeteringAction.Builder(afPoint, FocusMeteringAction.FLAG_AF)
             .addPoint(aePoint, FocusMeteringAction.FLAG_AE)
+            // Auto-cancel restores continuous AF 5 s after the tap. This is safe again now
+            // that CONTROL_AF_MODE is no longer forced via Camera2Interop: the tap really
+            // focuses the tapped region, and afterwards the camera may resume scene-wide
+            // continuous AF as expected.
             .setAutoCancelDuration(5, TimeUnit.SECONDS)
             .build();
     boolean meteringSupported = camera.getCameraInfo().isFocusMeteringSupported(action);
@@ -1381,9 +1414,11 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     androidx.camera.camera2.interop.CaptureRequestOptions.Builder options =
         new androidx.camera.camera2.interop.CaptureRequestOptions.Builder();
     if (clamped <= 0) {
-      options.setCaptureRequestOption(
-          android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE,
-          android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+      // Restore autofocus by clearing the interop overrides instead of forcing
+      // CONTROL_AF_MODE=CONTINUOUS_PICTURE: a sticky interop AF mode would override CameraX's
+      // 3A management and prevent tap-to-focus from switching to AF_MODE_AUTO.
+      // setCaptureRequestOptions() replaces all previous options, so an empty bundle removes
+      // both CONTROL_AF_MODE and LENS_FOCUS_DISTANCE.
     } else {
       float focusDistance = minimumFocusDistanceDiopters * clamped / FOCUS_SLIDER_MAX;
       options
@@ -2307,6 +2342,168 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     return imageCapture;
   }
 
+  /**
+   * Tracks the active physical camera (logical multi-camera, API 29+) and the lens focal length
+   * from a capture result, logging whenever the active lens changes (e.g. caused by zoom changes).
+   * Diagnostics only; failures are swallowed and never break the capture stream.
+   */
+  private void trackLensFromCaptureResult(
+      @NonNull android.hardware.camera2.TotalCaptureResult result) {
+    try {
+      String activeId = null;
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        activeId =
+            result.get(
+                android.hardware.camera2.CaptureResult.LOGICAL_MULTI_CAMERA_ACTIVE_PHYSICAL_ID);
+      }
+      Float focalLength = result.get(android.hardware.camera2.CaptureResult.LENS_FOCAL_LENGTH);
+      boolean idChanged = activeId != null && !activeId.equals(lastActivePhysicalCameraId);
+      boolean flChanged =
+          focalLength != null && Math.abs(focalLength - lastLensFocalLength) > 0.01f;
+      if (idChanged || flChanged) {
+        Log.i(
+            TAG,
+            "LensDiag: active lens changed: physicalId="
+                + activeId
+                + " (was "
+                + lastActivePhysicalCameraId
+                + "), focalLength="
+                + focalLength
+                + "mm (was "
+                + lastLensFocalLength
+                + "mm), zoomRatio="
+                + selectedZoomRatio);
+      }
+      if (activeId != null) lastActivePhysicalCameraId = activeId;
+      if (focalLength != null) lastLensFocalLength = focalLength;
+    } catch (Throwable t) {
+      // Diagnostics only; never break the capture stream
+    }
+  }
+
+  /**
+   * Logs detailed lens/camera diagnostics to help analyze whether the device exposes multiple
+   * physical cameras (e.g. ultra-wide, wide, telephoto) to third-party apps and whether zoom
+   * changes can switch the physical lens. Diagnostics only; failures are swallowed.
+   */
+  @OptIn(markerClass = ExperimentalCamera2Interop.class)
+  private void logLensDiagnostics() {
+    try {
+      Context ctx = getContext();
+      if (ctx == null) return;
+
+      // Bound CameraX camera: id and zoom range
+      if (camera != null) {
+        String boundId =
+            androidx.camera.camera2.interop.Camera2CameraInfo.from(camera.getCameraInfo())
+                .getCameraId();
+        ZoomState zs = camera.getCameraInfo().getZoomState().getValue();
+        Log.i(
+            TAG,
+            "LensDiag: bound cameraId="
+                + boundId
+                + (zs != null
+                    ? ", zoomRange=" + zs.getMinZoomRatio() + ".." + zs.getMaxZoomRatio()
+                    : ", zoomState=null"));
+      }
+
+      android.hardware.camera2.CameraManager cm =
+          (android.hardware.camera2.CameraManager) ctx.getSystemService(Context.CAMERA_SERVICE);
+      if (cm == null) {
+        Log.i(TAG, "LensDiag: CameraManager unavailable");
+        return;
+      }
+      for (String id : cm.getCameraIdList()) {
+        android.hardware.camera2.CameraCharacteristics cc = cm.getCameraCharacteristics(id);
+        Integer facing = cc.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING);
+        if (facing == null
+            || facing != android.hardware.camera2.CameraCharacteristics.LENS_FACING_BACK) {
+          continue;
+        }
+        float[] focalLengths =
+            cc.get(
+                android.hardware.camera2.CameraCharacteristics
+                    .LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+        android.util.SizeF sensorSize =
+            cc.get(android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE);
+        Float maxDigitalZoom =
+            cc.get(
+                android.hardware.camera2.CameraCharacteristics
+                    .SCALER_AVAILABLE_MAX_DIGITAL_ZOOM);
+        String zoomRatioRange = "n/a";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+          android.util.Range<Float> zr =
+              cc.get(android.hardware.camera2.CameraCharacteristics.CONTROL_ZOOM_RATIO_RANGE);
+          if (zr != null) zoomRatioRange = zr.getLower() + ".." + zr.getUpper();
+        }
+        boolean logical = false;
+        String physicalIds = "n/a";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+          int[] caps =
+              cc.get(
+                  android.hardware.camera2.CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES);
+          if (caps != null) {
+            for (int cap : caps) {
+              if (cap
+                  == android.hardware.camera2.CameraCharacteristics
+                      .REQUEST_AVAILABLE_CAPABILITIES_LOGICAL_MULTI_CAMERA) {
+                logical = true;
+                break;
+              }
+            }
+          }
+          java.util.Set<String> phys = cc.getPhysicalCameraIds();
+          if (!phys.isEmpty()) {
+            physicalIds = phys.toString();
+            // Log details of each physical sub-camera (focal length reveals the lens type)
+            for (String pid : phys) {
+              try {
+                android.hardware.camera2.CameraCharacteristics pcc =
+                    cm.getCameraCharacteristics(pid);
+                float[] pFocal =
+                    pcc.get(
+                        android.hardware.camera2.CameraCharacteristics
+                            .LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+                android.util.SizeF pSensor =
+                    pcc.get(
+                        android.hardware.camera2.CameraCharacteristics
+                            .SENSOR_INFO_PHYSICAL_SIZE);
+                Log.i(
+                    TAG,
+                    "LensDiag:   physical id="
+                        + pid
+                        + ", focalLengths="
+                        + java.util.Arrays.toString(pFocal)
+                        + ", sensorSize="
+                        + pSensor);
+              } catch (Throwable t) {
+                Log.i(TAG, "LensDiag:   physical id=" + pid + " (characteristics unavailable)");
+              }
+            }
+          }
+        }
+        Log.i(
+            TAG,
+            "LensDiag: back cameraId="
+                + id
+                + ", logicalMultiCamera="
+                + logical
+                + ", physicalIds="
+                + physicalIds
+                + ", focalLengths="
+                + java.util.Arrays.toString(focalLengths)
+                + ", sensorSize="
+                + sensorSize
+                + ", maxDigitalZoom="
+                + maxDigitalZoom
+                + ", zoomRatioRange="
+                + zoomRatioRange);
+      }
+    } catch (Throwable t) {
+      Log.w(TAG, "LensDiag: failed to collect lens diagnostics", t);
+    }
+  }
+
   private void setLiveAnalysisEnabled(boolean enabled) {
     if (!isAdded()) {
       analysisEnabled = enabled;
@@ -2391,6 +2588,9 @@ public class CameraFragment extends Fragment implements SensorEventListener {
               if (focusDist != null) {
                 lastFocusDistanceDiopters = focusDist;
               }
+              // Lens diagnostics: track the active physical camera (logical multi-camera) and
+              // the focal length so lens switches caused by zoom changes become visible in logs.
+              trackLensFromCaptureResult(result);
             }
           });
 
