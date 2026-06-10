@@ -169,8 +169,8 @@ public class FeatureFlags {
 
   /**
    * Feature flag: enables the live focus-quality (sharpness) indicator in the camera preview (see
-   * docs/focus_quality_indicator_design.md). Disabled by default; when disabled, no UI is shown
-   * and no sharpness computation runs.
+   * docs/focus_quality_indicator_design.md). Disabled by default; when disabled, no UI is shown and
+   * no sharpness computation runs.
    */
   public static boolean isFocusQualityIndicatorEnabled() {
     Boolean override = focusQualityIndicatorOverride.get();

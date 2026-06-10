@@ -31,8 +31,8 @@ import org.opencv.imgproc.Imgproc;
  *   <li>All Mats are held in {@link ThreadLocal}s and reused across frames — the same pattern the
  *       analysis pipeline already uses for the NV21→RGBA path. No per-frame Mat or Bitmap
  *       allocations occur in the hot path (submat creates only a cheap header).
- *   <li>The input is the existing downscaled detection bitmap (≤ {@code DETECTION_MAX_EDGE} px);
- *       no extra copies of the camera frame are made.
+ *   <li>The input is the existing downscaled detection bitmap (≤ {@code DETECTION_MAX_EDGE} px); no
+ *       extra copies of the camera frame are made.
  *   <li>This class must only be called on the single CameraX analyzer thread, and only on frames
  *       that already pass the existing analysis throttle.
  * </ul>

@@ -1313,14 +1313,11 @@ public class CameraFragment extends Fragment implements SensorEventListener {
               ? "unknown"
               : switch (calibration) {
                 case android.hardware.camera2.CameraCharacteristics
-                        .LENS_INFO_FOCUS_DISTANCE_CALIBRATION_CALIBRATED ->
-                    "CALIBRATED";
+                    .LENS_INFO_FOCUS_DISTANCE_CALIBRATION_CALIBRATED -> "CALIBRATED";
                 case android.hardware.camera2.CameraCharacteristics
-                        .LENS_INFO_FOCUS_DISTANCE_CALIBRATION_APPROXIMATE ->
-                    "APPROXIMATE";
+                    .LENS_INFO_FOCUS_DISTANCE_CALIBRATION_APPROXIMATE -> "APPROXIMATE";
                 case android.hardware.camera2.CameraCharacteristics
-                        .LENS_INFO_FOCUS_DISTANCE_CALIBRATION_UNCALIBRATED ->
-                    "UNCALIBRATED";
+                    .LENS_INFO_FOCUS_DISTANCE_CALIBRATION_UNCALIBRATED -> "UNCALIBRATED";
                 default -> String.valueOf(calibration);
               };
       Log.i(
@@ -1402,8 +1399,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
    * Applies the manual focus value via Camera2 interop.
    *
    * @param progress slider progress; {@code 0} restores continuous autofocus
-   * @param liveUpdate {@code true} for throttled updates while dragging (suppresses the
-   *     "focus locked" toast)
+   * @param liveUpdate {@code true} for throttled updates while dragging (suppresses the "focus
+   *     locked" toast)
    * @return the future of the interop request, or {@code null} if nothing was applied
    */
   @OptIn(markerClass = ExperimentalCamera2Interop.class)
@@ -2422,14 +2419,12 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         }
         float[] focalLengths =
             cc.get(
-                android.hardware.camera2.CameraCharacteristics
-                    .LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+                android.hardware.camera2.CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
         android.util.SizeF sensorSize =
             cc.get(android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE);
         Float maxDigitalZoom =
             cc.get(
-                android.hardware.camera2.CameraCharacteristics
-                    .SCALER_AVAILABLE_MAX_DIGITAL_ZOOM);
+                android.hardware.camera2.CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM);
         String zoomRatioRange = "n/a";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
           android.util.Range<Float> zr =
@@ -2440,8 +2435,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         String physicalIds = "n/a";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
           int[] caps =
-              cc.get(
-                  android.hardware.camera2.CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES);
+              cc.get(android.hardware.camera2.CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES);
           if (caps != null) {
             for (int cap : caps) {
               if (cap
@@ -2466,8 +2460,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                             .LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
                 android.util.SizeF pSensor =
                     pcc.get(
-                        android.hardware.camera2.CameraCharacteristics
-                            .SENSOR_INFO_PHYSICAL_SIZE);
+                        android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE);
                 Log.i(
                     TAG,
                     "LensDiag:   physical id="
@@ -2669,9 +2662,9 @@ public class CameraFragment extends Fragment implements SensorEventListener {
   }
 
   /**
-   * Computes the Laplacian-variance sharpness score for the current analysis frame and updates
-   * the segment indicator. Runs on the analyzer thread, only on frames that already passed the
-   * existing analysis throttle, and only while the feature flag is enabled.
+   * Computes the Laplacian-variance sharpness score for the current analysis frame and updates the
+   * segment indicator. Runs on the analyzer thread, only on frames that already passed the existing
+   * analysis throttle, and only while the feature flag is enabled.
    *
    * <p>ROI priority per design note: bounding rect of the detected quad, else full frame. UI is
    * only touched when the mapped segment count actually changes (no per-frame invalidations).
@@ -2712,7 +2705,9 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 + ", segments="
                 + segments
                 + ", roi="
-                + (roi != null ? roi.width + "x" + roi.height : "full " + bmp.getWidth() + "x" + bmp.getHeight())
+                + (roi != null
+                    ? roi.width + "x" + roi.height
+                    : "full " + bmp.getWidth() + "x" + bmp.getHeight())
                 + ", durationMs="
                 + durationMs);
       }

@@ -20,15 +20,15 @@ import androidx.annotation.Nullable;
 import de.schliweb.makeacopy.R;
 
 /**
- * Small 5-segment focus-quality (sharpness) indicator shown near the shutter button while
- * scanning (feature-flagged, see {@code docs/focus_quality_indicator_design.md}).
+ * Small 5-segment focus-quality (sharpness) indicator shown near the shutter button while scanning
+ * (feature-flagged, see {@code docs/focus_quality_indicator_design.md}).
  *
- * <p>The level is conveyed by the <b>number of filled segments</b> (▮▮▮□□), not by color alone;
- * the color shift (red→yellow→green) is only an optional enhancement. The view exposes a
- * localized content description per quality band for TalkBack.
+ * <p>The level is conveyed by the <b>number of filled segments</b> (▮▮▮□□), not by color alone; the
+ * color shift (red→yellow→green) is only an optional enhancement. The view exposes a localized
+ * content description per quality band for TalkBack.
  *
- * <p>Performance: {@link #setLevel(int)} only invalidates when the segment count actually
- * changes; drawing uses pre-allocated Paints and a single reused RectF.
+ * <p>Performance: {@link #setLevel(int)} only invalidates when the segment count actually changes;
+ * drawing uses pre-allocated Paints and a single reused RectF.
  */
 public class FocusQualityIndicatorView extends View {
 
