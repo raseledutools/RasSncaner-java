@@ -2525,8 +2525,16 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         binding.cornerOverlay.setVisibility(View.GONE);
         binding.cornerOverlay.setScore(null);
       }
-      if (!effectiveAnalysis) {
+      if (!enabled) {
+        // Hide the focus-quality indicator as soon as live corner detection is turned off,
+        // even if the analyzer keeps running internally (Accessibility Mode): the visual
+        // indicator follows the user's live-analysis preference only.
         resetFocusQualityIndicator();
+      } else {
+        // Force the next measurement to refresh the UI: while the indicator was hidden the
+        // analyzer may have kept updating lastFocusQualitySegments (Accessibility Mode), so
+        // an unchanged segment level would otherwise skip re-showing the indicator.
+        lastFocusQualitySegments = -1;
       }
     }
     if (imageAnalysis != null) {
@@ -2717,10 +2725,16 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       runOnUiThreadSafe(
           () -> {
             if (binding == null) return;
-            if (binding.focusQualityIndicator.getVisibility() != View.VISIBLE) {
-              binding.focusQualityIndicator.setVisibility(View.VISIBLE);
+            // Visual indicator only while live corner detection is enabled by the user.
+            // This also guards against in-flight analyzer frames re-showing the indicator
+            // right after it was hidden via setLiveAnalysisEnabled(false). A11y announcements
+            // below stay active (analyzer may run for Accessibility Mode).
+            if (analysisEnabled) {
+              if (binding.focusQualityIndicator.getVisibility() != View.VISIBLE) {
+                binding.focusQualityIndicator.setVisibility(View.VISIBLE);
+              }
+              binding.focusQualityIndicator.setLevel(segments);
             }
-            binding.focusQualityIndicator.setLevel(segments);
             maybeAnnounceFocusQuality(band);
           });
     } catch (Throwable t) {
