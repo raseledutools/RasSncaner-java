@@ -1087,10 +1087,21 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
   private void setupTapToFocus() {
     if (binding == null) return;
+    GestureDetector tapDetector =
+        new GestureDetector(
+            requireContext(),
+            new GestureDetector.SimpleOnGestureListener() {
+              @Override
+              public boolean onSingleTapUp(@NonNull MotionEvent e) {
+                return true;
+              }
+            });
     View.OnTouchListener listener =
         (view, event) -> {
-          if (event.getAction() != MotionEvent.ACTION_UP) return true;
-          startTapToFocus(view, event.getX(), event.getY());
+          if (tapDetector.onTouchEvent(event)) {
+            view.performClick();
+            startTapToFocus(view, event.getX(), event.getY());
+          }
           return true;
         };
     binding.viewFinder.setOnTouchListener(listener);
@@ -1169,7 +1180,11 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       UIUtils.showToast(requireContext(), R.string.tap_to_focus_not_supported, Toast.LENGTH_SHORT);
       return;
     }
-    UIUtils.showToast(requireContext(), R.string.tap_to_focus_started, Toast.LENGTH_SHORT);
+    // Visual + haptic + spoken feedback instead of toasts: the indicator marks the exact
+    // position of the focus request.
+    binding.focusRing.showAt(x, y);
+    HapticsUtils.vibrateOneShot(getContext(), 15L);
+    announce(R.string.tap_to_focus_started);
     ListenableFuture<FocusMeteringResult> future =
         camera.getCameraControl().startFocusAndMetering(action);
     future.addListener(
@@ -1178,20 +1193,19 @@ public class CameraFragment extends Fragment implements SensorEventListener {
           try {
             if (requestId != tapToFocusRequestId) return;
             FocusMeteringResult result = future.get();
-            Log.d(TAG, "Tap-to-focus result: success=" + result.isFocusSuccessful());
-            UIUtils.showToast(
-                requireContext(),
-                result.isFocusSuccessful()
-                    ? R.string.tap_to_focus_done
-                    : R.string.tap_to_focus_requested,
-                Toast.LENGTH_SHORT);
+            boolean success = result.isFocusSuccessful();
+            Log.d(TAG, "Tap-to-focus result: success=" + success);
+            if (binding != null) binding.focusRing.onFocusResult(success);
+            HapticsUtils.vibrateOneShot(getContext(), success ? 20L : 40L);
+            announce(success ? R.string.tap_to_focus_done : R.string.tap_to_focus_not_locked);
           } catch (Exception e) {
             if (requestId != tapToFocusRequestId || isFocusMeteringCancellation(e)) {
               Log.d(TAG, "Tap-to-focus request was superseded", e);
               return;
             }
             Log.w(TAG, "Tap-to-focus failed", e);
-            UIUtils.showToast(requireContext(), R.string.tap_to_focus_failed, Toast.LENGTH_SHORT);
+            if (binding != null) binding.focusRing.onFocusResult(false);
+            announce(R.string.tap_to_focus_failed);
           }
         },
         ContextCompat.getMainExecutor(requireContext()));
