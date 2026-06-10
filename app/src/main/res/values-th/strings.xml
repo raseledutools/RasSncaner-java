@@ -95,6 +95,9 @@
     <string name="tap_to_focus_not_locked">ไม่สามารถล็อกโฟกัสที่นี่ได้</string>
     <string name="tap_to_focus_not_supported">ไม่รองรับการแตะเพื่อโฟกัสที่นี่</string>
     <string name="tap_to_focus_failed">ไม่สามารถโฟกัสที่นี่ได้</string>
+    <string name="focus_quality_low">คุณภาพโฟกัส: ต่ำ</string>
+    <string name="focus_quality_good">คุณภาพโฟกัส: ดี</string>
+    <string name="focus_quality_excellent">คุณภาพโฟกัส: ดีเยี่ยม</string>
     <string name="camera_zoom_title">ซูม / เลนส์</string>
     <string name="camera_zoom_cd">เลือกซูมหรือเลนส์</string>
     <string name="camera_zoom_ratio">%1$s×</string>

@@ -100,6 +100,9 @@
     <string name="tap_to_focus_not_locked">Não foi possível bloquear o foco aqui</string>
     <string name="tap_to_focus_not_supported">Foco por toque não é suportado aqui</string>
     <string name="tap_to_focus_failed">Não foi possível focar aqui</string>
+    <string name="focus_quality_low">Qualidade de foco: baixa</string>
+    <string name="focus_quality_good">Qualidade de foco: boa</string>
+    <string name="focus_quality_excellent">Qualidade de foco: excelente</string>
     <string name="camera_zoom_title">Zoom / lente</string>
     <string name="camera_zoom_cd">Escolher zoom ou lente</string>
     <string name="camera_zoom_ratio">%1$s×</string>

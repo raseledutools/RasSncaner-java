@@ -99,6 +99,9 @@
     <string name="tap_to_focus_not_locked">Fokus konnte hier nicht fixiert werden</string>
     <string name="tap_to_focus_not_supported">Fokussieren per Tippen wird hier nicht unterstützt</string>
     <string name="tap_to_focus_failed">Hier konnte nicht fokussiert werden</string>
+    <string name="focus_quality_low">Fokusqualität: niedrig</string>
+    <string name="focus_quality_good">Fokusqualität: gut</string>
+    <string name="focus_quality_excellent">Fokusqualität: ausgezeichnet</string>
     <string name="camera_zoom_title">Zoom / Linse</string>
     <string name="camera_zoom_cd">Zoom oder Linse auswählen</string>
     <string name="camera_zoom_ratio">%1$s×</string>

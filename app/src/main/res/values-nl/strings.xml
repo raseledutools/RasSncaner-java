@@ -99,6 +99,9 @@
     <string name="tap_to_focus_not_locked">Focus kon hier niet worden vergrendeld</string>
     <string name="tap_to_focus_not_supported">Tikfocus wordt hier niet ondersteund</string>
     <string name="tap_to_focus_failed">Kon hier niet scherpstellen</string>
+    <string name="focus_quality_low">Scherpstelkwaliteit: laag</string>
+    <string name="focus_quality_good">Scherpstelkwaliteit: goed</string>
+    <string name="focus_quality_excellent">Scherpstelkwaliteit: uitstekend</string>
     <string name="camera_zoom_title">Zoom / lens</string>
     <string name="camera_zoom_cd">Zoom of lens kiezen</string>
     <string name="camera_zoom_ratio">%1$s×</string>

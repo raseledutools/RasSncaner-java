@@ -191,6 +191,16 @@ public class CameraFragment extends Fragment implements SensorEventListener {
   private ExecutorService analysisExecutor;
   private volatile boolean analysisEnabled = false;
   private long lastAnalysisTs = 0L;
+  // Live focus-quality (sharpness) indicator — feature-flagged, disabled by default.
+  // See docs/focus_quality_indicator_design.md. The analyzer is created lazily so the
+  // feature has zero overhead while the flag is off; the meter holds the decaying
+  // rolling-max normalization state (analyzer thread only).
+  private FocusQualityAnalyzer focusQualityAnalyzer = null;
+  private final FocusQualityMeter focusQualityMeter = new FocusQualityMeter();
+  private volatile int lastFocusQualitySegments = -1;
+  private FocusQualityMeter.Band lastAnnouncedFocusQualityBand = null;
+  private long lastFocusQualityAnnounceTs = 0L;
+  private static final long FOCUS_QUALITY_ANNOUNCE_MIN_INTERVAL_MS = 3000L;
   // Accessibility Mode – stability and feedback state
   private double lastScore = 0.0;
   private int stableCount = 0;
@@ -2325,6 +2335,9 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         binding.cornerOverlay.setVisibility(View.GONE);
         binding.cornerOverlay.setScore(null);
       }
+      if (!effectiveAnalysis) {
+        resetFocusQualityIndicator();
+      }
     }
     if (imageAnalysis != null) {
       if (effectiveAnalysis) {
@@ -2414,6 +2427,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         binding.cornerOverlay.setVisibility(View.GONE);
         binding.cornerOverlay.setScore(null);
       }
+      resetFocusQualityIndicator();
       clearA11yGuidanceController();
     }
   }
@@ -2452,6 +2466,109 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     a11yStateMachine = null;
     lastGuidanceEventHint = null;
     lastGuidanceEventTs = 0L;
+  }
+
+  /**
+   * Computes the Laplacian-variance sharpness score for the current analysis frame and updates
+   * the segment indicator. Runs on the analyzer thread, only on frames that already passed the
+   * existing analysis throttle, and only while the feature flag is enabled.
+   *
+   * <p>ROI priority per design note: bounding rect of the detected quad, else full frame. UI is
+   * only touched when the mapped segment count actually changes (no per-frame invalidations).
+   */
+  private void measureFocusQuality(
+      @NonNull Bitmap bmp, @androidx.annotation.Nullable org.opencv.core.Point[] quad, long nowMs) {
+    try {
+      if (focusQualityAnalyzer == null) focusQualityAnalyzer = new FocusQualityAnalyzer();
+      org.opencv.core.Rect roi = null;
+      if (quad != null && quad.length == 4) {
+        double minX = quad[0].x, minY = quad[0].y, maxX = quad[0].x, maxY = quad[0].y;
+        for (int i = 1; i < 4; i++) {
+          minX = Math.min(minX, quad[i].x);
+          minY = Math.min(minY, quad[i].y);
+          maxX = Math.max(maxX, quad[i].x);
+          maxY = Math.max(maxY, quad[i].y);
+        }
+        roi =
+            new org.opencv.core.Rect(
+                (int) Math.floor(minX),
+                (int) Math.floor(minY),
+                (int) Math.ceil(maxX - minX),
+                (int) Math.ceil(maxY - minY));
+      }
+      long t0 = SystemClock.elapsedRealtime();
+      double rawVariance = focusQualityAnalyzer.measure(bmp, roi);
+      long durationMs = SystemClock.elapsedRealtime() - t0;
+      if (rawVariance < 0) return; // measurement failed; keep last state
+      double score = focusQualityMeter.update(rawVariance, nowMs);
+      int segments = FocusQualityMeter.segmentsForScore(score);
+      if (BuildConfig.DEBUG) {
+        Log.d(
+            TAG,
+            "[FOCUS_Q] raw="
+                + String.format(Locale.US, "%.1f", rawVariance)
+                + ", score="
+                + String.format(Locale.US, "%.3f", score)
+                + ", segments="
+                + segments
+                + ", roi="
+                + (roi != null ? roi.width + "x" + roi.height : "full " + bmp.getWidth() + "x" + bmp.getHeight())
+                + ", durationMs="
+                + durationMs);
+      }
+      if (segments == lastFocusQualitySegments) return; // no UI churn for unchanged level
+      lastFocusQualitySegments = segments;
+      final FocusQualityMeter.Band band = FocusQualityMeter.bandForSegments(segments);
+      runOnUiThreadSafe(
+          () -> {
+            if (binding == null) return;
+            if (binding.focusQualityIndicator.getVisibility() != View.VISIBLE) {
+              binding.focusQualityIndicator.setVisibility(View.VISIBLE);
+            }
+            binding.focusQualityIndicator.setLevel(segments);
+            maybeAnnounceFocusQuality(band);
+          });
+    } catch (Throwable t) {
+      Log.w(TAG, "Focus-quality measurement failed: " + t.getMessage());
+    }
+  }
+
+  /**
+   * Announces the coarse focus-quality band via the existing announce helper. Rate-limited (same
+   * cadence as the framing signal) and only emitted on band changes to avoid TalkBack spam.
+   */
+  private void maybeAnnounceFocusQuality(FocusQualityMeter.Band band) {
+    if (band == lastAnnouncedFocusQualityBand) return;
+    long now = System.currentTimeMillis();
+    if (now - lastFocusQualityAnnounceTs < FOCUS_QUALITY_ANNOUNCE_MIN_INTERVAL_MS) return;
+    lastAnnouncedFocusQualityBand = band;
+    lastFocusQualityAnnounceTs = now;
+    if (!isAccessibilityModeEnabled()) return; // visual users see the segments
+    int resId;
+    switch (band) {
+      case EXCELLENT:
+        resId = R.string.focus_quality_excellent;
+        break;
+      case GOOD:
+        resId = R.string.focus_quality_good;
+        break;
+      case LOW:
+      default:
+        resId = R.string.focus_quality_low;
+        break;
+    }
+    announce(resId);
+  }
+
+  /** Hides the focus-quality indicator and resets the normalization state. */
+  private void resetFocusQualityIndicator() {
+    focusQualityMeter.reset();
+    lastFocusQualitySegments = -1;
+    lastAnnouncedFocusQualityBand = null;
+    if (binding != null) {
+      binding.focusQualityIndicator.setVisibility(View.GONE);
+      binding.focusQualityIndicator.setLevel(0);
+    }
   }
 
   private void analyzeFrameForCorners(@NonNull ImageProxy image) {
@@ -2546,6 +2663,12 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
       // Map bitmap coords to overlay coords (PreviewView with FIT_CENTER) when valid
       android.graphics.PointF[] viewPts = hasValid ? mapToOverlayPoints(pts, bmpW, bmpH) : null;
+
+      // Live focus-quality (sharpness) measurement — feature-flagged. Reuses this already
+      // throttled analysis pass and the small upright bitmap: no extra pipeline, no copies.
+      if (FeatureFlags.isFocusQualityIndicatorEnabled()) {
+        measureFocusQuality(bmp, hasValid ? pts : null, now);
+      }
 
       // Optional: Evaluate FramingEngine (logging and/or accessibility guidance)
       boolean wantFraming =

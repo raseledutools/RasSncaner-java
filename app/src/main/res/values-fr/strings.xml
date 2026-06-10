@@ -100,6 +100,9 @@
     <string name="tap_to_focus_not_locked">Impossible de verrouiller la mise au point ici</string>
     <string name="tap_to_focus_not_supported">La mise au point tactile n’est pas prise en charge ici</string>
     <string name="tap_to_focus_failed">Impossible de faire la mise au point ici</string>
+    <string name="focus_quality_low">Qualité de mise au point : faible</string>
+    <string name="focus_quality_good">Qualité de mise au point : bonne</string>
+    <string name="focus_quality_excellent">Qualité de mise au point : excellente</string>
     <string name="camera_zoom_title">Zoom / objectif</string>
     <string name="camera_zoom_cd">Choisir le zoom ou l\'objectif</string>
     <string name="camera_zoom_ratio">%1$s×</string>

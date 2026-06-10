@@ -98,6 +98,9 @@
     <string name="tap_to_focus_not_locked">Itt nem sikerült rögzíteni a fókuszt</string>
     <string name="tap_to_focus_not_supported">A koppintásos fókusz itt nem támogatott</string>
     <string name="tap_to_focus_failed">Itt nem sikerült fókuszálni</string>
+    <string name="focus_quality_low">Fókuszminőség: alacsony</string>
+    <string name="focus_quality_good">Fókuszminőség: jó</string>
+    <string name="focus_quality_excellent">Fókuszminőség: kiváló</string>
     <string name="camera_zoom_title">Zoom / objektív</string>
     <string name="camera_zoom_cd">Zoom vagy objektív kiválasztása</string>
     <string name="camera_zoom_ratio">%1$s×</string>

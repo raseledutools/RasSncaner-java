@@ -99,6 +99,9 @@
     <string name="tap_to_focus_not_locked">Не удалось зафиксировать фокус здесь</string>
     <string name="tap_to_focus_not_supported">Фокусировка касанием здесь не поддерживается</string>
     <string name="tap_to_focus_failed">Не удалось сфокусироваться здесь</string>
+    <string name="focus_quality_low">Качество фокусировки: низкое</string>
+    <string name="focus_quality_good">Качество фокусировки: хорошее</string>
+    <string name="focus_quality_excellent">Качество фокусировки: отличное</string>
     <string name="camera_zoom_title">Зум / объектив</string>
     <string name="camera_zoom_cd">Выбрать зум или объектив</string>
     <string name="camera_zoom_ratio">%1$s×</string>

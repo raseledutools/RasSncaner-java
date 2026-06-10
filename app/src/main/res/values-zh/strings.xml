@@ -91,6 +91,9 @@
     <string name="tap_to_focus_not_locked">无法在此处锁定对焦</string>
     <string name="tap_to_focus_not_supported">此处不支持点按对焦</string>
     <string name="tap_to_focus_failed">无法在此处对焦</string>
+    <string name="focus_quality_low">对焦质量：低</string>
+    <string name="focus_quality_good">对焦质量：良好</string>
+    <string name="focus_quality_excellent">对焦质量：极佳</string>
     <string name="camera_zoom_title">变焦 / 镜头</string>
     <string name="camera_zoom_cd">选择变焦或镜头</string>
     <string name="camera_zoom_ratio">%1$s×</string>

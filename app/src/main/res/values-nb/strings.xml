@@ -97,6 +97,9 @@
     <string name="tap_to_focus_not_locked">Kunne ikke låse fokus her</string>
     <string name="tap_to_focus_not_supported">Trykkfokus støttes ikke her</string>
     <string name="tap_to_focus_failed">Kunne ikke fokusere her</string>
+    <string name="focus_quality_low">Fokuskvalitet: lav</string>
+    <string name="focus_quality_good">Fokuskvalitet: god</string>
+    <string name="focus_quality_excellent">Fokuskvalitet: utmerket</string>
     <string name="camera_zoom_title">Zoom / objektiv</string>
     <string name="camera_zoom_cd">Velg zoom eller objektiv</string>
     <string name="camera_zoom_ratio">%1$s×</string>

@@ -102,6 +102,9 @@
     <string name="tap_to_focus_not_locked">Focus could not lock here</string>
     <string name="tap_to_focus_not_supported">Tap focus is not supported here</string>
     <string name="tap_to_focus_failed">Could not focus here</string>
+    <string name="focus_quality_low">Focus quality: low</string>
+    <string name="focus_quality_good">Focus quality: good</string>
+    <string name="focus_quality_excellent">Focus quality: excellent</string>
     <string name="camera_zoom_title">Zoom / lens</string>
     <string name="camera_zoom_cd">Choose zoom or lens</string>
     <string name="camera_zoom_ratio">%1$s×</string>

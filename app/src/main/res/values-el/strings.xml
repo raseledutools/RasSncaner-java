@@ -91,6 +91,9 @@
     <string name="tap_to_focus_not_locked">Δεν ήταν δυνατό το κλείδωμα εστίασης εδώ</string>
     <string name="tap_to_focus_not_supported">Η εστίαση με πάτημα δεν υποστηρίζεται εδώ</string>
     <string name="tap_to_focus_failed">Δεν ήταν δυνατή η εστίαση εδώ</string>
+    <string name="focus_quality_low">Ποιότητα εστίασης: χαμηλή</string>
+    <string name="focus_quality_good">Ποιότητα εστίασης: καλή</string>
+    <string name="focus_quality_excellent">Ποιότητα εστίασης: άριστη</string>
     <string name="camera_zoom_title">Ζουμ / φακός</string>
     <string name="camera_zoom_cd">Επιλογή ζουμ ή φακού</string>
     <string name="camera_zoom_ratio">%1$s×</string>

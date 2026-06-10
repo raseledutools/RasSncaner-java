@@ -90,6 +90,9 @@
     <string name="tap_to_focus_not_locked">यहाँ फ़ोकस लॉक नहीं हो सका</string>
     <string name="tap_to_focus_not_supported">यहाँ टैप फ़ोकस समर्थित नहीं है</string>
     <string name="tap_to_focus_failed">यहाँ फ़ोकस नहीं हो सका</string>
+    <string name="focus_quality_low">फ़ोकस गुणवत्ता: कम</string>
+    <string name="focus_quality_good">फ़ोकस गुणवत्ता: अच्छी</string>
+    <string name="focus_quality_excellent">फ़ोकस गुणवत्ता: उत्कृष्ट</string>
     <string name="camera_zoom_title">ज़ूम / लेंस</string>
     <string name="camera_zoom_cd">ज़ूम या लेंस चुनें</string>
     <string name="camera_zoom_ratio">%1$s×</string>

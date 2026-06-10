@@ -101,6 +101,9 @@
     <string name="tap_to_focus_not_locked">Tu sa nepodarilo uzamknúť zaostrenie</string>
     <string name="tap_to_focus_not_supported">Zaostrenie klepnutím tu nie je podporované</string>
     <string name="tap_to_focus_failed">Tu sa nepodarilo zaostriť</string>
+    <string name="focus_quality_low">Kvalita zaostrenia: nízka</string>
+    <string name="focus_quality_good">Kvalita zaostrenia: dobrá</string>
+    <string name="focus_quality_excellent">Kvalita zaostrenia: vynikajúca</string>
     <string name="camera_zoom_title">Priblíženie / objektív</string>
     <string name="camera_zoom_cd">Vybrať priblíženie alebo objektív</string>
     <string name="camera_zoom_ratio">%1$s×</string>

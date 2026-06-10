@@ -99,6 +99,9 @@
     <string name="tap_to_focus_not_locked">Focalizarea nu a putut fi blocată aici</string>
     <string name="tap_to_focus_not_supported">Focalizarea prin atingere nu este acceptată aici</string>
     <string name="tap_to_focus_failed">Nu s-a putut focaliza aici</string>
+    <string name="focus_quality_low">Calitatea focalizării: scăzută</string>
+    <string name="focus_quality_good">Calitatea focalizării: bună</string>
+    <string name="focus_quality_excellent">Calitatea focalizării: excelentă</string>
     <string name="camera_zoom_title">Zoom / obiectiv</string>
     <string name="camera_zoom_cd">Alege zoomul sau obiectivul</string>
     <string name="camera_zoom_ratio">%1$s×</string>

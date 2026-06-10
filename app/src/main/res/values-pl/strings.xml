@@ -98,6 +98,9 @@
     <string name="tap_to_focus_not_locked">Nie udało się zablokować ostrości tutaj</string>
     <string name="tap_to_focus_not_supported">Ustawianie ostrości dotknięciem nie jest tutaj obsługiwane</string>
     <string name="tap_to_focus_failed">Nie udało się ustawić ostrości tutaj</string>
+    <string name="focus_quality_low">Jakość ostrości: niska</string>
+    <string name="focus_quality_good">Jakość ostrości: dobra</string>
+    <string name="focus_quality_excellent">Jakość ostrości: doskonała</string>
     <string name="camera_zoom_title">Zoom / obiektyw</string>
     <string name="camera_zoom_cd">Wybierz zoom lub obiektyw</string>
     <string name="camera_zoom_ratio">%1$s×</string>

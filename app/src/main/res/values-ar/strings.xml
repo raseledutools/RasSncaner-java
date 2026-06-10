@@ -95,6 +95,9 @@
     <string name="tap_to_focus_not_locked">تعذر تثبيت التركيز هنا</string>
     <string name="tap_to_focus_not_supported">التركيز باللمس غير مدعوم هنا</string>
     <string name="tap_to_focus_failed">تعذر التركيز هنا</string>
+    <string name="focus_quality_low">جودة التركيز: منخفضة</string>
+    <string name="focus_quality_good">جودة التركيز: جيدة</string>
+    <string name="focus_quality_excellent">جودة التركيز: ممتازة</string>
     <string name="camera_zoom_title">التكبير / العدسة</string>
     <string name="camera_zoom_cd">اختر التكبير أو العدسة</string>
     <string name="camera_zoom_ratio">%1$s×</string>

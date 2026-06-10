@@ -98,6 +98,9 @@
     <string name="tap_to_focus_not_locked">فوکوس در اینجا قفل نشد</string>
     <string name="tap_to_focus_not_supported">فوکوس با لمس در اینجا پشتیبانی نمی‌شود</string>
     <string name="tap_to_focus_failed">امکان فوکوس در اینجا نبود</string>
+    <string name="focus_quality_low">کیفیت فوکوس: کم</string>
+    <string name="focus_quality_good">کیفیت فوکوس: خوب</string>
+    <string name="focus_quality_excellent">کیفیت فوکوس: عالی</string>
     <string name="camera_zoom_title">زوم / لنز</string>
     <string name="camera_zoom_cd">زوم یا لنز را انتخاب کنید</string>
     <string name="camera_zoom_ratio">%1$s×</string>
