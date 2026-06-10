@@ -149,6 +149,44 @@ public class FeatureFlags {
   }
 
   /**
+   * Test/runtime override for the focus-quality indicator feature flag. When non-null, this value
+   * takes precedence over the BuildConfig value.
+   */
+  private static final AtomicReference<Boolean> focusQualityIndicatorOverride =
+      new AtomicReference<>(null);
+
+  /**
+   * Sets a runtime override for the focus-quality indicator feature flag. Pass {@code null} to
+   * clear the override and revert to the BuildConfig default. Intended for tests and developer
+   * toggles.
+   *
+   * @param enabled {@code true} to force-enable, {@code false} to force-disable, {@code null} to
+   *     use the BuildConfig default
+   */
+  public static void setFocusQualityIndicatorOverride(Boolean enabled) {
+    focusQualityIndicatorOverride.set(enabled);
+  }
+
+  /**
+   * Feature flag: enables the live focus-quality (sharpness) indicator in the camera preview (see
+   * docs/focus_quality_indicator_design.md). Disabled by default; when disabled, no UI is shown
+   * and no sharpness computation runs.
+   */
+  public static boolean isFocusQualityIndicatorEnabled() {
+    Boolean override = focusQualityIndicatorOverride.get();
+    if (override != null) {
+      return override;
+    }
+    try {
+      Class<?> c = de.schliweb.makeacopy.BuildConfig.class;
+      java.lang.reflect.Field f = c.getField("FEATURE_FOCUS_QUALITY_INDICATOR");
+      return f.getBoolean(null);
+    } catch (Throwable ignore) {
+      return false;
+    }
+  }
+
+  /**
    * Feature flag: enables layout analysis for complex documents. When enabled, OCR can detect and
    * process multi-column documents and tables with optimized settings for each region.
    */
