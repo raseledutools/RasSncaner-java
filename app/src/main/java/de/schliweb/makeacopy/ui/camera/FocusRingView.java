@@ -47,6 +47,18 @@ public class FocusRingView extends View {
   private float radius;
   @Nullable private ValueAnimator shrinkAnimator;
 
+  // Visibility duration is driven by postDelayed instead of the animator's start delay so the
+  // result indicator stays visible even when animator scaling is 0 (battery saver, "remove
+  // animations" accessibility setting, developer options).
+  private final Runnable fadeOutRunnable =
+      () -> {
+        if (ValueAnimator.areAnimatorsEnabled()) {
+          animate().alpha(0f).setStartDelay(0).setDuration(300).withEndAction(this::hide).start();
+        } else {
+          hide();
+        }
+      };
+
   public FocusRingView(Context context) {
     super(context);
     init();
@@ -105,12 +117,8 @@ public class FocusRingView extends View {
     ringPaint.setColor(color);
     glyphPaint.setColor(color);
     invalidate();
-    animate()
-        .alpha(0f)
-        .setStartDelay(success ? 400 : 800)
-        .setDuration(300)
-        .withEndAction(this::hide)
-        .start();
+    removeCallbacks(fadeOutRunnable);
+    postDelayed(fadeOutRunnable, success ? 800 : 1000);
   }
 
   /** Hides the indicator immediately. */
@@ -122,6 +130,7 @@ public class FocusRingView extends View {
   }
 
   private void cancelPending() {
+    removeCallbacks(fadeOutRunnable);
     animate().cancel();
     if (shrinkAnimator != null) {
       shrinkAnimator.cancel();
