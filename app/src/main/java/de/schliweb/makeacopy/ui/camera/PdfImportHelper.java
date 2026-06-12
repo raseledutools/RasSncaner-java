@@ -167,8 +167,8 @@ final class PdfImportHelper {
     RecyclerView recyclerView = dialogView.findViewById(R.id.recycler_pages);
     View progressBar = dialogView.findViewById(R.id.progress_loading);
 
-    // Set up RecyclerView with GridLayoutManager (3 columns)
-    recyclerView.setLayoutManager(new GridLayoutManager(fragment.requireContext(), 3));
+    // Set up RecyclerView with GridLayoutManager (2 columns)
+    recyclerView.setLayoutManager(new GridLayoutManager(fragment.requireContext(), 2));
 
     AlertDialog dialog =
         new MaterialAlertDialogBuilder(fragment.requireContext())
