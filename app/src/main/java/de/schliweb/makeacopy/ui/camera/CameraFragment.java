@@ -113,7 +113,10 @@ public class CameraFragment extends Fragment implements SensorEventListener {
   private static final String PREF_EXPOSURE_INDEX = "exposure_compensation_index";
   private static final String PREF_CAMERA_ZOOM_RATIO = "camera_zoom_ratio";
   private static final String PREF_MANUAL_FOCUS_PROGRESS = "manual_focus_progress";
+  private static final String PREF_MANUAL_FOCUS_POSITION = "manual_focus_position";
+  private static final int FOCUS_SLIDER_MIN = 1;
   private static final int FOCUS_SLIDER_MAX = 100;
+  private static final int FOCUS_SLIDER_DEFAULT_POSITION = 50;
   // Tap-to-focus metering point sizes (fraction of the preview's narrower dimension).
   // AF uses a small region so focus really locks on the tapped spot; AE uses a larger
   // region for stable document exposure. AWB is intentionally not metered to avoid
@@ -179,11 +182,20 @@ public class CameraFragment extends Fragment implements SensorEventListener {
   private float selectedZoomRatio = CameraZoomOptions.DEFAULT_ZOOM_RATIO;
   private float minimumFocusDistanceDiopters = 0f;
   private boolean manualFocusSupported = false;
+  // True while the user has selected manual focus via the slider; false means autofocus.
+  // The AF/MF split (separate AF button + MF-only slider) was requested in issue #78.
+  private boolean manualFocusActive = false;
   // Live manual-focus updates while dragging the slider (throttled to avoid flooding the
   // capture session with Camera2 interop requests).
   private static final long MANUAL_FOCUS_LIVE_UPDATE_INTERVAL_MS = 100L;
   private int pendingFocusProgress = 0;
   private boolean focusUpdateScheduled = false;
+  // The "manual focus locked" toast is shown only after the slider drag has really ended:
+  // onStopTrackingTouch can fire multiple times per gesture (e.g. ACTION_CANCEL when the finger
+  // leaves the slider bounds), so the toast is posted with a short delay and cancelled if
+  // dragging resumes (issue #78 feedback).
+  private Runnable pendingFocusLockedToast = null;
+  private static final long MANUAL_FOCUS_TOAST_DELAY_MS = 400L;
   private int tapToFocusRequestId = 0;
   private boolean isFlashlightOn = false;
   private boolean hasFlash = false;
@@ -1125,8 +1137,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     updateZoomButtonLabel(normalized);
     // On multi-camera devices a zoom change may switch the active physical camera; re-apply
     // the manual focus distance so it does not silently become stale.
-    if (manualFocusSupported && binding != null && binding.focusSlider.getValue() > 0f) {
-      applyManualFocus((int) binding.focusSlider.getValue(), true);
+    if (manualFocusSupported && currentManualFocusProgress() > 0) {
+      applyManualFocus(currentManualFocusProgress(), true);
     }
   }
 
@@ -1174,12 +1186,13 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       }
       viewFinderX = Math.max(0f, Math.min(binding.viewFinder.getWidth(), viewFinderX));
       viewFinderY = Math.max(0f, Math.min(binding.viewFinder.getHeight(), viewFinderY));
-      if (manualFocusSupported && binding.focusSlider.getValue() > 0f) {
+      if (manualFocusSupported && manualFocusActive) {
         Log.d(
             TAG,
             "Tap-to-focus resetting manual focus before AF, progress="
-                + (int) binding.focusSlider.getValue());
-        binding.focusSlider.setValue(0);
+                + currentManualFocusProgress());
+        manualFocusActive = false;
+        updateManualFocusUi();
         persistManualFocusProgress(0);
         // Chain AF on the manual-focus reset request instead of a fixed delay: start the
         // metering only after the Camera2 interop options have actually been applied.
@@ -1229,7 +1242,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             + ", manualFocusSupported="
             + manualFocusSupported
             + ", manualFocusProgress="
-            + (int) binding.focusSlider.getValue()
+            + currentManualFocusProgress()
             + ", meteringFlags=AF+AE, afPointSize="
             + TAP_TO_FOCUS_AF_POINT_SIZE
             + ", aePointSize="
@@ -1334,19 +1347,22 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       binding.focusControl.setVisibility(View.GONE);
       return;
     }
+    binding.focusSlider.setValueFrom(FOCUS_SLIDER_MIN);
     binding.focusSlider.setValueTo(FOCUS_SLIDER_MAX);
     int savedProgress = readPersistedManualFocusProgress();
-    binding.focusSlider.setValue(savedProgress);
-    updateManualFocusLabel(savedProgress);
-    binding.focusSlider.setLabelFormatter(
-        value -> value <= 0f ? getString(R.string.manual_focus_auto) : String.valueOf((int) value));
+    manualFocusActive = savedProgress > 0;
+    binding.focusSlider.setValue(
+        manualFocusActive ? savedProgress : readPersistedManualFocusPosition());
+    updateManualFocusUi();
+    binding.focusSlider.setLabelFormatter(value -> String.valueOf((int) value));
     binding.focusSlider.addOnChangeListener(
         (slider, value, fromUser) -> {
           if (!fromUser) return;
-          int progress = (int) value;
-          updateManualFocusLabel(progress);
+          // Dragging the slider switches from AF to manual focus.
+          manualFocusActive = true;
+          updateManualFocusUi();
           // Live focus while dragging, throttled to one interop request per interval.
-          pendingFocusProgress = progress;
+          pendingFocusProgress = (int) value;
           if (!focusUpdateScheduled) {
             focusUpdateScheduled = true;
             slider.postDelayed(
@@ -1360,16 +1376,75 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     binding.focusSlider.addOnSliderTouchListener(
         new Slider.OnSliderTouchListener() {
           @Override
-          public void onStartTrackingTouch(@NonNull Slider slider) {}
+          public void onStartTrackingTouch(@NonNull Slider slider) {
+            // The previous gesture continues: do not announce "focus locked" in between.
+            if (pendingFocusLockedToast != null) {
+              slider.removeCallbacks(pendingFocusLockedToast);
+              pendingFocusLockedToast = null;
+            }
+          }
 
           @Override
           public void onStopTrackingTouch(@NonNull Slider slider) {
-            applyManualFocus((int) slider.getValue(), false);
-            persistManualFocusProgress((int) slider.getValue());
+            int progress = (int) slider.getValue();
+            applyManualFocus(progress, true);
+            persistManualFocusProgress(progress);
+            persistManualFocusPosition(progress);
+            // Show the confirmation toast only once the drag has really ended (no new
+            // onStartTrackingTouch within the delay window).
+            if (pendingFocusLockedToast != null) {
+              slider.removeCallbacks(pendingFocusLockedToast);
+            }
+            pendingFocusLockedToast =
+                () -> {
+                  pendingFocusLockedToast = null;
+                  if (isAdded() && progress > 0) {
+                    UIUtils.showToast(
+                        requireContext(), R.string.manual_focus_locked, Toast.LENGTH_SHORT);
+                  }
+                };
+            slider.postDelayed(pendingFocusLockedToast, MANUAL_FOCUS_TOAST_DELAY_MS);
+          }
+        });
+    binding.focusAfButton.setOnClickListener(
+        v -> {
+          if (!manualFocusActive) {
+            // Second click toggles back to manual focus at the current slider position.
+            manualFocusActive = true;
+            updateManualFocusUi();
+            int progress = (int) binding.focusSlider.getValue();
+            persistManualFocusProgress(progress);
+            applyManualFocus(progress, true);
+            if (isAdded()) {
+              UIUtils.showToast(requireContext(), R.string.manual_focus_locked, Toast.LENGTH_SHORT);
+            }
+            return;
+          }
+          manualFocusActive = false;
+          updateManualFocusUi();
+          persistManualFocusProgress(0);
+          applyManualFocus(0, true);
+          if (isAdded()) {
+            UIUtils.showToast(requireContext(), R.string.autofocus_enabled, Toast.LENGTH_SHORT);
           }
         });
     binding.focusControl.setVisibility(View.VISIBLE);
-    applyManualFocus(savedProgress, true);
+    applyManualFocus(manualFocusActive ? savedProgress : 0, true);
+  }
+
+  /**
+   * Returns the effective manual focus progress: the slider value while manual focus is active,
+   * or {@code 0} when autofocus is selected (AF button checked).
+   */
+  private int currentManualFocusProgress() {
+    if (!manualFocusActive || binding == null) return 0;
+    return (int) binding.focusSlider.getValue();
+  }
+
+  private void updateManualFocusUi() {
+    if (binding == null) return;
+    binding.focusAfButton.setChecked(!manualFocusActive);
+    updateManualFocusLabel(currentManualFocusProgress());
   }
 
   private int readPersistedManualFocusProgress() {
@@ -1390,6 +1465,30 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         .apply();
   }
 
+  /**
+   * Last manual-focus slider position (1..100), kept separately from the active progress so the
+   * position is restored when the user switches back from AF to manual focus.
+   */
+  private int readPersistedManualFocusPosition() {
+    Context ctx = getContext();
+    if (ctx == null) return FOCUS_SLIDER_DEFAULT_POSITION;
+    int saved =
+        ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE)
+            .getInt(PREF_MANUAL_FOCUS_POSITION, FOCUS_SLIDER_DEFAULT_POSITION);
+    return Math.max(FOCUS_SLIDER_MIN, Math.min(FOCUS_SLIDER_MAX, saved));
+  }
+
+  private void persistManualFocusPosition(int position) {
+    Context ctx = getContext();
+    if (ctx == null) return;
+    ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE)
+        .edit()
+        .putInt(
+            PREF_MANUAL_FOCUS_POSITION,
+            Math.max(FOCUS_SLIDER_MIN, Math.min(FOCUS_SLIDER_MAX, position)))
+        .apply();
+  }
+
   private void updateManualFocusLabel(int progress) {
     if (binding == null) return;
     binding.focusLabel.setText(
@@ -1403,7 +1502,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
    *
    * @param progress slider progress; {@code 0} restores continuous autofocus
    * @param liveUpdate {@code true} for throttled updates while dragging (suppresses the "focus
-   *     locked" toast)
+   *     locked" toast); slider release uses {@code true} as well, since the slider shows its own
+   *     debounced confirmation toast in {@code onStopTrackingTouch}.
    * @return the future of the interop request, or {@code null} if nothing was applied
    */
   @OptIn(markerClass = ExperimentalCamera2Interop.class)
@@ -1436,10 +1536,10 @@ public class CameraFragment extends Fragment implements SensorEventListener {
   }
 
   private void resetManualFocusControl() {
+    manualFocusActive = false;
     if (binding != null) {
       binding.focusControl.setVisibility(View.GONE);
-      binding.focusSlider.setValue(0);
-      updateManualFocusLabel(0);
+      updateManualFocusUi();
     }
     persistManualFocusProgress(0);
     applyManualFocus(0, true);
@@ -2518,9 +2618,11 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         requireContext().getSharedPreferences("export_options", Context.MODE_PRIVATE);
     prefs.edit().putBoolean("analysis_enabled", enabled).apply();
 
-    // Effective analysis: run analyzer whenever user enabled it OR Accessibility Mode is on
+    // Effective analysis: run analyzer whenever user enabled it, Accessibility Mode is on,
+    // or the focus-quality indicator needs frames (independent of live corner detection).
     boolean a11y = isAccessibilityModeEnabled();
-    boolean effectiveAnalysis = enabled || a11y;
+    boolean focusQuality = isFocusQualityIndicatorUserEnabled();
+    boolean effectiveAnalysis = enabled || a11y || focusQuality;
 
     if (binding != null) {
       if (effectiveAnalysis && binding.viewFinder.getVisibility() == View.VISIBLE) {
@@ -2535,7 +2637,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         binding.cornerOverlay.setVisibility(View.GONE);
         binding.cornerOverlay.setScore(null);
       }
-      if (!effectiveAnalysis) {
+      if (!focusQuality) {
         resetFocusQualityIndicator();
       }
     }
@@ -2602,9 +2704,11 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       imageAnalysis.setTargetRotation(rotation);
     }
 
-    // Analyzer should run when either user enabled visual preview or Accessibility Mode is on
+    // Analyzer should run when the user enabled visual preview, Accessibility Mode is on,
+    // or the focus-quality indicator needs frames (independent of live corner detection).
     boolean a11y = isAccessibilityModeEnabled();
-    boolean effectiveAnalysis = analysisEnabled || a11y;
+    boolean focusQuality = isFocusQualityIndicatorUserEnabled();
+    boolean effectiveAnalysis = analysisEnabled || a11y || focusQuality;
 
     if (effectiveAnalysis) {
       ensureAnalysisExecutor();
@@ -2616,6 +2720,9 @@ public class CameraFragment extends Fragment implements SensorEventListener {
           binding.cornerOverlay.setCorners(null);
           binding.cornerOverlay.setScore(null);
         }
+      }
+      if (!focusQuality) {
+        resetFocusQualityIndicator();
       }
       // Initialize Accessibility Guidance controller when active and flagged
       if (FeatureFlags.isA11yGuidanceEnabled() && a11y) {
@@ -2727,6 +2834,11 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       runOnUiThreadSafe(
           () -> {
             if (binding == null) return;
+            // Re-check on the UI thread: the user may have disabled the indicator (camera
+            // options) while this frame was still in flight on the analyzer thread. Without
+            // this guard a stale post could re-show the indicator right after
+            // resetFocusQualityIndicator() hid it.
+            if (!isFocusQualityIndicatorUserEnabled()) return;
             if (binding.focusQualityIndicator.getVisibility() != View.VISIBLE) {
               binding.focusQualityIndicator.setVisibility(View.VISIBLE);
             }
@@ -2765,6 +2877,19 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     announce(resId);
   }
 
+  /**
+   * Returns whether the live focus-quality indicator should run: the build-time feature flag must
+   * be enabled AND the user must have turned the setting on in the camera options dialog. The
+   * setting is independent of the live corner detection preference.
+   */
+  private boolean isFocusQualityIndicatorUserEnabled() {
+    if (!FeatureFlags.isFocusQualityIndicatorEnabled()) return false;
+    Context ctx = getContext();
+    if (ctx == null) return false;
+    return ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE)
+        .getBoolean(CameraOptionsDialogFragment.BUNDLE_FOCUS_QUALITY_INDICATOR, false);
+  }
+
   /** Hides the focus-quality indicator and resets the normalization state. */
   private void resetFocusQualityIndicator() {
     focusQualityMeter.reset();
@@ -2783,9 +2908,11 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       // Running adaptive EC per analyzed frame caused progressive darkening when the torch is on.
       // We keep exposure stable here to ensure a consistent preview brightness.
 
-      // Run analyzer if user enabled visual analysis OR A11y mode is active (internal analysis)
-      boolean effectiveAnalysis = analysisEnabled || isAccessibilityModeEnabled();
-      if (!effectiveAnalysis || binding == null || !isAdded()) return;
+      // Run analyzer if user enabled visual analysis, A11y mode is active (internal analysis),
+      // or the focus-quality indicator is enabled (sharpness measurement only).
+      boolean wantCorners = analysisEnabled || isAccessibilityModeEnabled();
+      boolean wantFocusQuality = isFocusQualityIndicatorUserEnabled();
+      if ((!wantCorners && !wantFocusQuality) || binding == null || !isAdded()) return;
 
       long now = System.currentTimeMillis();
       // Orientation for this frame processing: initial defaults, set if available later
@@ -2835,44 +2962,52 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
       // DocQuad is the standard detector with OpenCV as fallback.
       // Cache the detector so DocQuad runner/throttle actually persist across frames.
-      de.schliweb.makeacopy.ml.corners.CornerDetector liveDetector = cachedLiveCornerDetector;
-      if (liveDetector == null || !cachedLiveCornerDetectorFlag) {
-        liveDetector =
-            de.schliweb.makeacopy.ml.corners.CornerDetectorFactory.forLive(
-                requireContext(), docQuadOrtRunner);
-        cachedLiveCornerDetector = liveDetector;
-        cachedLiveCornerDetectorFlag = true;
-      }
-
-      org.opencv.core.Point[] pts;
-      boolean hasValid;
-
-      de.schliweb.makeacopy.ml.corners.DetectionResult r =
-          liveDetector.detect(bmp, requireContext());
-      if (r != null
-          && r.success
-          && r.cornersOriginalTLTRBRBL != null
-          && r.cornersOriginalTLTRBRBL.length == 4) {
-        pts = new org.opencv.core.Point[4];
-        for (int i = 0; i < 4; i++) {
-          pts[i] =
-              new org.opencv.core.Point(
-                  r.cornersOriginalTLTRBRBL[i][0], r.cornersOriginalTLTRBRBL[i][1]);
+      // Skip corner detection entirely when only the focus-quality indicator needs frames:
+      // the sharpness measurement then simply uses the full frame as ROI.
+      org.opencv.core.Point[] detectedPts = null;
+      boolean detectedValid = false;
+      if (wantCorners) {
+        de.schliweb.makeacopy.ml.corners.CornerDetector liveDetector = cachedLiveCornerDetector;
+        if (liveDetector == null || !cachedLiveCornerDetectorFlag) {
+          liveDetector =
+              de.schliweb.makeacopy.ml.corners.CornerDetectorFactory.forLive(
+                  requireContext(), docQuadOrtRunner);
+          cachedLiveCornerDetector = liveDetector;
+          cachedLiveCornerDetectorFlag = true;
         }
-        hasValid = true;
-      } else {
-        pts = null;
-        hasValid = false;
+
+        de.schliweb.makeacopy.ml.corners.DetectionResult r =
+            liveDetector.detect(bmp, requireContext());
+        if (r != null
+            && r.success
+            && r.cornersOriginalTLTRBRBL != null
+            && r.cornersOriginalTLTRBRBL.length == 4) {
+          detectedPts = new org.opencv.core.Point[4];
+          for (int i = 0; i < 4; i++) {
+            detectedPts[i] =
+                new org.opencv.core.Point(
+                    r.cornersOriginalTLTRBRBL[i][0], r.cornersOriginalTLTRBRBL[i][1]);
+          }
+          detectedValid = true;
+        }
       }
+      final org.opencv.core.Point[] pts = detectedPts;
+      final boolean hasValid = detectedValid;
       // Live-DocQuad liefert aktuell keinen Score (Determinismus/Performance).
 
       // Map bitmap coords to overlay coords (PreviewView with FIT_CENTER) when valid
       android.graphics.PointF[] viewPts = hasValid ? mapToOverlayPoints(pts, bmpW, bmpH) : null;
 
-      // Live focus-quality (sharpness) measurement — feature-flagged. Reuses this already
-      // throttled analysis pass and the small upright bitmap: no extra pipeline, no copies.
-      if (FeatureFlags.isFocusQualityIndicatorEnabled()) {
+      // Live focus-quality (sharpness) measurement — user-toggleable in the camera options.
+      // Reuses this already throttled analysis pass and the small upright bitmap: no extra
+      // pipeline, no copies.
+      if (wantFocusQuality) {
         measureFocusQuality(bmp, hasValid ? pts : null, now);
+      } else if (lastFocusQualitySegments != -1) {
+        // Self-healing: the indicator was disabled (e.g. via camera options) while corner
+        // detection keeps the analyzer running — make sure stale indicator UI is hidden.
+        lastFocusQualitySegments = -1;
+        runOnUiThreadSafe(this::resetFocusQualityIndicator);
       }
 
       // Optional: Evaluate FramingEngine (logging and/or accessibility guidance)

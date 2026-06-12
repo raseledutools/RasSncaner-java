@@ -41,6 +41,7 @@ public class CameraOptionsDialogFragment extends DialogFragment {
   public static final String BUNDLE_ACCESSIBILITY_MODE = "accessibility_mode";
   public static final String BUNDLE_EXPOSURE_COMPENSATION = "exposure_compensation_enabled";
   public static final String BUNDLE_MANUAL_FOCUS = "manual_focus_enabled";
+  public static final String BUNDLE_FOCUS_QUALITY_INDICATOR = "focus_quality_indicator_enabled";
 
   private static final String FRAGMENT_TAG = "CameraOptionsDialogFragment";
 
@@ -282,6 +283,7 @@ public class CameraOptionsDialogFragment extends DialogFragment {
     CheckBox cbAccessibility = view.findViewById(R.id.dialog_checkbox_accessibility_mode);
     CheckBox cbExposure = view.findViewById(R.id.dialog_checkbox_exposure_compensation);
     CheckBox cbManualFocus = view.findViewById(R.id.dialog_checkbox_manual_focus);
+    CheckBox cbFocusQuality = view.findViewById(R.id.dialog_checkbox_focus_quality);
     // Auto‑Capture/Auto‑Torch options removed to keep it simple
 
     SharedPreferences prefs = ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE);
@@ -292,6 +294,7 @@ public class CameraOptionsDialogFragment extends DialogFragment {
     boolean accessibilityMode = prefs.getBoolean(BUNDLE_ACCESSIBILITY_MODE, false);
     boolean exposureEnabled = prefs.getBoolean(BUNDLE_EXPOSURE_COMPENSATION, false);
     boolean manualFocusEnabled = prefs.getBoolean(BUNDLE_MANUAL_FOCUS, false);
+    boolean focusQualityEnabled = prefs.getBoolean(BUNDLE_FOCUS_QUALITY_INDICATOR, false);
     cbSkip.setChecked(skipOcr);
     if (cbSkipCropping != null) cbSkipCropping.setChecked(skipPerspective);
     if (cbSkipEdgeDetection != null) cbSkipEdgeDetection.setChecked(skipEdgeDetection);
@@ -299,6 +302,14 @@ public class CameraOptionsDialogFragment extends DialogFragment {
     if (cbAccessibility != null) cbAccessibility.setChecked(accessibilityMode);
     if (cbExposure != null) cbExposure.setChecked(exposureEnabled);
     if (cbManualFocus != null) cbManualFocus.setChecked(manualFocusEnabled);
+    if (cbFocusQuality != null) {
+      // The setting is only offered while the build-time feature flag is enabled.
+      if (de.schliweb.makeacopy.utils.infra.FeatureFlags.isFocusQualityIndicatorEnabled()) {
+        cbFocusQuality.setChecked(focusQualityEnabled);
+      } else {
+        cbFocusQuality.setVisibility(View.GONE);
+      }
+    }
 
     // Wire up the Share Logs button placed under the options
     View shareBtn = view.findViewById(R.id.button_share_logs);
@@ -318,6 +329,7 @@ public class CameraOptionsDialogFragment extends DialogFragment {
           boolean accessibility = cbAccessibility != null && cbAccessibility.isChecked();
           boolean exposure = cbExposure != null && cbExposure.isChecked();
           boolean manualFocus = cbManualFocus != null && cbManualFocus.isChecked();
+          boolean focusQuality = cbFocusQuality != null && cbFocusQuality.isChecked();
           // No extra A11y options persisted
 
           // Persist and keep legacy/new flags in sync
@@ -331,6 +343,7 @@ public class CameraOptionsDialogFragment extends DialogFragment {
               .putBoolean(BUNDLE_ACCESSIBILITY_MODE, accessibility)
               .putBoolean(BUNDLE_EXPOSURE_COMPENSATION, exposure)
               .putBoolean(BUNDLE_MANUAL_FOCUS, manualFocus)
+              .putBoolean(BUNDLE_FOCUS_QUALITY_INDICATOR, focusQuality)
               .apply();
 
           Bundle result = new Bundle();
@@ -341,6 +354,7 @@ public class CameraOptionsDialogFragment extends DialogFragment {
           result.putBoolean(BUNDLE_ACCESSIBILITY_MODE, accessibility);
           result.putBoolean(BUNDLE_EXPOSURE_COMPENSATION, exposure);
           result.putBoolean(BUNDLE_MANUAL_FOCUS, manualFocus);
+          result.putBoolean(BUNDLE_FOCUS_QUALITY_INDICATOR, focusQuality);
           getParentFragmentManager().setFragmentResult(REQUEST_KEY, result);
         });
   }

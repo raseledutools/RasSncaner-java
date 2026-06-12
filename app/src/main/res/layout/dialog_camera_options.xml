@@ -50,6 +50,12 @@
         android:layout_height="wrap_content"
         android:text="@string/manual_focus_option" />
 
+    <CheckBox
+        android:id="@+id/dialog_checkbox_focus_quality"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/focus_quality_option" />
+
     <!-- Share logs button placed directly under the options (de-emphasized) -->
     <Button
         android:id="@+id/button_share_logs"
