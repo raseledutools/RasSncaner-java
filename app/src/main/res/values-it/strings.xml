@@ -17,6 +17,7 @@
     <string name="btn_crop">Ritaglia</string>
     <string name="btn_process">Elabora</string>
     <string name="btn_share">Condividi</string>
+    <string name="btn_share_text">Condividi testo</string>
     <string name="next">Avanti</string>
     <string name="back">Indietro</string>
 
@@ -77,6 +78,7 @@
     <!-- Export options -->
     <string name="convert_to_grayscale">Scala di grigi</string>
     <string name="export_as_jpeg">Esporta come JPEG</string>
+    <string name="export_format_label">Formato di esportazione</string>
     <string name="export_as_pdf">Esporta come PDF (predefinito)</string>
 
     <!-- Flashlight options -->
@@ -125,6 +127,7 @@
     <string name="pdf_bw_mode_color_clean">Colori puliti (passa-alto)</string>
     <string name="skip_ocr_export_only">Salta OCR (solo esportazione)</string>
     <string name="skip_cropping">Salta il ritaglio</string>
+    <string name="skip_edge_detection">Salta rilevamento bordi</string>
     <string name="preview_corner_detection">Anteprima del rilevamento degli angoli</string>
     <string name="btn_pick_image">Carica</string>
     <string name="pick_image_cd">Carica immagine esistente</string>
@@ -485,4 +488,6 @@
     <string name="document_cleanup_natural">Naturale</string>
     <string name="document_cleanup_enhanced">Migliorato</string>
     <string name="document_cleanup_clean_text">Testo pulito</string>
+    <string name="workflow_step_description">Passaggio %1$d di %2$d: %3$s</string>
+    <string name="search_scans">Cerca scansioni</string>
 </resources>

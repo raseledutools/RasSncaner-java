@@ -17,6 +17,7 @@
     <string name="btn_crop">Beskär</string>
     <string name="btn_process">Bearbeta</string>
     <string name="btn_share">Dela</string>
+    <string name="btn_share_text">Dela text</string>
     <string name="next">Nästa</string>
     <string name="back">Tillbaka</string>
 
@@ -73,6 +74,7 @@
     <!-- Export options -->
     <string name="convert_to_grayscale">Gråskala</string>
     <string name="export_as_jpeg">Exportera som JPEG</string>
+    <string name="export_format_label">Exportformat</string>
     <string name="export_as_pdf">Exportera som PDF (standard)</string>
 
     <!-- Flashlight options -->
@@ -121,6 +123,7 @@
     <string name="pdf_bw_mode_color_clean">Färg – rensad (högpassfilter)</string>
     <string name="skip_ocr_export_only">Hoppa över OCR (endast export)</string>
     <string name="skip_cropping">Hoppa över beskärning</string>
+    <string name="skip_edge_detection">Hoppa över kantdetektering</string>
     <string name="preview_corner_detection">Förhandsvisning av hörndetektering</string>
     <string name="btn_pick_image">Ladda</string>
     <string name="pick_image_cd">Ladda befintlig bild</string>
@@ -476,4 +479,6 @@
     <string name="document_cleanup_natural">Naturlig</string>
     <string name="document_cleanup_enhanced">Förbättrad</string>
     <string name="document_cleanup_clean_text">Ren text</string>
+    <string name="workflow_step_description">Steg %1$d av %2$d: %3$s</string>
+    <string name="search_scans">Sök skanningar</string>
 </resources>

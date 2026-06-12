@@ -17,6 +17,7 @@
     <string name="btn_crop">Zuschneiden</string>
     <string name="btn_process">Verarbeiten</string>
     <string name="btn_share">Teilen</string>
+    <string name="btn_share_text">Text teilen</string>
     <string name="next">Weiter</string>
     <string name="back">Zurück</string>
 
@@ -75,6 +76,7 @@
     <!-- Export options -->
     <string name="convert_to_grayscale">Graustufen</string>
     <string name="export_as_jpeg">Als JPEG exportieren</string>
+    <string name="export_format_label">Exportformat</string>
     <string name="export_as_pdf">Als PDF exportieren (Standard)</string>
 
     <!-- Flashlight options -->
@@ -124,6 +126,7 @@
 
     <string name="skip_ocr_export_only">OCR überspringen (nur Export)</string>
     <string name="skip_cropping">Zuschneiden überspringen</string>
+    <string name="skip_edge_detection">Kantenerkennung überspringen</string>
     <string name="preview_corner_detection">Vorschau Eckenerkennung</string>
     <string name="btn_pick_image">Laden</string>
     <string name="pick_image_cd">Vorhandenes Bild laden</string>
@@ -502,4 +505,6 @@
     <string name="document_cleanup_natural">Natürlich</string>
     <string name="document_cleanup_enhanced">Verbessert</string>
     <string name="document_cleanup_clean_text">Reiner Text</string>
+    <string name="workflow_step_description">Schritt %1$d von %2$d: %3$s</string>
+    <string name="search_scans">Scans durchsuchen</string>
 </resources>

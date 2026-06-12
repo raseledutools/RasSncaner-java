@@ -17,6 +17,7 @@
     <string name="btn_crop">اقتصاص</string>
     <string name="btn_process">معالجة</string>
     <string name="btn_share">مشاركة</string>
+    <string name="btn_share_text">مشاركة النص</string>
     <string name="next">التالي</string>
     <string name="back">رجوع</string>
 
@@ -71,6 +72,7 @@
     <!-- Export options -->
     <string name="convert_to_grayscale">تدرج الرمادي</string>
     <string name="export_as_jpeg">تصدير كـ JPEG</string>
+    <string name="export_format_label">تنسيق التصدير</string>
     <string name="export_as_pdf">تصدير كـ PDF (افتراضي)</string>
 
     <!-- Flashlight options -->
@@ -119,6 +121,7 @@
     <string name="skip_ocr_export_only">تخطي OCR (تصدير فقط)</string>
     <string name="preview_corner_detection">معاينة اكتشاف الزوايا</string>
     <string name="skip_cropping">تخطي الاقتصاص</string>
+    <string name="skip_edge_detection">تخطي اكتشاف الحواف</string>
     <string name="btn_pick_image">تحميل</string>
     <string name="pick_image_cd">تحميل صورة موجودة</string>
     <!-- Multipage Export (v1 increment) -->
@@ -468,4 +471,6 @@
     <string name="document_cleanup_natural">طبيعي</string>
     <string name="document_cleanup_enhanced">محسّن</string>
     <string name="document_cleanup_clean_text">نص نظيف</string>
+    <string name="workflow_step_description">الخطوة %1$d من %2$d: %3$s</string>
+    <string name="search_scans">البحث في المستندات الممسوحة</string>
 </resources>

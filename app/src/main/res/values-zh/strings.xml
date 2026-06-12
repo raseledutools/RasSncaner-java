@@ -16,6 +16,7 @@
     <string name="btn_crop">裁剪</string>
     <string name="btn_process">处理</string>
     <string name="btn_share">分享</string>
+    <string name="btn_share_text">分享文本</string>
     <string name="next">下一步</string>
     <string name="back">返回</string>
 
@@ -67,6 +68,7 @@
     <!-- Export options -->
     <string name="convert_to_grayscale">灰度</string>
     <string name="export_as_jpeg">导出为 JPEG</string>
+    <string name="export_format_label">导出格式</string>
     <string name="export_as_pdf">导出为 PDF（默认）</string>
 
     <!-- Flashlight options -->
@@ -115,6 +117,7 @@
     <string name="pdf_bw_mode_color_clean">彩色清理（高通滤波）</string>
     <string name="skip_ocr_export_only">跳过 OCR（仅导出）</string>
     <string name="skip_cropping">跳过裁剪</string>
+    <string name="skip_edge_detection">跳过边缘检测</string>
     <string name="preview_corner_detection">角点检测预览</string>
     <string name="btn_pick_image">加载</string>
     <string name="pick_image_cd">加载已有图像</string>
@@ -458,4 +461,6 @@
     <string name="document_cleanup_natural">自然</string>
     <string name="document_cleanup_enhanced">增强</string>
     <string name="document_cleanup_clean_text">纯文本</string>
+    <string name="workflow_step_description">第 %1$d 步，共 %2$d 步：%3$s</string>
+    <string name="search_scans">搜索扫描件</string>
 </resources>

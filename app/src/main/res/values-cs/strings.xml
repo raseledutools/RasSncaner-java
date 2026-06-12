@@ -18,6 +18,7 @@
     <string name="btn_crop">Oříznout</string>
     <string name="btn_process">Zpracovat</string>
     <string name="btn_share">Sdílet</string>
+    <string name="btn_share_text">Sdílet text</string>
     <string name="next">Další</string>
     <string name="back">Zpět</string>
 
@@ -75,6 +76,7 @@
     <!-- Export options -->
     <string name="convert_to_grayscale">Odstíny šedi</string>
     <string name="export_as_jpeg">Exportovat jako JPEG</string>
+    <string name="export_format_label">Formát exportu</string>
     <string name="export_as_pdf">Exportovat jako PDF (výchozí)</string>
 
     <!-- Flashlight options -->
@@ -122,6 +124,7 @@
     <string name="pdf_bw_mode_color_clean">Barvy – vyčištěné (high-pass)</string>
     <string name="skip_ocr_export_only">Přeskočit OCR (pouze export)</string>
     <string name="skip_cropping">Přeskočit oříznutí</string>
+    <string name="skip_edge_detection">Přeskočit detekci okrajů</string>
     <string name="preview_corner_detection">Náhled detekce rohů</string>
     <string name="btn_pick_image">Načíst</string>
     <string name="pick_image_cd">Načíst existující obrázek</string>
@@ -479,4 +482,6 @@
     <string name="document_cleanup_natural">Přirozené</string>
     <string name="document_cleanup_enhanced">Vylepšené</string>
     <string name="document_cleanup_clean_text">Čistý text</string>
+    <string name="workflow_step_description">Krok %1$d z %2$d: %3$s</string>
+    <string name="search_scans">Hledat skeny</string>
 </resources>

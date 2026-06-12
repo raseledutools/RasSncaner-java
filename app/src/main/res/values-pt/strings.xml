@@ -17,6 +17,7 @@
     <string name="btn_crop">Cortar</string>
     <string name="btn_process">Processar</string>
     <string name="btn_share">Compartilhar</string>
+    <string name="btn_share_text">Compartilhar texto</string>
     <string name="next">Avançar</string>
     <string name="back">Voltar</string>
 
@@ -76,6 +77,7 @@
     <!-- Export options -->
     <string name="convert_to_grayscale">Tons de cinza</string>
     <string name="export_as_jpeg">Exportar como JPEG</string>
+    <string name="export_format_label">Formato de exportação</string>
     <string name="export_as_pdf">Exportar como PDF (padrão)</string>
 
     <!-- Flashlight options -->
@@ -125,6 +127,7 @@
     <string name="pdf_bw_mode_color_clean">Cor limpa (passa-alta)</string>
     <string name="skip_ocr_export_only">Pular OCR (apenas exportar)</string>
     <string name="skip_cropping">Pular corte</string>
+    <string name="skip_edge_detection">Ignorar detecção de bordas</string>
     <string name="preview_corner_detection">Pré-visualização da deteção de cantos</string>
     <string name="btn_pick_image">Carregar</string>
     <string name="pick_image_cd">Carregar imagem existente</string>
@@ -482,4 +485,6 @@
     <string name="document_cleanup_natural">Natural</string>
     <string name="document_cleanup_enhanced">Melhorado</string>
     <string name="document_cleanup_clean_text">Texto limpo</string>
+    <string name="workflow_step_description">Etapa %1$d de %2$d: %3$s</string>
+    <string name="search_scans">Pesquisar digitalizações</string>
 </resources>

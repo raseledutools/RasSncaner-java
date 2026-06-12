@@ -18,6 +18,7 @@
     <string name="btn_crop">Recadrer</string>
     <string name="btn_process">Traiter</string>
     <string name="btn_share">Partager</string>
+    <string name="btn_share_text">Partager le texte</string>
     <string name="next">Suivant</string>
     <string name="back">Retour</string>
 
@@ -76,6 +77,7 @@
     <!-- Export options -->
     <string name="convert_to_grayscale">Niveaux de gris</string>
     <string name="export_as_jpeg">Exporter en JPEG</string>
+    <string name="export_format_label">Format d\'exportation</string>
     <string name="export_as_pdf">Exporter en PDF (par défaut)</string>
 
     <!-- Flashlight options -->
@@ -123,6 +125,7 @@
     <string name="pdf_bw_mode_color_clean">Couleurs nettoyées (passe-haut)</string>
     <string name="skip_ocr_export_only">Ignorer l’OCR (export seulement)</string>
     <string name="skip_cropping">Ignorer le recadrage</string>
+    <string name="skip_edge_detection">Ignorer la détection des bords</string>
     <string name="preview_corner_detection">Aperçu de la détection des coins</string>
     <string name="btn_pick_image">Charger</string>
     <string name="pick_image_cd">Charger une image existante</string>
@@ -482,4 +485,6 @@
     <string name="document_cleanup_natural">Naturel</string>
     <string name="document_cleanup_enhanced">Amélioré</string>
     <string name="document_cleanup_clean_text">Texte net</string>
+    <string name="workflow_step_description">Étape %1$d sur %2$d : %3$s</string>
+    <string name="search_scans">Rechercher des numérisations</string>
 </resources>

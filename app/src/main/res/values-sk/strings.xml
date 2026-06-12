@@ -17,6 +17,7 @@
     <string name="btn_crop">Orezať</string>
     <string name="btn_process">Spracovať</string>
     <string name="btn_share">Zdieľať</string>
+    <string name="btn_share_text">Zdieľať text</string>
     <string name="next">Ďalej</string>
     <string name="back">Späť</string>
 
@@ -77,6 +78,7 @@
     <!-- Export options -->
     <string name="convert_to_grayscale">Odtiene sivej</string>
     <string name="export_as_jpeg">Exportovať ako JPEG</string>
+    <string name="export_format_label">Formát exportu</string>
     <string name="export_as_pdf">Exportovať ako PDF (predvolené)</string>
 
     <!-- Flashlight options -->
@@ -125,6 +127,7 @@
     <string name="pdf_bw_mode_color_clean">Farba – vyčistená (hornopriepustný filter)</string>
     <string name="skip_ocr_export_only">Preskočiť OCR (iba export)</string>
     <string name="skip_cropping">Preskočiť orezanie</string>
+    <string name="skip_edge_detection">Preskočiť detekciu okrajov</string>
     <string name="preview_corner_detection">Náhľad detekcie rohov</string>
     <string name="btn_pick_image">Načítať</string>
     <string name="pick_image_cd">Načítať existujúci obrázok</string>
@@ -484,4 +487,6 @@
     <string name="document_cleanup_natural">Prirodzené</string>
     <string name="document_cleanup_enhanced">Vylepšené</string>
     <string name="document_cleanup_clean_text">Čistý text</string>
+    <string name="workflow_step_description">Krok %1$d z %2$d: %3$s</string>
+    <string name="search_scans">Hľadať skeny</string>
 </resources>

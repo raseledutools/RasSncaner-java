@@ -17,6 +17,7 @@
     <string name="btn_crop">Przytnij</string>
     <string name="btn_process">Przetwórz</string>
     <string name="btn_share">Udostępnij</string>
+    <string name="btn_share_text">Udostępnij tekst</string>
     <string name="next">Dalej</string>
     <string name="back">Wstecz</string>
 
@@ -74,6 +75,7 @@
     <!-- Opcje eksportu -->
     <string name="convert_to_grayscale">Skala szarości</string>
     <string name="export_as_jpeg">Eksportuj jako JPEG</string>
+    <string name="export_format_label">Format eksportu</string>
     <string name="export_as_pdf">Eksportuj jako PDF (domyślnie)</string>
 
     <!-- Latarka -->
@@ -122,6 +124,7 @@
     <string name="pdf_bw_mode_color_clean">Kolor – oczyszczony (górnoprzepustowy)</string>
     <string name="skip_ocr_export_only">Pomiń OCR (tylko eksport)</string>
     <string name="skip_cropping">Pomiń przycinanie</string>
+    <string name="skip_edge_detection">Pomiń wykrywanie krawędzi</string>
     <string name="preview_corner_detection">Podgląd wykrywania narożników</string>
     <string name="btn_pick_image">Wczytaj</string>
     <string name="pick_image_cd">Wczytaj istniejący obraz</string>
@@ -480,4 +483,6 @@
     <string name="document_cleanup_natural">Naturalny</string>
     <string name="document_cleanup_enhanced">Ulepszony</string>
     <string name="document_cleanup_clean_text">Czysty tekst</string>
+    <string name="workflow_step_description">Krok %1$d z %2$d: %3$s</string>
+    <string name="search_scans">Szukaj skanów</string>
 </resources>

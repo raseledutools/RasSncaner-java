@@ -17,6 +17,7 @@
     <string name="btn_crop">ครอบตัด</string>
     <string name="btn_process">ประมวลผล</string>
     <string name="btn_share">แชร์</string>
+    <string name="btn_share_text">แชร์ข้อความ</string>
     <string name="next">ถัดไป</string>
     <string name="back">ย้อนกลับ</string>
 
@@ -71,6 +72,7 @@
     <!-- Export options -->
     <string name="convert_to_grayscale">ระดับเทา</string>
     <string name="export_as_jpeg">ส่งออกเป็น JPEG</string>
+    <string name="export_format_label">รูปแบบการส่งออก</string>
     <string name="export_as_pdf">ส่งออกเป็น PDF (ค่าเริ่มต้น)</string>
 
     <!-- Flashlight options -->
@@ -119,6 +121,7 @@
     <string name="pdf_bw_mode_color_clean">สีแบบปรับให้สะอาด (ฟิลเตอร์ผ่านความถี่สูง)</string>
     <string name="skip_ocr_export_only">ข้าม OCR (ส่งออกเท่านั้น)</string>
     <string name="skip_cropping">ข้ามการครอบตัด</string>
+    <string name="skip_edge_detection">ข้ามการตรวจจับขอบ</string>
     <string name="preview_corner_detection">แสดงตัวอย่างการตรวจจับมุม</string>
     <string name="btn_pick_image">โหลด</string>
     <string name="pick_image_cd">โหลดรูปที่มีอยู่</string>
@@ -474,4 +477,6 @@
     <string name="document_cleanup_natural">เป็นธรรมชาติ</string>
     <string name="document_cleanup_enhanced">ปรับปรุง</string>
     <string name="document_cleanup_clean_text">ข้อความสะอาด</string>
+    <string name="workflow_step_description">ขั้นตอนที่ %1$d จาก %2$d: %3$s</string>
+    <string name="search_scans">ค้นหาเอกสารสแกน</string>
 </resources>

@@ -18,6 +18,7 @@
     <string name="btn_crop">Kırp</string>
     <string name="btn_process">İşle</string>
     <string name="btn_share">Paylaş</string>
+    <string name="btn_share_text">Metni paylaş</string>
     <string name="next">İleri</string>
     <string name="back">Geri</string>
 
@@ -74,6 +75,7 @@
     <!-- Export options -->
     <string name="convert_to_grayscale">Gri tonlamalı</string>
     <string name="export_as_jpeg">JPEG olarak dışa aktar</string>
+    <string name="export_format_label">Dışa aktarma biçimi</string>
     <string name="export_as_pdf">PDF olarak dışa aktar (varsayılan)</string>
 
     <!-- Flashlight options -->
@@ -121,6 +123,7 @@
     <string name="pdf_bw_mode_color_clean">Renk – temizlenmiş (yüksek geçiren filtre)</string>
     <string name="skip_ocr_export_only">OCR\'yi atla (yalnızca dışa aktar)</string>
     <string name="skip_cropping">Kırpmayı atla</string>
+    <string name="skip_edge_detection">Kenar algılamayı atla</string>
     <string name="preview_corner_detection">Köşe algılama önizlemesi</string>
     <string name="btn_pick_image">Yükle</string>
     <string name="pick_image_cd">Mevcut görüntüyü yükle</string>
@@ -477,4 +480,6 @@
     <string name="document_cleanup_natural">Doğal</string>
     <string name="document_cleanup_enhanced">Geliştirilmiş</string>
     <string name="document_cleanup_clean_text">Temiz metin</string>
+    <string name="workflow_step_description">Adım %1$d / %2$d: %3$s</string>
+    <string name="search_scans">Taramalarda ara</string>
 </resources>

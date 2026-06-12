@@ -17,6 +17,7 @@
     <string name="btn_crop">Beskær</string>
     <string name="btn_process">Behandl</string>
     <string name="btn_share">Del</string>
+    <string name="btn_share_text">Del tekst</string>
     <string name="next">Næste</string>
     <string name="back">Tilbage</string>
 
@@ -73,6 +74,7 @@
     <!-- Export options -->
     <string name="convert_to_grayscale">Gråtoner</string>
     <string name="export_as_jpeg">Eksporter som JPEG</string>
+    <string name="export_format_label">Eksportformat</string>
     <string name="export_as_pdf">Eksporter som PDF (standard)</string>
 
     <!-- Flashlight options -->
@@ -121,6 +123,7 @@
     <string name="pdf_bw_mode_color_clean">Farver – renset (high-pass)</string>
     <string name="skip_ocr_export_only">Spring OCR over (kun eksport)</string>
     <string name="skip_cropping">Spring beskæring over</string>
+    <string name="skip_edge_detection">Spring kantdetektering over</string>
     <string name="preview_corner_detection">Forhåndsvisning af hjørnedetektion</string>
     <string name="btn_pick_image">Indlæs</string>
     <string name="pick_image_cd">Indlæs eksisterende billede</string>
@@ -476,4 +479,6 @@
     <string name="document_cleanup_natural">Naturlig</string>
     <string name="document_cleanup_enhanced">Forbedret</string>
     <string name="document_cleanup_clean_text">Ren tekst</string>
+    <string name="workflow_step_description">Trin %1$d af %2$d: %3$s</string>
+    <string name="search_scans">Søg i scanninger</string>
 </resources>

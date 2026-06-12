@@ -17,6 +17,7 @@
     <string name="btn_crop">Обрезать</string>
     <string name="btn_process">Обработать</string>
     <string name="btn_share">Поделиться</string>
+    <string name="btn_share_text">Поделиться текстом</string>
     <string name="next">Далее</string>
     <string name="back">Назад</string>
 
@@ -75,6 +76,7 @@
     <!-- Export options -->
     <string name="convert_to_grayscale">Оттенки серого</string>
     <string name="export_as_jpeg">Экспорт как JPEG</string>
+    <string name="export_format_label">Формат экспорта</string>
     <string name="export_as_pdf">Экспорт как PDF (по умолчанию)</string>
 
     <!-- Flashlight options -->
@@ -124,6 +126,7 @@
     <string name="pdf_bw_mode_color_clean">Цвет — очищенный (высокочастотный фильтр)</string>
     <string name="skip_ocr_export_only">Пропустить OCR (только экспорт)</string>
     <string name="skip_cropping">Пропустить обрезку</string>
+    <string name="skip_edge_detection">Пропустить определение краёв</string>
     <string name="preview_corner_detection">Предпросмотр обнаружения углов</string>
     <string name="btn_pick_image">Загрузить</string>
     <string name="pick_image_cd">Загрузить существующее изображение</string>
@@ -480,4 +483,6 @@
     <string name="document_cleanup_natural">Естественный</string>
     <string name="document_cleanup_enhanced">Улучшенный</string>
     <string name="document_cleanup_clean_text">Чистый текст</string>
+    <string name="workflow_step_description">Шаг %1$d из %2$d: %3$s</string>
+    <string name="search_scans">Поиск сканов</string>
 </resources>

@@ -17,6 +17,7 @@
     <string name="btn_crop">Bijsnijden</string>
     <string name="btn_process">Verwerken</string>
     <string name="btn_share">Delen</string>
+    <string name="btn_share_text">Tekst delen</string>
     <string name="next">Verder</string>
     <string name="back">Terug</string>
 
@@ -75,6 +76,7 @@
     <!-- Export options -->
     <string name="convert_to_grayscale">Grijstinten</string>
     <string name="export_as_jpeg">Exporteren als JPEG</string>
+    <string name="export_format_label">Exportformaat</string>
     <string name="export_as_pdf">Exporteren als PDF (standaard)</string>
 
     <!-- Flashlight options -->
@@ -123,6 +125,7 @@
     <string name="pdf_bw_mode_color_clean">Kleur – opgeschoond (hoogdoorlaat)</string>
     <string name="skip_ocr_export_only">OCR overslaan (alleen exporteren)</string>
     <string name="skip_cropping">Bijsnijden overslaan</string>
+    <string name="skip_edge_detection">Randdetectie overslaan</string>
     <string name="preview_corner_detection">Voorbeeld van hoekdetectie</string>
     <string name="btn_pick_image">Laden</string>
     <string name="pick_image_cd">Bestaande afbeelding laden</string>
@@ -482,4 +485,6 @@
     <string name="document_cleanup_natural">Natuurlijk</string>
     <string name="document_cleanup_enhanced">Verbeterd</string>
     <string name="document_cleanup_clean_text">Schone tekst</string>
+    <string name="workflow_step_description">Stap %1$d van %2$d: %3$s</string>
+    <string name="search_scans">Scans zoeken</string>
 </resources>

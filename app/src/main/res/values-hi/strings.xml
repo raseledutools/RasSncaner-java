@@ -15,6 +15,7 @@
     <string name="btn_crop">क्रॉप</string>
     <string name="btn_process">प्रोसेस</string>
     <string name="btn_share">शेयर</string>
+    <string name="btn_share_text">टेक्स्ट साझा करें</string>
     <string name="next">अगला</string>
     <string name="back">पीछे</string>
 
@@ -66,6 +67,7 @@
     <!-- Export options -->
     <string name="convert_to_grayscale">ग्रेस्केल</string>
     <string name="export_as_jpeg">JPEG के रूप में निर्यात करें</string>
+    <string name="export_format_label">निर्यात प्रारूप</string>
     <string name="export_as_pdf">PDF के रूप में निर्यात करें (डिफ़ॉल्ट)</string>
 
     <!-- Flashlight options -->
@@ -114,6 +116,7 @@
     <string name="pdf_bw_mode_color_clean">रंग साफ़ (हाई-पास)</string>
     <string name="skip_ocr_export_only">OCR छोड़ें (केवल निर्यात)</string>
     <string name="skip_cropping">क्रॉपिंग छोड़ें</string>
+    <string name="skip_edge_detection">किनारा पहचान छोड़ें</string>
     <string name="preview_corner_detection">कोना पहचान पूर्वावलोकन</string>
     <string name="btn_pick_image">लोड</string>
     <string name="pick_image_cd">मौजूदा चित्र लोड करें</string>
@@ -455,4 +458,6 @@
     <string name="document_cleanup_natural">प्राकृतिक</string>
     <string name="document_cleanup_enhanced">उन्नत</string>
     <string name="document_cleanup_clean_text">स्वच्छ पाठ</string>
+    <string name="workflow_step_description">चरण %1$d / %2$d: %3$s</string>
+    <string name="search_scans">स्कैन खोजें</string>
 </resources>

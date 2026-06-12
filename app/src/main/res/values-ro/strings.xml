@@ -17,6 +17,7 @@
     <string name="btn_crop">Decupare</string>
     <string name="btn_process">Procesare</string>
     <string name="btn_share">Partajare</string>
+    <string name="btn_share_text">Partajează textul</string>
     <string name="next">Următor</string>
     <string name="back">Înapoi</string>
 
@@ -75,6 +76,7 @@
     <!-- Export options -->
     <string name="convert_to_grayscale">Tonuri de gri</string>
     <string name="export_as_jpeg">Exportă ca JPEG</string>
+    <string name="export_format_label">Format de export</string>
     <string name="export_as_pdf">Exportă ca PDF (implicit)</string>
 
     <!-- Flashlight options -->
@@ -123,6 +125,7 @@
     <string name="pdf_bw_mode_color_clean">Culoare – curățată (trece-sus)</string>
     <string name="skip_ocr_export_only">Omite OCR (doar export)</string>
     <string name="skip_cropping">Omite decuparea</string>
+    <string name="skip_edge_detection">Omite detectarea marginilor</string>
     <string name="preview_corner_detection">Previzualizare detecție colțuri</string>
     <string name="btn_pick_image">Încarcă</string>
     <string name="pick_image_cd">Încarcă o imagine existentă</string>
@@ -487,4 +490,6 @@
     <string name="document_cleanup_natural">Natural</string>
     <string name="document_cleanup_enhanced">Îmbunătățit</string>
     <string name="document_cleanup_clean_text">Text curat</string>
+    <string name="workflow_step_description">Pasul %1$d din %2$d: %3$s</string>
+    <string name="search_scans">Căutare scanări</string>
 </resources>

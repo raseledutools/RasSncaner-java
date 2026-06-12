@@ -17,6 +17,7 @@
     <string name="btn_crop">Kivágás</string>
     <string name="btn_process">Feldolgozás</string>
     <string name="btn_share">Megosztás</string>
+    <string name="btn_share_text">Szöveg megosztása</string>
     <string name="next">Tovább</string>
     <string name="back">Vissza</string>
 
@@ -74,6 +75,7 @@
     <!-- Export options -->
     <string name="convert_to_grayscale">Szürkeárnyalatos</string>
     <string name="export_as_jpeg">Exportálás JPEG-ként</string>
+    <string name="export_format_label">Exportálási formátum</string>
     <string name="export_as_pdf">Exportálás PDF-ként (alapértelmezett)</string>
 
     <!-- Flashlight options -->
@@ -122,6 +124,7 @@
     <string name="pdf_bw_mode_color_clean">Színes – tisztított (high-pass)</string>
     <string name="skip_ocr_export_only">OCR kihagyása (csak exportálás)</string>
     <string name="skip_cropping">Kivágás kihagyása</string>
+    <string name="skip_edge_detection">Szélfelismerés kihagyása</string>
     <string name="preview_corner_detection">Sarokérzékelés előnézete</string>
     <string name="btn_pick_image">Betöltés</string>
     <string name="pick_image_cd">Meglévő kép betöltése</string>
@@ -479,4 +482,6 @@
     <string name="document_cleanup_natural">Természetes</string>
     <string name="document_cleanup_enhanced">Javított</string>
     <string name="document_cleanup_clean_text">Tiszta szöveg</string>
+    <string name="workflow_step_description">%1$d. lépés a(z) %2$d közül: %3$s</string>
+    <string name="search_scans">Szkennelések keresése</string>
 </resources>
