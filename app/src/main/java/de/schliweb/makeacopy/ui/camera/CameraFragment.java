@@ -260,6 +260,14 @@ public class CameraFragment extends Fragment implements SensorEventListener {
   private volatile String lastActivePhysicalCameraId = null;
   private volatile float lastLensFocalLength = 0f;
 
+  // Explicit lens selection (issue #75): back lenses resolved once per camera provider, plus the
+  // currently bound dedicated lens (null = default back camera) and its zoom factor relative to
+  // the default back camera. Some devices (e.g. Pixel 6 Pro) never switch to the telephoto lens
+  // via CONTROL_ZOOM_RATIO on the logical camera, so 3x/5x presets bind the tele camera directly.
+  private java.util.List<CameraLensSelector.LensInfo> backLenses = null;
+  private String boundLensCameraId = null;
+  private float boundLensZoomFactor = 1.0f;
+
   /**
    * Converts a given surface rotation value to its corresponding degree representation.
    *
@@ -920,7 +928,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     // Analyzer
     setupOrUpdateImageAnalysis(rotation);
 
-    CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
+    CameraSelector cameraSelector = buildCameraSelectorForZoom();
 
     try {
       cameraProvider.unbindAll();
@@ -1082,8 +1090,18 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       UIUtils.showToast(requireContext(), R.string.camera_zoom_not_available, Toast.LENGTH_SHORT);
       return;
     }
-    float[] ratios =
-        CameraZoomOptions.buildPresetRatios(state.getMinZoomRatio(), state.getMaxZoomRatio());
+    // Presets are expressed relative to the default back camera. When a dedicated lens is bound,
+    // map its zoom range back into default-camera terms and fold in all lens factors so the user
+    // can always switch back to 1x or up to an exposed telephoto lens.
+    float effMin = state.getMinZoomRatio() * boundLensZoomFactor;
+    float effMax = state.getMaxZoomRatio() * boundLensZoomFactor;
+    if (backLenses != null) {
+      for (CameraLensSelector.LensInfo lens : backLenses) {
+        effMin = Math.min(effMin, lens.zoomFactor);
+        effMax = Math.max(effMax, lens.zoomFactor);
+      }
+    }
+    float[] ratios = CameraZoomOptions.buildPresetRatios(effMin, effMax);
     String[] labels = new String[ratios.length];
     for (int i = 0; i < ratios.length; i++) labels[i] = formatZoomRatio(ratios[i]);
     int checked = CameraZoomOptions.indexOfClosest(ratios, selectedZoomRatio);
@@ -1113,28 +1131,82 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     dialog.show();
   }
 
+  /**
+   * Resolves (and caches) the back lenses and returns the dedicated lens the current
+   * {@code selectedZoomRatio} should use, or {@code null} for the default back camera.
+   */
+  private CameraLensSelector.LensInfo desiredLensForZoom() {
+    if (backLenses == null && cameraProvider != null) {
+      backLenses = CameraLensSelector.resolveBackLenses(cameraProvider);
+      Log.w(TAG, "LensDiag: resolved back lenses=" + backLenses);
+    }
+    return CameraLensSelector.chooseLens(backLenses, selectedZoomRatio);
+  }
+
+  /**
+   * Builds the camera selector for the current zoom selection: the default back camera, or an
+   * explicit selector for a dedicated telephoto lens (issue #75). Also records the bound lens so
+   * {@link #applySelectedZoomRatio()} can split the requested ratio into lens + digital zoom.
+   */
+  private CameraSelector buildCameraSelectorForZoom() {
+    CameraLensSelector.LensInfo lens = desiredLensForZoom();
+    if (lens == null) {
+      boundLensCameraId = null;
+      boundLensZoomFactor = 1.0f;
+      return CameraSelector.DEFAULT_BACK_CAMERA;
+    }
+    boundLensCameraId = lens.cameraId;
+    boundLensZoomFactor = lens.zoomFactor;
+    Log.w(TAG, "LensDiag: binding dedicated lens " + lens + " for zoomRatio=" + selectedZoomRatio);
+    return CameraLensSelector.buildSelector(lens.cameraId);
+  }
+
   private void applySelectedZoomRatio() {
     if (camera == null) return;
     ZoomState state = camera.getCameraInfo().getZoomState().getValue();
     if (state == null) return;
+    // If the selected ratio maps to a different dedicated lens, rebind with the new selector
+    // (issue #75). bindWithTier() re-invokes this method once the lens is bound.
+    CameraLensSelector.LensInfo desired = desiredLensForZoom();
+    String desiredId = desired != null ? desired.cameraId : null;
+    if (!java.util.Objects.equals(desiredId, boundLensCameraId)
+        && cameraProvider != null
+        && lastTier != null) {
+      Log.w(
+          TAG,
+          "LensDiag: lens change required (bound="
+              + boundLensCameraId
+              + " -> desired="
+              + desiredId
+              + "), rebinding");
+      bindWithTier(lastTier);
+      return;
+    }
+    // Apply the remaining zoom digitally within the bound lens.
+    float withinLens = selectedZoomRatio / boundLensZoomFactor;
     float normalized =
-        CameraZoomOptions.normalize(
-            selectedZoomRatio, state.getMinZoomRatio(), state.getMaxZoomRatio());
-    selectedZoomRatio = normalized;
-    Log.i(
+        CameraZoomOptions.normalize(withinLens, state.getMinZoomRatio(), state.getMaxZoomRatio());
+    selectedZoomRatio = normalized * boundLensZoomFactor;
+    Log.w(
         TAG,
         "LensDiag: applying zoomRatio="
             + normalized
-            + " (range="
+            + " on lens id="
+            + boundLensCameraId
+            + " (factor="
+            + boundLensZoomFactor
+            + ", range="
             + state.getMinZoomRatio()
             + ".."
             + state.getMaxZoomRatio()
-            + "), activePhysicalId="
+            + "), effectiveRatio="
+            + selectedZoomRatio
+            + ", activePhysicalId="
             + lastActivePhysicalCameraId
             + ", focalLength="
             + lastLensFocalLength);
     camera.getCameraControl().setZoomRatio(normalized);
-    updateZoomButtonLabel(normalized);
+    updateZoomButtonLabel(selectedZoomRatio);
     // On multi-camera devices a zoom change may switch the active physical camera; re-apply
     // the manual focus distance so it does not silently become stale.
     if (manualFocusSupported && currentManualFocusProgress() > 0) {
@@ -2468,7 +2540,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       boolean flChanged =
           focalLength != null && Math.abs(focalLength - lastLensFocalLength) > 0.01f;
       if (idChanged || flChanged) {
-        Log.i(
+        Log.w(
             TAG,
             "LensDiag: active lens changed: physicalId="
                 + activeId
@@ -2505,7 +2577,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             androidx.camera.camera2.interop.Camera2CameraInfo.from(camera.getCameraInfo())
                 .getCameraId();
         ZoomState zs = camera.getCameraInfo().getZoomState().getValue();
-        Log.i(
+        Log.w(
             TAG,
             "LensDiag: bound cameraId="
                 + boundId
@@ -2517,7 +2589,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       android.hardware.camera2.CameraManager cm =
           (android.hardware.camera2.CameraManager) ctx.getSystemService(Context.CAMERA_SERVICE);
       if (cm == null) {
-        Log.i(TAG, "LensDiag: CameraManager unavailable");
+        Log.w(TAG, "LensDiag: CameraManager unavailable");
         return;
       }
       for (String id : cm.getCameraIdList()) {
@@ -2571,7 +2643,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                 android.util.SizeF pSensor =
                     pcc.get(
                         android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE);
-                Log.i(
+                Log.w(
                     TAG,
                     "LensDiag:   physical id="
                         + pid
@@ -2580,12 +2652,12 @@ public class CameraFragment extends Fragment implements SensorEventListener {
                         + ", sensorSize="
                         + pSensor);
               } catch (Throwable t) {
-                Log.i(TAG, "LensDiag:   physical id=" + pid + " (characteristics unavailable)");
+                Log.w(TAG, "LensDiag:   physical id=" + pid + " (characteristics unavailable)");
               }
             }
           }
         }
-        Log.i(
+        Log.w(
             TAG,
             "LensDiag: back cameraId="
                 + id
