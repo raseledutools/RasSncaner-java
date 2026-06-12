@@ -38,6 +38,9 @@ public final class HapticsUtils {
    * Triggers a single haptic vibration of the specified duration on devices running Android O (API
    * 26) and above. On Android S (API 31) and later, the vibration is handled using VibratorManager.
    *
+   * <p>Respects the system "haptic feedback" preference: if the user disabled haptic feedback in
+   * the system sound/vibration settings, no vibration is emitted.
+   *
    * @param ctx the context used to retrieve the Vibrator service. If null, the method does nothing.
    * @param durationMs the duration of the vibration in milliseconds. Values less than 1 millisecond
    *     will be treated as 1 millisecond.
@@ -55,6 +58,9 @@ public final class HapticsUtils {
           Log.w("HapticsUtils", "TestListener.onVibrate failed", e);
         }
       }
+
+      // Respect the user's system-wide haptic feedback preference
+      if (!isHapticFeedbackEnabled(ctx)) return;
 
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         android.os.VibratorManager vm =
@@ -76,6 +82,21 @@ public final class HapticsUtils {
       vib.vibrate(effect);
     } catch (Exception e) {
       Log.w("HapticsUtils", "Vibration failed", e);
+    }
+  }
+
+  /**
+   * Returns whether the user's system-wide "haptic feedback" setting is enabled. Defaults to
+   * enabled if the setting cannot be read.
+   */
+  private static boolean isHapticFeedbackEnabled(Context ctx) {
+    try {
+      return android.provider.Settings.System.getInt(
+              ctx.getContentResolver(), android.provider.Settings.System.HAPTIC_FEEDBACK_ENABLED, 1)
+          != 0;
+    } catch (Exception e) {
+      Log.w("HapticsUtils", "Reading HAPTIC_FEEDBACK_ENABLED failed", e);
+      return true;
     }
   }
 }
