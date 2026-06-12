@@ -85,8 +85,11 @@
     <string name="manual_focus_auto">AF</string>
     <string name="manual_focus_label">MF %1$d%%</string>
     <string name="manual_focus_cd">Ρυθμιστικό χειροκίνητης εστίασης</string>
+    <string name="manual_focus_af_button_cd">Εναλλαγή σε αυτόματη εστίαση</string>
+    <string name="autofocus_enabled">Η αυτόματη εστίαση ενεργοποιήθηκε</string>
     <string name="manual_focus_locked">Η χειροκίνητη εστίαση κλειδώθηκε</string>
     <string name="manual_focus_option">Χειροκίνητη εστίαση</string>
+    <string name="focus_quality_option">Ένδειξη ποιότητας εστίασης</string>
     <string name="tap_to_focus_started">Εστίαση…</string>
     <string name="tap_to_focus_done">Η εστίαση προσαρμόστηκε</string>
     <string name="tap_to_focus_requested">Ζητήθηκε εστίαση</string>

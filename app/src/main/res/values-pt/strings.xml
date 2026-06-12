@@ -94,8 +94,11 @@
     <string name="manual_focus_auto">AF</string>
     <string name="manual_focus_label">MF %1$d%%</string>
     <string name="manual_focus_cd">Controle deslizante de foco manual</string>
+    <string name="manual_focus_af_button_cd">Mudar para foco automático</string>
+    <string name="autofocus_enabled">Foco automático ativado</string>
     <string name="manual_focus_locked">Foco manual bloqueado</string>
     <string name="manual_focus_option">Foco manual</string>
+    <string name="focus_quality_option">Indicador de qualidade do foco</string>
     <string name="tap_to_focus_started">Focando…</string>
     <string name="tap_to_focus_done">Foco ajustado</string>
     <string name="tap_to_focus_requested">Foco solicitado</string>

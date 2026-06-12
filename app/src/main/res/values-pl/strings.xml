@@ -92,8 +92,11 @@
     <string name="manual_focus_auto">AF</string>
     <string name="manual_focus_label">MF %1$d%%</string>
     <string name="manual_focus_cd">Suwak ręcznego ustawiania ostrości</string>
+    <string name="manual_focus_af_button_cd">Przełącz na autofokus</string>
+    <string name="autofocus_enabled">Autofokus włączony</string>
     <string name="manual_focus_locked">Ręczna ostrość zablokowana</string>
     <string name="manual_focus_option">Ręczne ustawianie ostrości</string>
+    <string name="focus_quality_option">Wskaźnik jakości ostrości</string>
     <string name="tap_to_focus_started">Ustawianie ostrości…</string>
     <string name="tap_to_focus_done">Ostrość dostosowana</string>
     <string name="tap_to_focus_requested">Zażądano ustawienia ostrości</string>

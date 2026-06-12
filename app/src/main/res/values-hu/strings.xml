@@ -92,8 +92,11 @@
     <string name="manual_focus_auto">AF</string>
     <string name="manual_focus_label">MF %1$d%%</string>
     <string name="manual_focus_cd">Kézi fókusz csúszka</string>
+    <string name="manual_focus_af_button_cd">Váltás autofókuszra</string>
+    <string name="autofocus_enabled">Autofókusz bekapcsolva</string>
     <string name="manual_focus_locked">Kézi fókusz rögzítve</string>
     <string name="manual_focus_option">Kézi fókusz</string>
+    <string name="focus_quality_option">Fókuszminőség-jelző</string>
     <string name="tap_to_focus_started">Fókuszálás…</string>
     <string name="tap_to_focus_done">Fókusz beállítva</string>
     <string name="tap_to_focus_requested">Fókusz kérése elküldve</string>

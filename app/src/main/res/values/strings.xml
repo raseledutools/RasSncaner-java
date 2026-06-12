@@ -100,8 +100,11 @@
     <string name="manual_focus_auto">AF</string>
     <string name="manual_focus_label">MF %1$d%%</string>
     <string name="manual_focus_cd">Manual focus slider</string>
+    <string name="manual_focus_af_button_cd">Switch to autofocus</string>
+    <string name="autofocus_enabled">Autofocus enabled</string>
     <string name="manual_focus_locked">Manual focus locked</string>
     <string name="manual_focus_option">Manual focus</string>
+    <string name="focus_quality_option">Focus quality indicator</string>
     <string name="tap_to_focus_started">Focusing…</string>
     <string name="tap_to_focus_done">Focus adjusted</string>
     <string name="tap_to_focus_requested">Focus requested</string>

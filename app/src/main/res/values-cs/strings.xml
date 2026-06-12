@@ -93,8 +93,11 @@
     <string name="manual_focus_auto">AF</string>
     <string name="manual_focus_label">MF %1$d%%</string>
     <string name="manual_focus_cd">Posuvník ručního ostření</string>
+    <string name="manual_focus_af_button_cd">Přepnout na automatické ostření</string>
+    <string name="autofocus_enabled">Automatické ostření zapnuto</string>
     <string name="manual_focus_locked">Ruční ostření uzamčeno</string>
     <string name="manual_focus_option">Ruční ostření</string>
+    <string name="focus_quality_option">Indikátor kvality ostření</string>
     <string name="tap_to_focus_started">Zaostřování…</string>
     <string name="tap_to_focus_done">Ostření upraveno</string>
     <string name="tap_to_focus_requested">Ostření vyžádáno</string>

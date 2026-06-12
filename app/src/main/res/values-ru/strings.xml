@@ -93,8 +93,11 @@
     <string name="manual_focus_auto">AF</string>
     <string name="manual_focus_label">MF %1$d%%</string>
     <string name="manual_focus_cd">Ползунок ручной фокусировки</string>
+    <string name="manual_focus_af_button_cd">Переключиться на автофокус</string>
+    <string name="autofocus_enabled">Автофокус включён</string>
     <string name="manual_focus_locked">Ручная фокусировка зафиксирована</string>
     <string name="manual_focus_option">Ручная фокусировка</string>
+    <string name="focus_quality_option">Индикатор качества фокусировки</string>
     <string name="tap_to_focus_started">Фокусировка…</string>
     <string name="tap_to_focus_done">Фокус настроен</string>
     <string name="tap_to_focus_requested">Фокусировка запрошена</string>

@@ -94,8 +94,11 @@
     <string name="manual_focus_auto">AF</string>
     <string name="manual_focus_label">MF %1$d%%</string>
     <string name="manual_focus_cd">Curseur de mise au point manuelle</string>
+    <string name="manual_focus_af_button_cd">Passer à la mise au point automatique</string>
+    <string name="autofocus_enabled">Mise au point automatique activée</string>
     <string name="manual_focus_locked">Mise au point manuelle verrouillée</string>
     <string name="manual_focus_option">Mise au point manuelle</string>
+    <string name="focus_quality_option">Indicateur de qualité de mise au point</string>
     <string name="tap_to_focus_started">Mise au point…</string>
     <string name="tap_to_focus_done">Mise au point ajustée</string>
     <string name="tap_to_focus_requested">Mise au point demandée</string>

@@ -95,8 +95,11 @@
     <string name="manual_focus_auto">AF</string>
     <string name="manual_focus_label">MF %1$d%%</string>
     <string name="manual_focus_cd">Cursore della messa a fuoco manuale</string>
+    <string name="manual_focus_af_button_cd">Passa alla messa a fuoco automatica</string>
+    <string name="autofocus_enabled">Messa a fuoco automatica attivata</string>
     <string name="manual_focus_locked">Messa a fuoco manuale bloccata</string>
     <string name="manual_focus_option">Messa a fuoco manuale</string>
+    <string name="focus_quality_option">Indicatore di qualità della messa a fuoco</string>
     <string name="tap_to_focus_started">Messa a fuoco…</string>
     <string name="tap_to_focus_done">Messa a fuoco regolata</string>
     <string name="tap_to_focus_requested">Messa a fuoco richiesta</string>

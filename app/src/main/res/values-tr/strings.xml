@@ -92,8 +92,11 @@
     <string name="manual_focus_auto">AF</string>
     <string name="manual_focus_label">MF %1$d%%</string>
     <string name="manual_focus_cd">Manuel odak kaydırıcısı</string>
+    <string name="manual_focus_af_button_cd">Otomatik odaklamaya geç</string>
+    <string name="autofocus_enabled">Otomatik odaklama etkinleştirildi</string>
     <string name="manual_focus_locked">Manuel odak kilitlendi</string>
     <string name="manual_focus_option">Manuel odak</string>
+    <string name="focus_quality_option">Odak kalitesi göstergesi</string>
     <string name="tap_to_focus_started">Odaklanıyor…</string>
     <string name="tap_to_focus_done">Odak ayarlandı</string>
     <string name="tap_to_focus_requested">Odak istendi</string>

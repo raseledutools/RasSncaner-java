@@ -95,8 +95,11 @@
     <string name="manual_focus_auto">AF</string>
     <string name="manual_focus_label">MF %1$d%%</string>
     <string name="manual_focus_cd">Posuvník manuálneho zaostrenia</string>
+    <string name="manual_focus_af_button_cd">Prepnúť na automatické zaostrovanie</string>
+    <string name="autofocus_enabled">Automatické zaostrovanie zapnuté</string>
     <string name="manual_focus_locked">Manuálne zaostrenie uzamknuté</string>
     <string name="manual_focus_option">Manuálne zaostrenie</string>
+    <string name="focus_quality_option">Indikátor kvality zaostrenia</string>
     <string name="tap_to_focus_started">Zaostrovanie…</string>
     <string name="tap_to_focus_done">Zaostrenie upravené</string>
     <string name="tap_to_focus_requested">Zaostrenie vyžiadané</string>

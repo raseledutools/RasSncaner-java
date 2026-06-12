@@ -84,8 +84,11 @@
     <string name="manual_focus_auto">AF</string>
     <string name="manual_focus_label">MF %1$d%%</string>
     <string name="manual_focus_cd">मैन्युअल फ़ोकस स्लाइडर</string>
+    <string name="manual_focus_af_button_cd">ऑटोफ़ोकस पर स्विच करें</string>
+    <string name="autofocus_enabled">ऑटोफ़ोकस सक्षम किया गया</string>
     <string name="manual_focus_locked">मैन्युअल फ़ोकस लॉक किया गया</string>
     <string name="manual_focus_option">मैन्युअल फ़ोकस</string>
+    <string name="focus_quality_option">फ़ोकस गुणवत्ता संकेतक</string>
     <string name="tap_to_focus_started">फ़ोकस कर रहा है…</string>
     <string name="tap_to_focus_done">फ़ोकस समायोजित किया गया</string>
     <string name="tap_to_focus_requested">फ़ोकस का अनुरोध किया गया</string>

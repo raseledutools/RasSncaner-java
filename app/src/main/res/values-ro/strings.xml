@@ -93,8 +93,11 @@
     <string name="manual_focus_auto">AF</string>
     <string name="manual_focus_label">MF %1$d%%</string>
     <string name="manual_focus_cd">Glisor pentru focalizare manuală</string>
+    <string name="manual_focus_af_button_cd">Comutare la focalizare automată</string>
+    <string name="autofocus_enabled">Focalizare automată activată</string>
     <string name="manual_focus_locked">Focalizare manuală blocată</string>
     <string name="manual_focus_option">Focalizare manuală</string>
+    <string name="focus_quality_option">Indicator de calitate a focalizării</string>
     <string name="tap_to_focus_started">Se focalizează…</string>
     <string name="tap_to_focus_done">Focalizare ajustată</string>
     <string name="tap_to_focus_requested">Focalizare solicitată</string>

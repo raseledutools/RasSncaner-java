@@ -91,8 +91,11 @@
     <string name="manual_focus_auto">AF</string>
     <string name="manual_focus_label">MF %1$d%%</string>
     <string name="manual_focus_cd">Glidebryter for manuell fokus</string>
+    <string name="manual_focus_af_button_cd">Bytt til autofokus</string>
+    <string name="autofocus_enabled">Autofokus aktivert</string>
     <string name="manual_focus_locked">Manuell fokus låst</string>
     <string name="manual_focus_option">Manuell fokus</string>
+    <string name="focus_quality_option">Indikator for fokuskvalitet</string>
     <string name="tap_to_focus_started">Fokuserer…</string>
     <string name="tap_to_focus_done">Fokus justert</string>
     <string name="tap_to_focus_requested">Fokus forespurt</string>

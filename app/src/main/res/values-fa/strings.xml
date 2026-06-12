@@ -92,8 +92,11 @@
     <string name="manual_focus_auto">AF</string>
     <string name="manual_focus_label">MF %1$d%%</string>
     <string name="manual_focus_cd">لغزندهٔ فوکوس دستی</string>
+    <string name="manual_focus_af_button_cd">تغییر به فوکوس خودکار</string>
+    <string name="autofocus_enabled">فوکوس خودکار فعال شد</string>
     <string name="manual_focus_locked">فوکوس دستی قفل شد</string>
     <string name="manual_focus_option">فوکوس دستی</string>
+    <string name="focus_quality_option">نشانگر کیفیت فوکوس</string>
     <string name="tap_to_focus_started">در حال فوکوس…</string>
     <string name="tap_to_focus_done">فوکوس تنظیم شد</string>
     <string name="tap_to_focus_requested">درخواست فوکوس ثبت شد</string>

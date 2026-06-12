@@ -85,8 +85,11 @@
     <string name="manual_focus_auto">AF</string>
     <string name="manual_focus_label">MF %1$d%%</string>
     <string name="manual_focus_cd">手动对焦滑块</string>
+    <string name="manual_focus_af_button_cd">切换到自动对焦</string>
+    <string name="autofocus_enabled">已启用自动对焦</string>
     <string name="manual_focus_locked">手动对焦已锁定</string>
     <string name="manual_focus_option">手动对焦</string>
+    <string name="focus_quality_option">对焦质量指示器</string>
     <string name="tap_to_focus_started">正在对焦…</string>
     <string name="tap_to_focus_done">对焦已调整</string>
     <string name="tap_to_focus_requested">已请求对焦</string>

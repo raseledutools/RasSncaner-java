@@ -91,8 +91,11 @@
     <string name="manual_focus_auto">AF</string>
     <string name="manual_focus_label">MF %1$d%%</string>
     <string name="manual_focus_cd">Reglage för manuell fokus</string>
+    <string name="manual_focus_af_button_cd">Växla till autofokus</string>
+    <string name="autofocus_enabled">Autofokus aktiverat</string>
     <string name="manual_focus_locked">Manuell fokus låst</string>
     <string name="manual_focus_option">Manuell fokus</string>
+    <string name="focus_quality_option">Indikator för fokuskvalitet</string>
     <string name="tap_to_focus_started">Fokuserar…</string>
     <string name="tap_to_focus_done">Fokus justerad</string>
     <string name="tap_to_focus_requested">Fokus begärd</string>

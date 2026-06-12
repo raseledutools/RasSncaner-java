@@ -93,8 +93,11 @@
     <string name="manual_focus_auto">AF</string>
     <string name="manual_focus_label">MF %1$d%%</string>
     <string name="manual_focus_cd">Schuifregelaar voor handmatige focus</string>
+    <string name="manual_focus_af_button_cd">Overschakelen naar autofocus</string>
+    <string name="autofocus_enabled">Autofocus ingeschakeld</string>
     <string name="manual_focus_locked">Handmatige focus vergrendeld</string>
     <string name="manual_focus_option">Handmatige focus</string>
+    <string name="focus_quality_option">Indicator voor scherpstelkwaliteit</string>
     <string name="tap_to_focus_started">Scherpstellen…</string>
     <string name="tap_to_focus_done">Focus aangepast</string>
     <string name="tap_to_focus_requested">Focus aangevraagd</string>
