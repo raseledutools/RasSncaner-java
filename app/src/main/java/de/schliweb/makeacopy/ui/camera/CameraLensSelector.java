@@ -59,9 +59,9 @@ final class CameraLensSelector {
   }
 
   /**
-   * Enumerates all back cameras bindable via CameraX and computes their zoom factor relative to
-   * the default back camera (the first back camera in the provider's list, which is the camera
-   * {@link CameraSelector#DEFAULT_BACK_CAMERA} binds).
+   * Enumerates all back cameras bindable via CameraX and computes their zoom factor relative to the
+   * default back camera (the first back camera in the provider's list, which is the camera {@link
+   * CameraSelector#DEFAULT_BACK_CAMERA} binds).
    */
   @OptIn(markerClass = ExperimentalCamera2Interop.class)
   static List<LensInfo> resolveBackLenses(@NonNull ProcessCameraProvider provider) {
@@ -112,8 +112,8 @@ final class CameraLensSelector {
 
   /**
    * Builds a selector that binds exactly the given back camera id. If the id cannot be matched
-   * during filtering, the filter falls back to all candidates so binding never fails because of
-   * the lens selection.
+   * during filtering, the filter falls back to all candidates so binding never fails because of the
+   * lens selection.
    */
   @OptIn(markerClass = ExperimentalCamera2Interop.class)
   static CameraSelector buildSelector(@NonNull String cameraId) {

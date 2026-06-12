@@ -1132,8 +1132,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
   }
 
   /**
-   * Resolves (and caches) the back lenses and returns the dedicated lens the current
-   * {@code selectedZoomRatio} should use, or {@code null} for the default back camera.
+   * Resolves (and caches) the back lenses and returns the dedicated lens the current {@code
+   * selectedZoomRatio} should use, or {@code null} for the default back camera.
    */
   private CameraLensSelector.LensInfo desiredLensForZoom() {
     if (backLenses == null && cameraProvider != null) {
@@ -1505,8 +1505,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
   }
 
   /**
-   * Returns the effective manual focus progress: the slider value while manual focus is active,
-   * or {@code 0} when autofocus is selected (AF button checked).
+   * Returns the effective manual focus progress: the slider value while manual focus is active, or
+   * {@code 0} when autofocus is selected (AF button checked).
    */
   private int currentManualFocusProgress() {
     if (!manualFocusActive || binding == null) return 0;
