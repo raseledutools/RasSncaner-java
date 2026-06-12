@@ -23,11 +23,14 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "25"
+          java-version: "21"
 
       - name: Install ORT
         run: |
-          ORT_URL=$(curl -s https://api.github.com/repos/oss-review-toolkit/ort/releases/latest \
+          # Pinned to 88.0.0, as newer releases are built with JDK 25 which is
+          # incompatible with the Gradle/Groovy version used by this project.
+          ORT_VERSION=88.0.0
+          ORT_URL=$(curl -s "https://api.github.com/repos/oss-review-toolkit/ort/releases/tags/${ORT_VERSION}" \
             | jq -r '.assets[] | select(.name | test("^ort-.*\\.tgz$")) | .browser_download_url')
           curl -L -o ort.tgz "$ORT_URL"
           tar -xzf ort.tgz
