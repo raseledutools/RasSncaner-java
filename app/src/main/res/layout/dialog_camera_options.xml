@@ -21,6 +21,12 @@
         android:text="@string/skip_cropping" />
 
     <CheckBox
+        android:id="@+id/dialog_checkbox_skip_edge_detection"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/skip_edge_detection" />
+
+    <CheckBox
         android:id="@+id/dialog_checkbox_analysis_enabled"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

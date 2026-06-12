@@ -29,6 +29,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.databinding.FragmentCropBinding;
 import de.schliweb.makeacopy.ui.camera.CameraViewModel;
@@ -39,6 +40,8 @@ import de.schliweb.makeacopy.utils.image.OpenCVUtils;
 import de.schliweb.makeacopy.utils.infra.FeatureFlags;
 import de.schliweb.makeacopy.utils.ui.A11yUtils;
 import de.schliweb.makeacopy.utils.ui.DialogUtils;
+import de.schliweb.makeacopy.utils.ui.HapticsUtils;
+import de.schliweb.makeacopy.utils.ui.TransitionUtils;
 import de.schliweb.makeacopy.utils.ui.UIUtils;
 
 /**
@@ -49,6 +52,13 @@ import de.schliweb.makeacopy.utils.ui.UIUtils;
  */
 @dagger.hilt.android.AndroidEntryPoint
 public class CropFragment extends Fragment {
+
+  @Override
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    // Forward-only shared-axis: the camera screen (SurfaceView preview) must not be animated.
+    TransitionUtils.applySharedAxisXForwardOnly(this);
+  }
 
   @javax.inject.Inject de.schliweb.makeacopy.ml.docquad.DocQuadOrtRunner docQuadOrtRunner;
   private static final String TAG = "CropFragment";
@@ -286,7 +296,9 @@ public class CropFragment extends Fragment {
           } catch (Throwable ignored) {
             // Best-effort; failure is non-critical
           }
-          // Navigate back to Camera
+          // Navigate back to Camera: disable the shared-axis exit transition for this hop,
+          // the camera's SurfaceView preview must not be animated by view transitions.
+          setExitTransition(null);
           NavOptions navOptions =
               new NavOptions.Builder().setPopUpTo(R.id.navigation_camera, true).build();
           Navigation.findNavController(requireView())
@@ -294,7 +306,12 @@ public class CropFragment extends Fragment {
         });
 
     // Crop-Button
-    binding.buttonCrop.setOnClickListener(v -> performCrop());
+    binding.buttonCrop.setOnClickListener(
+        v -> {
+          // Confirm the crop action with a short haptic tick
+          HapticsUtils.vibrateOneShot(getContext(), 20L);
+          performCrop();
+        });
 
     // Rotation buttons (now available pre-crop)
     binding.buttonRotateLeft.setOnClickListener(v -> cropViewModel.rotateLeft());
@@ -1148,9 +1165,15 @@ public class CropFragment extends Fragment {
     binding.cropSnapToggleButton.setSelected(active);
     int tint;
     if (active) {
+      // Dynamic-color aware: use the theme's primary color token instead of a static color.
+      android.util.TypedValue tvActive = new android.util.TypedValue();
+      requireContext()
+          .getTheme()
+          .resolveAttribute(androidx.appcompat.R.attr.colorPrimary, tvActive, true);
       tint =
-          androidx.core.content.ContextCompat.getColor(
-              requireContext(), R.color.crop_toggle_active);
+          tvActive.resourceId != 0
+              ? androidx.core.content.ContextCompat.getColor(requireContext(), tvActive.resourceId)
+              : tvActive.data;
     } else {
       android.util.TypedValue tv = new android.util.TypedValue();
       requireContext().getTheme().resolveAttribute(android.R.attr.colorControlNormal, tv, true);
@@ -1169,7 +1192,7 @@ public class CropFragment extends Fragment {
     final int checked = indexOfAspect(prev);
     final int[] selectedIdx = new int[] {checked};
     AlertDialog dialog =
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.crop_aspect_label)
             .setSingleChoiceItems(labels, checked, (d, which) -> selectedIdx[0] = which)
             .setNegativeButton(android.R.string.cancel, null)
@@ -1267,7 +1290,7 @@ public class CropFragment extends Fragment {
     }
 
     AlertDialog dialog =
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.crop_aspect_custom_dialog_title)
             .setView(view)
             .setNegativeButton(android.R.string.cancel, null)

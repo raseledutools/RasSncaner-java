@@ -23,6 +23,17 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
 
+    <!-- Workflow stepper: Camera → Crop → OCR → Export (step 1) -->
+    <de.schliweb.makeacopy.ui.views.WorkflowStepperView
+            android:id="@+id/workflow_stepper"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            app:currentStep="1"
+            app:layout_constraintTop_toBottomOf="@id/text_camera"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
     <!-- Barrier for buttons -->
     <androidx.constraintlayout.widget.Barrier
             android:id="@+id/buttons_top_barrier"
@@ -43,7 +54,7 @@
             android:focusable="false"
             android:clickable="false"
             android:importantForAccessibility="no"
-            app:layout_constraintTop_toBottomOf="@id/text_camera"
+            app:layout_constraintTop_toBottomOf="@id/workflow_stepper"
             app:layout_constraintBottom_toTopOf="@id/focus_control"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
@@ -56,7 +67,7 @@
             android:layout_margin="16dp"
             android:clickable="false"
             android:focusable="false"
-            app:layout_constraintTop_toBottomOf="@id/text_camera"
+            app:layout_constraintTop_toBottomOf="@id/workflow_stepper"
             app:layout_constraintBottom_toTopOf="@id/focus_control"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -70,7 +81,7 @@
             android:clickable="false"
             android:focusable="false"
             android:importantForAccessibility="no"
-            app:layout_constraintTop_toBottomOf="@id/text_camera"
+            app:layout_constraintTop_toBottomOf="@id/workflow_stepper"
             app:layout_constraintBottom_toTopOf="@id/focus_control"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -84,7 +95,7 @@
             android:scaleType="fitCenter"
             android:contentDescription="@string/captured_image"
             android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@id/text_camera"
+            app:layout_constraintTop_toBottomOf="@id/workflow_stepper"
             app:layout_constraintBottom_toTopOf="@id/focus_control"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
@@ -112,11 +123,15 @@
                 android:minWidth="56dp"
                 android:gravity="center"/>
 
-        <SeekBar
+        <com.google.android.material.slider.Slider
                 android:id="@+id/focus_slider"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:valueFrom="0"
+                android:valueTo="10"
+                android:stepSize="1"
+                app:labelBehavior="floating"
                 android:contentDescription="@string/manual_focus_cd"/>
 
     </LinearLayout>
@@ -144,11 +159,15 @@
                 android:minWidth="56dp"
                 android:gravity="center"/>
 
-        <SeekBar
+        <com.google.android.material.slider.Slider
                 android:id="@+id/exposure_slider"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:valueFrom="0"
+                android:valueTo="1"
+                android:stepSize="1"
+                app:labelBehavior="floating"
                 android:contentDescription="@string/exposure_compensation_cd"/>
 
     </LinearLayout>
@@ -174,7 +193,7 @@
                 android:layout_marginEnd="16dp"
                 android:padding="8dp"
                 android:contentDescription="@string/btn_options"
-                android:src="@drawable/ic_build"
+                android:src="@drawable/ic_tune"
                 app:tint="?attr/colorControlNormal"
                 android:minWidth="48dp"
                 android:minHeight="48dp"
@@ -242,7 +261,7 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:orientation="horizontal"
-            android:background="@color/button_container_background"
+            android:background="?attr/colorSurfaceContainer"
             android:elevation="8dp"
             android:padding="12dp"
             android:layout_marginStart="16dp"
@@ -265,20 +284,16 @@
         <!-- Pick Image (Left) -->
         <Button
                 android:id="@+id/button_pick_image"
+                style="@style/Widget.MakeACopy.Button.Tonal"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:paddingStart="8dp"
                 android:paddingEnd="8dp"
-                android:background="@drawable/rounded_bg_light"
                 android:text="@string/btn_pick_image"
                 android:contentDescription="@string/pick_image_cd"
                 android:maxLines="1"
-                android:ellipsize="end"
-                app:autoSizeTextType="uniform"
-                app:autoSizeMinTextSize="10sp"
-                app:autoSizeMaxTextSize="16sp"
-                app:autoSizeStepGranularity="1sp"/>
+                android:ellipsize="end" />
 
         <Space
                 android:layout_width="16dp"
@@ -292,14 +307,9 @@
                 android:layout_weight="1"
                 android:paddingStart="8dp"
                 android:paddingEnd="8dp"
-                android:background="@drawable/rounded_bg_light"
                 android:text="@string/btn_scan"
                 android:maxLines="1"
-                android:ellipsize="end"
-                app:autoSizeTextType="uniform"
-                app:autoSizeMinTextSize="10sp"
-                app:autoSizeMaxTextSize="16sp"
-                app:autoSizeStepGranularity="1sp"/>
+                android:ellipsize="end" />
     </LinearLayout>
 
     <!-- Review buttons -->
@@ -309,7 +319,7 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:orientation="horizontal"
-            android:background="@color/button_container_background"
+            android:background="?attr/colorSurfaceContainer"
             android:elevation="8dp"
             android:padding="12dp"
             android:layout_marginStart="16dp"
@@ -322,20 +332,16 @@
 
         <Button
                 android:id="@+id/button_retake"
+                style="@style/Widget.MakeACopy.Button.Tonal"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginEnd="12dp"
                 android:paddingStart="8dp"
                 android:paddingEnd="8dp"
-                android:background="@drawable/rounded_bg_light"
                 android:text="@string/back"
                 android:maxLines="1"
-                android:ellipsize="end"
-                app:autoSizeTextType="uniform"
-                app:autoSizeMinTextSize="10sp"
-                app:autoSizeMaxTextSize="16sp"
-                app:autoSizeStepGranularity="1sp"/>
+                android:ellipsize="end" />
 
         <Button
                 android:id="@+id/button_confirm"
@@ -344,14 +350,9 @@
                 android:layout_weight="1"
                 android:paddingStart="8dp"
                 android:paddingEnd="8dp"
-                android:background="@drawable/rounded_bg_light"
                 android:text="@string/next"
                 android:maxLines="1"
-                android:ellipsize="end"
-                app:autoSizeTextType="uniform"
-                app:autoSizeMinTextSize="10sp"
-                app:autoSizeMaxTextSize="16sp"
-                app:autoSizeStepGranularity="1sp"/>
+                android:ellipsize="end" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

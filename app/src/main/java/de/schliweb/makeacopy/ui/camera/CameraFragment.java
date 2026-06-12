@@ -27,7 +27,6 @@ import android.net.Uri;
 import android.os.*;
 import android.util.Log;
 import android.view.*;
-import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
@@ -53,6 +52,8 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.slider.Slider;
 import com.google.common.util.concurrent.ListenableFuture;
 import de.schliweb.makeacopy.BuildConfig;
 import de.schliweb.makeacopy.R;
@@ -1076,7 +1077,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     int checked = CameraZoomOptions.indexOfClosest(ratios, selectedZoomRatio);
 
     AlertDialog dialog =
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.camera_zoom_title)
             .setSingleChoiceItems(
                 labels,
@@ -1124,8 +1125,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     updateZoomButtonLabel(normalized);
     // On multi-camera devices a zoom change may switch the active physical camera; re-apply
     // the manual focus distance so it does not silently become stale.
-    if (manualFocusSupported && binding != null && binding.focusSlider.getProgress() > 0) {
-      applyManualFocus(binding.focusSlider.getProgress(), true);
+    if (manualFocusSupported && binding != null && binding.focusSlider.getValue() > 0f) {
+      applyManualFocus((int) binding.focusSlider.getValue(), true);
     }
   }
 
@@ -1173,12 +1174,12 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       }
       viewFinderX = Math.max(0f, Math.min(binding.viewFinder.getWidth(), viewFinderX));
       viewFinderY = Math.max(0f, Math.min(binding.viewFinder.getHeight(), viewFinderY));
-      if (manualFocusSupported && binding.focusSlider.getProgress() > 0) {
+      if (manualFocusSupported && binding.focusSlider.getValue() > 0f) {
         Log.d(
             TAG,
             "Tap-to-focus resetting manual focus before AF, progress="
-                + binding.focusSlider.getProgress());
-        binding.focusSlider.setProgress(0);
+                + (int) binding.focusSlider.getValue());
+        binding.focusSlider.setValue(0);
         persistManualFocusProgress(0);
         // Chain AF on the manual-focus reset request instead of a fixed delay: start the
         // metering only after the Camera2 interop options have actually been applied.
@@ -1228,7 +1229,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             + ", manualFocusSupported="
             + manualFocusSupported
             + ", manualFocusProgress="
-            + binding.focusSlider.getProgress()
+            + (int) binding.focusSlider.getValue()
             + ", meteringFlags=AF+AE, afPointSize="
             + TAP_TO_FOCUS_AF_POINT_SIZE
             + ", aePointSize="
@@ -1333,36 +1334,38 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       binding.focusControl.setVisibility(View.GONE);
       return;
     }
-    binding.focusSlider.setMax(FOCUS_SLIDER_MAX);
+    binding.focusSlider.setValueTo(FOCUS_SLIDER_MAX);
     int savedProgress = readPersistedManualFocusProgress();
-    binding.focusSlider.setProgress(savedProgress);
+    binding.focusSlider.setValue(savedProgress);
     updateManualFocusLabel(savedProgress);
-    binding.focusSlider.setOnSeekBarChangeListener(
-        new SeekBar.OnSeekBarChangeListener() {
-          @Override
-          public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            if (!fromUser) return;
-            updateManualFocusLabel(progress);
-            // Live focus while dragging, throttled to one interop request per interval.
-            pendingFocusProgress = progress;
-            if (!focusUpdateScheduled) {
-              focusUpdateScheduled = true;
-              seekBar.postDelayed(
-                  () -> {
-                    focusUpdateScheduled = false;
-                    applyManualFocus(pendingFocusProgress, true);
-                  },
-                  MANUAL_FOCUS_LIVE_UPDATE_INTERVAL_MS);
-            }
+    binding.focusSlider.setLabelFormatter(
+        value -> value <= 0f ? getString(R.string.manual_focus_auto) : String.valueOf((int) value));
+    binding.focusSlider.addOnChangeListener(
+        (slider, value, fromUser) -> {
+          if (!fromUser) return;
+          int progress = (int) value;
+          updateManualFocusLabel(progress);
+          // Live focus while dragging, throttled to one interop request per interval.
+          pendingFocusProgress = progress;
+          if (!focusUpdateScheduled) {
+            focusUpdateScheduled = true;
+            slider.postDelayed(
+                () -> {
+                  focusUpdateScheduled = false;
+                  applyManualFocus(pendingFocusProgress, true);
+                },
+                MANUAL_FOCUS_LIVE_UPDATE_INTERVAL_MS);
           }
+        });
+    binding.focusSlider.addOnSliderTouchListener(
+        new Slider.OnSliderTouchListener() {
+          @Override
+          public void onStartTrackingTouch(@NonNull Slider slider) {}
 
           @Override
-          public void onStartTrackingTouch(SeekBar seekBar) {}
-
-          @Override
-          public void onStopTrackingTouch(SeekBar seekBar) {
-            applyManualFocus(seekBar.getProgress(), false);
-            persistManualFocusProgress(seekBar.getProgress());
+          public void onStopTrackingTouch(@NonNull Slider slider) {
+            applyManualFocus((int) slider.getValue(), false);
+            persistManualFocusProgress((int) slider.getValue());
           }
         });
     binding.focusControl.setVisibility(View.VISIBLE);
@@ -1435,7 +1438,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
   private void resetManualFocusControl() {
     if (binding != null) {
       binding.focusControl.setVisibility(View.GONE);
-      binding.focusSlider.setProgress(0);
+      binding.focusSlider.setValue(0);
       updateManualFocusLabel(0);
     }
     persistManualFocusProgress(0);
@@ -1660,6 +1663,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             Log.d(
                 TAG,
                 "Image saved: " + photoFile.getAbsolutePath() + ", size=" + photoFile.length());
+            // Confirm capture success with a short haptic tick (all users)
+            HapticsUtils.vibrateOneShot(getContext(), 30L);
             // Accessibility: confirm capture success with haptic + spoken cue
             if (isAccessibilityModeEnabled() && binding != null && isAdded()) {
               binding.getRoot().performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
@@ -2059,7 +2064,7 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     try {
       isLowLightDialogVisible = true;
       AlertDialog dialog =
-          new AlertDialog.Builder(requireContext())
+          new MaterialAlertDialogBuilder(requireContext())
               .setMessage(R.string.low_light_detected)
               .setPositiveButton(
                   R.string.flashlight_on,
@@ -2236,9 +2241,9 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
     Log.i(TAG, "Exposure compensation: range=" + lower + ".." + upper + " step=" + step);
 
-    // SeekBar: 0..max maps to lower..upper
+    // Slider: 0..max maps to lower..upper
     int seekMax = upper - lower;
-    binding.exposureSlider.setMax(seekMax);
+    binding.exposureSlider.setValueTo(seekMax);
 
     // Restore persisted index, clamped to current device range
     android.content.SharedPreferences prefs =
@@ -2246,26 +2251,31 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     int savedIndex = prefs.getInt(PREF_EXPOSURE_INDEX, 0);
     int clampedIndex = ExposureCompensationHelper.clampIndex(savedIndex, lower, upper);
 
-    binding.exposureSlider.setProgress(
+    binding.exposureSlider.setValue(
         ExposureCompensationHelper.indexToProgress(clampedIndex, lower));
     updateExposureLabel(clampedIndex, step);
     applyExposureCompensation(clampedIndex);
 
-    binding.exposureSlider.setOnSeekBarChangeListener(
-        new SeekBar.OnSeekBarChangeListener() {
+    binding.exposureSlider.setLabelFormatter(
+        value -> {
+          int index = ExposureCompensationHelper.progressToIndex((int) value, lower);
+          return ExposureCompensationHelper.formatEv(
+              ExposureCompensationHelper.indexToEv(index, step));
+        });
+    binding.exposureSlider.addOnChangeListener(
+        (slider, value, fromUser) -> {
+          if (!fromUser) return;
+          int index = ExposureCompensationHelper.progressToIndex((int) value, lower);
+          updateExposureLabel(index, step);
+        });
+    binding.exposureSlider.addOnSliderTouchListener(
+        new Slider.OnSliderTouchListener() {
           @Override
-          public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            if (!fromUser) return;
-            int index = ExposureCompensationHelper.progressToIndex(progress, lower);
-            updateExposureLabel(index, step);
-          }
+          public void onStartTrackingTouch(@NonNull Slider slider) {}
 
           @Override
-          public void onStartTrackingTouch(SeekBar seekBar) {}
-
-          @Override
-          public void onStopTrackingTouch(SeekBar seekBar) {
-            int index = ExposureCompensationHelper.progressToIndex(seekBar.getProgress(), lower);
+          public void onStopTrackingTouch(@NonNull Slider slider) {
+            int index = ExposureCompensationHelper.progressToIndex((int) slider.getValue(), lower);
             applyExposureCompensation(index);
             persistExposureIndex(index);
           }
@@ -2525,16 +2535,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         binding.cornerOverlay.setVisibility(View.GONE);
         binding.cornerOverlay.setScore(null);
       }
-      if (!enabled) {
-        // Hide the focus-quality indicator as soon as live corner detection is turned off,
-        // even if the analyzer keeps running internally (Accessibility Mode): the visual
-        // indicator follows the user's live-analysis preference only.
+      if (!effectiveAnalysis) {
         resetFocusQualityIndicator();
-      } else {
-        // Force the next measurement to refresh the UI: while the indicator was hidden the
-        // analyzer may have kept updating lastFocusQualitySegments (Accessibility Mode), so
-        // an unchanged segment level would otherwise skip re-showing the indicator.
-        lastFocusQualitySegments = -1;
       }
     }
     if (imageAnalysis != null) {
@@ -2725,16 +2727,10 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       runOnUiThreadSafe(
           () -> {
             if (binding == null) return;
-            // Visual indicator only while live corner detection is enabled by the user.
-            // This also guards against in-flight analyzer frames re-showing the indicator
-            // right after it was hidden via setLiveAnalysisEnabled(false). A11y announcements
-            // below stay active (analyzer may run for Accessibility Mode).
-            if (analysisEnabled) {
-              if (binding.focusQualityIndicator.getVisibility() != View.VISIBLE) {
-                binding.focusQualityIndicator.setVisibility(View.VISIBLE);
-              }
-              binding.focusQualityIndicator.setLevel(segments);
+            if (binding.focusQualityIndicator.getVisibility() != View.VISIBLE) {
+              binding.focusQualityIndicator.setVisibility(View.VISIBLE);
             }
+            binding.focusQualityIndicator.setLevel(segments);
             maybeAnnounceFocusQuality(band);
           });
     } catch (Throwable t) {

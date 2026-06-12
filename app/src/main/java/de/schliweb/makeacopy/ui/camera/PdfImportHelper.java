@@ -25,6 +25,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.utils.ui.DialogUtils;
 import de.schliweb.makeacopy.utils.ui.UIUtils;
@@ -170,7 +171,7 @@ final class PdfImportHelper {
     recyclerView.setLayoutManager(new GridLayoutManager(fragment.requireContext(), 3));
 
     AlertDialog dialog =
-        new AlertDialog.Builder(fragment.requireContext())
+        new MaterialAlertDialogBuilder(fragment.requireContext())
             .setView(dialogView)
             .setNegativeButton(android.R.string.cancel, null)
             .create();

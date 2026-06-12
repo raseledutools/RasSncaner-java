@@ -20,7 +20,6 @@ import android.widget.CheckBox;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import de.schliweb.makeacopy.BuildConfig;
@@ -38,12 +37,19 @@ public class CameraOptionsDialogFragment extends DialogFragment {
   public static final String BUNDLE_SKIP_OCR = "skip_ocr";
   public static final String BUNDLE_ANALYSIS_ENABLED = "analysis_enabled";
   public static final String BUNDLE_SKIP_CROPPING = "skip_cropping";
+  public static final String BUNDLE_SKIP_EDGE_DETECTION = "skip_edge_detection";
   public static final String BUNDLE_ACCESSIBILITY_MODE = "accessibility_mode";
   public static final String BUNDLE_EXPOSURE_COMPENSATION = "exposure_compensation_enabled";
   public static final String BUNDLE_MANUAL_FOCUS = "manual_focus_enabled";
 
+  private static final String FRAGMENT_TAG = "CameraOptionsDialogFragment";
+
   public static void show(@NonNull FragmentManager fm) {
-    new CameraOptionsDialogFragment().show(fm, "CameraOptionsDialogFragment");
+    // Guard against rapid double-taps on the options button: if a dialog with this tag
+    // is already added, do not show a second instance. showNow() commits synchronously,
+    // so the tag is visible to the very next click event.
+    if (fm.findFragmentByTag(FRAGMENT_TAG) != null || fm.isStateSaved()) return;
+    new CameraOptionsDialogFragment().showNow(fm, FRAGMENT_TAG);
   }
 
   /**
@@ -271,6 +277,7 @@ public class CameraOptionsDialogFragment extends DialogFragment {
 
     CheckBox cbSkip = view.findViewById(R.id.dialog_checkbox_skip_ocr);
     CheckBox cbSkipCropping = view.findViewById(R.id.dialog_checkbox_skip_cropping);
+    CheckBox cbSkipEdgeDetection = view.findViewById(R.id.dialog_checkbox_skip_edge_detection);
     CheckBox cbAnalysis = view.findViewById(R.id.dialog_checkbox_analysis_enabled);
     CheckBox cbAccessibility = view.findViewById(R.id.dialog_checkbox_accessibility_mode);
     CheckBox cbExposure = view.findViewById(R.id.dialog_checkbox_exposure_compensation);
@@ -280,12 +287,14 @@ public class CameraOptionsDialogFragment extends DialogFragment {
     SharedPreferences prefs = ctx.getSharedPreferences("export_options", Context.MODE_PRIVATE);
     boolean skipOcr = prefs.getBoolean(BUNDLE_SKIP_OCR, false);
     boolean skipPerspective = prefs.getBoolean(BUNDLE_SKIP_CROPPING, false);
+    boolean skipEdgeDetection = prefs.getBoolean(BUNDLE_SKIP_EDGE_DETECTION, false);
     boolean analysisEnabled = prefs.getBoolean(BUNDLE_ANALYSIS_ENABLED, false);
     boolean accessibilityMode = prefs.getBoolean(BUNDLE_ACCESSIBILITY_MODE, false);
     boolean exposureEnabled = prefs.getBoolean(BUNDLE_EXPOSURE_COMPENSATION, false);
     boolean manualFocusEnabled = prefs.getBoolean(BUNDLE_MANUAL_FOCUS, false);
     cbSkip.setChecked(skipOcr);
     if (cbSkipCropping != null) cbSkipCropping.setChecked(skipPerspective);
+    if (cbSkipEdgeDetection != null) cbSkipEdgeDetection.setChecked(skipEdgeDetection);
     if (cbAnalysis != null) cbAnalysis.setChecked(analysisEnabled);
     if (cbAccessibility != null) cbAccessibility.setChecked(accessibilityMode);
     if (cbExposure != null) cbExposure.setChecked(exposureEnabled);
@@ -297,55 +306,42 @@ public class CameraOptionsDialogFragment extends DialogFragment {
       shareBtn.setOnClickListener(v -> shareLogs(ctx));
     }
 
-    AlertDialog dialog =
-        new AlertDialog.Builder(ctx)
-            .setTitle(R.string.btn_options)
-            .setView(view)
-            .setNegativeButton(R.string.cancel, (d, w) -> d.dismiss())
-            .setPositiveButton(
-                R.string.confirm,
-                (d, w) -> {
-                  boolean skip = cbSkip.isChecked();
-                  boolean skipCropping = cbSkipCropping != null && cbSkipCropping.isChecked();
-                  boolean analysis = cbAnalysis != null && cbAnalysis.isChecked();
-                  boolean accessibility = cbAccessibility != null && cbAccessibility.isChecked();
-                  boolean exposure = cbExposure != null && cbExposure.isChecked();
-                  boolean manualFocus = cbManualFocus != null && cbManualFocus.isChecked();
-                  // No extra A11y options persisted
+    return DialogUtils.createOptionsBottomSheet(
+        ctx,
+        getString(R.string.btn_options),
+        view,
+        () -> {
+          boolean skip = cbSkip.isChecked();
+          boolean skipCropping = cbSkipCropping != null && cbSkipCropping.isChecked();
+          boolean skipEdge = cbSkipEdgeDetection != null && cbSkipEdgeDetection.isChecked();
+          boolean analysis = cbAnalysis != null && cbAnalysis.isChecked();
+          boolean accessibility = cbAccessibility != null && cbAccessibility.isChecked();
+          boolean exposure = cbExposure != null && cbExposure.isChecked();
+          boolean manualFocus = cbManualFocus != null && cbManualFocus.isChecked();
+          // No extra A11y options persisted
 
-                  // Persist and keep legacy/new flags in sync
-                  prefs
-                      .edit()
-                      .putBoolean(BUNDLE_SKIP_OCR, skip)
-                      .putBoolean("include_ocr", !skip) // TODO
-                      .putBoolean(BUNDLE_SKIP_CROPPING, skipCropping)
-                      .putBoolean(BUNDLE_ANALYSIS_ENABLED, analysis)
-                      .putBoolean(BUNDLE_ACCESSIBILITY_MODE, accessibility)
-                      .putBoolean(BUNDLE_EXPOSURE_COMPENSATION, exposure)
-                      .putBoolean(BUNDLE_MANUAL_FOCUS, manualFocus)
-                      .apply();
+          // Persist and keep legacy/new flags in sync
+          prefs
+              .edit()
+              .putBoolean(BUNDLE_SKIP_OCR, skip)
+              .putBoolean("include_ocr", !skip) // TODO
+              .putBoolean(BUNDLE_SKIP_CROPPING, skipCropping)
+              .putBoolean(BUNDLE_SKIP_EDGE_DETECTION, skipEdge)
+              .putBoolean(BUNDLE_ANALYSIS_ENABLED, analysis)
+              .putBoolean(BUNDLE_ACCESSIBILITY_MODE, accessibility)
+              .putBoolean(BUNDLE_EXPOSURE_COMPENSATION, exposure)
+              .putBoolean(BUNDLE_MANUAL_FOCUS, manualFocus)
+              .apply();
 
-                  Bundle result = new Bundle();
-                  result.putBoolean(BUNDLE_SKIP_OCR, skip);
-                  result.putBoolean(BUNDLE_SKIP_CROPPING, skipCropping);
-                  result.putBoolean(BUNDLE_ANALYSIS_ENABLED, analysis);
-                  result.putBoolean(BUNDLE_ACCESSIBILITY_MODE, accessibility);
-                  result.putBoolean(BUNDLE_EXPOSURE_COMPENSATION, exposure);
-                  result.putBoolean(BUNDLE_MANUAL_FOCUS, manualFocus);
-                  getParentFragmentManager().setFragmentResult(REQUEST_KEY, result);
-                })
-            .create();
-
-    // Improve button contrast for night mode if utility exists (best-effort)
-    dialog.setOnShowListener(
-        dlg -> {
-          try {
-            DialogUtils.improveAlertDialogButtonContrastForNight(dialog, ctx);
-          } catch (Throwable ignore) {
-            // Dialog contrast improvement is best-effort
-          }
+          Bundle result = new Bundle();
+          result.putBoolean(BUNDLE_SKIP_OCR, skip);
+          result.putBoolean(BUNDLE_SKIP_CROPPING, skipCropping);
+          result.putBoolean(BUNDLE_SKIP_EDGE_DETECTION, skipEdge);
+          result.putBoolean(BUNDLE_ANALYSIS_ENABLED, analysis);
+          result.putBoolean(BUNDLE_ACCESSIBILITY_MODE, accessibility);
+          result.putBoolean(BUNDLE_EXPOSURE_COMPENSATION, exposure);
+          result.putBoolean(BUNDLE_MANUAL_FOCUS, manualFocus);
+          getParentFragmentManager().setFragmentResult(REQUEST_KEY, result);
         });
-
-    return dialog;
   }
 }

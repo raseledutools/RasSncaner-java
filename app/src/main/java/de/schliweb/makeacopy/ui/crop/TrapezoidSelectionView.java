@@ -1194,6 +1194,22 @@ public class TrapezoidSelectionView extends View {
       return;
     }
 
+    // User option: skip automatic edge detection and start with a simple default rectangle
+    if (isSkipEdgeDetectionEnabled()) {
+      Log.d(TAG, "initializeCornersAsync: edge detection skipped by user preference");
+      if (cornerTask != null) {
+        cornerTask.cancel(true);
+        cornerTask = null;
+      }
+      ++requestedInitSeq;
+      setDefaultCorners(width, height);
+      lastWidth = width;
+      lastHeight = height;
+      initialized = true;
+      invalidate();
+      return;
+    }
+
     // Cancel any running task
     if (cornerTask != null) {
       cornerTask.cancel(true);
@@ -1747,6 +1763,17 @@ public class TrapezoidSelectionView extends View {
     return pts;
   }
 
+  /** Returns true when the user opted to skip automatic edge detection (camera options). */
+  private boolean isSkipEdgeDetectionEnabled() {
+    try {
+      return getContext()
+          .getSharedPreferences("export_options", Context.MODE_PRIVATE)
+          .getBoolean("skip_edge_detection", false);
+    } catch (Throwable t) {
+      return false;
+    }
+  }
+
   private void setDefaultCorners(int width, int height) {
     updateCorner(0, width * 0.1f, height * 0.1f);
     updateCorner(1, width * 0.9f, height * 0.1f);
@@ -2186,6 +2213,7 @@ public class TrapezoidSelectionView extends View {
       Log.d(TAG, "Scheduling corners initialization via posted runnable");
       // Debounce any previous requests and post a fresh one
       removeCallbacks(initCornersRunnable);
+      lastAutoInitBitmap = imageBitmap;
       post(initCornersRunnable);
     } else if ((w != oldw || h != oldh) && w > 0 && h > 0) {
       // cancel any pending detection and reschedule/guard
@@ -3274,6 +3302,13 @@ public class TrapezoidSelectionView extends View {
   }
 
   /**
+   * The bitmap instance for which corner auto-initialization was last scheduled. Used to skip
+   * redundant detection runs when the same bitmap is set again (e.g. view setup followed by the
+   * ViewModel observer delivering the identical instance).
+   */
+  private Bitmap lastAutoInitBitmap;
+
+  /**
    * Set the image bitmap for edge detection
    *
    * @param bitmap The image bitmap
@@ -3296,6 +3331,7 @@ public class TrapezoidSelectionView extends View {
       if (!sameDims) {
         userHasEdited = false;
         docQuadAutoInitConsumed = false;
+        lastAutoInitBitmap = null;
       }
 
       lastBitmapWidth = bw;
@@ -3312,6 +3348,7 @@ public class TrapezoidSelectionView extends View {
       lastBitmapHeight = -1;
       userHasEdited = false;
       docQuadAutoInitConsumed = false;
+      lastAutoInitBitmap = null;
     }
 
     // If the bitmap is null, do not (re)start corner initialization. Just cancel pending work and
@@ -3348,8 +3385,17 @@ public class TrapezoidSelectionView extends View {
         invalidate();
         return;
       }
+      if (bitmap == lastAutoInitBitmap) {
+        // Same bitmap instance already triggered (or is running) corner initialization —
+        // avoid a redundant detection pass.
+        if (debugLogsEnabled)
+          Log.d(TAG, "setImageBitmap: same bitmap instance, auto-init already scheduled → skip");
+        invalidate();
+        return;
+      }
       removeCallbacks(initCornersRunnable);
       if (!suppressInitOnce) {
+        lastAutoInitBitmap = bitmap;
         post(initCornersRunnable);
       } else {
         suppressInitOnce = false;

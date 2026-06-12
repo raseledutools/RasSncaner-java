@@ -23,6 +23,17 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Workflow stepper: Camera → Crop → OCR → Export (step 2) -->
+    <de.schliweb.makeacopy.ui.views.WorkflowStepperView
+            android:id="@+id/workflow_stepper"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            app:currentStep="2"
+            app:layout_constraintTop_toBottomOf="@id/text_crop"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
     <!-- Originalbild zur Bearbeitung -->
     <ImageView
             android:id="@+id/image_to_crop"
@@ -32,7 +43,7 @@
             android:layout_marginBottom="8dp"
             android:contentDescription="@string/image_to_crop"
             android:scaleType="fitCenter"
-            app:layout_constraintTop_toBottomOf="@id/text_crop"
+            app:layout_constraintTop_toBottomOf="@id/workflow_stepper"
             app:layout_constraintBottom_toTopOf="@id/rotation_button_bar"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -71,7 +82,7 @@
             android:contentDescription="@string/cropped_image"
             android:scaleType="fitCenter"
             android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@id/text_crop"
+            app:layout_constraintTop_toBottomOf="@id/workflow_stepper"
             app:layout_constraintBottom_toTopOf="@id/crop_button_container"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -83,7 +94,7 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:orientation="horizontal"
-            android:background="@color/button_container_background"
+            android:background="?attr/colorSurfaceContainer"
             android:padding="12dp"
             android:elevation="8dp"
             android:layout_marginStart="16dp"
@@ -95,20 +106,16 @@
 
         <Button
                 android:id="@+id/button_back"
+                style="@style/Widget.MakeACopy.Button.Tonal"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginEnd="12dp"
                 android:paddingStart="8dp"
                 android:paddingEnd="8dp"
-                android:background="@drawable/rounded_bg_light"
                 android:text="@string/back"
                 android:maxLines="1"
-                android:ellipsize="end"
-                app:autoSizeTextType="uniform"
-                app:autoSizeMinTextSize="10sp"
-                app:autoSizeMaxTextSize="16sp"
-                app:autoSizeStepGranularity="1sp"/>
+                android:ellipsize="end" />
 
         <Button
                 android:id="@+id/button_crop"
@@ -117,14 +124,9 @@
                 android:layout_weight="1"
                 android:paddingStart="8dp"
                 android:paddingEnd="8dp"
-                android:background="@drawable/rounded_bg_light"
                 android:text="@string/btn_crop"
                 android:maxLines="1"
-                android:ellipsize="end"
-                app:autoSizeTextType="uniform"
-                app:autoSizeMinTextSize="10sp"
-                app:autoSizeMaxTextSize="16sp"
-                app:autoSizeStepGranularity="1sp"/>
+                android:ellipsize="end" />
     </LinearLayout>
 
     <!-- Rotation Icons (über dem Button-Container, nur nach Crop sichtbar).
