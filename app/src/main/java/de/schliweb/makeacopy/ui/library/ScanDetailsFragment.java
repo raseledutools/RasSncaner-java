@@ -301,7 +301,8 @@ public class ScanDetailsFragment extends Fragment {
                           names[n] = getString(R.string.create_new_collection);
 
                           final androidx.appcompat.app.AlertDialog pickerDialog =
-                              new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                              new com.google.android.material.dialog.MaterialAlertDialogBuilder(
+                                      requireContext())
                                   .setTitle(getString(R.string.place_in_collection_title))
                                   .setItems(
                                       names,
@@ -312,8 +313,8 @@ public class ScanDetailsFragment extends Fragment {
                                               new android.widget.EditText(requireContext());
                                           input.setHint(R.string.collection_name_hint);
                                           final androidx.appcompat.app.AlertDialog createDialog =
-                                              new androidx.appcompat.app.AlertDialog.Builder(
-                                                      requireContext())
+                                              new com.google.android.material.dialog
+                                                      .MaterialAlertDialogBuilder(requireContext())
                                                   .setTitle(R.string.new_collection_title)
                                                   .setView(input)
                                                   .setPositiveButton(
@@ -905,7 +906,7 @@ public class ScanDetailsFragment extends Fragment {
     input.setHint(R.string.collection_name_hint);
     input.setText(entity.title != null ? entity.title : "");
     final androidx.appcompat.app.AlertDialog dialog =
-        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.rename)
             .setView(input)
             .setPositiveButton(
@@ -944,7 +945,7 @@ public class ScanDetailsFragment extends Fragment {
   private void confirmDelete() {
     if (entity == null) return;
     final androidx.appcompat.app.AlertDialog dialog =
-        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.confirm)
             .setMessage(R.string.delete_warning_irreversible)
             .setPositiveButton(R.string.delete, (d, w) -> doDelete())

@@ -17,7 +17,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
-import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.RecyclerView;
 import dagger.hilt.android.AndroidEntryPoint;
 import de.schliweb.makeacopy.R;
@@ -93,35 +92,25 @@ public class ScansLibraryFragment extends Fragment {
     buttonIndexExistingIcon = root.findViewById(R.id.buttonIndexExistingIcon);
     buttonCleanupSettings = root.findViewById(R.id.buttonCleanupSettings);
 
-    // Apply system insets: add status bar top inset to root padding and nav bar bottom inset to the
-    // bottom button container
-    final int origPadLeft = root.getPaddingLeft();
-    final int origPadTop = root.getPaddingTop();
-    final int origPadRight = root.getPaddingRight();
-    final int origPadBottom = root.getPaddingBottom();
-    final View bottomContainer = buttonContainer;
-    final int origBottomMargin;
-    if (bottomContainer != null
-        && bottomContainer.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
-      origBottomMargin =
-          ((ViewGroup.MarginLayoutParams) bottomContainer.getLayoutParams()).bottomMargin;
-    } else {
-      origBottomMargin = 0;
-    }
+    // Apply system insets: the AppBarLayout (fitsSystemWindows) handles the status bar; the
+    // bottom button container gets the nav bar inset added to its base margin.
+    de.schliweb.makeacopy.utils.ui.UIUtils.adjustMarginForSystemInsets(buttonContainer, 8);
     androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(
         root,
         (v, insets) -> {
-          androidx.core.graphics.Insets sb =
-              insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());
-          // Top inset for status bar
-          v.setPadding(origPadLeft, origPadTop + sb.top, origPadRight, origPadBottom);
-          // Bottom inset for nav bar on the bottom button container
-          if (bottomContainer != null
-              && bottomContainer.getLayoutParams() instanceof ViewGroup.MarginLayoutParams mlp) {
-            mlp.bottomMargin = origBottomMargin + sb.bottom;
-            bottomContainer.setLayoutParams(mlp);
-          }
+          de.schliweb.makeacopy.utils.ui.UIUtils.adjustMarginForSystemInsets(buttonContainer, 8);
           return insets;
+        });
+    root.addOnAttachStateChangeListener(
+        new View.OnAttachStateChangeListener() {
+          @Override
+          public void onViewAttachedToWindow(@NonNull View v) {
+            de.schliweb.makeacopy.utils.ui.UIUtils.adjustMarginForSystemInsets(buttonContainer, 8);
+            androidx.core.view.ViewCompat.requestApplyInsets(v);
+          }
+
+          @Override
+          public void onViewDetachedFromWindow(@NonNull View v) {}
         });
 
     adapter =
@@ -152,8 +141,57 @@ public class ScansLibraryFragment extends Fragment {
           });
     }
     list.setAdapter(adapter);
-    list.addItemDecoration(
-        new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL));
+    // Adaptive grid: one column per ~360dp of available width (cards carry their own margins)
+    int spanCount = Math.max(1, (int) (getResources().getConfiguration().screenWidthDp / 360f));
+    list.setLayoutManager(
+        new androidx.recyclerview.widget.GridLayoutManager(requireContext(), spanCount));
+
+    // Material SearchBar + SearchView: UI-only filter over the already loaded items
+    com.google.android.material.search.SearchBar searchBar = root.findViewById(R.id.search_bar);
+    com.google.android.material.search.SearchView searchView = root.findViewById(R.id.search_view);
+    RecyclerView searchResults = root.findViewById(R.id.search_results);
+    if (searchBar != null && searchView != null && searchResults != null) {
+      searchView.setupWithSearchBar(searchBar);
+      searchResults.setLayoutManager(
+          new androidx.recyclerview.widget.LinearLayoutManager(requireContext()));
+      // Share the adapter so results stay in sync without duplicating data
+      searchResults.setAdapter(adapter);
+      searchView
+          .getEditText()
+          .addTextChangedListener(
+              new android.text.TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int st, int c, int a) {}
+
+                @Override
+                public void onTextChanged(CharSequence s, int st, int b, int c) {}
+
+                @Override
+                public void afterTextChanged(android.text.Editable s) {
+                  adapter.filter(s == null ? null : s.toString());
+                }
+              });
+      searchView.addTransitionListener(
+          (sv, previousState, newState) -> {
+            if (newState == com.google.android.material.search.SearchView.TransitionState.HIDDEN) {
+              adapter.filter(null);
+            }
+          });
+    }
+
+    // Empty-state call to action: jump straight to the camera to create the first scan
+    View scanFirst = root.findViewById(R.id.buttonScanFirst);
+    if (scanFirst != null) {
+      scanFirst.setOnClickListener(
+          v -> {
+            try {
+              Navigation.findNavController(requireView()).navigate(R.id.navigation_camera);
+            } catch (Throwable t) {
+              UIUtils.showToast(
+                  requireContext(), R.string.navigation_failed, android.widget.Toast.LENGTH_SHORT);
+            }
+          });
+    }
 
     if (!FeatureFlags.isScanLibraryEnable()) {
       UIUtils.showToast(
@@ -194,7 +232,7 @@ public class ScansLibraryFragment extends Fragment {
             String display =
                 (item.title != null && !item.title.trim().isEmpty()) ? item.title : item.id;
             final androidx.appcompat.app.AlertDialog dialog =
-                new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
                     .setTitle(display)
                     .setMessage(R.string.remove_from_collection_question)
                     .setPositiveButton(
@@ -378,6 +416,9 @@ public class ScansLibraryFragment extends Fragment {
                         showLoading(false);
                         boolean isEmpty = (finalData == null || finalData.isEmpty());
                         emptyText.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+                        // Hide the (empty) RecyclerView so it does not overlap the empty-state
+                        // call-to-action and swallow its touch events
+                        list.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
                         if (buttonIndexExistingIcon != null) {
                           buttonIndexExistingIcon.setVisibility(
                               finalShowIndexBtn ? View.VISIBLE : View.GONE);

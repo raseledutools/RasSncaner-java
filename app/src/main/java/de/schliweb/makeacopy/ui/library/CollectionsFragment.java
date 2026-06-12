@@ -62,21 +62,13 @@ public class CollectionsFragment extends Fragment {
     backButton = root.findViewById(R.id.button_back);
     buttonContainer = root.findViewById(R.id.button_container);
 
-    // Apply system insets: add status bar top inset to root padding and nav bar bottom inset to the
-    // bottom button container
+    // Apply system insets: add status bar top inset to root padding; the bottom button
+    // container gets the nav bar inset added to its base margin (shared UIUtils pattern).
     final int origPadLeft = root.getPaddingLeft();
     final int origPadTop = root.getPaddingTop();
     final int origPadRight = root.getPaddingRight();
     final int origPadBottom = root.getPaddingBottom();
-    final View bottomContainer = buttonContainer;
-    final int origBottomMargin;
-    if (bottomContainer != null
-        && bottomContainer.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
-      origBottomMargin =
-          ((ViewGroup.MarginLayoutParams) bottomContainer.getLayoutParams()).bottomMargin;
-    } else {
-      origBottomMargin = 0;
-    }
+    UIUtils.adjustMarginForSystemInsets(buttonContainer, 8);
     androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(
         root,
         (v, insets) -> {
@@ -85,12 +77,19 @@ public class CollectionsFragment extends Fragment {
           // Top inset for status bar
           v.setPadding(origPadLeft, origPadTop + sb.top, origPadRight, origPadBottom);
           // Bottom inset for nav bar on the bottom button container
-          if (bottomContainer != null
-              && bottomContainer.getLayoutParams() instanceof ViewGroup.MarginLayoutParams mlp) {
-            mlp.bottomMargin = origBottomMargin + sb.bottom;
-            bottomContainer.setLayoutParams(mlp);
-          }
+          UIUtils.adjustMarginForSystemInsets(buttonContainer, 8);
           return insets;
+        });
+    root.addOnAttachStateChangeListener(
+        new View.OnAttachStateChangeListener() {
+          @Override
+          public void onViewAttachedToWindow(@NonNull View v) {
+            UIUtils.adjustMarginForSystemInsets(buttonContainer, 8);
+            androidx.core.view.ViewCompat.requestApplyInsets(v);
+          }
+
+          @Override
+          public void onViewDetachedFromWindow(@NonNull View v) {}
         });
 
     list.setAdapter(adapter);
@@ -164,7 +163,8 @@ public class CollectionsFragment extends Fragment {
                                     new CharSequence[] {
                                       getString(R.string.rename), getString(R.string.delete)
                                     };
-                                new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                                new com.google.android.material.dialog.MaterialAlertDialogBuilder(
+                                        requireContext())
                                     .setTitle(row.name)
                                     .setItems(
                                         items,
@@ -175,8 +175,8 @@ public class CollectionsFragment extends Fragment {
                                                 new android.widget.EditText(requireContext());
                                             input.setHint(R.string.collection_name_hint);
                                             input.setText(row.name);
-                                            new androidx.appcompat.app.AlertDialog.Builder(
-                                                    requireContext())
+                                            new com.google.android.material.dialog
+                                                    .MaterialAlertDialogBuilder(requireContext())
                                                 .setTitle(R.string.rename_collection_title)
                                                 .setView(input)
                                                 .setPositiveButton(
@@ -271,7 +271,7 @@ public class CollectionsFragment extends Fragment {
     final android.widget.EditText input = new android.widget.EditText(requireContext());
     input.setHint(R.string.collection_name_hint);
     final androidx.appcompat.app.AlertDialog dialog =
-        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.new_collection_title)
             .setView(input)
             .setPositiveButton(

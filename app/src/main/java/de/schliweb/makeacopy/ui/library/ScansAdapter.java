@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -46,6 +47,8 @@ import java.util.concurrent.Executors;
 }) // DateFormat requires Date; loader tasks are fire-and-forget
 public class ScansAdapter extends RecyclerView.Adapter<ScansAdapter.VH> {
   private final List<ScanEntity> items = new ArrayList<>();
+  private final List<ScanEntity> allItems = new ArrayList<>();
+  private String filterQuery = "";
   private final OnItemClickListener listener;
   private OnItemLongClickListener longClickListener;
 
@@ -87,9 +90,43 @@ public class ScansAdapter extends RecyclerView.Adapter<ScansAdapter.VH> {
   }
 
   public void submitList(List<ScanEntity> data) {
+    allItems.clear();
+    if (data != null) allItems.addAll(data);
+    applyFilter();
+  }
+
+  /**
+   * Filters the visible items by title, id (filename) or collection membership. A {@code null} or
+   * blank query restores the full list. UI-only; the underlying data is untouched.
+   */
+  public void filter(String query) {
+    filterQuery = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
+    applyFilter();
+  }
+
+  private void applyFilter() {
     items.clear();
-    if (data != null) items.addAll(data);
+    if (filterQuery.isEmpty()) {
+      items.addAll(allItems);
+    } else {
+      for (ScanEntity e : allItems) {
+        if (matchesFilter(e)) items.add(e);
+      }
+    }
     notifyDataSetChanged();
+  }
+
+  private boolean matchesFilter(ScanEntity e) {
+    if (e == null) return false;
+    if (e.title != null && e.title.toLowerCase(Locale.ROOT).contains(filterQuery)) return true;
+    if (e.id != null && e.id.toLowerCase(Locale.ROOT).contains(filterQuery)) return true;
+    List<String> cols = memberships.get(e.id);
+    if (cols != null) {
+      for (String c : cols) {
+        if (c != null && c.toLowerCase(Locale.ROOT).contains(filterQuery)) return true;
+      }
+    }
+    return false;
   }
 
   public void setMemberships(Map<String, List<String>> map) {
