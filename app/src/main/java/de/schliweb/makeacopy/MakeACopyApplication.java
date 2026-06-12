@@ -11,6 +11,7 @@ package de.schliweb.makeacopy;
 
 import android.app.Application;
 import android.util.Log;
+import com.google.android.material.color.DynamicColors;
 import dagger.hilt.android.HiltAndroidApp;
 import de.schliweb.makeacopy.data.library.CollectionsRepository;
 import de.schliweb.makeacopy.services.CacheCleanupService;
@@ -35,6 +36,10 @@ public class MakeACopyApplication extends Application {
     super.onCreate();
 
     Log.i(TAG, "MakeACopy Application starting...");
+
+    // Material You dynamic color (Android 12+). No-op on older devices, where the
+    // static fallback palette from themes.xml is used. Works fully offline.
+    DynamicColors.applyToActivitiesIfAvailable(this);
 
     // Initialize OpenCV
     initializeOpenCV();

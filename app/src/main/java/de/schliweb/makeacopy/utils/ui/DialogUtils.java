@@ -63,6 +63,84 @@ public final class DialogUtils {
   }
 
   /**
+   * Builds a Material 3 bottom sheet hosting an options view with a title and a Cancel/Confirm
+   * button row. Used by the camera/export option dialogs instead of AlertDialogs so options appear
+   * as bottom sheets (reachable, M3-styled via the app-wide {@code bottomSheetDialogTheme}).
+   *
+   * @param ctx the context
+   * @param title the sheet title
+   * @param content the options content view (typically an inflated ScrollView)
+   * @param onConfirm invoked when the user taps Confirm; the sheet is dismissed afterwards
+   * @return the configured, not-yet-shown bottom sheet dialog
+   */
+  public static com.google.android.material.bottomsheet.BottomSheetDialog createOptionsBottomSheet(
+      Context ctx, CharSequence title, android.view.View content, Runnable onConfirm) {
+    com.google.android.material.bottomsheet.BottomSheetDialog dialog =
+        new com.google.android.material.bottomsheet.BottomSheetDialog(ctx);
+    float density = ctx.getResources().getDisplayMetrics().density;
+    int pad = (int) (16 * density);
+
+    LinearLayout container = new LinearLayout(ctx);
+    container.setOrientation(LinearLayout.VERTICAL);
+    container.setPadding(pad, pad, pad, pad);
+
+    TextView titleView = new TextView(ctx);
+    titleView.setText(title);
+    titleView.setTextAppearance(
+        com.google.android.material.R.style.TextAppearance_Material3_TitleLarge);
+    titleView.setPadding(0, 0, 0, (int) (8 * density));
+    androidx.core.view.ViewCompat.setAccessibilityHeading(titleView, true);
+    container.addView(titleView);
+
+    container.addView(
+        content,
+        new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f /* weight: scrollable content */));
+
+    LinearLayout buttonRow = new LinearLayout(ctx);
+    buttonRow.setOrientation(LinearLayout.HORIZONTAL);
+    buttonRow.setGravity(android.view.Gravity.END);
+    buttonRow.setPadding(0, (int) (8 * density), 0, 0);
+
+    com.google.android.material.button.MaterialButton cancelButton =
+        new com.google.android.material.button.MaterialButton(
+            ctx, null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
+    cancelButton.setText(R.string.cancel);
+    cancelButton.setOnClickListener(v -> dialog.dismiss());
+    buttonRow.addView(cancelButton);
+
+    com.google.android.material.button.MaterialButton confirmButton =
+        new com.google.android.material.button.MaterialButton(ctx);
+    confirmButton.setText(R.string.confirm);
+    LinearLayout.LayoutParams confirmLp =
+        new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+    confirmLp.setMarginStart((int) (8 * density));
+    confirmButton.setLayoutParams(confirmLp);
+    confirmButton.setOnClickListener(
+        v -> {
+          try {
+            if (onConfirm != null) onConfirm.run();
+          } finally {
+            dialog.dismiss();
+          }
+        });
+    buttonRow.addView(confirmButton);
+
+    container.addView(buttonRow);
+    dialog.setContentView(container);
+
+    // Long option lists: open fully expanded so the action row is visible right away.
+    // The sheet height is capped by the screen; the weighted content view scrolls while
+    // title and buttons stay pinned. Skip the collapsed state entirely — a half-open
+    // sheet hides the Cancel/Confirm row and only confuses.
+    com.google.android.material.bottomsheet.BottomSheetBehavior<?> behavior = dialog.getBehavior();
+    behavior.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
+    behavior.setSkipCollapsed(true);
+    return dialog;
+  }
+
+  /**
    * Shows the cleanup settings dialog for completed scans. Reads and writes policy configuration
    * from/to SharedPreferences ({@code cache_cleanup_prefs}).
    *
@@ -132,7 +210,7 @@ public final class DialogUtils {
     layout.addView(inputStorage);
 
     final androidx.appcompat.app.AlertDialog dialog =
-        new androidx.appcompat.app.AlertDialog.Builder(ctx)
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(ctx)
             .setTitle(R.string.scan_cleanup_settings)
             .setView(layout)
             .setPositiveButton(

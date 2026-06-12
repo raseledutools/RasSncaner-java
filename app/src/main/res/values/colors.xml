@@ -6,8 +6,6 @@
     <color name="teal_200">#FF03DAC5</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="button_container_background">#FFFFFFFF</color>
     <!-- Accent color for active state of crop toolbar toggles (e.g. snap-to-right-angle).
          Light theme: deep purple for strong contrast on light surfaces. -->
-    <color name="crop_toggle_active">#FF3700B3</color>
 </resources>
