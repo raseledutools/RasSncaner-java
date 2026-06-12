@@ -12,12 +12,15 @@
     <string name="title_crop">Crop</string>
     <string name="title_ocr">OCR</string>
     <string name="title_export">Export</string>
+    <!-- Accessibility description for the workflow stepper, e.g. "Step 2 of 4: Crop" -->
+    <string name="workflow_step_description">Step %1$d of %2$d: %3$s</string>
 
     <!-- Button labels -->
     <string name="btn_scan">Scan</string>
     <string name="btn_crop">Crop</string>
     <string name="btn_process">Process</string>
     <string name="btn_share">Share</string>
+    <string name="btn_share_text">Share text</string>
     <string name="next">Next</string>
     <string name="back">Back</string>
 
@@ -73,6 +76,9 @@
     <!-- Export options -->
     <string name="convert_to_grayscale">Grayscale</string>
     <string name="export_as_jpeg">Export as JPEG</string>
+    <string name="export_format_label">Export format</string>
+    <string name="export_format_pdf" translatable="false">PDF</string>
+    <string name="export_format_jpeg" translatable="false">JPEG</string>
     <string name="export_as_pdf">Export as PDF (default)</string>
     <string name="document_cleanup_title">Document cleanup</string>
     <string name="document_cleanup_original">Original</string>
@@ -127,6 +133,7 @@
     <string name="skip_ocr_export_only">Skip OCR (export only)</string>
     <string name="preview_corner_detection">Preview corner detection</string>
     <string name="skip_cropping">Skip cropping</string>
+    <string name="skip_edge_detection">Skip edge detection</string>
     <string name="btn_pick_image">Load</string>
     <string name="pick_image_cd">Load existing image</string>
     <!-- Multipage Export (v1 increment) -->
@@ -490,4 +497,5 @@
     <string name="crop_snap_toggle_cd" tools:ignore="MissingTranslation">Toggle right-angle snap</string>
     <string name="crop_snap_toggle_on" tools:ignore="MissingTranslation">Right-angle snap on</string>
     <string name="crop_snap_toggle_off" tools:ignore="MissingTranslation">Right-angle snap off</string>
+    <string name="search_scans">Search scans</string>
 </resources>
