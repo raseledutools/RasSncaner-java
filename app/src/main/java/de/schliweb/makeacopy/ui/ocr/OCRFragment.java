@@ -19,7 +19,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AutoCompleteTextView;
 import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
@@ -32,6 +31,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import dagger.hilt.android.AndroidEntryPoint;
 import de.schliweb.makeacopy.R;
@@ -394,7 +394,7 @@ public class OCRFragment extends Fragment {
   private final List<String> selectedLanguageCodes = new ArrayList<>();
 
   private void setupLanguageSpinner() {
-    AutoCompleteTextView dropdown = binding.languageSpinner;
+    MaterialButton dropdown = binding.languageSpinner;
     String[] codes = getAvailableLanguages();
     String[] displayNames = mapCodesToDisplayNames(codes);
 
@@ -447,8 +447,6 @@ public class OCRFragment extends Fragment {
 
     // Set click listener to show language selection dialog
     dropdown.setOnClickListener(v -> showLanguageDialog(codes, displayNames, dropdown));
-    dropdown.setFocusable(false);
-    dropdown.setClickable(true);
   }
 
   private String resolveDefaultLanguageForDevice(String[] codes) {
@@ -493,8 +491,7 @@ public class OCRFragment extends Fragment {
     return false;
   }
 
-  private void showLanguageDialog(
-      String[] codes, String[] displayNames, AutoCompleteTextView dropdown) {
+  private void showLanguageDialog(String[] codes, String[] displayNames, MaterialButton dropdown) {
     if (de.schliweb.makeacopy.BuildConfig.FEATURE_PADDLE_OCR) {
       showSingleLanguageDialog(codes, displayNames, dropdown);
     } else {
@@ -503,7 +500,7 @@ public class OCRFragment extends Fragment {
   }
 
   private void showSingleLanguageDialog(
-      String[] codes, String[] displayNames, AutoCompleteTextView dropdown) {
+      String[] codes, String[] displayNames, MaterialButton dropdown) {
     int checkedItem = -1;
     if (!selectedLanguageCodes.isEmpty()) {
       String selected = selectedLanguageCodes.get(0);
@@ -537,7 +534,7 @@ public class OCRFragment extends Fragment {
 
   /** Shows a multi-select dialog for choosing OCR languages (max 2). */
   private void showMultiLanguageDialog(
-      String[] codes, String[] displayNames, AutoCompleteTextView dropdown) {
+      String[] codes, String[] displayNames, MaterialButton dropdown) {
     boolean[] checkedItems = new boolean[codes.length];
     for (int i = 0; i < codes.length; i++) {
       checkedItems[i] = selectedLanguageCodes.contains(codes[i]);
@@ -595,7 +592,7 @@ public class OCRFragment extends Fragment {
   }
 
   private void applyLanguageSelection(
-      AutoCompleteTextView dropdown, String[] codes, String[] displayNames, String prevLang) {
+      MaterialButton dropdown, String[] codes, String[] displayNames, String prevLang) {
     String newLangSpec = buildLangSpec();
     updateLanguageDropdownText(dropdown, codes, displayNames);
     ocrViewModel.setLanguage(newLangSpec);
@@ -658,9 +655,9 @@ public class OCRFragment extends Fragment {
 
   /** Updates the dropdown text to show selected languages. */
   private void updateLanguageDropdownText(
-      AutoCompleteTextView dropdown, String[] codes, String[] displayNames) {
+      MaterialButton dropdown, String[] codes, String[] displayNames) {
     if (selectedLanguageCodes.isEmpty()) {
-      dropdown.setText("", false);
+      dropdown.setText(getString(R.string.label_language));
       return;
     }
 
@@ -678,7 +675,7 @@ public class OCRFragment extends Fragment {
         displayText.append(displayNames[idx]);
       }
     }
-    dropdown.setText(displayText.toString(), false);
+    dropdown.setText(displayText.toString());
   }
 
   private boolean isLanguageAvailableSafe(String lang) {
