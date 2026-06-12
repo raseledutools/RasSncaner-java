@@ -32,6 +32,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import dagger.hilt.android.AndroidEntryPoint;
 import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.databinding.FragmentOcrBinding;
@@ -41,6 +42,8 @@ import de.schliweb.makeacopy.utils.image.OpenCVUtils;
 import de.schliweb.makeacopy.utils.infra.FeatureFlags;
 import de.schliweb.makeacopy.utils.ocr.*;
 import de.schliweb.makeacopy.utils.ui.DialogUtils;
+import de.schliweb.makeacopy.utils.ui.HapticsUtils;
+import de.schliweb.makeacopy.utils.ui.TransitionUtils;
 import de.schliweb.makeacopy.utils.ui.UIUtils;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +65,13 @@ import javax.inject.Provider;
  */
 @AndroidEntryPoint
 public class OCRFragment extends Fragment {
+
+  @Override
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    TransitionUtils.applySharedAxisX(this);
+  }
+
   private static final String TAG = "OCRFragment";
   // Early-exit thresholds are now centralized in OcrEarlyExitPolicy. The previous
   // "meanConf >= 55" gate was too lenient and would early-exit on tiny garbage
@@ -70,6 +80,9 @@ public class OCRFragment extends Fragment {
   // policy also requires a minimum word count and a minimum text length.
 
   private FragmentOcrBinding binding;
+
+  // Tracks the previous OCR processing state to emit a haptic tick on completion
+  private boolean wasOcrProcessing;
   private OCRViewModel ocrViewModel;
   private CropViewModel cropViewModel;
 
@@ -168,6 +181,11 @@ public class OCRFragment extends Fragment {
             getViewLifecycleOwner(),
             state -> {
               boolean canProceed = state.imageProcessed() && !state.processing();
+              // Haptic confirmation when OCR processing finishes
+              if (wasOcrProcessing && !state.processing() && state.imageProcessed()) {
+                HapticsUtils.vibrateOneShot(getContext(), 30L);
+              }
+              wasOcrProcessing = state.processing();
               binding.buttonProcess.setEnabled(canProceed);
               binding.buttonProcess.setText(R.string.next);
 
@@ -197,6 +215,12 @@ public class OCRFragment extends Fragment {
                 binding.buttonOcrReview.setAlpha(enableReview ? 1f : 0.4f);
                 binding.buttonOcrReview.setVisibility(View.VISIBLE);
               }
+
+              // Enable share button only when OCR finished and there is text to share
+              boolean hasText = effectiveText != null && !effectiveText.trim().isEmpty();
+              boolean enableShare = state.imageProcessed() && !state.processing() && hasText;
+              binding.buttonOcrShare.setEnabled(enableShare);
+              binding.buttonOcrShare.setAlpha(enableShare ? 1f : 0.4f);
 
               // Disable settings (OCR options) button while processing is running
               boolean processing = state.processing();
@@ -320,6 +344,8 @@ public class OCRFragment extends Fragment {
 
     // OCR options (settings) icon above the button bar
     binding.buttonOcrOptions.setOnClickListener(v -> showOcrOptionsDialog());
+    // Share recognized text directly with other apps
+    binding.buttonOcrShare.setOnClickListener(v -> shareOcrText());
     // OCR Review icon (optional, feature-flagged)
     if (!FeatureFlags.isOcrReviewEnabled()) {
       binding.buttonOcrReview.setVisibility(View.GONE);
@@ -490,7 +516,7 @@ public class OCRFragment extends Fragment {
     }
 
     AlertDialog dlg =
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.select_ocr_languages)
             .setSingleChoiceItems(
                 displayNames,
@@ -518,7 +544,7 @@ public class OCRFragment extends Fragment {
     }
 
     AlertDialog dlg =
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.select_ocr_languages)
             .setMultiChoiceItems(
                 displayNames,
@@ -590,6 +616,25 @@ public class OCRFragment extends Fragment {
     } else if (processed) {
       binding.buttonProcess.setText(R.string.next);
       binding.buttonProcess.setOnClickListener(v -> navigateToExport());
+    }
+  }
+
+  /** Shares the current OCR text (reviewed text if available) with other apps via ACTION_SEND. */
+  private void shareOcrText() {
+    try {
+      OCRViewModel.OcrUiState state = ocrViewModel.getState().getValue();
+      String text = state != null ? state.getEffectiveText() : null;
+      if (text == null || text.trim().isEmpty()) {
+        UIUtils.showToast(
+            requireContext(), getString(R.string.ocr_results_will_appear_here), Toast.LENGTH_SHORT);
+        return;
+      }
+      Intent sendIntent = new Intent(Intent.ACTION_SEND);
+      sendIntent.setType("text/plain");
+      sendIntent.putExtra(Intent.EXTRA_TEXT, text);
+      startActivity(Intent.createChooser(sendIntent, getString(R.string.btn_share_text)));
+    } catch (Throwable t) {
+      UIUtils.showToast(requireContext(), getString(R.string.share_failed), Toast.LENGTH_SHORT);
     }
   }
 
@@ -983,7 +1028,7 @@ public class OCRFragment extends Fragment {
                     : android.view.View.VISIBLE));
 
     AlertDialog dlg =
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
             .setTitle(
                 fixedPaddleMode ? R.string.ocr_models_manage : R.string.ocr_choose_prep_mode_title)
             .setView(view)
@@ -1122,7 +1167,7 @@ public class OCRFragment extends Fragment {
           getString(R.string.ocr_explain_prep_modes)
         };
     AlertDialog dlg =
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.ocr_models_manage)
             .setItems(
                 items,
@@ -1150,7 +1195,7 @@ public class OCRFragment extends Fragment {
                     // Confirm deletion
                     String display = codeToDisplayName(langCode);
                     AlertDialog confirm =
-                        new AlertDialog.Builder(requireContext())
+                        new MaterialAlertDialogBuilder(requireContext())
                             .setTitle(R.string.ocr_delete_confirm_title)
                             .setMessage(getString(R.string.ocr_delete_confirm_msg, display))
                             .setPositiveButton(
@@ -1202,7 +1247,7 @@ public class OCRFragment extends Fragment {
       explain = explain + "\n\n" + autoNote;
     }
     AlertDialog info =
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.ocr_prep_modes_title)
             .setMessage(explain)
             .setPositiveButton(R.string.ok, null)
@@ -1225,7 +1270,7 @@ public class OCRFragment extends Fragment {
     }
     CharSequence[] items = pkgs.toArray(new CharSequence[0]);
     AlertDialog dlg =
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.ocr_choose_pack)
             .setItems(items, (d, idx) -> showModelsInPackDialog(pkgs.get(idx)))
             .setNegativeButton(R.string.cancel, null)
@@ -1245,7 +1290,7 @@ public class OCRFragment extends Fragment {
     }
     CharSequence[] items = files.toArray(new CharSequence[0]);
     AlertDialog dlg =
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.ocr_choose_model)
             .setItems(
                 items,

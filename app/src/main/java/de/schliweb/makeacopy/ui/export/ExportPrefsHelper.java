@@ -42,6 +42,10 @@ public final class ExportPrefsHelper {
     return getPrefs(context).getBoolean("export_as_jpeg", false);
   }
 
+  public static void setExportAsJpeg(Context context, boolean exportAsJpeg) {
+    getPrefs(context).edit().putBoolean("export_as_jpeg", exportAsJpeg).apply();
+  }
+
   public static boolean isSkipOcr(Context context) {
     return getPrefs(context).getBoolean("skip_ocr", false);
   }

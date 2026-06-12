@@ -15,25 +15,7 @@
             android:layout_height="wrap_content"
             android:text="@string/include_ocr_text" />
 
-        <RadioGroup
-            android:id="@+id/dialog_format_group"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <RadioButton
-                android:id="@+id/dialog_checkbox_export_pdf"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:text="@string/export_as_pdf" />
-
-            <RadioButton
-                android:id="@+id/dialog_checkbox_export_jpeg"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/export_as_jpeg" />
-        </RadioGroup>
+        <!-- Format selection moved inline to the Export screen (segmented PDF | JPEG buttons). -->
 
         <TextView
             android:layout_width="wrap_content"
@@ -292,32 +274,22 @@
                 android:paddingEnd="4dp"
                 android:paddingTop="4dp" />
 
-            <LinearLayout
+            <!-- Stacked vertically: the long localized labels (e.g. German) wrap
+                 unevenly when placed side by side -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/dialog_button_inbox_select"
+                style="@style/Widget.MakeACopy.Button.Outlined"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingTop="4dp">
+                android:layout_marginTop="4dp"
+                android:text="@string/inbox_select_folder" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/dialog_button_inbox_select"
-                    style="@style/Widget.MakeACopy.Button.Outlined"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:text="@string/inbox_select_folder"
-                    android:ellipsize="end"
-                    android:maxLines="2" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/dialog_button_inbox_clear"
-                    style="@style/Widget.MakeACopy.Button.Outlined"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:text="@string/inbox_clear"
-                    android:ellipsize="end"
-                    android:maxLines="2" />
-            </LinearLayout>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/dialog_button_inbox_clear"
+                style="@style/Widget.MakeACopy.Button.Outlined"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/inbox_clear" />
 
             <TextView
                 android:layout_width="wrap_content"

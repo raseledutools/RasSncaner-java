@@ -21,6 +21,17 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
 
+    <!-- Workflow stepper: Camera → Crop → OCR → Export (step 3) -->
+    <de.schliweb.makeacopy.ui.views.WorkflowStepperView
+            android:id="@+id/workflow_stepper"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            app:currentStep="3"
+            app:layout_constraintTop_toBottomOf="@id/text_ocr"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
     <!-- Sprache auswählen (modern exposed dropdown) -->
     <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/language_input_layout"
@@ -32,7 +43,7 @@
             android:layout_marginTop="16dp"
             android:hint="@string/label_language"
             app:endIconMode="dropdown_menu"
-            app:layout_constraintTop_toBottomOf="@id/text_ocr"
+            app:layout_constraintTop_toBottomOf="@id/workflow_stepper"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 
@@ -112,7 +123,7 @@
                 android:layout_marginEnd="16dp"
                 android:padding="8dp"
                 android:contentDescription="@string/btn_options"
-                android:src="@drawable/ic_build"
+                android:src="@drawable/ic_tune"
                 app:tint="?attr/colorControlNormal"
                 android:minWidth="48dp"
                 android:minHeight="48dp"
@@ -132,6 +143,23 @@
                 android:minHeight="48dp"
                 app:tooltipText="@string/btn_review"
                 android:background="?attr/selectableItemBackgroundBorderless"/>
+
+        <ImageButton
+                android:id="@+id/button_ocr_share"
+                android:enabled="false"
+                android:alpha="0.4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginStart="16dp"
+                android:padding="8dp"
+                android:contentDescription="@string/btn_share_text"
+                android:src="@drawable/ic_share"
+                app:tint="?attr/colorControlNormal"
+                android:minWidth="48dp"
+                android:minHeight="48dp"
+                app:tooltipText="@string/btn_share_text"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
     </LinearLayout>
 
     <!-- Bottom button bar (mirror CropFragment positioning) -->
@@ -141,7 +169,7 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:orientation="horizontal"
-            android:background="@color/button_container_background"
+            android:background="?attr/colorSurfaceContainer"
             android:padding="12dp"
             android:elevation="8dp"
             android:layout_marginStart="16dp"
@@ -153,20 +181,16 @@
 
         <Button
                 android:id="@+id/button_back"
+                style="@style/Widget.MakeACopy.Button.Tonal"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginEnd="12dp"
                 android:paddingStart="8dp"
                 android:paddingEnd="8dp"
-                android:background="@drawable/rounded_bg_light"
                 android:text="@string/back"
                 android:maxLines="1"
-                android:ellipsize="end"
-                app:autoSizeTextType="uniform"
-                app:autoSizeMinTextSize="10sp"
-                app:autoSizeMaxTextSize="16sp"
-                app:autoSizeStepGranularity="1sp"/>
+                android:ellipsize="end" />
 
         <Button
                 android:id="@+id/button_process"
@@ -175,13 +199,8 @@
                 android:layout_weight="1"
                 android:paddingStart="8dp"
                 android:paddingEnd="8dp"
-                android:background="@drawable/rounded_bg_light"
                 android:text="@string/next"
                 android:maxLines="1"
-                android:ellipsize="end"
-                app:autoSizeTextType="uniform"
-                app:autoSizeMinTextSize="10sp"
-                app:autoSizeMaxTextSize="16sp"
-                app:autoSizeStepGranularity="1sp"/>
+                android:ellipsize="end" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

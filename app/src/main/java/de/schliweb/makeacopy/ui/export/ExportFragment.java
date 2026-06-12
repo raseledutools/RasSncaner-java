@@ -45,6 +45,8 @@ import de.schliweb.makeacopy.utils.infra.SessionIds;
 import de.schliweb.makeacopy.utils.ocr.*;
 import de.schliweb.makeacopy.utils.ui.A11yUtils;
 import de.schliweb.makeacopy.utils.ui.DialogUtils;
+import de.schliweb.makeacopy.utils.ui.HapticsUtils;
+import de.schliweb.makeacopy.utils.ui.TransitionUtils;
 import de.schliweb.makeacopy.utils.ui.UIUtils;
 import de.schliweb.makeacopy.utils.ui.ViewSizeUtils;
 import java.io.File;
@@ -80,6 +82,14 @@ import javax.inject.Inject;
  */
 @AndroidEntryPoint
 public class ExportFragment extends Fragment {
+
+  @Override
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    // Enter/return only: "New"/"Add page" navigate to the camera screen (SurfaceView preview),
+    // which must not be animated by view transitions.
+    TransitionUtils.applySharedAxisXEnterReturnOnly(this);
+  }
 
   @Inject ScansRepository scansRepository;
   @Inject javax.inject.Provider<OCRHelper> ocrHelperProvider;
@@ -450,6 +460,20 @@ public class ExportFragment extends Fragment {
     exportViewModel.setConvertToGrayscale(convertToGrayscale);
     exportViewModel.setExportFormat(exportAsJpeg ? "JPEG" : "PDF");
 
+    // Inline export format selector (PDF | JPEG): mirrors the persisted preference and
+    // updates it immediately so the Save button uses the visible selection.
+    binding.exportFormatToggle.check(exportAsJpeg ? R.id.format_jpeg : R.id.format_pdf);
+    binding.exportFormatToggle.addOnButtonCheckedListener(
+        (group, checkedId, isChecked) -> {
+          if (!isChecked) return;
+          boolean jpegSelected = checkedId == R.id.format_jpeg;
+          Context c = getContext();
+          if (c == null || ExportPrefsHelper.isExportAsJpeg(c) == jpegSelected) return;
+          ExportPrefsHelper.setExportAsJpeg(c, jpegSelected);
+          exportViewModel.setExportFormat(jpegSelected ? "JPEG" : "PDF");
+          renderPreviewFromCurrent();
+        });
+
     // Include OCR option is now managed solely via ExportOptionsDialogFragment.
     // Keep the inline checkbox hidden and do not alter its visibility here.
 
@@ -552,7 +576,8 @@ public class ExportFragment extends Fragment {
                 // Confirm removal to avoid accidental fat-finger deletions (analog to back
                 // navigation)
                 androidx.appcompat.app.AlertDialog dialog =
-                    new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    new com.google.android.material.dialog.MaterialAlertDialogBuilder(
+                            requireContext())
                         .setTitle(getString(R.string.confirm_remove_page_title))
                         .setMessage(getString(R.string.confirm_remove_page_message))
                         .setPositiveButton(
@@ -878,7 +903,7 @@ public class ExportFragment extends Fragment {
     binding.buttonClearPages.setOnClickListener(
         v -> {
           androidx.appcompat.app.AlertDialog dialog =
-              new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+              new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
                   .setTitle(getString(R.string.confirm_clear_pages_title))
                   .setMessage(getString(R.string.confirm_clear_pages_message))
                   .setPositiveButton(
@@ -1067,7 +1092,8 @@ public class ExportFragment extends Fragment {
                 int n = (pages == null) ? 0 : pages.size();
                 if (n > 1) {
                   androidx.appcompat.app.AlertDialog dialog =
-                      new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                      new com.google.android.material.dialog.MaterialAlertDialogBuilder(
+                              requireContext())
                           .setTitle(getString(R.string.confirm_clear_multipage_title))
                           .setMessage(getString(R.string.confirm_clear_multipage_message))
                           .setPositiveButton(
@@ -1707,6 +1733,8 @@ public class ExportFragment extends Fragment {
                                     ? R.string.document_multipage_exported
                                     : R.string.document_exported,
                                 lastExportedPdfName);
+                        // Confirm the successful export with a short haptic tick
+                        HapticsUtils.vibrateOneShot(appContext, 30L);
                         UIUtils.showToast(appContext, msg, Toast.LENGTH_LONG);
                         View rv = getView();
                         if (isAdded() && rv != null) {

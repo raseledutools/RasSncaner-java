@@ -13,7 +13,6 @@ import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +25,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import dagger.hilt.android.AndroidEntryPoint;
 import de.schliweb.makeacopy.BuildConfig;
 import de.schliweb.makeacopy.R;
@@ -38,6 +38,7 @@ import de.schliweb.makeacopy.utils.ocr.DictionaryManager;
 import de.schliweb.makeacopy.utils.ocr.OCRHelper;
 import de.schliweb.makeacopy.utils.ocr.OCRPostProcessor;
 import de.schliweb.makeacopy.utils.ocr.OCRUtils;
+import de.schliweb.makeacopy.utils.ocr.OcrModelManager;
 import de.schliweb.makeacopy.utils.ocr.OcrPageSegmentationMode;
 import de.schliweb.makeacopy.utils.ocr.RecognizedWord;
 import de.schliweb.makeacopy.utils.ui.DialogUtils;
@@ -1071,6 +1072,15 @@ public class OcrReviewFragment extends Fragment {
     int pad = (int) (16 * getResources().getDisplayMetrics().density);
     root.setPadding(pad, pad, pad, pad);
 
+    // Title (unified options bottom sheet pattern, see DialogUtils.createOptionsBottomSheet)
+    android.widget.TextView titleView = new android.widget.TextView(requireContext());
+    titleView.setText(R.string.edit_word_title);
+    titleView.setTextAppearance(
+        com.google.android.material.R.style.TextAppearance_Material3_TitleLarge);
+    titleView.setPadding(0, 0, 0, (int) (8 * getResources().getDisplayMetrics().density));
+    androidx.core.view.ViewCompat.setAccessibilityHeading(titleView, true);
+    root.addView(titleView);
+
     // TextInput
     final com.google.android.material.textfield.TextInputLayout til =
         new com.google.android.material.textfield.TextInputLayout(requireContext());
@@ -1123,17 +1133,15 @@ public class OcrReviewFragment extends Fragment {
     android.widget.Space spacer = new android.widget.Space(requireContext());
     actions.addView(spacer, new android.widget.LinearLayout.LayoutParams(0, 0, 1f));
 
-    // MaterialButton-Styles aus deiner styles.xml:
-    // - Widget.MakeACopy.Button (global)
-    // - Widget.MakeACopy.Button.Outlined (optional spezieller Stil)
-    ContextThemeWrapper btnCtx =
-        new ContextThemeWrapper(requireContext(), R.style.Widget_MakeACopy_Button_Outlined);
-
-    MaterialButton btnCancel = new MaterialButton(btnCtx, null, 0);
+    // Unified button styles: Cancel outlined, Save filled (matching
+    // DialogUtils.createOptionsBottomSheet)
+    MaterialButton btnCancel =
+        new MaterialButton(
+            requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
     btnCancel.setText(getString(R.string.cancel));
     btnCancel.setOnClickListener(v -> sheet.dismiss());
 
-    MaterialButton btnSave = new MaterialButton(btnCtx, null, 0);
+    MaterialButton btnSave = new MaterialButton(requireContext());
     btnSave.setText(R.string.btn_save);
     btnSave.setOnClickListener(
         v -> {
@@ -1156,12 +1164,12 @@ public class OcrReviewFragment extends Fragment {
         });
 
     // Add buttons with spacing between them
-    android.widget.LinearLayout.LayoutParams cancelLp =
+    actions.addView(btnCancel);
+    android.widget.LinearLayout.LayoutParams saveLp =
         new android.widget.LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-    cancelLp.setMarginEnd((int) (16 * getResources().getDisplayMetrics().density));
-    actions.addView(btnCancel, cancelLp);
-    actions.addView(btnSave);
+    saveLp.setMarginStart((int) (8 * getResources().getDisplayMetrics().density));
+    actions.addView(btnSave, saveLp);
 
     android.widget.LinearLayout.LayoutParams actionsLp =
         new android.widget.LinearLayout.LayoutParams(
@@ -1279,7 +1287,7 @@ public class OcrReviewFragment extends Fragment {
           getString(R.string.cm_lang)
         };
     AlertDialog dialog =
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
             .setItems(
                 items,
                 (d, which) -> {
@@ -1323,7 +1331,7 @@ public class OcrReviewFragment extends Fragment {
           getString(R.string.case_title)
         };
     AlertDialog dialog =
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.cm_case)
             .setItems(
                 items,
@@ -1371,83 +1379,144 @@ public class OcrReviewFragment extends Fragment {
 
     final int[] selectedIndex = {currentIndex};
 
-    AlertDialog dialog =
-        new AlertDialog.Builder(requireContext())
-            .setTitle(R.string.dialog_language_title)
-            .setSingleChoiceItems(
-                displayNames,
-                currentIndex,
-                (dlg, which) -> {
-                  selectedIndex[0] = which;
-                })
-            .setNegativeButton(R.string.cancel, null)
-            .setNeutralButton(
-                R.string.btn_reocr,
-                (dlg, w) -> {
-                  if (selectedIndex[0] < 0 || selectedIndex[0] >= codes.length) {
-                    UIUtils.showToast(
-                        requireContext(),
-                        getString(R.string.reocr_no_language),
-                        android.widget.Toast.LENGTH_SHORT);
-                    return;
-                  }
-                  String newLang = codes[selectedIndex[0]];
-                  // Save the language first
-                  viewModel.markModified();
-                  word.lang = newLang;
-                  word.e = true;
+    // Bottom Sheet im M3-Look (unified options bottom sheet pattern, see
+    // DialogUtils.createOptionsBottomSheet)
+    final BottomSheetDialog sheet =
+        new BottomSheetDialog(requireContext(), R.style.ThemeOverlay_MakeACopy_BottomSheet);
 
-                  // Update status chips
-                  OcrDoc currentDoc = viewModel.getDoc().getValue();
-                  updateStatusChips(currentDoc);
+    float density = getResources().getDisplayMetrics().density;
+    android.widget.LinearLayout root = new android.widget.LinearLayout(requireContext());
+    root.setOrientation(android.widget.LinearLayout.VERTICAL);
+    int pad = (int) (16 * density);
+    root.setPadding(pad, pad, pad, pad);
 
-                  // Run Re-OCR for this word
-                  reOcrWord(word, newLang);
-                })
-            .setPositiveButton(
-                R.string.btn_save,
-                (dlg, w) -> {
-                  viewModel.markModified();
-                  if (selectedIndex[0] >= 0 && selectedIndex[0] < codes.length) {
-                    word.lang = codes[selectedIndex[0]];
-                  } else {
-                    word.lang = null;
-                  }
-                  word.e = true;
+    // Title
+    android.widget.TextView titleView = new android.widget.TextView(requireContext());
+    titleView.setText(R.string.dialog_language_title);
+    titleView.setTextAppearance(
+        com.google.android.material.R.style.TextAppearance_Material3_TitleLarge);
+    titleView.setPadding(0, 0, 0, (int) (8 * density));
+    androidx.core.view.ViewCompat.setAccessibilityHeading(titleView, true);
+    root.addView(titleView);
 
-                  // Update status chips immediately to reflect the language change
-                  OcrDoc currentDoc = viewModel.getDoc().getValue();
-                  updateStatusChips(currentDoc);
+    // Single-choice language list (RadioGroup inside a ScrollView)
+    android.widget.RadioGroup radioGroup = new android.widget.RadioGroup(requireContext());
+    radioGroup.setOrientation(android.widget.LinearLayout.VERTICAL);
+    for (int i = 0; i < displayNames.length; i++) {
+      com.google.android.material.radiobutton.MaterialRadioButton rb =
+          new com.google.android.material.radiobutton.MaterialRadioButton(requireContext());
+      rb.setId(i);
+      rb.setText(displayNames[i]);
+      rb.setMinHeight((int) (48 * density));
+      radioGroup.addView(rb);
+    }
+    if (currentIndex >= 0) radioGroup.check(currentIndex);
+    radioGroup.setOnCheckedChangeListener((group, checkedId) -> selectedIndex[0] = checkedId);
 
-                  propagateAndAutosave();
-                })
-            .create();
-    dialog.setOnShowListener(
-        d -> {
-          DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext());
-          // Force horizontal button layout to prevent stacking on narrow screens
-          try {
-            android.widget.Button btnPositive = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-            android.widget.Button btnNegative = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
-            android.widget.Button btnNeutral = dialog.getButton(AlertDialog.BUTTON_NEUTRAL);
-            // Reduce text size slightly to fit all buttons horizontally
-            float smallerSize = 12 * getResources().getDisplayMetrics().density;
-            if (btnPositive != null)
-              btnPositive.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, smallerSize);
-            if (btnNegative != null)
-              btnNegative.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, smallerSize);
-            if (btnNeutral != null)
-              btnNeutral.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, smallerSize);
-            // Reduce padding to save space
-            int smallPadding = (int) (8 * getResources().getDisplayMetrics().density);
-            if (btnPositive != null) btnPositive.setPadding(smallPadding, 0, smallPadding, 0);
-            if (btnNegative != null) btnNegative.setPadding(smallPadding, 0, smallPadding, 0);
-            if (btnNeutral != null) btnNeutral.setPadding(smallPadding, 0, smallPadding, 0);
-          } catch (Throwable ignore) {
-            // Best-effort; failure is non-critical
+    android.widget.ScrollView scroll = new android.widget.ScrollView(requireContext());
+    scroll.addView(
+        radioGroup,
+        new android.widget.FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+    android.widget.LinearLayout.LayoutParams scrollLp =
+        new android.widget.LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+    root.addView(scroll, scrollLp);
+
+    // Cap the list height so the action row stays visible with long language lists
+    final int maxListHeight = (int) (getResources().getDisplayMetrics().heightPixels * 0.5f);
+    scroll.post(
+        () -> {
+          if (scroll.getHeight() > maxListHeight) {
+            scroll.getLayoutParams().height = maxListHeight;
+            scroll.requestLayout();
           }
         });
-    dialog.show();
+
+    // Actions: Re-OCR on its own full-width row (three buttons side by side would not fit on
+    // narrow screens), Cancel + Save right-aligned below
+    android.widget.LinearLayout actions = new android.widget.LinearLayout(requireContext());
+    actions.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+    actions.setGravity(android.view.Gravity.END);
+
+    android.widget.Space spacer = new android.widget.Space(requireContext());
+    actions.addView(spacer, new android.widget.LinearLayout.LayoutParams(0, 0, 1f));
+
+    MaterialButton btnCancel =
+        new MaterialButton(
+            requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
+    btnCancel.setText(getString(R.string.cancel));
+    btnCancel.setOnClickListener(v -> sheet.dismiss());
+
+    MaterialButton btnReOcr =
+        new MaterialButton(
+            requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
+    btnReOcr.setText(R.string.btn_reocr);
+    btnReOcr.setOnClickListener(
+        v -> {
+          if (selectedIndex[0] < 0 || selectedIndex[0] >= codes.length) {
+            UIUtils.showToast(
+                requireContext(),
+                getString(R.string.reocr_no_language),
+                android.widget.Toast.LENGTH_SHORT);
+            return;
+          }
+          String newLang = codes[selectedIndex[0]];
+          // Save the language first
+          viewModel.markModified();
+          word.lang = newLang;
+          word.e = true;
+
+          // Update status chips
+          OcrDoc currentDoc = viewModel.getDoc().getValue();
+          updateStatusChips(currentDoc);
+
+          // Run Re-OCR for this word
+          reOcrWord(word, newLang);
+          sheet.dismiss();
+        });
+
+    MaterialButton btnSave = new MaterialButton(requireContext());
+    btnSave.setText(R.string.btn_save);
+    btnSave.setOnClickListener(
+        v -> {
+          viewModel.markModified();
+          if (selectedIndex[0] >= 0 && selectedIndex[0] < codes.length) {
+            word.lang = codes[selectedIndex[0]];
+          } else {
+            word.lang = null;
+          }
+          word.e = true;
+
+          // Update status chips immediately to reflect the language change
+          OcrDoc currentDoc = viewModel.getDoc().getValue();
+          updateStatusChips(currentDoc);
+
+          propagateAndAutosave();
+          sheet.dismiss();
+        });
+
+    actions.addView(btnCancel);
+    android.widget.LinearLayout.LayoutParams saveLp =
+        new android.widget.LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+    saveLp.setMarginStart((int) (8 * density));
+    actions.addView(btnSave, saveLp);
+
+    android.widget.LinearLayout.LayoutParams reOcrLp =
+        new android.widget.LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+    reOcrLp.topMargin = (int) (12 * density);
+    root.addView(btnReOcr, reOcrLp);
+
+    android.widget.LinearLayout.LayoutParams actionsLp =
+        new android.widget.LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+    actionsLp.topMargin = (int) (8 * density);
+    root.addView(actions, actionsLp);
+
+    sheet.setContentView(root);
+    sheet.show();
   }
 
   /**
@@ -1457,6 +1526,8 @@ public class OcrReviewFragment extends Fragment {
    */
   private String[] getAvailableLanguageCodes() {
     try {
+      String[] flavorLanguages = OcrModelManager.getAvailableLanguageCodes(requireContext());
+      if (flavorLanguages != null && flavorLanguages.length > 0) return flavorLanguages;
       OCRHelper helper = ocrHelperProvider.get();
       String[] langs = helper.getAvailableLanguages();
       if (langs != null && langs.length > 0) return langs;
@@ -1488,6 +1559,20 @@ public class OcrReviewFragment extends Fragment {
    * @return the display name (e.g., "English", "German")
    */
   private String codeToDisplayName(String code) {
+    if (de.schliweb.makeacopy.BuildConfig.FEATURE_PADDLE_OCR) {
+      return switch (code) {
+        case "en" -> "English (Paddle)";
+        case "latin" -> "Latin script (Paddle)";
+        case "eslav" -> "East Slavic (Paddle)";
+        case "cyrillic" -> "Cyrillic script (Paddle)";
+        case "arabic" -> "Arabic script (Paddle)";
+        case "devanagari" -> "Devanagari script (Paddle)";
+        case "th" -> "Thai (Paddle)";
+        case "el" -> "Greek (Paddle)";
+        case "zh" -> "Chinese/Japanese/Korean (Paddle)";
+        default -> code + " (Paddle)";
+      };
+    }
     // Map common Tesseract 3-letter codes to 2-letter BCP-47 where possible
     String two;
     switch (code) {
@@ -2112,7 +2197,7 @@ public class OcrReviewFragment extends Fragment {
     if (viewModel.hasUnsavedChanges()) {
       // Show discard confirmation dialog
       AlertDialog dialog =
-          new AlertDialog.Builder(requireContext())
+          new MaterialAlertDialogBuilder(requireContext())
               .setTitle(R.string.title_discard_changes)
               .setMessage(R.string.msg_discard_changes)
               .setPositiveButton(

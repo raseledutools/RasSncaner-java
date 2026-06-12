@@ -295,7 +295,7 @@ public class CompletedScansPickerFragment extends Fragment
   public void onItemLongPress(@NonNull String id) {
     // Show confirmation dialog to remove from registry
     androidx.appcompat.app.AlertDialog dialog =
-        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.remove_from_registry_title)
             .setMessage(R.string.remove_from_registry_message)
             .setPositiveButton(

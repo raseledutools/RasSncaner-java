@@ -22,6 +22,17 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Workflow stepper: Camera → Crop → OCR → Export (step 4) -->
+    <de.schliweb.makeacopy.ui.views.WorkflowStepperView
+            android:id="@+id/workflow_stepper"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            app:currentStep="4"
+            app:layout_constraintTop_toBottomOf="@id/text_export"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
     <!-- Dokument-Vorschau (mit Pinch-Zoom und Pan) -->
     <de.schliweb.makeacopy.ui.export.view.ZoomableImageView
             android:id="@+id/document_preview"
@@ -30,7 +41,7 @@
             android:layout_marginTop="16dp"
             android:layout_marginBottom="8dp"
             android:contentDescription="@string/document_preview"
-            app:layout_constraintTop_toBottomOf="@id/text_export"
+            app:layout_constraintTop_toBottomOf="@id/workflow_stepper"
             app:layout_constraintBottom_toTopOf="@+id/pages_container"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -119,7 +130,7 @@
             android:padding="8dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/export_options_group">
+            app:layout_constraintBottom_toTopOf="@+id/export_format_toggle">
 
         <!-- Options (gear) to the left of Plus -->
         <ImageButton
@@ -129,7 +140,7 @@
                 android:layout_weight="1"
                 android:padding="8dp"
                 android:contentDescription="@string/btn_options"
-                android:src="@drawable/ic_build"
+                android:src="@drawable/ic_tune"
                 app:tint="?attr/colorControlNormal"
                 android:minWidth="48dp"
                 android:minHeight="48dp"
@@ -196,13 +207,43 @@
                 android:background="?attr/selectableItemBackgroundBorderless"/>
     </LinearLayout>
 
+    <!-- Inline export format selector (segmented buttons) -->
+    <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/export_format_toggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:contentDescription="@string/export_format_label"
+            app:singleSelection="true"
+            app:selectionRequired="true"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/export_options_group">
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/format_pdf"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="96dp"
+                android:text="@string/export_format_pdf" />
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/format_jpeg"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="96dp"
+                android:text="@string/export_format_jpeg" />
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
     <!-- Optionen & Button -->
     <LinearLayout
             android:id="@+id/export_options_group"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@color/button_container_background"
+            android:background="?attr/colorSurfaceContainer"
             android:padding="8dp"
             android:elevation="8dp"
             android:layout_marginStart="16dp"
@@ -224,24 +265,21 @@
             <!-- Back-Button (New) -->
             <Button
                     android:id="@+id/button_back"
+                    style="@style/Widget.MakeACopy.Button.Tonal"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginEnd="4dp"
                     android:paddingStart="8dp"
                     android:paddingEnd="8dp"
-                    android:background="@drawable/rounded_bg_light"
                     android:text="@string/btn_new"
                     android:maxLines="1"
-                    android:ellipsize="end"
-                    app:autoSizeTextType="uniform"
-                    app:autoSizeMinTextSize="10sp"
-                    app:autoSizeMaxTextSize="16sp"
-                    app:autoSizeStepGranularity="1sp" />
+                    android:ellipsize="end" />
 
             <!-- Add-Button (Middle) -->
             <Button
                     android:id="@+id/button_add_scan"
+                    style="@style/Widget.MakeACopy.Button.Tonal"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -249,14 +287,9 @@
                     android:layout_marginEnd="4dp"
                     android:paddingStart="8dp"
                     android:paddingEnd="8dp"
-                    android:background="@drawable/rounded_bg_light"
                     android:text="@string/add_another_page"
                     android:maxLines="1"
-                    android:ellipsize="end"
-                    app:autoSizeTextType="uniform"
-                    app:autoSizeMinTextSize="10sp"
-                    app:autoSizeMaxTextSize="16sp"
-                    app:autoSizeStepGranularity="1sp" />
+                    android:ellipsize="end" />
 
             <!-- Export-Button (Right) -->
             <Button
@@ -265,23 +298,17 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="4dp"
-                    android:background="@drawable/rounded_bg_light"
                     android:paddingStart="8dp"
                     android:paddingEnd="8dp"
                     android:text="@string/btn_save"
                     android:enabled="false"
                     android:maxLines="1"
-                    android:ellipsize="end"
-                    app:autoSizeTextType="uniform"
-                    app:autoSizeMinTextSize="10sp"
-                    app:autoSizeMaxTextSize="16sp"
-                    app:autoSizeStepGranularity="1sp" />
+                    android:ellipsize="end" />
         </LinearLayout>
 
         <!-- Progress indicator for long exports (multi-page PDF/JPEG) -->
-        <ProgressBar
+        <com.google.android.material.progressindicator.LinearProgressIndicator
             android:id="@+id/export_progress"
-            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"

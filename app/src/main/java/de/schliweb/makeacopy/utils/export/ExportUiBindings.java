@@ -100,7 +100,16 @@ public final class ExportUiBindings {
             max -> {
               Integer m = (max == null) ? 0 : max;
               binding.exportProgress.setMax((m <= 0) ? 100 : m);
-              binding.exportProgress.setIndeterminate(m == null || m <= 0);
+              boolean indeterminate = m <= 0;
+              if (binding.exportProgress.isIndeterminate() != indeterminate) {
+                // Material progress indicators only allow switching the mode while not visible.
+                int previousVisibility = binding.exportProgress.getVisibility();
+                if (previousVisibility == android.view.View.VISIBLE) {
+                  binding.exportProgress.setVisibility(android.view.View.INVISIBLE);
+                }
+                binding.exportProgress.setIndeterminate(indeterminate);
+                binding.exportProgress.setVisibility(previousVisibility);
+              }
             });
     vm.getExportProgress()
         .observe(

@@ -24,7 +24,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import de.schliweb.makeacopy.R;
@@ -117,8 +116,6 @@ public class ExportOptionsDialogFragment extends DialogFragment {
     View view = getLayoutInflater().inflate(R.layout.dialog_export_options, null);
 
     CheckBox cbIncludeOcr = view.findViewById(R.id.dialog_checkbox_include_ocr);
-    RadioButton rbExportPdf = view.findViewById(R.id.dialog_checkbox_export_pdf);
-    RadioButton rbExportJpeg = view.findViewById(R.id.dialog_checkbox_export_jpeg);
     RadioGroup cleanupModeGroup = view.findViewById(R.id.dialog_document_cleanup_group);
     RadioButton rbCleanupOriginal = view.findViewById(R.id.dialog_document_cleanup_original);
     RadioButton rbCleanupNatural = view.findViewById(R.id.dialog_document_cleanup_natural);
@@ -174,12 +171,8 @@ public class ExportOptionsDialogFragment extends DialogFragment {
     PdfCreator.TextLayerMode textLayerMode = ExportPrefsHelper.resolveTextLayerMode(ctx);
 
     cbIncludeOcr.setChecked(includeOcr);
-    // Initialize format selection from preference (PDF default)
-    if (exportAsJpeg) {
-      rbExportJpeg.setChecked(true);
-    } else {
-      rbExportPdf.setChecked(true);
-    }
+    // Format (PDF/JPEG) is selected inline on the Export screen; the dialog only shows the
+    // option groups matching the currently selected format.
 
     if (savedCleanupMode == DocumentCleanupMode.NATURAL) rbCleanupNatural.setChecked(true);
     else if (savedCleanupMode == DocumentCleanupMode.ENHANCED) rbCleanupEnhanced.setChecked(true);
@@ -305,116 +298,97 @@ public class ExportOptionsDialogFragment extends DialogFragment {
       }
     }
 
-    // Visibility toggle between PDF and JPEG groups based on selected format
+    // Visibility toggle between PDF and JPEG groups based on the inline format selection
     updateGroups(exportAsJpeg, pdfGroup, jpegGroup);
-    RadioGroup formatGroup = view.findViewById(R.id.dialog_format_group);
-    if (formatGroup != null) {
-      formatGroup.setOnCheckedChangeListener(
-          (group, checkedId) -> {
-            boolean jpegSelected = checkedId == rbExportJpeg.getId();
-            updateGroups(jpegSelected, pdfGroup, jpegGroup);
-          });
-    }
 
     // PDF color mode uses RadioGroup; mutual exclusivity is handled by the group.
 
     // JPEG modes use RadioGroup; mutual exclusivity is handled by the group.
 
-    AlertDialog dialog =
-        new AlertDialog.Builder(ctx)
-            .setTitle(R.string.export_options_title)
-            .setView(view)
-            .setNegativeButton(R.string.cancel, (d, w) -> d.dismiss())
-            .setPositiveButton(
-                R.string.confirm,
-                (d, w) -> {
-                  boolean incOcr = cbIncludeOcr.isChecked();
-                  boolean asJpeg = rbExportJpeg.isChecked();
+    return DialogUtils.createOptionsBottomSheet(
+        ctx,
+        getString(R.string.export_options_title),
+        view,
+        () -> {
+          boolean incOcr = cbIncludeOcr.isChecked();
+          boolean asJpeg = ExportPrefsHelper.isExportAsJpeg(ctx);
 
-                  // determine jpeg mode from RadioGroup
-                  JpegExportOptions.Mode mode = JpegExportOptions.Mode.NONE;
-                  int jpegCheckedId = jpegModeGroup.getCheckedRadioButtonId();
-                  boolean jpegGray = false;
-                  if (jpegCheckedId == rbJpegAuto.getId()) {
-                    jpegGray = true;
-                  } else if (jpegCheckedId == rbJpegBw.getId()) {
-                    mode = JpegExportOptions.Mode.BW_TEXT;
-                  }
+          // determine jpeg mode from RadioGroup
+          JpegExportOptions.Mode mode = JpegExportOptions.Mode.NONE;
+          int jpegCheckedId = jpegModeGroup.getCheckedRadioButtonId();
+          boolean jpegGray = false;
+          if (jpegCheckedId == rbJpegAuto.getId()) {
+            jpegGray = true;
+          } else if (jpegCheckedId == rbJpegBw.getId()) {
+            mode = JpegExportOptions.Mode.BW_TEXT;
+          }
 
-                  // determine PDF color mode from RadioGroup (null = none/original)
-                  String pdfBwMode = null;
-                  int pdfBwCheckedId = pdfBwModeGroup.getCheckedRadioButtonId();
-                  if (pdfBwCheckedId == rbPdfGray.getId()) pdfBwMode = "GRAYSCALE";
-                  else if (pdfBwCheckedId == rbPdfBwClassic.getId()) pdfBwMode = "CLASSIC";
-                  else if (pdfBwCheckedId == rbPdfBwRobust.getId()) pdfBwMode = "ROBUST";
+          // determine PDF color mode from RadioGroup (null = none/original)
+          String pdfBwMode = null;
+          int pdfBwCheckedId = pdfBwModeGroup.getCheckedRadioButtonId();
+          if (pdfBwCheckedId == rbPdfGray.getId()) pdfBwMode = "GRAYSCALE";
+          else if (pdfBwCheckedId == rbPdfBwClassic.getId()) pdfBwMode = "CLASSIC";
+          else if (pdfBwCheckedId == rbPdfBwRobust.getId()) pdfBwMode = "ROBUST";
 
-                  DocumentCleanupMode cleanupMode = DocumentCleanupMode.ORIGINAL;
-                  int cleanupCheckedId = cleanupModeGroup.getCheckedRadioButtonId();
-                  if (cleanupCheckedId == rbCleanupNatural.getId()) {
-                    cleanupMode = DocumentCleanupMode.NATURAL;
-                  } else if (cleanupCheckedId == rbCleanupEnhanced.getId()) {
-                    cleanupMode = DocumentCleanupMode.ENHANCED;
-                  } else if (cleanupCheckedId == rbCleanupCleanText.getId()) {
-                    cleanupMode = DocumentCleanupMode.CLEAN_TEXT;
-                  }
+          DocumentCleanupMode cleanupMode = DocumentCleanupMode.ORIGINAL;
+          int cleanupCheckedId = cleanupModeGroup.getCheckedRadioButtonId();
+          if (cleanupCheckedId == rbCleanupNatural.getId()) {
+            cleanupMode = DocumentCleanupMode.NATURAL;
+          } else if (cleanupCheckedId == rbCleanupEnhanced.getId()) {
+            cleanupMode = DocumentCleanupMode.ENHANCED;
+          } else if (cleanupCheckedId == rbCleanupCleanText.getId()) {
+            cleanupMode = DocumentCleanupMode.CLEAN_TEXT;
+          }
 
-                  // determine pdf preset
-                  PdfQualityPreset sel = PdfQualityPreset.STANDARD;
-                  int checkedId = pdfPresetGroup.getCheckedRadioButtonId();
-                  if (checkedId == rbHigh.getId()) sel = PdfQualityPreset.HIGH;
-                  else if (checkedId == rbSmall.getId()) sel = PdfQualityPreset.SMALL;
-                  else if (checkedId == rbVerySmall.getId()) sel = PdfQualityPreset.VERY_SMALL;
+          // determine pdf preset
+          PdfQualityPreset sel = PdfQualityPreset.STANDARD;
+          int checkedId = pdfPresetGroup.getCheckedRadioButtonId();
+          if (checkedId == rbHigh.getId()) sel = PdfQualityPreset.HIGH;
+          else if (checkedId == rbSmall.getId()) sel = PdfQualityPreset.SMALL;
+          else if (checkedId == rbVerySmall.getId()) sel = PdfQualityPreset.VERY_SMALL;
 
-                  // determine page format
-                  PageFormat selFormat = PageFormat.FIT_TO_IMAGE;
-                  int pageFormatCheckedId = pageFormatGroup.getCheckedRadioButtonId();
-                  if (pageFormatCheckedId == rbPageA4.getId()) selFormat = PageFormat.A4;
-                  else if (pageFormatCheckedId == rbPageLetter.getId())
-                    selFormat = PageFormat.US_LETTER;
-                  else if (pageFormatCheckedId == rbPageLegal.getId()) selFormat = PageFormat.LEGAL;
+          // determine page format
+          PageFormat selFormat = PageFormat.FIT_TO_IMAGE;
+          int pageFormatCheckedId = pageFormatGroup.getCheckedRadioButtonId();
+          if (pageFormatCheckedId == rbPageA4.getId()) selFormat = PageFormat.A4;
+          else if (pageFormatCheckedId == rbPageLetter.getId()) selFormat = PageFormat.US_LETTER;
+          else if (pageFormatCheckedId == rbPageLegal.getId()) selFormat = PageFormat.LEGAL;
 
-                  PdfCreator.TextLayerMode selTextLayerMode = PdfCreator.TextLayerMode.LINE_BASED;
-                  int textLayerCheckedId = pdfTextLayerModeGroup.getCheckedRadioButtonId();
-                  if (textLayerCheckedId == rbPdfTextLayerWordPositioned.getId()) {
-                    selTextLayerMode = PdfCreator.TextLayerMode.WORD_POSITIONED;
-                  }
+          PdfCreator.TextLayerMode selTextLayerMode = PdfCreator.TextLayerMode.LINE_BASED;
+          int textLayerCheckedId = pdfTextLayerModeGroup.getCheckedRadioButtonId();
+          if (textLayerCheckedId == rbPdfTextLayerWordPositioned.getId()) {
+            selTextLayerMode = PdfCreator.TextLayerMode.WORD_POSITIONED;
+          }
 
-                  // persist
-                  SharedPreferences.Editor editor =
-                      prefs
-                          .edit()
-                          .putBoolean("include_ocr", incOcr)
-                          .putBoolean("export_as_jpeg", asJpeg)
-                          .putString("jpeg_mode", mode.name())
-                          .putBoolean("jpeg_output_grayscale", jpegGray)
-                          .putString("document_cleanup_mode", cleanupMode.name())
-                          .putString("pdf_preset", sel.name())
-                          .putString("page_format", selFormat.name())
-                          .putString("pdf_text_layer_mode", selTextLayerMode.name());
-                  if (pdfBwMode != null) editor.putString("pdf_bw_mode", pdfBwMode);
-                  else editor.remove("pdf_bw_mode");
-                  editor.apply();
+          // persist
+          SharedPreferences.Editor editor =
+              prefs
+                  .edit()
+                  .putBoolean("include_ocr", incOcr)
+                  .putBoolean("export_as_jpeg", asJpeg)
+                  .putString("jpeg_mode", mode.name())
+                  .putBoolean("jpeg_output_grayscale", jpegGray)
+                  .putString("document_cleanup_mode", cleanupMode.name())
+                  .putString("pdf_preset", sel.name())
+                  .putString("page_format", selFormat.name())
+                  .putString("pdf_text_layer_mode", selTextLayerMode.name());
+          if (pdfBwMode != null) editor.putString("pdf_bw_mode", pdfBwMode);
+          else editor.remove("pdf_bw_mode");
+          editor.apply();
 
-                  Bundle result = new Bundle();
-                  result.putBoolean(BUNDLE_INCLUDE_OCR, incOcr);
-                  result.putBoolean(BUNDLE_EXPORT_AS_JPEG, asJpeg);
-                  result.putString(BUNDLE_JPEG_MODE, mode.name());
-                  result.putBoolean("jpeg_output_grayscale", jpegGray);
-                  result.putString("document_cleanup_mode", cleanupMode.name());
-                  if (pdfBwMode != null) result.putString("pdf_bw_mode", pdfBwMode);
-                  else result.remove("pdf_bw_mode");
-                  result.putString(BUNDLE_PDF_PRESET, sel.name());
-                  result.putString(BUNDLE_PAGE_FORMAT, selFormat.name());
-                  result.putString(BUNDLE_PDF_TEXT_LAYER_MODE, selTextLayerMode.name());
-                  getParentFragmentManager().setFragmentResult(REQUEST_KEY, result);
-                })
-            .create();
-
-    // Improve dark mode contrast for dialog buttons similar to other dialogs
-    dialog.setOnShowListener(
-        dlg -> DialogUtils.improveAlertDialogButtonContrastForNight(dialog, ctx));
-
-    return dialog;
+          Bundle result = new Bundle();
+          result.putBoolean(BUNDLE_INCLUDE_OCR, incOcr);
+          result.putBoolean(BUNDLE_EXPORT_AS_JPEG, asJpeg);
+          result.putString(BUNDLE_JPEG_MODE, mode.name());
+          result.putBoolean("jpeg_output_grayscale", jpegGray);
+          result.putString("document_cleanup_mode", cleanupMode.name());
+          if (pdfBwMode != null) result.putString("pdf_bw_mode", pdfBwMode);
+          else result.remove("pdf_bw_mode");
+          result.putString(BUNDLE_PDF_PRESET, sel.name());
+          result.putString(BUNDLE_PAGE_FORMAT, selFormat.name());
+          result.putString(BUNDLE_PDF_TEXT_LAYER_MODE, selTextLayerMode.name());
+          getParentFragmentManager().setFragmentResult(REQUEST_KEY, result);
+        });
   }
 
   private void updateGroups(boolean exportJpeg, View pdfGroup, View jpegGroup) {
