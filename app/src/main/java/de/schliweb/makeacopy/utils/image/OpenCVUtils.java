@@ -90,7 +90,7 @@ public final class OpenCVUtils {
   private static final double MIN_RECT_CORNER_ANGLE_DEG = 60.0;
   private static final double MAX_RECT_CORNER_ANGLE_DEG = 120.0;
 
-  static boolean isSafeMode() {
+  public static boolean isSafeMode() {
     return USE_SAFE_MODE;
   }
 

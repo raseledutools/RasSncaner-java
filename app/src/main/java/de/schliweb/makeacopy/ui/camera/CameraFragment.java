@@ -3552,7 +3552,9 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     // resize and rotate as Mats, then blit into a pooled ARGB_8888 Bitmap. This avoids
     // the previous YuvImage→JPEG(Q60)→BitmapFactory round-trip (which was both lossy
     // and CPU-heavy) and reuses a small Bitmap pool to suppress GC churn at ~5–6 FPS.
-    if (OpenCVUtils.isInitialized()) {
+    // In OpenCV safe mode this path is intentionally disabled: on Android emulators and some
+    // affected devices Imgproc.cvtColor can abort the process with SIGILL, which Java cannot catch.
+    if (OpenCVUtils.isInitialized() && !OpenCVUtils.isSafeMode()) {
       try {
         return yuvToBitmapUprightSmallCv(image, maxSize);
       } catch (Throwable t) {
