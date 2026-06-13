@@ -114,6 +114,8 @@ public class OCRFragment extends Fragment {
     cropViewModel = new ViewModelProvider(requireActivity()).get(CropViewModel.class);
     binding = FragmentOcrBinding.inflate(inflater, container, false);
     View root = binding.getRoot();
+    binding.ocrModelsHint.setVisibility(
+        getResources().getBoolean(R.bool.show_ocr_models_hint) ? View.VISIBLE : View.GONE);
 
     // If OCR was opened directly (skipping Crop), ensure we have a bitmap in CropViewModel
     try {
