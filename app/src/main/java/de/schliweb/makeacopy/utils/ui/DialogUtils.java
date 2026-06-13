@@ -16,6 +16,7 @@ import android.text.InputType;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -173,6 +174,12 @@ public final class DialogUtils {
     int pad = (int) (16 * ctx.getResources().getDisplayMetrics().density);
     layout.setPadding(pad, pad, pad, pad);
 
+    ScrollView scrollView = new ScrollView(ctx);
+    scrollView.addView(
+        layout,
+        new ScrollView.LayoutParams(
+            ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
+
     TextView labelPolicy = new TextView(ctx);
     labelPolicy.setText(R.string.cleanup_policy);
     layout.addView(labelPolicy);
@@ -212,7 +219,7 @@ public final class DialogUtils {
     final androidx.appcompat.app.AlertDialog dialog =
         new com.google.android.material.dialog.MaterialAlertDialogBuilder(ctx)
             .setTitle(R.string.scan_cleanup_settings)
-            .setView(layout)
+            .setView(scrollView)
             .setPositiveButton(
                 R.string.ok,
                 (d, w) -> {

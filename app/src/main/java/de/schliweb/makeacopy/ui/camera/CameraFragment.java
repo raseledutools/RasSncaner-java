@@ -27,6 +27,7 @@ import android.net.Uri;
 import android.os.*;
 import android.util.Log;
 import android.view.*;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
@@ -1126,6 +1127,15 @@ public class CameraFragment extends Fragment implements SensorEventListener {
             DialogUtils.improveAlertDialogButtonContrastForNight(dialog, requireContext());
           } catch (Throwable ignore) {
             // Dialog contrast improvement is best-effort
+          }
+          ListView listView = dialog.getListView();
+          if (listView != null) {
+            int maxHeight = (int) (getResources().getDisplayMetrics().heightPixels * 0.6f);
+            ViewGroup.LayoutParams params = listView.getLayoutParams();
+            if (params != null && (params.height <= 0 || params.height > maxHeight)) {
+              params.height = maxHeight;
+              listView.setLayoutParams(params);
+            }
           }
         });
     dialog.show();
