@@ -224,7 +224,8 @@ public final class DocQuadOrtRunner implements AutoCloseable {
       }
 
       long[] inputShape = new long[] {1, 3, IN_H, IN_W};
-      try (OnnxTensor input = OnnxTensor.createTensor(env, FloatBuffer.wrap(inputNchw), inputShape);
+      try (OnnxTensor input =
+              OnnxTensor.createTensor(env, FloatBuffer.wrap(inputNchw), inputShape);
           OrtSession.Result results = session.run(Collections.singletonMap("input", input))) {
 
         // Always read outputs by name (robust against output order).
