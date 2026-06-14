@@ -316,9 +316,10 @@ public final class OpenCVUtils {
       @androidx.annotation.Nullable Double targetShortOverLong) {
     if (corners == null || corners.length != 4) return originalBitmap;
     if (mode == null) mode = WarpMode.AUTO_PROJECTIVE;
+    Bitmap bitmapForOpenCv = ensureBitmapToMatCompatible(originalBitmap);
     Mat mat = new Mat();
     try {
-      Utils.bitmapToMat(originalBitmap, mat);
+      Utils.bitmapToMat(bitmapForOpenCv, mat);
       // Compute a tight target size based on the selection to preserve aspect ratio of the cropped
       // area. The strategy depends on the requested WarpMode:
       //   - AUTO_PROJECTIVE: projective aspect-ratio estimation (Zhang & He, 2006) with
@@ -372,6 +373,25 @@ public final class OpenCVUtils {
     } finally {
       release(mat);
     }
+  }
+
+  private static Bitmap ensureBitmapToMatCompatible(Bitmap bitmap) {
+    if (bitmap == null) return null;
+    Bitmap.Config config = bitmap.getConfig();
+    if (config == Bitmap.Config.ARGB_8888 || config == Bitmap.Config.RGB_565) {
+      return bitmap;
+    }
+    Bitmap converted = bitmap.copy(Bitmap.Config.ARGB_8888, false);
+    if (converted != null) {
+      Log.d(TAG, "Converted " + config + " bitmap to ARGB_8888 for OpenCV");
+      return converted;
+    }
+    Bitmap fallback =
+        Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+    Canvas canvas = new Canvas(fallback);
+    canvas.drawBitmap(bitmap, 0f, 0f, null);
+    Log.d(TAG, "Redrew " + config + " bitmap as ARGB_8888 for OpenCV");
+    return fallback;
   }
 
   /**
