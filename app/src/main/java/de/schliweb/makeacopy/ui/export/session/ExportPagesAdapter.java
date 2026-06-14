@@ -88,11 +88,26 @@ public class ExportPagesAdapter extends RecyclerView.Adapter<ExportPagesAdapter.
   }
 
   private static Bitmap ThumbCache_get(String key) {
-    return key == null ? null : THUMB_CACHE.get(key);
+    if (key == null) return null;
+    Bitmap bmp = THUMB_CACHE.get(key);
+    if (bmp != null && bmp.isRecycled()) {
+      THUMB_CACHE.remove(key);
+      return null;
+    }
+    return bmp;
   }
 
   private static void ThumbCache_put(String key, Bitmap bmp) {
-    if (key != null && bmp != null) THUMB_CACHE.put(key, bmp);
+    if (key != null && bmp != null && !bmp.isRecycled()) THUMB_CACHE.put(key, bmp);
+  }
+
+  private static boolean setImageBitmapIfDrawable(@NonNull ImageView view, Bitmap bmp) {
+    if (bmp == null || bmp.isRecycled()) {
+      view.setImageResource(R.drawable.ic_image);
+      return false;
+    }
+    view.setImageBitmap(bmp);
+    return true;
   }
 
   /**
@@ -201,14 +216,14 @@ public class ExportPagesAdapter extends RecyclerView.Adapter<ExportPagesAdapter.
           // Best-effort; failure is non-critical
         }
       }
-      h.thumb.setImageBitmap(bmp);
+      setImageBitmapIfDrawable(h.thumb, bmp);
     } else {
       String basePath = (s.thumbPath() != null) ? s.thumbPath() : s.filePath();
       String cacheKey =
           basePath; // keep simple key; we rotate only for rare metadata entries inline
       Bitmap cached = ThumbCache_get(cacheKey);
       if (cached != null) {
-        h.thumb.setImageBitmap(cached);
+        setImageBitmapIfDrawable(h.thumb, cached);
       } else {
         h.thumb.setImageResource(R.drawable.ic_image);
         String path = basePath;
@@ -237,7 +252,7 @@ public class ExportPagesAdapter extends RecyclerView.Adapter<ExportPagesAdapter.
               }
             }
             ThumbCache_put(cacheKey, out);
-            h.thumb.setImageBitmap(out);
+            setImageBitmapIfDrawable(h.thumb, out);
           }
         }
       }
