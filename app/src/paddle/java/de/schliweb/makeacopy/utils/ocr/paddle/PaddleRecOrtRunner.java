@@ -128,6 +128,8 @@ class PaddleRecOrtRunner implements AutoCloseable {
     private final File dictFile;
     private final String modelKey;
     private volatile String[] vocab;
+    private final Object sessionLock = new Object();
+    private boolean closed;
 
     /**
      * Represents the output of a recognition process, including the recognized text,
@@ -511,77 +513,83 @@ class PaddleRecOrtRunner implements AutoCloseable {
             float[] input = bitmapToNchwRgbNormalized(target, paddedW, targetH);
             long[] inputShape = new long[] {1, 3, targetH, paddedW};
 
-            try (OnnxTensor inT =
-                            OnnxTensor.createTensor(env, FloatBuffer.wrap(input), inputShape);
-                    OrtSession.Result results =
-                            session.run(Collections.singletonMap(INPUT_NAME, inT))) {
-
-                float[][] logits = extractLogitsTC(results);
-                int T = logits.length;
-                int C = (T > 0) ? logits[0].length : 0;
-
-                String[] vocab = vocab();
-                // Vocab-Validation: dict.size()+1 == V (CTC blank inkludiert).
-                // RecDictLoader prependet bereits eine Blank-Zeile, daher gilt:
-                // vocab.length == V (dict.size()+1).
-                if (C > 0 && vocab.length != C) {
-                    throw new IllegalStateException(
-                            "Vocab/Model size mismatch for modelKey=" + modelKey
-                                    + ": vocab=" + vocab.length + " modelV=" + C);
+            synchronized (sessionLock) {
+                if (closed) {
+                    throw new IllegalStateException("PaddleRecOrtRunner is closed");
                 }
 
-                CtcDecoder.Decoded dec = CtcDecoder.decode(logits, vocab);
+                try (OnnxTensor inT =
+                                OnnxTensor.createTensor(env, FloatBuffer.wrap(input), inputShape);
+                        OrtSession.Result results =
+                                session.run(Collections.singletonMap(INPUT_NAME, inT))) {
 
-                int[] argmaxHead = null;
-                if (PaddleResultBuilder.ENABLE_DEBUG_DUMPS
-                        && PaddleDebugDumper.isEnabled()
-                        && T > 0
-                        && C > 0) {
-                    int n = Math.min(T, PaddleDebugDumper.ARGMAX_HEAD_FRAMES);
-                    argmaxHead = new int[n];
-                    for (int t = 0; t < n; t++) {
-                        float[] row = logits[t];
-                        int best = 0;
-                        float bestVal = row[0];
-                        for (int c = 1; c < C; c++) {
-                            if (row[c] > bestVal) {
-                                bestVal = row[c];
-                                best = c;
-                            }
-                        }
-                        argmaxHead[t] = best;
+                    float[][] logits = extractLogitsTC(results);
+                    int T = logits.length;
+                    int C = (T > 0) ? logits[0].length : 0;
+
+                    String[] vocab = vocab();
+                    // Vocab-Validation: dict.size()+1 == V (CTC blank inkludiert).
+                    // RecDictLoader prependet bereits eine Blank-Zeile, daher gilt:
+                    // vocab.length == V (dict.size()+1).
+                    if (C > 0 && vocab.length != C) {
+                        throw new IllegalStateException(
+                                "Vocab/Model size mismatch for modelKey=" + modelKey
+                                        + ": vocab=" + vocab.length + " modelV=" + C);
                     }
-                }
 
-                if (ENABLE_PER_CROP_RECOGNITION_LOGS) {
-                    long tEnd = System.nanoTime();
-                    Log.i(
-                            TAG,
-                            "recognize modelKey="
-                                    + modelKey
-                                    + " T="
-                                    + T
-                                    + " C="
-                                    + C
-                                    + " textLen="
-                                    + dec.text().length()
-                                    + " meanConf="
-                                    + dec.meanConfidence()
-                                    + " tokens="
-                                    + dec.tokens().size()
-                                    + " total="
-                                    + ((tEnd - tStart) / 1_000_000L)
-                                    + "ms");
+                    CtcDecoder.Decoded dec = CtcDecoder.decode(logits, vocab);
+
+                    int[] argmaxHead = null;
+                    if (PaddleResultBuilder.ENABLE_DEBUG_DUMPS
+                            && PaddleDebugDumper.isEnabled()
+                            && T > 0
+                            && C > 0) {
+                        int n = Math.min(T, PaddleDebugDumper.ARGMAX_HEAD_FRAMES);
+                        argmaxHead = new int[n];
+                        for (int t = 0; t < n; t++) {
+                            float[] row = logits[t];
+                            int best = 0;
+                            float bestVal = row[0];
+                            for (int c = 1; c < C; c++) {
+                                if (row[c] > bestVal) {
+                                    bestVal = row[c];
+                                    best = c;
+                                }
+                            }
+                            argmaxHead[t] = best;
+                        }
+                    }
+
+                    if (ENABLE_PER_CROP_RECOGNITION_LOGS) {
+                        long tEnd = System.nanoTime();
+                        Log.i(
+                                TAG,
+                                "recognize modelKey="
+                                        + modelKey
+                                        + " T="
+                                        + T
+                                        + " C="
+                                        + C
+                                        + " textLen="
+                                        + dec.text().length()
+                                        + " meanConf="
+                                        + dec.meanConfidence()
+                                        + " tokens="
+                                        + dec.tokens().size()
+                                        + " total="
+                                        + ((tEnd - tStart) / 1_000_000L)
+                                        + "ms");
+                    }
+                    return new RecOutput(
+                            dec.text(),
+                            dec.meanConfidence(),
+                            dec.tokens(),
+                            dec.frameCount(),
+                            scaledW,
+                            paddedW,
+                            srcW,
+                            argmaxHead);
                 }
-                return new RecOutput(
-                        dec.text(),
-                        dec.meanConfidence(),
-                        dec.tokens(),
-                        dec.frameCount(),
-                        scaledW,
-                        paddedW,
-                        srcW,
-                        argmaxHead);
             }
         } finally {
             if (!target.isRecycled()) {
@@ -631,10 +639,13 @@ class PaddleRecOrtRunner implements AutoCloseable {
 
     @Override
     public void close() {
-        try {
-            if (session != null) session.close();
-        } catch (Exception e) {
-            Log.w(TAG, "Error closing OrtSession: " + e.getMessage());
+        synchronized (sessionLock) {
+            try {
+                if (!closed && session != null) session.close();
+            } catch (Exception e) {
+                Log.w(TAG, "Error closing OrtSession: " + e.getMessage());
+            }
+            closed = true;
         }
         // OrtEnvironment ist global/shared; nicht schließen.
     }

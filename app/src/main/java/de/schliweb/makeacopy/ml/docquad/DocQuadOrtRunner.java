@@ -60,6 +60,8 @@ public final class DocQuadOrtRunner implements AutoCloseable {
 
   private final OrtEnvironment env;
   private final OrtSession session;
+  private final Object sessionLock = new Object();
+  private boolean closed;
 
   DocQuadOrtRunner(Context context, String modelAssetPath) throws Exception {
     this(context, modelAssetPath, context.getCacheDir());
@@ -216,27 +218,36 @@ public final class DocQuadOrtRunner implements AutoCloseable {
       throw new IllegalArgumentException("inputNchw must have length " + (3 * IN_H * IN_W));
     }
 
-    long[] inputShape = new long[] {1, 3, IN_H, IN_W};
-    try (OnnxTensor input = OnnxTensor.createTensor(env, FloatBuffer.wrap(inputNchw), inputShape);
-        OrtSession.Result results = session.run(Collections.singletonMap("input", input))) {
-
-      // Always read outputs by name (robust against output order).
-      float[][][][] maskLogits = getRequiredFloat4d(results, "mask_logits");
-      float[][][][] cornerHeatmaps = getRequiredFloat4d(results, "corner_heatmaps");
-
-      // Optional: fast shape assertion in debug/test builds.
-      if (BuildConfig.DEBUG) {
-        assertShapeMask(maskLogits);
-        assertShapeCorners(cornerHeatmaps);
+    synchronized (sessionLock) {
+      if (closed) {
+        throw new IllegalStateException("DocQuadOrtRunner is closed");
       }
-      return new Outputs(maskLogits, cornerHeatmaps);
+
+      long[] inputShape = new long[] {1, 3, IN_H, IN_W};
+      try (OnnxTensor input = OnnxTensor.createTensor(env, FloatBuffer.wrap(inputNchw), inputShape);
+          OrtSession.Result results = session.run(Collections.singletonMap("input", input))) {
+
+        // Always read outputs by name (robust against output order).
+        float[][][][] maskLogits = getRequiredFloat4d(results, "mask_logits");
+        float[][][][] cornerHeatmaps = getRequiredFloat4d(results, "corner_heatmaps");
+
+        // Optional: fast shape assertion in debug/test builds.
+        if (BuildConfig.DEBUG) {
+          assertShapeMask(maskLogits);
+          assertShapeCorners(cornerHeatmaps);
+        }
+        return new Outputs(maskLogits, cornerHeatmaps);
+      }
     }
   }
 
   @Override
   public void close() throws Exception {
-    if (session != null) {
-      session.close();
+    synchronized (sessionLock) {
+      if (!closed && session != null) {
+        session.close();
+      }
+      closed = true;
     }
     // OrtEnvironment is global/shared; not closed.
   }

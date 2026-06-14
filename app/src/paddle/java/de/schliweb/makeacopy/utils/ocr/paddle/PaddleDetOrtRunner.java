@@ -99,6 +99,8 @@ class PaddleDetOrtRunner implements AutoCloseable {
     private final OrtEnvironment env;
     private final OrtSession session;
     private final DbPostProcessor postProcessor;
+    private final Object sessionLock = new Object();
+    private boolean closed;
 
     /**
      * Protected constructor for the {@code PaddleDetOrtRunner} class.
@@ -302,50 +304,56 @@ class PaddleDetOrtRunner implements AutoCloseable {
             // 2) Eingabe-Tensor erzeugen: NCHW float32, BGR-Mean/Std-Norm.
             float[] input = bitmapToNchwBgrNormalized(target, lb.dstW, lb.dstH);
 
-            long[] inputShape = new long[] {1, 3, lb.dstH, lb.dstW};
-            try (OnnxTensor inT =
-                            OnnxTensor.createTensor(env, FloatBuffer.wrap(input), inputShape);
-                    OrtSession.Result results =
-                            session.run(Collections.singletonMap(INPUT_NAME, inT))) {
-
-                // 3) Probmap [1,1,H,W] auslesen.
-                float[][] prob = extractProbMap(results, lb.dstH, lb.dstW);
-
-                long tPost = System.nanoTime();
-                List<Quad> quadsLb = postProcessor.process(prob);
-                long tPostEnd = System.nanoTime();
-                // logPostprocessSensitivity(prob, quadsLb.size());
-
-                // 4) De-letterbox.
-                List<Quad> quads = new java.util.ArrayList<>(quadsLb.size());
-                for (Quad q : quadsLb) {
-                    double[] xs = new double[4];
-                    double[] ys = new double[4];
-                    for (int i = 0; i < 4; i++) {
-                        double[] p = lb.unapplyPoint(q.x[i], q.y[i]);
-                        // Auf Bildgrenzen klemmen.
-                        xs[i] = Math.max(0.0, Math.min(srcW - 1.0, p[0]));
-                        ys[i] = Math.max(0.0, Math.min(srcH - 1.0, p[1]));
-                    }
-                    quads.add(new Quad(xs, ys, q.score));
+            synchronized (sessionLock) {
+                if (closed) {
+                    throw new IllegalStateException("PaddleDetOrtRunner is closed");
                 }
 
-                // 5) Sortierung: zuerst y, dann x (TL→BR-Lesefluss).
-                quads.sort(
-                        Comparator.<Quad>comparingDouble(Quad::minY)
-                                .thenComparingDouble(Quad::minX));
+                long[] inputShape = new long[] {1, 3, lb.dstH, lb.dstW};
+                try (OnnxTensor inT =
+                                OnnxTensor.createTensor(env, FloatBuffer.wrap(input), inputShape);
+                        OrtSession.Result results =
+                                session.run(Collections.singletonMap(INPUT_NAME, inT))) {
 
-                long tEnd = System.nanoTime();
-                Log.i(
-                        TAG,
-                        "detect quads="
-                                + quads.size()
-                                + " postproc="
-                                + ((tPostEnd - tPost) / 1_000_000L)
-                                + "ms total="
-                                + ((tEnd - tStart) / 1_000_000L)
-                                + "ms");
-                return quads;
+                    // 3) Probmap [1,1,H,W] auslesen.
+                    float[][] prob = extractProbMap(results, lb.dstH, lb.dstW);
+
+                    long tPost = System.nanoTime();
+                    List<Quad> quadsLb = postProcessor.process(prob);
+                    long tPostEnd = System.nanoTime();
+                    // logPostprocessSensitivity(prob, quadsLb.size());
+
+                    // 4) De-letterbox.
+                    List<Quad> quads = new java.util.ArrayList<>(quadsLb.size());
+                    for (Quad q : quadsLb) {
+                        double[] xs = new double[4];
+                        double[] ys = new double[4];
+                        for (int i = 0; i < 4; i++) {
+                            double[] p = lb.unapplyPoint(q.x[i], q.y[i]);
+                            // Auf Bildgrenzen klemmen.
+                            xs[i] = Math.max(0.0, Math.min(srcW - 1.0, p[0]));
+                            ys[i] = Math.max(0.0, Math.min(srcH - 1.0, p[1]));
+                        }
+                        quads.add(new Quad(xs, ys, q.score));
+                    }
+
+                    // 5) Sortierung: zuerst y, dann x (TL→BR-Lesefluss).
+                    quads.sort(
+                            Comparator.<Quad>comparingDouble(Quad::minY)
+                                    .thenComparingDouble(Quad::minX));
+
+                    long tEnd = System.nanoTime();
+                    Log.i(
+                            TAG,
+                            "detect quads="
+                                    + quads.size()
+                                    + " postproc="
+                                    + ((tPostEnd - tPost) / 1_000_000L)
+                                    + "ms total="
+                                    + ((tEnd - tStart) / 1_000_000L)
+                                    + "ms");
+                    return quads;
+                }
             }
         } finally {
             if (!target.isRecycled()) {
@@ -403,10 +411,13 @@ class PaddleDetOrtRunner implements AutoCloseable {
 
     @Override
     public void close() {
-        try {
-            if (session != null) session.close();
-        } catch (Exception e) {
-            Log.w(TAG, "Error closing OrtSession: " + e.getMessage());
+        synchronized (sessionLock) {
+            try {
+                if (!closed && session != null) session.close();
+            } catch (Exception e) {
+                Log.w(TAG, "Error closing OrtSession: " + e.getMessage());
+            }
+            closed = true;
         }
         // OrtEnvironment ist global/shared; nicht schließen.
     }
