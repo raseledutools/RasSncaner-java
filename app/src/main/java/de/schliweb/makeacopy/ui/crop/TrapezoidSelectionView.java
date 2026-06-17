@@ -392,6 +392,14 @@ public class TrapezoidSelectionView extends View {
   @Nullable private Future<?> cornerTask;
   private volatile int requestedInitSeq = 0; // debouncing/cancellation token
 
+  // Debounce window for the auto-initialization triggered by onSizeChanged. When the crop screen
+  // opens, the view typically receives several onSizeChanged events in quick succession while the
+  // layout settles (system-inset/IME size jumps, e.g. 1546 → 1601 → 1546 px). Posting the
+  // initialization with this delay (and cancelling pending posts via removeCallbacks before
+  // re-posting) coalesces those events into a single detection run, so the accurate first result
+  // is not overwritten by a redundant second pass.
+  private static final long INIT_DEBOUNCE_MS = 150L;
+
   // Debounced initialization runnable to avoid synchronous heavy work in onSizeChanged
   private final Runnable initCornersRunnable =
       new Runnable() {
@@ -1320,8 +1328,20 @@ public class TrapezoidSelectionView extends View {
         // Even if the result came from OpenCV fallback inside the composite, we still consider the
         // attempt consumed.
         docQuadAutoInitConsumed = true;
+      } else if (!userHasEdited
+          && BuildConfig.FEATURE_DOCQUAD_CORNERS
+          && BuildConfig.FEATURE_BEST_OF_CROP_CORNERS) {
+        // DocQuad was already consumed by a previous (auto) initialization, but the user has not
+        // edited the corners yet. A redundant re-initialization can happen when the view receives
+        // several onSizeChanged events while laying out (e.g. system-inset/IME size jumps). In that
+        // case falling back to plain OpenCV here would overwrite the accurate DocQuad/best-of quad
+        // with the inferior Hough-fallback result. Reuse the same best-of/DocQuad path so every run
+        // yields the same good corners (DocQuad is cached once per image, so this stays cheap).
+        imgCorners = detectBestCropCorners(work, scaleToOrig);
+        if (imgCorners == null || imgCorners.length != 4) return null;
+        imgCornersAlreadyOriginalScale = true;
       } else {
-        // After user edit or DocQuad consumed, use OpenCV directly
+        // After a user edit (or when best-of/DocQuad is disabled), use OpenCV directly.
         imgCorners = OpenCVUtils.detectDocumentCorners(getContext(), work);
         if (imgCorners == null || imgCorners.length != 4) return null;
       }
@@ -2211,10 +2231,12 @@ public class TrapezoidSelectionView extends View {
     // Initialize corners when the view size is first determined
     if (!initialized) {
       Log.d(TAG, "Scheduling corners initialization via posted runnable");
-      // Debounce any previous requests and post a fresh one
+      // Debounce any previous requests and post a fresh one. Use a delayed post so that the rapid
+      // succession of onSizeChanged events during initial layout (inset/IME size jumps) collapses
+      // into a single detection run instead of triggering multiple redundant initializations.
       removeCallbacks(initCornersRunnable);
       lastAutoInitBitmap = imageBitmap;
-      post(initCornersRunnable);
+      postDelayed(initCornersRunnable, INIT_DEBOUNCE_MS);
     } else if ((w != oldw || h != oldh) && w > 0 && h > 0) {
       // cancel any pending detection and reschedule/guard
       if (cornerTask != null) {
@@ -2244,7 +2266,7 @@ public class TrapezoidSelectionView extends View {
         float newAspect = w / (float) h;
         if (Math.abs(oldAspect - newAspect) > 0.5f) {
           removeCallbacks(initCornersRunnable);
-          post(initCornersRunnable);
+          postDelayed(initCornersRunnable, INIT_DEBOUNCE_MS);
         }
       }
     }
@@ -3396,7 +3418,9 @@ public class TrapezoidSelectionView extends View {
       removeCallbacks(initCornersRunnable);
       if (!suppressInitOnce) {
         lastAutoInitBitmap = bitmap;
-        post(initCornersRunnable);
+        // Debounced like the onSizeChanged path: if a fresh layout pass (inset/IME size jump) posts
+        // another initialization shortly after, removeCallbacks coalesces them into one run.
+        postDelayed(initCornersRunnable, INIT_DEBOUNCE_MS);
       } else {
         suppressInitOnce = false;
         invalidate();
