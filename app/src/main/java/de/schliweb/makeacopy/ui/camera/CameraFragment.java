@@ -958,7 +958,8 @@ public class CameraFragment extends Fragment implements SensorEventListener {
         // 3) Preview + Analysis + Capture
         try {
           cameraProvider.unbindAll();
-          camera = bindUseCases(cameraSelector, sharedViewPort, preview, imageAnalysis, imageCapture);
+          camera =
+              bindUseCases(cameraSelector, sharedViewPort, preview, imageAnalysis, imageCapture);
           setPreviewSurfaceProviderWithLog(tier);
           logResolutions("Bind: Preview+Analysis+Capture");
         } catch (IllegalArgumentException e3) {
@@ -1022,7 +1023,9 @@ public class CameraFragment extends Fragment implements SensorEventListener {
    */
   private ViewPort buildSharedViewPort(int rotation) {
     try {
-      if (binding != null && binding.viewFinder.getWidth() > 0 && binding.viewFinder.getHeight() > 0) {
+      if (binding != null
+          && binding.viewFinder.getWidth() > 0
+          && binding.viewFinder.getHeight() > 0) {
         ViewPort vp = binding.viewFinder.getViewPort(rotation);
         if (vp != null) {
           return vp;
@@ -1036,8 +1039,9 @@ public class CameraFragment extends Fragment implements SensorEventListener {
   }
 
   /**
-   * Binds the given use cases through a {@link UseCaseGroup} that carries a shared {@link ViewPort},
-   * guaranteeing a common cropped field of view across Preview, ImageAnalysis and ImageCapture.
+   * Binds the given use cases through a {@link UseCaseGroup} that carries a shared {@link
+   * ViewPort}, guaranteeing a common cropped field of view across Preview, ImageAnalysis and
+   * ImageCapture.
    *
    * @param cameraSelector the camera selector to bind with
    * @param viewPort the shared ViewPort (may be {@code null} to skip view-port cropping)
@@ -3539,10 +3543,10 @@ public class CameraFragment extends Fragment implements SensorEventListener {
    *
    * <p>The detection bitmap is produced from the full analysis buffer, but — now that all use cases
    * share a common {@link ViewPort} — the preview only renders the cropped field of view. When a
-   * {@code cropRect} (already expressed in upright-bitmap space) is supplied, the FIT_CENTER scaling
-   * is computed against that visible region instead of the whole bitmap, so the overlay stays
-   * aligned with the preview on devices whose analysis crop is a true subset of the buffer. When
-   * {@code cropRect} is {@code null}, the full bitmap is used (previous behaviour).
+   * {@code cropRect} (already expressed in upright-bitmap space) is supplied, the FIT_CENTER
+   * scaling is computed against that visible region instead of the whole bitmap, so the overlay
+   * stays aligned with the preview on devices whose analysis crop is a true subset of the buffer.
+   * When {@code cropRect} is {@code null}, the full bitmap is used (previous behaviour).
    *
    * @param src the detected corner points in upright-bitmap coordinates
    * @param bmpW width of the upright analysis bitmap
@@ -3551,16 +3555,14 @@ public class CameraFragment extends Fragment implements SensorEventListener {
    * @return mapped overlay points, or {@code null} if the view/bitmap is not measurable yet
    */
   private android.graphics.PointF[] mapToOverlayPoints(
-      org.opencv.core.Point[] src,
-      int bmpW,
-      int bmpH,
-      @Nullable android.graphics.RectF cropRect) {
+      org.opencv.core.Point[] src, int bmpW, int bmpH, @Nullable android.graphics.RectF cropRect) {
     if (binding == null) return null;
     int vw = binding.viewFinder.getWidth();
     int vh = binding.viewFinder.getHeight();
     if (vw <= 0 || vh <= 0 || bmpW <= 0 || bmpH <= 0) return null;
 
-    // Visible region in upright-bitmap space: the preview crop when available, else the full bitmap.
+    // Visible region in upright-bitmap space: the preview crop when available, else the full
+    // bitmap.
     float regionLeft = 0f;
     float regionTop = 0f;
     float regionW = bmpW;
