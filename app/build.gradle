@@ -41,8 +41,8 @@ android {
         applicationId "de.schliweb.makeacopy"
         minSdk = 29
         targetSdk = 36
-        versionCode 40500
-        versionName "4.5.0"
+        versionCode 40501
+        versionName "4.5.1"
 
         // Use default AndroidX test runner
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
