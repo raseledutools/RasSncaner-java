@@ -19,7 +19,7 @@
             android:id="@+id/imageThumb"
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:scaleType="centerCrop"
+            android:scaleType="fitCenter"
             android:contentDescription="@string/thumbnail"
             android:src="@android:drawable/ic_menu_report_image" />
 
