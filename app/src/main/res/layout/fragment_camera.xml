@@ -16,7 +16,7 @@
             android:layout_marginEnd="8dp"
             android:text="@string/camera_ready_tap_the_button_to_scan_a_document"
             android:textAlignment="center"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:accessibilityHeading="true"
             android:accessibilityLiveRegion="polite"
             app:layout_constraintTop_toTopOf="parent"

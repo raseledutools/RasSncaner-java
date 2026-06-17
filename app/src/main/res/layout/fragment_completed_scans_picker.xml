@@ -12,7 +12,6 @@
         android:text="@string/picker_title_completed_scans"
         android:textStyle="bold"
         android:textSize="18sp"
-        android:textColor="?android:textColorPrimary"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:paddingTop="8dp"
