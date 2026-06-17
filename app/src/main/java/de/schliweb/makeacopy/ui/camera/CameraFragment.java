@@ -34,6 +34,7 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
 import androidx.appcompat.app.AlertDialog;
 import androidx.camera.camera2.interop.Camera2Interop;
@@ -931,30 +932,33 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
     CameraSelector cameraSelector = buildCameraSelectorForZoom();
 
+    // Shared ViewPort so that Preview, ImageAnalysis and ImageCapture are all cropped to the same
+    // field of view (WYSIWYG). Without this, AspectRatioStrategy(RATIO_4_3, FALLBACK_RULE_AUTO) is
+    // only a hint and CameraX may deliver diverging crops/aspect ratios per use case on some
+    // devices — the root cause of device-dependent aspect-ratio mismatches between the live
+    // preview, the live corner overlay and the actually captured image.
+    ViewPort sharedViewPort = buildSharedViewPort(rotation);
+
     try {
       cameraProvider.unbindAll();
 
       // Non-Sony: keep existing sequence Preview → Preview+Analysis → Preview+Analysis+Capture
       // 1) Preview only
-      camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview);
+      camera = bindUseCases(cameraSelector, sharedViewPort, preview);
       setPreviewSurfaceProviderWithLog(tier);
       logResolutions("Bind: Preview");
 
       // 2) Preview + Analysis
       try {
         cameraProvider.unbindAll();
-        camera =
-            cameraProvider.bindToLifecycle(
-                getViewLifecycleOwner(), cameraSelector, preview, imageAnalysis);
+        camera = bindUseCases(cameraSelector, sharedViewPort, preview, imageAnalysis);
         setPreviewSurfaceProviderWithLog(tier);
         logResolutions("Bind: Preview+Analysis");
 
         // 3) Preview + Analysis + Capture
         try {
           cameraProvider.unbindAll();
-          camera =
-              cameraProvider.bindToLifecycle(
-                  getViewLifecycleOwner(), cameraSelector, preview, imageAnalysis, imageCapture);
+          camera = bindUseCases(cameraSelector, sharedViewPort, preview, imageAnalysis, imageCapture);
           setPreviewSurfaceProviderWithLog(tier);
           logResolutions("Bind: Preview+Analysis+Capture");
         } catch (IllegalArgumentException e3) {
@@ -963,16 +967,14 @@ public class CameraFragment extends Fragment implements SensorEventListener {
               "Bind failed for Preview+Analysis+Capture on " + tier + " → fallback Preview+Capture",
               e3);
           cameraProvider.unbindAll();
-          camera =
-              cameraProvider.bindToLifecycle(
-                  getViewLifecycleOwner(), cameraSelector, preview, imageCapture);
+          camera = bindUseCases(cameraSelector, sharedViewPort, preview, imageCapture);
           setPreviewSurfaceProviderWithLog(tier);
           logResolutions("Fallback: Preview+Capture");
         }
       } catch (IllegalArgumentException e2) {
         Log.w(TAG, "Bind failed for Preview+Analysis on " + tier + " → fallback Preview only", e2);
         cameraProvider.unbindAll();
-        camera = cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview);
+        camera = bindUseCases(cameraSelector, sharedViewPort, preview);
         setPreviewSurfaceProviderWithLog(tier);
         logResolutions("Fallback: Preview");
       }
@@ -1007,6 +1009,52 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       Log.e(TAG, "bindToLifecycle failed: " + e.getMessage(), e);
       escalateBindTier();
     }
+  }
+
+  /**
+   * Builds a shared {@link ViewPort} so that all bound use cases (Preview, ImageAnalysis,
+   * ImageCapture) are cropped to the same field of view. Prefers the {@link PreviewView}'s own
+   * ViewPort (which mirrors its FIT_CENTER scale type and current size), and falls back to an
+   * explicit 4:3 sensor ratio when the view is not laid out yet.
+   *
+   * @param rotation the target rotation (Surface.ROTATION_*) shared by all use cases
+   * @return a ViewPort to attach to the {@link UseCaseGroup}, never {@code null}
+   */
+  private ViewPort buildSharedViewPort(int rotation) {
+    try {
+      if (binding != null && binding.viewFinder.getWidth() > 0 && binding.viewFinder.getHeight() > 0) {
+        ViewPort vp = binding.viewFinder.getViewPort(rotation);
+        if (vp != null) {
+          return vp;
+        }
+      }
+    } catch (Throwable t) {
+      Log.w(TAG, "buildSharedViewPort: PreviewView.getViewPort failed, using 4:3 fallback", t);
+    }
+    // Fallback: enforce the same 4:3 sensor ratio that all ResolutionSelectors request.
+    return new ViewPort.Builder(new android.util.Rational(4, 3), rotation).build();
+  }
+
+  /**
+   * Binds the given use cases through a {@link UseCaseGroup} that carries a shared {@link ViewPort},
+   * guaranteeing a common cropped field of view across Preview, ImageAnalysis and ImageCapture.
+   *
+   * @param cameraSelector the camera selector to bind with
+   * @param viewPort the shared ViewPort (may be {@code null} to skip view-port cropping)
+   * @param useCases the use cases to bind (in order)
+   * @return the bound {@link Camera}
+   */
+  private Camera bindUseCases(
+      CameraSelector cameraSelector, @Nullable ViewPort viewPort, UseCase... useCases) {
+    UseCaseGroup.Builder groupBuilder = new UseCaseGroup.Builder();
+    if (viewPort != null) {
+      groupBuilder.setViewPort(viewPort);
+    }
+    for (UseCase useCase : useCases) {
+      groupBuilder.addUseCase(useCase);
+    }
+    return cameraProvider.bindToLifecycle(
+        getViewLifecycleOwner(), cameraSelector, groupBuilder.build());
   }
 
   // --------- Capture ---------
@@ -3077,8 +3125,14 @@ public class CameraFragment extends Fragment implements SensorEventListener {
       final boolean hasValid = detectedValid;
       // Live-DocQuad liefert aktuell keinen Score (Determinismus/Performance).
 
-      // Map bitmap coords to overlay coords (PreviewView with FIT_CENTER) when valid
-      android.graphics.PointF[] viewPts = hasValid ? mapToOverlayPoints(pts, bmpW, bmpH) : null;
+      // Map bitmap coords to overlay coords (PreviewView with FIT_CENTER) when valid.
+      // The detection bitmap is built from the FULL analysis buffer, but the PreviewView (sharing
+      // a common ViewPort with Preview/Capture) only displays the cropped field of view. Compute
+      // that crop region in upright-bitmap space so the overlay lines up with what is shown.
+      final android.graphics.RectF analysisCropUpright =
+          computeUprightCropRect(image, OpenCVUtils.DETECTION_MAX_EDGE, bmpW, bmpH);
+      android.graphics.PointF[] viewPts =
+          hasValid ? mapToOverlayPoints(pts, bmpW, bmpH, analysisCropUpright) : null;
 
       // Live focus-quality (sharpness) measurement — user-toggleable in the camera options.
       // Reuses this already throttled analysis pass and the small upright bitmap: no extra
@@ -3476,23 +3530,124 @@ public class CameraFragment extends Fragment implements SensorEventListener {
 
   private android.graphics.PointF[] mapToOverlayPoints(
       org.opencv.core.Point[] src, int bmpW, int bmpH) {
+    return mapToOverlayPoints(src, bmpW, bmpH, null);
+  }
+
+  /**
+   * Maps detected corner points from the upright analysis-bitmap coordinate space to overlay
+   * coordinates on top of the {@link PreviewView} (which uses {@code FIT_CENTER}).
+   *
+   * <p>The detection bitmap is produced from the full analysis buffer, but — now that all use cases
+   * share a common {@link ViewPort} — the preview only renders the cropped field of view. When a
+   * {@code cropRect} (already expressed in upright-bitmap space) is supplied, the FIT_CENTER scaling
+   * is computed against that visible region instead of the whole bitmap, so the overlay stays
+   * aligned with the preview on devices whose analysis crop is a true subset of the buffer. When
+   * {@code cropRect} is {@code null}, the full bitmap is used (previous behaviour).
+   *
+   * @param src the detected corner points in upright-bitmap coordinates
+   * @param bmpW width of the upright analysis bitmap
+   * @param bmpH height of the upright analysis bitmap
+   * @param cropRect the visible (preview) region in upright-bitmap space, or {@code null}
+   * @return mapped overlay points, or {@code null} if the view/bitmap is not measurable yet
+   */
+  private android.graphics.PointF[] mapToOverlayPoints(
+      org.opencv.core.Point[] src,
+      int bmpW,
+      int bmpH,
+      @Nullable android.graphics.RectF cropRect) {
     if (binding == null) return null;
     int vw = binding.viewFinder.getWidth();
     int vh = binding.viewFinder.getHeight();
     if (vw <= 0 || vh <= 0 || bmpW <= 0 || bmpH <= 0) return null;
-    float sx = vw / (float) bmpW;
-    float sy = vh / (float) bmpH;
+
+    // Visible region in upright-bitmap space: the preview crop when available, else the full bitmap.
+    float regionLeft = 0f;
+    float regionTop = 0f;
+    float regionW = bmpW;
+    float regionH = bmpH;
+    if (cropRect != null && cropRect.width() > 0 && cropRect.height() > 0) {
+      regionLeft = cropRect.left;
+      regionTop = cropRect.top;
+      regionW = cropRect.width();
+      regionH = cropRect.height();
+    }
+
+    float sx = vw / regionW;
+    float sy = vh / regionH;
     float scale = Math.min(sx, sy);
-    float contentW = bmpW * scale;
-    float contentH = bmpH * scale;
+    float contentW = regionW * scale;
+    float contentH = regionH * scale;
     float offX = (vw - contentW) * 0.5f;
     float offY = (vh - contentH) * 0.5f;
     android.graphics.PointF[] out = new android.graphics.PointF[4];
     for (int i = 0; i < 4; i++) {
       float x = (float) src[i].x;
       float y = (float) src[i].y;
-      out[i] = new android.graphics.PointF(offX + x * scale, offY + y * scale);
+      out[i] =
+          new android.graphics.PointF(
+              offX + (x - regionLeft) * scale, offY + (y - regionTop) * scale);
     }
+    return out;
+  }
+
+  /**
+   * Computes the visible preview crop region in the upright analysis-bitmap coordinate space.
+   *
+   * <p>The analysis bitmap is built from the full {@link ImageProxy} buffer (then downscaled and
+   * rotated to be upright), whereas the {@link PreviewView} — sharing a common {@link ViewPort} —
+   * only shows {@link ImageProxy#getCropRect()}. This helper applies the same downscale and 90°
+   * rotation transforms to that crop rectangle so it lines up with the detected corner coordinates.
+   *
+   * @param image the analysis frame
+   * @param maxSize the detection max edge used by {@link #yuvToBitmapUprightSmall}
+   * @param bmpW width of the resulting upright bitmap
+   * @param bmpH height of the resulting upright bitmap
+   * @return the crop region in upright-bitmap space, or {@code null} when the crop covers the whole
+   *     buffer (no adjustment needed) or cannot be determined
+   */
+  @Nullable
+  private android.graphics.RectF computeUprightCropRect(
+      @NonNull ImageProxy image, int maxSize, int bmpW, int bmpH) {
+    android.graphics.Rect crop = image.getCropRect();
+    int w = image.getWidth();
+    int h = image.getHeight();
+    if (crop == null || w <= 0 || h <= 0) return null;
+    // Full-buffer crop → preview shows the whole bitmap, keep previous (full-bitmap) mapping.
+    if (crop.left <= 0 && crop.top <= 0 && crop.right >= w && crop.bottom >= h) return null;
+
+    int sample = Math.max(1, computeSampleSize(w, h, maxSize));
+    float s = 1f / sample;
+    float cl = crop.left * s;
+    float ct = crop.top * s;
+    float cr = crop.right * s;
+    float cb = crop.bottom * s;
+
+    // Resized (pre-rotation) bitmap dimensions.
+    int rw = Math.max(1, w / sample);
+    int rh = Math.max(1, h / sample);
+
+    int rot = ((image.getImageInfo().getRotationDegrees() % 360) + 360) % 360;
+    android.graphics.RectF out;
+    switch (rot) {
+      case 90: // ROTATE_90_CLOCKWISE: upright dims = (rh, rw)
+        out = new android.graphics.RectF(rh - cb, cl, rh - ct, cr);
+        break;
+      case 180:
+        out = new android.graphics.RectF(rw - cr, rh - cb, rw - cl, rh - ct);
+        break;
+      case 270: // ROTATE_90_COUNTERCLOCKWISE: upright dims = (rh, rw)
+        out = new android.graphics.RectF(ct, rw - cr, cb, rw - cl);
+        break;
+      default:
+        out = new android.graphics.RectF(cl, ct, cr, cb);
+        break;
+    }
+    // Clamp to the actual upright bitmap bounds to guard against rounding.
+    out.left = Math.max(0f, Math.min(out.left, bmpW));
+    out.top = Math.max(0f, Math.min(out.top, bmpH));
+    out.right = Math.max(0f, Math.min(out.right, bmpW));
+    out.bottom = Math.max(0f, Math.min(out.bottom, bmpH));
+    if (out.width() <= 0 || out.height() <= 0) return null;
     return out;
   }
 
