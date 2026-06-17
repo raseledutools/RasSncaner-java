@@ -15,6 +15,7 @@ import android.content.res.Configuration;
 import android.text.InputType;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Spinner;
@@ -177,8 +178,8 @@ public final class DialogUtils {
     ScrollView scrollView = new ScrollView(ctx);
     scrollView.addView(
         layout,
-        new ScrollView.LayoutParams(
-            ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
+        new FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
 
     TextView labelPolicy = new TextView(ctx);
     labelPolicy.setText(R.string.cleanup_policy);

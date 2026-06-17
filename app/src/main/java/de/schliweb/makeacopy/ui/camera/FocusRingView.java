@@ -16,6 +16,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.View;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
@@ -50,14 +51,7 @@ public class FocusRingView extends View {
   // Visibility duration is driven by postDelayed instead of the animator's start delay so the
   // result indicator stays visible even when animator scaling is 0 (battery saver, "remove
   // animations" accessibility setting, developer options).
-  private final Runnable fadeOutRunnable =
-      () -> {
-        if (ValueAnimator.areAnimatorsEnabled()) {
-          animate().alpha(0f).setStartDelay(0).setDuration(300).withEndAction(this::hide).start();
-        } else {
-          hide();
-        }
-      };
+  private final Runnable fadeOutRunnable = this::fadeOut;
 
   public FocusRingView(Context context) {
     super(context);
@@ -138,8 +132,16 @@ public class FocusRingView extends View {
     }
   }
 
+  private void fadeOut() {
+    if (ValueAnimator.areAnimatorsEnabled()) {
+      animate().alpha(0f).setStartDelay(0).setDuration(300).withEndAction(this::hide).start();
+    } else {
+      hide();
+    }
+  }
+
   @Override
-  protected void onDraw(Canvas canvas) {
+  protected void onDraw(@NonNull Canvas canvas) {
     super.onDraw(canvas);
     if (state == State.HIDDEN) return;
     float r = radius > 0 ? radius : dp(26);

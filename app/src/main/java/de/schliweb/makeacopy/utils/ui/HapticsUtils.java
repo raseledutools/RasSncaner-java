@@ -22,6 +22,8 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 public final class HapticsUtils {
+  private static final String HAPTIC_FEEDBACK_ENABLED = "haptic_feedback_enabled";
+
   /** Optional test hook to observe vibrations in androidTest. */
   public interface TestListener {
     void onVibrate(long durationMs);
@@ -92,7 +94,7 @@ public final class HapticsUtils {
   private static boolean isHapticFeedbackEnabled(Context ctx) {
     try {
       return android.provider.Settings.System.getInt(
-              ctx.getContentResolver(), android.provider.Settings.System.HAPTIC_FEEDBACK_ENABLED, 1)
+              ctx.getContentResolver(), HAPTIC_FEEDBACK_ENABLED, 1)
           != 0;
     } catch (Exception e) {
       Log.w("HapticsUtils", "Reading HAPTIC_FEEDBACK_ENABLED failed", e);
