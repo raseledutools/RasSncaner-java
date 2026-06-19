@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import de.schliweb.makeacopy.R;
 import de.schliweb.makeacopy.data.library.ScanEntity;
+import de.schliweb.makeacopy.data.library.ScanSearchResult;
 import de.schliweb.makeacopy.utils.image.ImageDecodeUtils;
 import de.schliweb.makeacopy.utils.infra.FileUtils;
 import de.schliweb.makeacopy.utils.ui.UIUtils;
@@ -54,6 +55,9 @@ public class ScansAdapter extends RecyclerView.Adapter<ScansAdapter.VH> {
 
   // Map of scanId -> collection names for membership display
   private final Map<String, List<String>> memberships = new LinkedHashMap<>();
+
+  // Map of scanId -> OCR search result for the currently active query
+  private final Map<String, ScanSearchResult> ocrMatches = new LinkedHashMap<>();
 
   // Simple in-memory LRU cache for small thumbnails
   private final Map<String, Bitmap> thumbCache =
@@ -104,6 +108,18 @@ public class ScansAdapter extends RecyclerView.Adapter<ScansAdapter.VH> {
     applyFilter();
   }
 
+  public void setOcrMatches(List<ScanSearchResult> results) {
+    ocrMatches.clear();
+    if (results != null) {
+      for (ScanSearchResult result : results) {
+        if (result != null && result.scanId != null && !ocrMatches.containsKey(result.scanId)) {
+          ocrMatches.put(result.scanId, result);
+        }
+      }
+    }
+    applyFilter();
+  }
+
   private void applyFilter() {
     items.clear();
     if (filterQuery.isEmpty()) {
@@ -118,8 +134,9 @@ public class ScansAdapter extends RecyclerView.Adapter<ScansAdapter.VH> {
 
   private boolean matchesFilter(ScanEntity e) {
     if (e == null) return false;
+    if (ocrMatches.containsKey(e.id)) return true;
     if (e.title != null && e.title.toLowerCase(Locale.ROOT).contains(filterQuery)) return true;
-    if (e.id != null && e.id.toLowerCase(Locale.ROOT).contains(filterQuery)) return true;
+    if (e.id.toLowerCase(Locale.ROOT).contains(filterQuery)) return true;
     List<String> cols = memberships.get(e.id);
     if (cols != null) {
       for (String c : cols) {
@@ -152,6 +169,16 @@ public class ScansAdapter extends RecyclerView.Adapter<ScansAdapter.VH> {
         DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
             .format(new Date(e.createdAt));
     String baseSubtitle = dateStr + " • " + Math.max(1, e.pageCount) + " page(s)";
+    ScanSearchResult ocrMatch = ocrMatches.get(e.id);
+    if (ocrMatch != null) {
+      StringBuilder matchText = new StringBuilder(baseSubtitle);
+      matchText.append(" • OCR");
+      if (ocrMatch.pageIndex >= 0) matchText.append(" p.").append(ocrMatch.pageIndex + 1);
+      if (ocrMatch.snippet != null && !ocrMatch.snippet.trim().isEmpty()) {
+        matchText.append(" • ").append(ocrMatch.snippet.trim());
+      }
+      baseSubtitle = matchText.toString();
+    }
     // Show base metadata in subtitle (date/pages)
     h.subtitle.setText(baseSubtitle);
     // Show collection membership on its own line (separate TextView)
