@@ -392,6 +392,12 @@ public class OCRFragment extends Fragment {
   // Maximum number of languages that can be selected for multi-language OCR
   private static final int MAX_LANGUAGES = 2;
 
+  // Pseudo language code for the dedicated PP-OCRv6 small entry. Only offered in the paddle
+  // flavor when FEATURE_PADDLE_V6_SMALL is enabled. Selecting it makes the OCR engine route to
+  // the PP-OCRv6 small unified model instead of the v5 models. The value MUST stay in sync with
+  // PaddleLanguageRouter.MODEL_V6_SMALL (paddle source set).
+  private static final String PADDLE_V6_SMALL_CODE = "paddle_v6_small";
+
   // Track currently selected language codes for multi-select
   private final List<String> selectedLanguageCodes = new ArrayList<>();
 
@@ -681,6 +687,12 @@ public class OCRFragment extends Fragment {
   }
 
   private boolean isLanguageAvailableSafe(String lang) {
+    // The PP-OCRv6 small entry is a synthetic option (no Tesseract/Paddle asset is looked up via
+    // langHelper); it is available whenever the corresponding build flag is enabled.
+    if (PADDLE_V6_SMALL_CODE.equals(lang)) {
+      return de.schliweb.makeacopy.BuildConfig.FEATURE_PADDLE_OCR
+          && de.schliweb.makeacopy.BuildConfig.FEATURE_PADDLE_V6_SMALL;
+    }
     try {
       return langHelper != null && langHelper.isLanguageAvailable(lang);
     } catch (Throwable t) {
@@ -692,17 +704,39 @@ public class OCRFragment extends Fragment {
   private String[] getAvailableLanguages() {
     try {
       String[] flavorLanguages = OcrModelManager.getAvailableLanguageCodes(requireContext());
-      if (flavorLanguages != null && flavorLanguages.length > 0) return flavorLanguages;
+      if (flavorLanguages != null && flavorLanguages.length > 0)
+        return appendPaddleV6Entry(flavorLanguages);
       if (langHelper != null) {
         String[] langs = langHelper.getAvailableLanguages();
-        if (langs != null && langs.length > 0) return langs;
+        if (langs != null && langs.length > 0) return appendPaddleV6Entry(langs);
       }
     } catch (Throwable ignore) {
       // Best-effort; failure is non-critical
     }
     // Fallback includes Chinese (Simplified and Traditional) so users on zh locales can select them
     // when asset listing fails
-    return OCRUtils.getLanguages();
+    return appendPaddleV6Entry(OCRUtils.getLanguages());
+  }
+
+  /**
+   * Appends the dedicated PP-OCRv6 small entry to the available language codes when running the
+   * paddle flavor with FEATURE_PADDLE_V6_SMALL enabled. The existing (v5) language selection stays
+   * unchanged; the v6 model is offered as an additional, explicit entry.
+   */
+  private String[] appendPaddleV6Entry(String[] codes) {
+    if (!de.schliweb.makeacopy.BuildConfig.FEATURE_PADDLE_OCR
+        || !de.schliweb.makeacopy.BuildConfig.FEATURE_PADDLE_V6_SMALL) {
+      return codes;
+    }
+    if (codes == null) {
+      return new String[] {PADDLE_V6_SMALL_CODE};
+    }
+    if (isCodeAvailable(codes, PADDLE_V6_SMALL_CODE)) {
+      return codes;
+    }
+    String[] extended = java.util.Arrays.copyOf(codes, codes.length + 1);
+    extended[codes.length] = PADDLE_V6_SMALL_CODE;
+    return extended;
   }
 
   private String[] mapCodesToDisplayNames(String[] codes) {
@@ -714,6 +748,9 @@ public class OCRFragment extends Fragment {
   }
 
   private String codeToDisplayName(String code) {
+    if (PADDLE_V6_SMALL_CODE.equals(code)) {
+      return "PP-OCRv6 Small (Paddle, multilingual)";
+    }
     if (de.schliweb.makeacopy.BuildConfig.FEATURE_PADDLE_OCR) {
       return switch (code) {
         case "en" -> "English (Paddle)";
