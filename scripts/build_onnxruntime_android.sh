@@ -44,11 +44,16 @@ BUILD_ROOT="/tmp/onnxruntime-build"
 #   ORT_OPS_CONFIG=none       -> disable minimal build entirely.
 #   ORT_OPS_CONFIGS=a:b:c     -> explicit colon-separated list of configs to merge.
 #   INCLUDE_PADDLE_OPS=0      -> exclude the PaddleOCR config from the default merge.
+#   INCLUDE_PADDLE_V6_OPS=1   -> additionally merge the experimental PaddleOCR v6
+#                                (small) config into the default merge. Default 0
+#                                so existing (v5-only) builds remain unchanged.
 REPO_OPS_CONFIG_DOCQUAD="$REPO_DIR/app/src/main/assets/docquad/docquadnet256_trained_opset17.required_operators.config"
 REPO_OPS_CONFIG_PADDLE="$REPO_DIR/app/src/paddle/assets/paddleocr/v5/paddleocr_v5.required_operators.config"
+REPO_OPS_CONFIG_PADDLE_V6="$REPO_DIR/app/src/paddle/assets/paddleocr/v6/paddleocr_v6_small.required_operators.config"
 ORT_OPS_CONFIG="${ORT_OPS_CONFIG:-}"
 ORT_OPS_CONFIGS="${ORT_OPS_CONFIGS:-}"
 INCLUDE_PADDLE_OPS="${INCLUDE_PADDLE_OPS:-1}"
+INCLUDE_PADDLE_V6_OPS="${INCLUDE_PADDLE_V6_OPS:-0}"
 
 # Merge multiple "domain;opset;OpA,OpB" config files into one.  Lines with the
 # same domain+opset are unioned; comments are dropped and replaced with a small
@@ -133,6 +138,15 @@ else
     [ -f "$REPO_OPS_CONFIG_DOCQUAD" ] && CONFIGS_TO_MERGE+=("$REPO_OPS_CONFIG_DOCQUAD")
     if [ "$INCLUDE_PADDLE_OPS" = "1" ] && [ -f "$REPO_OPS_CONFIG_PADDLE" ]; then
       CONFIGS_TO_MERGE+=("$REPO_OPS_CONFIG_PADDLE")
+    fi
+    # Experimental PaddleOCR v6 (small) — opt-in only, default off (v5 stays default).
+    if [ "$INCLUDE_PADDLE_V6_OPS" = "1" ]; then
+      if [ -f "$REPO_OPS_CONFIG_PADDLE_V6" ]; then
+        CONFIGS_TO_MERGE+=("$REPO_OPS_CONFIG_PADDLE_V6")
+      else
+        echo "ERROR: INCLUDE_PADDLE_V6_OPS=1 but config not found: $REPO_OPS_CONFIG_PADDLE_V6" >&2
+        exit 1
+      fi
     fi
   fi
 
