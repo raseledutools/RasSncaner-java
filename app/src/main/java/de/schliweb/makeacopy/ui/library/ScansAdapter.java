@@ -169,18 +169,10 @@ public class ScansAdapter extends RecyclerView.Adapter<ScansAdapter.VH> {
         DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
             .format(new Date(e.createdAt));
     String baseSubtitle = dateStr + " • " + Math.max(1, e.pageCount) + " page(s)";
-    ScanSearchResult ocrMatch = ocrMatches.get(e.id);
-    if (ocrMatch != null) {
-      StringBuilder matchText = new StringBuilder(baseSubtitle);
-      matchText.append(" • OCR");
-      if (ocrMatch.pageIndex >= 0) matchText.append(" p.").append(ocrMatch.pageIndex + 1);
-      if (ocrMatch.snippet != null && !ocrMatch.snippet.trim().isEmpty()) {
-        matchText.append(" • ").append(ocrMatch.snippet.trim());
-      }
-      baseSubtitle = matchText.toString();
-    }
     // Show base metadata in subtitle (date/pages)
     h.subtitle.setText(baseSubtitle);
+    // Show OCR full-text match info on its own line (separate TextView)
+    bindOcrMatch(h, e.id);
     // Show collection membership on its own line (separate TextView)
     List<String> cols = memberships.get(e.id);
     if (h.membership != null) {
@@ -283,6 +275,7 @@ public class ScansAdapter extends RecyclerView.Adapter<ScansAdapter.VH> {
                           DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
                               .format(new Date(cur.createdAt));
                       String base = dateStrCur + " • " + Math.max(1, cur.pageCount) + " page(s)";
+                      bindOcrMatch(h, cur.id);
                       List<String> colsCur = memberships.get(cur.id);
                       String sub = base;
                       if (!readable) {
@@ -322,6 +315,24 @@ public class ScansAdapter extends RecyclerView.Adapter<ScansAdapter.VH> {
   @Override
   public int getItemCount() {
     return items.size();
+  }
+
+  // Shows OCR full-text match info (OCR marker, page, snippet) on its own line if a match exists
+  private void bindOcrMatch(@NonNull VH h, String scanId) {
+    if (h.ocrMatch == null) return;
+    ScanSearchResult ocrMatch = ocrMatches.get(scanId);
+    if (ocrMatch == null) {
+      h.ocrMatch.setText("");
+      h.ocrMatch.setVisibility(View.GONE);
+      return;
+    }
+    StringBuilder matchText = new StringBuilder("OCR");
+    if (ocrMatch.pageIndex >= 0) matchText.append(" p.").append(ocrMatch.pageIndex + 1);
+    if (ocrMatch.snippet != null && !ocrMatch.snippet.trim().isEmpty()) {
+      matchText.append(" • ").append(ocrMatch.snippet.trim());
+    }
+    h.ocrMatch.setText(matchText.toString());
+    h.ocrMatch.setVisibility(View.VISIBLE);
   }
 
   // Formats the membership suffix like: "In: A, B" or "In: A, B +2"
@@ -370,6 +381,7 @@ public class ScansAdapter extends RecyclerView.Adapter<ScansAdapter.VH> {
     ImageView thumb;
     TextView title;
     TextView subtitle;
+    TextView ocrMatch;
     TextView membership;
 
     VH(@NonNull View itemView) {
@@ -377,6 +389,7 @@ public class ScansAdapter extends RecyclerView.Adapter<ScansAdapter.VH> {
       thumb = itemView.findViewById(R.id.imageThumb);
       title = itemView.findViewById(R.id.textTitle);
       subtitle = itemView.findViewById(R.id.textSubtitle);
+      ocrMatch = itemView.findViewById(R.id.textOcrMatch);
       membership = itemView.findViewById(R.id.textMembership);
     }
   }

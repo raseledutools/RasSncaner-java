@@ -32,7 +32,7 @@ def layoutAnalysisEnabled = (project.findProperty("layoutAnalysis") ?: "false").
 // Aktivieren per Gradle-Property: -PpaddleV6Small=true
 // Wenn deaktiviert, werden die v6-Assets (paddleocr/v6/**) weder ins APK noch ins
 // Bundle gepackt (siehe Asset-Entfernung im merge*Assets-Task weiter unten).
-def paddleV6SmallEnabled = (project.findProperty("paddleV6Small") ?: "false").toBoolean()
+def paddleV6SmallEnabled = (project.findProperty("paddleV6Small") ?: "true").toBoolean()
 def isPaddleAndroidTestInvocation = gradle.startParameter.taskNames.any {
     it.toLowerCase(Locale.ROOT).contains("paddle") && it.toLowerCase(Locale.ROOT).contains("androidtest")
 }
@@ -51,8 +51,8 @@ android {
         applicationId "de.schliweb.makeacopy"
         minSdk = 29
         targetSdk = 36
-        versionCode 40501
-        versionName "4.5.1"
+        versionCode 40600
+        versionName "4.6.0"
 
         // Use default AndroidX test runner
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

@@ -53,7 +53,7 @@ REPO_OPS_CONFIG_PADDLE_V6="$REPO_DIR/app/src/paddle/assets/paddleocr/v6/paddleoc
 ORT_OPS_CONFIG="${ORT_OPS_CONFIG:-}"
 ORT_OPS_CONFIGS="${ORT_OPS_CONFIGS:-}"
 INCLUDE_PADDLE_OPS="${INCLUDE_PADDLE_OPS:-1}"
-INCLUDE_PADDLE_V6_OPS="${INCLUDE_PADDLE_V6_OPS:-0}"
+INCLUDE_PADDLE_V6_OPS="${INCLUDE_PADDLE_V6_OPS:-1}"
 
 # Merge multiple "domain;opset;OpA,OpB" config files into one.  Lines with the
 # same domain+opset are unioned; comments are dropped and replaced with a small
