@@ -146,7 +146,7 @@ public class ScansLibraryFragment extends Fragment {
     list.setLayoutManager(
         new androidx.recyclerview.widget.GridLayoutManager(requireContext(), spanCount));
 
-    // Material SearchBar + SearchView: UI-only filter over the already loaded items
+    // Material SearchBar + SearchView: filter loaded metadata and augment it with OCR FTS matches
     com.google.android.material.search.SearchBar searchBar = root.findViewById(R.id.search_bar);
     com.google.android.material.search.SearchView searchView = root.findViewById(R.id.search_view);
     RecyclerView searchResults = root.findViewById(R.id.search_results);
@@ -168,13 +168,16 @@ public class ScansLibraryFragment extends Fragment {
 
                 @Override
                 public void afterTextChanged(android.text.Editable s) {
-                  adapter.filter(s == null ? null : s.toString());
+                  String query = s == null ? null : s.toString();
+                  adapter.filter(query);
+                  loadOcrMatchesAsync(query);
                 }
               });
       searchView.addTransitionListener(
           (sv, previousState, newState) -> {
             if (newState == com.google.android.material.search.SearchView.TransitionState.HIDDEN) {
               adapter.filter(null);
+              adapter.setOcrMatches(null);
             }
           });
     }
@@ -424,6 +427,22 @@ public class ScansLibraryFragment extends Fragment {
                               finalShowIndexBtn ? View.VISIBLE : View.GONE);
                         }
                       });
+            })
+        .start();
+  }
+
+  private void loadOcrMatchesAsync(String query) {
+    String trimmed = query == null ? "" : query.trim();
+    if (trimmed.isEmpty()) {
+      adapter.setOcrMatches(null);
+      return;
+    }
+    new Thread(
+            () -> {
+              List<de.schliweb.makeacopy.data.library.ScanSearchResult> results =
+                  scansRepository.searchOcrText(requireContext(), trimmed, 50);
+              if (!isAdded()) return;
+              requireActivity().runOnUiThread(() -> adapter.setOcrMatches(results));
             })
         .start();
   }
