@@ -123,6 +123,11 @@ public final class ExistingScansIndexer {
             } catch (Throwable ignoreMembership) {
               // Best-effort; failure is non-critical
             }
+            try {
+              repo.reindexOcrText(app, id);
+            } catch (Throwable ignoreOcrIndex) {
+              // Best-effort; failure is non-critical
+            }
             continue;
           }
         } catch (Throwable ignore) {

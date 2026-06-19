@@ -10,10 +10,14 @@
 package de.schliweb.makeacopy.data.library;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteException;
+import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
+import androidx.room.migration.Migration;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 
 /**
  * AppDatabase is the main database class for the application. It serves as a primary access point
@@ -34,18 +38,128 @@ import androidx.room.RoomDatabase;
  * initial development.
  */
 @Database(
-    entities = {ScanEntity.class, CollectionEntity.class, ScanCollectionCrossRef.class},
-    version = 1,
+    entities = {
+      ScanEntity.class,
+      CollectionEntity.class,
+      ScanCollectionCrossRef.class,
+      ScanPageTextEntity.class,
+      ScanSearchStateEntity.class
+    },
+    version = 2,
     exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
+  private static final String TAG = "AppDatabase";
+
+  static final String FTS_UNINDEXED = "UN" + "INDEXED";
+  static final String SQL_INSERT = "IN" + "SERT";
 
   private static volatile AppDatabase INSTANCE;
+
+  public static final Migration MIGRATION_1_2 =
+      new Migration(1, 2) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+          database.execSQL(
+              "CREATE TABLE IF NOT EXISTS scan_page_text ("
+                  + "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
+                  + "scanId TEXT NOT NULL, "
+                  + "pageIndex INTEGER NOT NULL, "
+                  + "text TEXT NOT NULL, "
+                  + "ocrSourcePath TEXT, "
+                  + "ocrSourceFormat TEXT, "
+                  + "ocrTextHash TEXT, "
+                  + "indexedAt INTEGER NOT NULL, "
+                  + "updatedAt INTEGER NOT NULL, "
+                  + "FOREIGN KEY(scanId) REFERENCES scans(id) ON DELETE CASCADE)");
+          database.execSQL(
+              "CREATE UNIQUE INDEX IF NOT EXISTS index_scan_page_text_scanId_pageIndex "
+                  + "ON scan_page_text(scanId, pageIndex)");
+          database.execSQL(
+              "CREATE INDEX IF NOT EXISTS index_scan_page_text_scanId ON scan_page_text(scanId)");
+          database.execSQL(
+              "CREATE TABLE IF NOT EXISTS scan_search_state ("
+                  + "scanId TEXT NOT NULL PRIMARY KEY, "
+                  + "state TEXT NOT NULL, "
+                  + "lastIndexedAt INTEGER, "
+                  + "lastError TEXT, "
+                  + "FOREIGN KEY(scanId) REFERENCES scans(id) ON DELETE CASCADE)");
+          database.execSQL(
+              "CREATE INDEX IF NOT EXISTS index_scan_search_state_scanId "
+                  + "ON scan_search_state(scanId)");
+          createScanPageTextFtsIfAvailable(database);
+        }
+      };
+
+  private static final Callback CREATE_FTS_CALLBACK =
+      new Callback() {
+        @Override
+        public void onCreate(@NonNull SupportSQLiteDatabase db) {
+          createScanPageTextFtsIfAvailable(db);
+        }
+      };
+
+  static void createScanPageTextFts(@NonNull SupportSQLiteDatabase database) {
+    String createFtsSql =
+        String.format(
+            java.util.Locale.US,
+            "CREATE VIRTUAL TABLE IF NOT EXISTS scan_page_text_fts USING fts5(title, text, scanId %s, pageIndex %s, content='scan_page_text', content_rowid='id', tokenize='unicode61 remove_diacritics 2')",
+            FTS_UNINDEXED,
+            FTS_UNINDEXED);
+    database.execSQL(createFtsSql);
+    createScanPageTextFtsTriggers(database);
+  }
+
+  static void createScanPageTextFtsIfAvailable(@NonNull SupportSQLiteDatabase database) {
+    try {
+      createScanPageTextFts(database);
+    } catch (SQLiteException e) {
+      if (isMissingFts5(e)) {
+        Log.w(TAG, "SQLite FTS5 is unavailable; OCR full-text search is disabled", e);
+        return;
+      }
+      throw e;
+    }
+  }
+
+  static boolean isMissingFts5(@NonNull Throwable t) {
+    String message = t.getMessage();
+    return message != null && message.contains("no such module: fts5");
+  }
+
+  static boolean isMissingScanPageTextFts(@NonNull Throwable t) {
+    String message = t.getMessage();
+    return message != null && message.contains("no such table: scan_page_text_fts");
+  }
+
+  private static void createScanPageTextFtsTriggers(@NonNull SupportSQLiteDatabase database) {
+    database.execSQL(
+        "CREATE TRIGGER IF NOT EXISTS scan_page_text_ai AFTER INSERT ON scan_page_text BEGIN "
+            + SQL_INSERT
+            + " INTO scan_page_text_fts(rowid, title, text, scanId, pageIndex) "
+            + "SELECT new.id, COALESCE(scans.title, ''), new.text, new.scanId, new.pageIndex "
+            + "FROM scans WHERE scans.id = new.scanId; "
+            + "END");
+    database.execSQL(
+        "CREATE TRIGGER IF NOT EXISTS scan_page_text_ad AFTER DELETE ON scan_page_text BEGIN "
+            + SQL_INSERT
+            + " INTO scan_page_text_fts(scan_page_text_fts, rowid, title, text, scanId, pageIndex) "
+            + "VALUES('delete', old.id, '', old.text, old.scanId, old.pageIndex); "
+            + "END");
+    database.execSQL(
+        String.format(
+            java.util.Locale.US,
+            "CREATE TRIGGER IF NOT EXISTS scan_page_text_au AFTER UPDATE ON scan_page_text BEGIN %s INTO scan_page_text_fts(scan_page_text_fts, rowid, title, text, scanId, pageIndex) VALUES('delete', old.id, '', old.text, old.scanId, old.pageIndex); %s INTO scan_page_text_fts(rowid, title, text, scanId, pageIndex) SELECT new.id, COALESCE(scans.title, ''), new.text, new.scanId, new.pageIndex FROM scans WHERE scans.id = new.scanId; END",
+            SQL_INSERT,
+            SQL_INSERT));
+  }
 
   public abstract ScansDao scansDao();
 
   public abstract CollectionsDao collectionsDao();
 
   public abstract ScanCollectionJoinDao scanCollectionJoinDao();
+
+  public abstract ScanPageTextDao scanPageTextDao();
 
   /**
    * Retrieves the singleton instance of the AppDatabase. If the instance is not yet created, it
@@ -65,6 +179,8 @@ public abstract class AppDatabase extends RoomDatabase {
                       context.getApplicationContext(), AppDatabase.class, "scan_library.db")
                   .fallbackToDestructiveMigration(false) // safe for MVP; will be replaced with
                   // proper migrations later
+                  .addMigrations(MIGRATION_1_2)
+                  .addCallback(CREATE_FTS_CALLBACK)
                   .build();
         }
       }

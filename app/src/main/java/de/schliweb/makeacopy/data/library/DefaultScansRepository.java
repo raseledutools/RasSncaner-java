@@ -13,6 +13,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
+import androidx.sqlite.db.SimpleSQLiteQuery;
 import java.io.File;
 import java.util.HashSet;
 import java.util.List;
@@ -35,14 +36,31 @@ import org.json.JSONArray;
  */
 public class DefaultScansRepository implements ScansRepository {
   private static final String TAG = "ScansRepo";
+  private static final SimpleSQLiteQuery OCR_FTS_TABLE_EXISTS_QUERY =
+      new SimpleSQLiteQuery(
+          "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'scan_page_text_fts')");
 
   private final ScansDao scansDao;
   private final ScanCollectionJoinDao joinDao;
+  private final ScanPageTextDao scanPageTextDao;
+  private final OcrSearchIndexer ocrSearchIndexer;
+  private Boolean ocrFtsAvailable;
 
   @Inject
-  public DefaultScansRepository(ScansDao scansDao, ScanCollectionJoinDao joinDao) {
+  public DefaultScansRepository(
+      ScansDao scansDao, ScanCollectionJoinDao joinDao, ScanPageTextDao scanPageTextDao) {
+    this(scansDao, joinDao, scanPageTextDao, new OcrSearchIndexer(scanPageTextDao));
+  }
+
+  public DefaultScansRepository(
+      ScansDao scansDao,
+      ScanCollectionJoinDao joinDao,
+      ScanPageTextDao scanPageTextDao,
+      OcrSearchIndexer ocrSearchIndexer) {
     this.scansDao = scansDao;
     this.joinDao = joinDao;
+    this.scanPageTextDao = scanPageTextDao;
+    this.ocrSearchIndexer = ocrSearchIndexer;
   }
 
   /**
@@ -71,6 +89,7 @@ public class DefaultScansRepository implements ScansRepository {
                 meta.exportPathsJson(),
                 meta.sourceMetaJson());
         scansDao.insert(entity);
+        ocrSearchIndexer.indexScan(context, entity);
       } else {
         // Update basic fields
         existing.title = meta.title() != null ? meta.title() : existing.title;
@@ -80,6 +99,7 @@ public class DefaultScansRepository implements ScansRepository {
         if (meta.exportPathsJson() != null) existing.exportPathsJson = meta.exportPathsJson();
         if (meta.sourceMetaJson() != null) existing.sourceMetaJson = meta.sourceMetaJson();
         scansDao.update(existing);
+        ocrSearchIndexer.indexScan(context, existing);
       }
     } catch (Throwable t) {
       Log.e(TAG, "indexExportedScan failed", t);
@@ -142,6 +162,60 @@ public class DefaultScansRepository implements ScansRepository {
     }
   }
 
+  @Override
+  public void reindexOcrText(Context context, String id) {
+    try {
+      ScanEntity entity = scansDao.getById(id);
+      if (entity != null) ocrSearchIndexer.indexScan(context, entity);
+    } catch (Throwable t) {
+      Log.e(TAG, "reindexOcrText failed", t);
+    }
+  }
+
+  @Override
+  public List<ScanSearchResult> searchOcrText(Context context, String query, int limit) {
+    try {
+      String ftsQuery = ScanSearchQueries.sanitizeFtsQuery(query);
+      if (ftsQuery.isEmpty()) return java.util.Collections.emptyList();
+      if (!isOcrFtsAvailable()) return searchOcrTextFallback(query, limit);
+      return scanPageTextDao.searchOcr(ScanSearchQueries.ocrSearch(ftsQuery, Math.max(1, limit)));
+    } catch (Throwable t) {
+      if (AppDatabase.isMissingFts5(t) || AppDatabase.isMissingScanPageTextFts(t)) {
+        ocrFtsAvailable = false;
+        return searchOcrTextFallback(query, limit);
+      }
+      Log.e(TAG, "searchOcrText failed", t);
+      return java.util.Collections.emptyList();
+    }
+  }
+
+  private List<ScanSearchResult> searchOcrTextFallback(String query, int limit) {
+    try {
+      String likeQuery = ScanSearchQueries.sanitizeLikeQuery(query);
+      if ("%%".equals(likeQuery)) return java.util.Collections.emptyList();
+      return scanPageTextDao.searchOcrFallback(
+          ScanSearchQueries.ocrFallbackSearch(query, Math.max(1, limit)));
+    } catch (Throwable t) {
+      Log.e(TAG, "searchOcrTextFallback failed", t);
+      return java.util.Collections.emptyList();
+    }
+  }
+
+  private boolean isOcrFtsAvailable() {
+    if (ocrFtsAvailable != null) return ocrFtsAvailable;
+    try {
+      ocrFtsAvailable = scanPageTextDao.hasOcrFtsTable(OCR_FTS_TABLE_EXISTS_QUERY) != 0;
+    } catch (Throwable t) {
+      if (AppDatabase.isMissingFts5(t) || AppDatabase.isMissingScanPageTextFts(t)) {
+        ocrFtsAvailable = false;
+        return false;
+      }
+      Log.e(TAG, "Checking OCR FTS availability failed", t);
+      ocrFtsAvailable = false;
+    }
+    return ocrFtsAvailable;
+  }
+
   /**
    * Deletes a scan with the specified unique identifier from the database, including associated
    * data and physical artifacts. This method performs cleanup on related entries, files, and joins
@@ -181,6 +255,9 @@ public class DefaultScansRepository implements ScansRepository {
       }
 
       // Remove any joins first to respect FK constraints if added later
+      if (scanPageTextDao != null) {
+        scanPageTextDao.deleteForScan(id);
+      }
       joinDao.removeAllForScan(id);
       scansDao.deleteById(id);
     } catch (Throwable t) {
@@ -226,10 +303,13 @@ public class DefaultScansRepository implements ScansRepository {
         }
       } else if (pathOrUri.startsWith("file://")) {
         Uri u = Uri.parse(pathOrUri);
-        File f = new File(u.getPath());
-        if (f.exists()) {
-          //noinspection ResultOfMethodCallIgnored
-          f.delete();
+        String path = u.getPath();
+        if (path != null) {
+          File f = new File(path);
+          if (f.exists()) {
+            //noinspection ResultOfMethodCallIgnored
+            f.delete();
+          }
         }
       } else {
         // treat as plain filesystem path

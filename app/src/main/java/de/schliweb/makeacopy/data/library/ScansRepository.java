@@ -51,6 +51,10 @@ public interface ScansRepository {
 
   ScanEntity getScanById(Context context, String id);
 
+  void reindexOcrText(Context context, String id);
+
+  List<ScanSearchResult> searchOcrText(Context context, String query, int limit);
+
   void deleteScan(Context context, String id);
 
   void updateTitle(Context context, String id, String newTitle);
