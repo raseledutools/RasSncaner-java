@@ -2560,6 +2560,7 @@ public class ExportFragment extends Fragment {
         title,
         pageCount,
         exportUri,
+        getOcrTextFromState(),
         buildDefaultBaseName());
   }
 }
