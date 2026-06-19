@@ -20,7 +20,9 @@ import de.schliweb.makeacopy.data.library.CollectionsDao;
 import de.schliweb.makeacopy.data.library.CollectionsRepository;
 import de.schliweb.makeacopy.data.library.DefaultCollectionsRepository;
 import de.schliweb.makeacopy.data.library.DefaultScansRepository;
+import de.schliweb.makeacopy.data.library.OcrSearchIndexer;
 import de.schliweb.makeacopy.data.library.ScanCollectionJoinDao;
+import de.schliweb.makeacopy.data.library.ScanPageTextDao;
 import de.schliweb.makeacopy.data.library.ScansDao;
 import de.schliweb.makeacopy.data.library.ScansRepository;
 import de.schliweb.makeacopy.utils.ocr.DictionaryManager;
@@ -53,9 +55,18 @@ public class DatabaseModule {
   }
 
   @Provides
+  ScanPageTextDao provideScanPageTextDao(AppDatabase db) {
+    return db.scanPageTextDao();
+  }
+
+  @Provides
   @Singleton
-  ScansRepository provideScansRepository(ScansDao scansDao, ScanCollectionJoinDao joinDao) {
-    return new DefaultScansRepository(scansDao, joinDao);
+  ScansRepository provideScansRepository(
+      ScansDao scansDao,
+      ScanCollectionJoinDao joinDao,
+      ScanPageTextDao scanPageTextDao,
+      OcrSearchIndexer ocrSearchIndexer) {
+    return new DefaultScansRepository(scansDao, joinDao, scanPageTextDao, ocrSearchIndexer);
   }
 
   @Provides
