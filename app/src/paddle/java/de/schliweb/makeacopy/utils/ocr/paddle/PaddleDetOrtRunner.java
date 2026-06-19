@@ -92,7 +92,18 @@ class PaddleDetOrtRunner implements AutoCloseable {
      */
     private static final float[] STD_BGR = {0.225f * 255f, 0.224f * 255f, 0.229f * 255f};
 
+    // PP-OCRv6 small detection post-processing parameters, taken from the model's
+    // inference.yml (paddleocr/v6/small/inference_det.yml): thresh=0.2, box_thresh=0.45,
+    // unclip_ratio=1.4. They differ from the v5 yml (0.3/0.6/1.5) and from the tuned v5
+    // defaults in DbPostProcessor, hence model-dependent construction below.
+    // Pre-processing (BGR ImageNet mean/std normalization) is identical between v5 and v6,
+    // so MEAN_BGR/STD_BGR are shared.
+    private static final double V6_DB_THRESH = 0.2;
+    private static final double V6_BOX_THRESH = 0.45;
+    private static final double V6_UNCLIP_RATIO = 1.4;
+
     private static volatile PaddleDetOrtRunner instance;
+    private static volatile PaddleDetOrtRunner instanceV6;
     private static final Object LOCK = new Object();
     private static final Executor DEFAULT_EXECUTOR = Executors.newSingleThreadExecutor();
 
@@ -123,10 +134,25 @@ class PaddleDetOrtRunner implements AutoCloseable {
     }
 
     PaddleDetOrtRunner(Context context) throws Exception {
+        this(context, /*useV6=*/false);
+    }
+
+    PaddleDetOrtRunner(Context context, boolean useV6) throws Exception {
         long t0 = System.nanoTime();
-        this.postProcessor = new DbPostProcessor();
+        this.postProcessor =
+                useV6
+                        ? new DbPostProcessor(V6_DB_THRESH, V6_BOX_THRESH, V6_UNCLIP_RATIO)
+                        : new DbPostProcessor();
         this.env = OrtEnvironment.getEnvironment();
-        File modelFile = PaddleAssets.getDetModelFile(context);
+        if (useV6) {
+            // v6 det is extracted lazily here (the v5 det is materialised by
+            // PaddleEngineFactory.create(); the experimental path stays self-contained).
+            PaddleAssets.ensureDetExtractedV6(context);
+        }
+        File modelFile =
+                useV6
+                        ? PaddleAssets.getDetModelFileV6(context)
+                        : PaddleAssets.getDetModelFile(context);
         if (!modelFile.exists()) {
             throw new IllegalStateException(
                     "det.onnx not found at " + modelFile + ". Call PaddleAssets.ensureExtracted() first.");
@@ -134,7 +160,9 @@ class PaddleDetOrtRunner implements AutoCloseable {
         this.session = createSessionWithFallback(env, modelFile.getAbsolutePath());
         Log.i(
                 TAG,
-                "Det session loaded ("
+                "Det session loaded"
+                        + (useV6 ? " (v6 small)" : "")
+                        + " ("
                         + ((System.nanoTime() - t0) / 1_000_000L)
                         + " ms) from "
                         + modelFile.getAbsolutePath());
@@ -174,6 +202,30 @@ class PaddleDetOrtRunner implements AutoCloseable {
         return instance;
     }
 
+    /** Returns the singleton detection runner for the experimental PP-OCRv6 small model. */
+    static PaddleDetOrtRunner getInstanceV6(Context ctx) throws Exception {
+        if (instanceV6 == null) {
+            synchronized (LOCK) {
+                if (instanceV6 == null) {
+                    instanceV6 = new PaddleDetOrtRunner(ctx.getApplicationContext(), /*useV6=*/true);
+                }
+            }
+        }
+        return instanceV6;
+    }
+
+    static CompletableFuture<PaddleDetOrtRunner> getInstanceV6Async(Context ctx) {
+        return CompletableFuture.supplyAsync(
+                () -> {
+                    try {
+                        return getInstanceV6(ctx);
+                    } catch (Exception e) {
+                        throw new CompletionException(e);
+                    }
+                },
+                DEFAULT_EXECUTOR);
+    }
+
     static CompletableFuture<PaddleDetOrtRunner> getInstanceAsync(Context ctx) {
         return getInstanceAsync(ctx, DEFAULT_EXECUTOR);
     }
@@ -203,6 +255,14 @@ class PaddleDetOrtRunner implements AutoCloseable {
                     Log.w(TAG, "Error closing instance: " + e.getMessage());
                 }
                 instance = null;
+            }
+            if (instanceV6 != null) {
+                try {
+                    instanceV6.close();
+                } catch (Exception e) {
+                    Log.w(TAG, "Error closing v6 instance: " + e.getMessage());
+                }
+                instanceV6 = null;
             }
         }
     }
