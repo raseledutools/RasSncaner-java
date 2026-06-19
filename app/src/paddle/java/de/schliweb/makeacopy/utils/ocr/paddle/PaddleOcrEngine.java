@@ -51,6 +51,16 @@ public final class PaddleOcrEngine implements OcrEngine {
         PaddleDetOrtRunner det() throws Exception;
 
         /**
+         * Provides the detection runner appropriate for the given recognition model key.
+         * By default this delegates to {@link #det()} (the v5 detection model); the default
+         * supplier overrides it to return the experimental v6 detection runner for the
+         * {@code PaddleLanguageRouter.MODEL_V6_SMALL} key.
+         */
+        default PaddleDetOrtRunner det(String modelKey) throws Exception {
+            return det();
+        }
+
+        /**
          * Provides a PaddleRecOrtRunner instance for the specified recognition model.
          *
          * @param modelKey the key identifying the recognition model to be used.
@@ -89,6 +99,14 @@ public final class PaddleOcrEngine implements OcrEngine {
             @Override
             public PaddleDetOrtRunner det() throws Exception {
                 return PaddleDetOrtRunner.getInstanceAsync(appCtx).get(60, TimeUnit.SECONDS);
+            }
+
+            @Override
+            public PaddleDetOrtRunner det(String modelKey) throws Exception {
+                if (PaddleAssets.isV6Model(modelKey)) {
+                    return PaddleDetOrtRunner.getInstanceV6Async(appCtx).get(60, TimeUnit.SECONDS);
+                }
+                return det();
             }
 
             @Override
@@ -140,6 +158,15 @@ public final class PaddleOcrEngine implements OcrEngine {
         highQualityDetectionEnabled = enabled;
     }
 
+    /**
+     * Enables or disables the experimental PP-OCRv6 small pipeline (process-wide).
+     * When enabled, languages fully supported by the v6 small unified model are routed to
+     * it; all other languages keep using the v5 models. Default: disabled (v5 only).
+     */
+    public static void setV6SmallExperimentalEnabled(boolean enabled) {
+        PaddleLanguageRouter.setV6SmallExperimentalEnabled(enabled);
+    }
+
     @Override
     public OCRHelper.OcrResultWords run(Bitmap bitmap) throws Exception {
         if (bitmap == null || bitmap.isRecycled()) {
@@ -165,7 +192,7 @@ public final class PaddleOcrEngine implements OcrEngine {
             Log.i(TAG, "no rec model for lang=" + language + " → empty result");
             return new OCRHelper.OcrResultWords("", null, new java.util.ArrayList<>());
         }
-        PaddleDetOrtRunner det = supplier.det();
+        PaddleDetOrtRunner det = supplier.det(modelKey);
         PaddleRecOrtRunner rec = supplier.rec(modelKey);
         long tInit = System.nanoTime();
 
