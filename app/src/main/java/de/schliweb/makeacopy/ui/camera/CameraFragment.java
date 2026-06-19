@@ -3532,11 +3532,6 @@ public class CameraFragment extends Fragment implements SensorEventListener {
     requireActivity().runOnUiThread(r);
   }
 
-  private android.graphics.PointF[] mapToOverlayPoints(
-      org.opencv.core.Point[] src, int bmpW, int bmpH) {
-    return mapToOverlayPoints(src, bmpW, bmpH, null);
-  }
-
   /**
    * Maps detected corner points from the upright analysis-bitmap coordinate space to overlay
    * coordinates on top of the {@link PreviewView} (which uses {@code FIT_CENTER}).
