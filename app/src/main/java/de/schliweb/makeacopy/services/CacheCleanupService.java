@@ -462,7 +462,8 @@ public class CacheCleanupService extends Service {
     try {
       AppDatabase db = AppDatabase.getInstance(this);
       DefaultScansRepository scansRepo =
-          new DefaultScansRepository(db.scansDao(), db.scanCollectionJoinDao());
+          new DefaultScansRepository(
+              db.scansDao(), db.scanCollectionJoinDao(), db.scanPageTextDao());
       DefaultCollectionsRepository collectionsRepo =
           new DefaultCollectionsRepository(
               db.collectionsDao(), db.scanCollectionJoinDao(), db.scansDao());
