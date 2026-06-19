@@ -26,6 +26,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.UUID;
 import lombok.experimental.UtilityClass;
@@ -59,6 +60,7 @@ final class ScanLibraryIndexer {
       String title,
       int pageCount,
       Uri exportUri,
+      String ocrText,
       String defaultBaseName) {
     if (title == null) title = defaultBaseName;
     final String titleFinal = title;
@@ -68,6 +70,7 @@ final class ScanLibraryIndexer {
     new Thread(
             () -> {
               try {
+                persistOcrText(ctx, generatedId, ocrText);
                 String coverPath = generateCover(ctx, exportUri, generatedId);
                 ScanIndexMeta meta =
                     new ScanIndexMeta(
@@ -84,6 +87,19 @@ final class ScanLibraryIndexer {
               }
             })
         .start();
+  }
+
+  private static void persistOcrText(Context ctx, String generatedId, String ocrText)
+      throws IOException {
+    if (ocrText == null || ocrText.trim().isEmpty()) return;
+    File scanDir = new File(ctx.getFilesDir(), "scans/" + generatedId);
+    if (!scanDir.isDirectory() && !scanDir.mkdirs()) {
+      throw new IOException("Unable to create scan OCR directory: " + scanDir);
+    }
+    File textFile = new File(scanDir, "text.txt");
+    try (FileOutputStream output = new FileOutputStream(textFile)) {
+      output.write(ocrText.getBytes(StandardCharsets.UTF_8));
+    }
   }
 
   private static String generateCover(Context ctx, Uri exportUri, String generatedId) {
