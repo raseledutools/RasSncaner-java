@@ -30,29 +30,6 @@ import java.util.regex.Pattern;
 final class PaddleLanguageRouter {
 
     /**
-     * Model key for the experimental PP-OCRv6 "small" unified recognition model.
-     * Assets live under {@code paddleocr/v6/small} (separate from the v5 assets) and are
-     * resolved by dedicated v6 branches in {@link PaddleAssets}. This key is intentionally
-     * NOT part of {@link #MODEL_KEYS} / {@link #ASSET_BASENAME}, so the existing v5
-     * resolution remains untouched unless the experimental flag is explicitly enabled.
-     */
-    static final String MODEL_V6_SMALL = "paddle_v6_small";
-
-    /**
-     * Languages supported by the PP-OCRv6 small unified recognition model (per the
-     * PP-OCRv6 paper / model card). Only these may be routed to {@link #MODEL_V6_SMALL}.
-     * Languages such as rus/ell/ara/fas/hin/tha/kor are NOT in this set and must keep
-     * using the v5 specialised models.
-     */
-    static final Set<String> V6_SMALL_SUPPORTED_LANGS;
-
-    /**
-     * Experimental opt-in switch for routing supported languages to PP-OCRv6 small.
-     * Default {@code false}: production behaviour stays on v5.
-     */
-    private static volatile boolean v6SmallExperimentalEnabled = false;
-
-    /**
      * A mapping of model keys to their corresponding asset base names. Each entry associates
      * a model key with the base name of the corresponding asset without file extensions or
      * suffixes (e.g., {@code .ort}, {@code _dict.txt}).
@@ -186,29 +163,6 @@ final class PaddleLanguageRouter {
         m.put("ko", "zh");
 
         LANG_TO_MODEL = Collections.unmodifiableMap(m);
-
-        // PP-OCRv6 small: unified Latin/CJK recognition model. Mapping follows the
-        // documented language list of the model; everything else stays on v5.
-        Set<String> v6 = new LinkedHashSet<>(Arrays.asList(
-                // English
-                "eng", "en",
-                // German, French, Spanish, Italian, Portuguese, Dutch
-                "deu", "ger", "de", "fra", "fre", "fr", "spa", "es",
-                "ita", "it", "por", "pt", "nld", "dut", "nl",
-                // Polish, Czech, Slovak, Hungarian, Romanian
-                "pol", "ces", "cze", "slk", "slo", "hun", "ron", "rum",
-                // Scandinavian + Finnish
-                "dan", "nor", "swe", "fin", "isl", "ice",
-                // Turkish, Vietnamese, Indonesian, Malay, Azerbaijani
-                "tur", "vie", "ind", "msa", "aze",
-                // Other Latin-script languages from the v6 model card
-                "afr", "bos", "hrv", "cym", "wel", "est", "gle", "kur",
-                "lit", "lav", "mlt", "mri", "mao", "oci", "slv", "sqi", "alb",
-                "swa", "tgl", "uzb", "lat", "srp_latn", "cat", "eus", "baq",
-                "glg", "ltz", "roh", "que",
-                // CJK subset supported by v6 small (NOT Korean)
-                "chi_sim", "chi_tra", "zh", "zh_cn", "zh_tw", "jpn", "ja"));
-        V6_SMALL_SUPPORTED_LANGS = Collections.unmodifiableSet(v6);
     }
 
     private static final Pattern TOKEN_SPLITTER = Pattern.compile("[+,;]");
@@ -234,23 +188,6 @@ final class PaddleLanguageRouter {
         String s = langSpec.trim();
         if (s.isEmpty()) return null;
         s = s.toLowerCase(Locale.ROOT);
-
-        // Explicit selection of the dedicated PP-OCRv6 small entry (a pseudo "language"
-        // exposed in the UI when FEATURE_PADDLE_V6_SMALL is enabled) always routes to the
-        // v6 model, independent of the experimental auto-routing flag. The regular v5
-        // language selection therefore stays exactly as it is.
-        if (MODEL_V6_SMALL.equals(s)) {
-            return MODEL_V6_SMALL;
-        }
-
-        // Experimental PP-OCRv6 small auto-routing: only when explicitly enabled AND every
-        // requested language is covered by the v6 model. This opt-in path is used by the
-        // evaluation harnesses (A/B v5 vs. v6); production routing relies on the explicit
-        // selection above. Unsupported languages (e.g. rus/ell/ara/fas/hin/tha/kor) never
-        // reach v6.
-        if (v6SmallExperimentalEnabled && isV6SmallSupported(s)) {
-            return MODEL_V6_SMALL;
-        }
 
         // In Tesseract sind '+' Trennzeichen; wir akzeptieren zusätzlich ',' und ';'.
         String[] tokens = TOKEN_SPLITTER.split(s, -1);
@@ -284,36 +221,5 @@ final class PaddleLanguageRouter {
     static String assetBaseName(@Nullable String modelKey) {
         if (modelKey == null) return null;
         return ASSET_BASENAME.get(modelKey);
-    }
-
-    /**
-     * Enables or disables the experimental PP-OCRv6 small routing.
-     * Default is disabled; v5 remains the production path.
-     */
-    static void setV6SmallExperimentalEnabled(boolean enabled) {
-        v6SmallExperimentalEnabled = enabled;
-    }
-
-    static boolean isV6SmallExperimentalEnabled() {
-        return v6SmallExperimentalEnabled;
-    }
-
-    /**
-     * Returns {@code true} iff the language spec is non-empty and ALL requested language
-     * tokens are supported by the PP-OCRv6 small unified model.
-     */
-    static boolean isV6SmallSupported(@Nullable String langSpec) {
-        if (langSpec == null) return false;
-        String s = langSpec.trim().toLowerCase(Locale.ROOT);
-        if (s.isEmpty()) return false;
-        String[] tokens = TOKEN_SPLITTER.split(s, -1);
-        boolean any = false;
-        for (String tok : tokens) {
-            String t = tok.trim();
-            if (t.isEmpty()) continue;
-            if (!V6_SMALL_SUPPORTED_LANGS.contains(t)) return false;
-            any = true;
-        }
-        return any;
     }
 }

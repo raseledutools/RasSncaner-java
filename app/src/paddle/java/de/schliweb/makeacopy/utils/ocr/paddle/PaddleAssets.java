@@ -42,22 +42,14 @@ import java.util.Set;
  * This class is designed to ensure model availability while maintaining integrity
  * checks using SHA256 hashes.
  */
-public final class PaddleAssets {
+final class PaddleAssets {
 
     private static final String TAG = "PaddleAssets";
 
     static final String ASSET_DIR = "paddleocr/v5";
     static final String CACHE_SUBDIR = "paddleocr/v5";
 
-    // Experimental PP-OCRv6 small assets — fully separated from the v5 tree so the
-    // production v5 pipeline stays untouched.
-    static final String ASSET_DIR_V6_SMALL = "paddleocr/v6/small";
-    static final String CACHE_SUBDIR_V6_SMALL = "paddleocr/v6/small";
-    /** Asset base name of the v6 small recognition model ({@code rec.ort} / {@code rec_dict.txt}). */
-    static final String V6_SMALL_REC_BASE = "rec";
-
     static final String DET_NAME = "det.ort";
-    public static final String LAYOUT_NAME = "layout.ort";
     static final String SHA256SUMS_NAME = "SHA256SUMS";
 
     private PaddleAssets() {
@@ -69,32 +61,13 @@ public final class PaddleAssets {
     // Gefüllt beim ersten Zugriff; identisch für die gesamte Prozesslaufzeit.
     // ---------------------------------------------------------------
     private static volatile Map<String, String> assetSha256Map;
-    private static volatile Map<String, String> assetSha256MapV6;
-
-    /** Returns {@code true} if the model key addresses the experimental PP-OCRv6 small model. */
-    static boolean isV6Model(@Nullable String modelKey) {
-        return PaddleLanguageRouter.MODEL_V6_SMALL.equals(modelKey);
-    }
 
     @VisibleForTesting
     static synchronized Map<String, String> loadAssetSha256Map(Context context) throws IOException {
         Map<String, String> cached = assetSha256Map;
         if (cached != null) return cached;
-        assetSha256Map = loadSha256Sums(context, ASSET_DIR);
-        return assetSha256Map;
-    }
-
-    static synchronized Map<String, String> loadAssetSha256MapV6(Context context) throws IOException {
-        Map<String, String> cached = assetSha256MapV6;
-        if (cached != null) return cached;
-        assetSha256MapV6 = loadSha256Sums(context, ASSET_DIR_V6_SMALL);
-        return assetSha256MapV6;
-    }
-
-    private static Map<String, String> loadSha256Sums(Context context, String assetDir)
-            throws IOException {
         Map<String, String> m = new LinkedHashMap<>();
-        try (InputStream in = context.getAssets().open(assetDir + "/" + SHA256SUMS_NAME);
+        try (InputStream in = context.getAssets().open(ASSET_DIR + "/" + SHA256SUMS_NAME);
              BufferedReader br = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
             String line;
             while ((line = br.readLine()) != null) {
@@ -108,7 +81,9 @@ public final class PaddleAssets {
                 m.put(name, hash);
             }
         }
-        return Collections.unmodifiableMap(m);
+        cached = Collections.unmodifiableMap(m);
+        assetSha256Map = cached;
+        return cached;
     }
 
     // ---------------------------------------------------------------
@@ -128,21 +103,7 @@ public final class PaddleAssets {
         if (context == null) throw new IOException("context is null");
         rejectOnnxAssetsOrThrow(context);
         File outDir = cacheDir(context);
-        extractRaw(context, ASSET_DIR, DET_NAME, outDir, /*expectedSha=*/null);
-    }
-
-    /** Ensures the experimental v6 small detection model is extracted to the v6 cache dir. */
-    static synchronized void ensureDetExtractedV6(Context context) throws IOException {
-        if (context == null) throw new IOException("context is null");
-        File outDir = cacheDirV6(context);
-        extractRaw(context, ASSET_DIR_V6_SMALL, DET_NAME, outDir, /*expectedSha=*/null);
-    }
-
-    public static synchronized void ensureLayoutExtracted(Context context) throws IOException {
-        if (context == null) throw new IOException("context is null");
-        rejectOnnxAssetsOrThrow(context);
-        File outDir = cacheDir(context);
-        extractRaw(context, ASSET_DIR, LAYOUT_NAME, outDir, /*expectedSha=*/null);
+        extractRaw(context, DET_NAME, outDir, /*expectedSha=*/null);
     }
 
     /**
@@ -158,23 +119,11 @@ public final class PaddleAssets {
     static synchronized void ensureRecExtracted(Context context, String modelKey) throws IOException {
         if (context == null) throw new IOException("context is null");
         if (modelKey == null) throw new IOException("modelKey is null");
-        final String assetDir;
-        final String base;
-        final File outDir;
-        final Map<String, String> shaMap;
-        if (isV6Model(modelKey)) {
-            assetDir = ASSET_DIR_V6_SMALL;
-            base = V6_SMALL_REC_BASE;
-            outDir = cacheDirV6(context);
-            shaMap = loadAssetSha256MapV6(context);
-        } else {
-            base = PaddleLanguageRouter.assetBaseName(modelKey);
-            if (base == null) throw new IOException("Unknown rec modelKey: " + modelKey);
-            rejectOnnxAssetsOrThrow(context);
-            assetDir = ASSET_DIR;
-            outDir = cacheDir(context);
-            shaMap = loadAssetSha256Map(context);
-        }
+        String base = PaddleLanguageRouter.assetBaseName(modelKey);
+        if (base == null) throw new IOException("Unknown rec modelKey: " + modelKey);
+        rejectOnnxAssetsOrThrow(context);
+        File outDir = cacheDir(context);
+        Map<String, String> shaMap = loadAssetSha256Map(context);
         String dictName = base + "_dict.txt";
         String ortName = base + ".ort";
         String dictExpected = shaMap.get(dictName);
@@ -182,9 +131,9 @@ public final class PaddleAssets {
             // SHA256SUMS muss alle Dicts pinnen — Mismatch ist Build-Bug.
             throw new IOException("Missing SHA256 entry for asset: " + dictName);
         }
-        extractRaw(context, assetDir, dictName, outDir, dictExpected);
+        extractRaw(context, dictName, outDir, dictExpected);
         // .ort: kein pinned SHA verfügbar → nur Existenz/Größe.
-        extractRaw(context, assetDir, ortName, outDir, /*expectedSha=*/null);
+        extractRaw(context, ortName, outDir, /*expectedSha=*/null);
     }
 
     /**
@@ -198,12 +147,6 @@ public final class PaddleAssets {
      */
     static boolean areModelsPresent(Context context, String modelKey) {
         try {
-            if (isV6Model(modelKey)) {
-                Set<String> v6 = listAssetEntries(context, ASSET_DIR_V6_SMALL);
-                return v6.contains(DET_NAME)
-                        && v6.contains(V6_SMALL_REC_BASE + ".ort")
-                        && v6.contains(V6_SMALL_REC_BASE + "_dict.txt");
-            }
             if (!getDetAssetExists(context)) return false;
             String base = PaddleLanguageRouter.assetBaseName(modelKey);
             if (base == null) return false;
@@ -246,15 +189,6 @@ public final class PaddleAssets {
         return new File(cacheDir(context), DET_NAME);
     }
 
-    /** Returns the cached file location of the experimental v6 small detection model. */
-    static File getDetModelFileV6(Context context) {
-        return new File(cacheDirV6(context), DET_NAME);
-    }
-
-    public static File getLayoutModelFile(Context context) {
-        return new File(cacheDir(context), LAYOUT_NAME);
-    }
-
     /**
      * Returns a {@link File} object representing the recognition model file
      * in the application's cache directory based on the provided model key.
@@ -269,9 +203,6 @@ public final class PaddleAssets {
      * @throws IllegalArgumentException if the {@code modelKey} is unrecognized
      */
     static File getRecModelFile(Context context, String modelKey) {
-        if (isV6Model(modelKey)) {
-            return new File(cacheDirV6(context), V6_SMALL_REC_BASE + ".ort");
-        }
         String base = requireBase(modelKey);
         return new File(cacheDir(context), base + ".ort");
     }
@@ -291,9 +222,6 @@ public final class PaddleAssets {
      * @throws IllegalArgumentException if the {@code modelKey} is unrecognized
      */
     static File getRecDictFile(Context context, String modelKey) {
-        if (isV6Model(modelKey)) {
-            return new File(cacheDirV6(context), V6_SMALL_REC_BASE + "_dict.txt");
-        }
         String base = requireBase(modelKey);
         return new File(cacheDir(context), base + "_dict.txt");
     }
@@ -383,15 +311,6 @@ public final class PaddleAssets {
         return outDir;
     }
 
-    private static File cacheDirV6(Context context) {
-        File outDir = new File(context.getCacheDir(), CACHE_SUBDIR_V6_SMALL);
-        if (!outDir.exists()) {
-            //noinspection ResultOfMethodCallIgnored
-            outDir.mkdirs();
-        }
-        return outDir;
-    }
-
     private static boolean assetExists(Context context, String name) throws IOException {
         Set<String> known = listAssetEntries(context);
         return known.contains(name);
@@ -409,19 +328,14 @@ public final class PaddleAssets {
         synchronized (PaddleAssets.class) {
             c = assetEntryCache;
             if (c == null) {
-                c = listAssetEntries(context, ASSET_DIR);
+                String[] arr = context.getAssets().list(ASSET_DIR);
+                Set<String> s = new HashSet<>();
+                if (arr != null) Collections.addAll(s, arr);
+                c = Collections.unmodifiableSet(s);
                 assetEntryCache = c;
             }
         }
         return c;
-    }
-
-    private static Set<String> listAssetEntries(Context context, String assetDir)
-            throws IOException {
-        String[] arr = context.getAssets().list(assetDir);
-        Set<String> s = new HashSet<>();
-        if (arr != null) Collections.addAll(s, arr);
-        return Collections.unmodifiableSet(s);
     }
 
     private static void rejectOnnxAssetsOrThrow(Context context) throws IOException {
@@ -445,7 +359,7 @@ public final class PaddleAssets {
      * @param expectedSha The expected SHA-256 hash of the file for validation. Can be null if hash validation is not required.
      * @throws IOException If an I/O error occurs during extraction or if hash validation fails.
      */
-    private static void extractRaw(Context context, String assetDir, String name, File outDir,
+    private static void extractRaw(Context context, String name, File outDir,
                                    @Nullable String expectedSha) throws IOException {
         File target = new File(outDir, name);
         if (target.isFile() && target.length() > 0) {
@@ -465,7 +379,7 @@ public final class PaddleAssets {
         File tmp = new File(outDir, name + ".tmp");
         //noinspection ResultOfMethodCallIgnored
         tmp.delete();
-        String assetPath = assetDir + "/" + name;
+        String assetPath = ASSET_DIR + "/" + name;
         try (InputStream in = context.getAssets().open(assetPath);
              OutputStream out = new FileOutputStream(tmp)) {
             byte[] buf = new byte[16 * 1024];
@@ -514,7 +428,6 @@ public final class PaddleAssets {
     @VisibleForTesting
     static synchronized void resetAssetCachesForTests() {
         assetSha256Map = null;
-        assetSha256MapV6 = null;
         assetEntryCache = null;
     }
 

@@ -25,7 +25,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import de.schliweb.makeacopy.utils.image.OpenCVUtils;
-import de.schliweb.makeacopy.utils.ocr.paddle.PaddleOcrEngine;
 import org.opencv.core.Point;
 
 import java.io.BufferedReader;
@@ -36,12 +35,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -88,23 +84,6 @@ public class PaddlePdfEvalTest {
     static final double HARD_REGRESSION_CER = 0.08;
     static final double HARD_REGRESSION_WER = 0.12;
 
-    /**
-     * Sprachen, die im Eval auf PP-OCRv6 Small laufen dürfen (Issue-Vorgabe; Teilmenge der
-     * v6-Whitelist im produktiven {@code PaddleLanguageRouter}). Samples mit anderen Sprachen
-     * (z.B. rus/el/ara/fas/hin/tha) werden im v6-Lauf übersprungen und im Report unter
-     * {@code skippedLanguages} dokumentiert.
-     */
-    private static final Set<String> V6_EVAL_LANGS =
-            Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-                    "deu", "eng", "fra", "ita", "spa", "por", "nld", "pol", "ces",
-                    "slk", "hun", "ron", "dan", "nor", "swe", "tur", "chi_sim", "chi_tra")));
-
-    private static final List<String> EXPECTED_LANGUAGE_SAMPLE_CODES =
-            Collections.unmodifiableList(Arrays.asList(
-                    "ara", "ces", "chi_sim", "chi_tra", "dan", "deu", "el", "eng", "fas",
-                    "fra", "hin", "hun", "ita", "nld", "nor", "pol", "por", "ron", "rus",
-                    "slk", "spa", "swe", "tha", "tur"));
-
     @Test
     public void evaluatePaddlePdf_writesReportAndLogsThresholds() throws Exception {
         Context ctx = ApplicationProvider.getApplicationContext();
@@ -114,97 +93,51 @@ public class PaddlePdfEvalTest {
         assumeTrue(
                 "no PDF eval samples found under assets/" + EVAL_DIR + " — skipping",
                 !samples.isEmpty());
-        assertExpectedLanguageSamples(samples);
         Log.i(TAG, "Loaded " + samples.size() + " PDF eval samples");
 
-        // ---------------- Lauf 1: Paddle V5 (Produktionspfad) ----------------
-        Report v5Report = runPaddleEval(ctx, "paddle-v5-best-pdf", samples, /*useV6Small=*/false);
-        Log.i(TAG, "Report JSON:\n" + toJson(v5Report));
+        // Debug-Dumps für die ersten 2 Paddle-Samples (Diagnose Det/Crop/Rec/CTC).
+        // Erfolgt per Reflection, da PaddleDebugDumper paket-privat im paddle-Package liegt
+        // und keine Public-API ergänzt werden soll.
+        File debugOutDir = ctx.getExternalFilesDir("eval-debug");
+        Class<?> dumperClass = null;
+        try {
+            dumperClass = Class.forName("de.schliweb.makeacopy.utils.ocr.paddle.PaddleDebugDumper");
+            java.lang.reflect.Method enableM =
+                    dumperClass.getDeclaredMethod("enable", File.class, int.class);
+            enableM.setAccessible(true);
+            enableM.invoke(null, debugOutDir, 2);
+            Log.i(TAG, "PaddleDebugDumper enabled, outDir=" + debugOutDir);
+        } catch (Throwable t) {
+            Log.w(TAG, "Could not enable PaddleDebugDumper (continuing without dumps): " + t);
+            dumperClass = null;
+        }
 
-        // Soft-Asserts (§9): nur loggen.
-        logThresholdCheck("paddle-v5-best-pdf", v5Report);
-
-        // Harter Per-Sample-Assert: Regression des DB-Detection-Fixes für saudi_executions.
-        assertHardRegressionSample(v5Report);
-
-        // ---------------- Lauf 2: Paddle V6 Small (experimentell, Opt-in) -----
-        // Gleiche Samples, aber nur v6-unterstützte Sprachen; Rest wird übersprungen
-        // und im Report unter skippedLanguages dokumentiert.
-        Report v6Report = runPaddleEval(ctx, "paddle-v6-small-pdf", samples, /*useV6Small=*/true);
-        Log.i(TAG, "Report JSON:\n" + toJson(v6Report));
-        logThresholdCheck("paddle-v6-small-pdf", v6Report);
-
-        // ---------------- Vergleichsreport V5 vs. V6 -------------------------
-        Log.i(TAG, "Comparison JSON:\n" + comparisonJson(v5Report, v6Report));
-    }
-
-    /**
-     * Führt einen kompletten Eval-Lauf mit einer frisch erzeugten Engine aus und erfasst
-     * dabei Engine-Erzeugungszeit sowie Speicherbedarf (vorher / nach Engine-Erzeugung /
-     * nach dem ersten Sample). Der v6-Pfad wird ausschließlich über die produktive
-     * Multi-Model-API {@link PaddleOcrEngine#setV6SmallExperimentalEnabled(boolean)}
-     * aktiviert (keine Reflection, keine Asset-Overrides, keine Test-Hooks).
-     */
-    private static Report runPaddleEval(
-            Context ctx, String reportName, List<Sample> allSamples, boolean useV6Small)
-            throws Exception {
-        List<Sample> samples;
-        List<String> skippedLanguages = new ArrayList<>();
-        if (useV6Small) {
-            samples = new ArrayList<>();
-            for (Sample s : allSamples) {
-                if (V6_EVAL_LANGS.contains(s.language)) {
-                    samples.add(s);
-                } else {
-                    if (!skippedLanguages.contains(s.language)) {
-                        skippedLanguages.add(s.language);
-                    }
-                    Log.i(TAG, reportName + " skipping sample=" + s.name
-                            + " lang=" + s.language + " (not supported by PP-OCRv6 small)");
+        OcrEngine paddle = PaddleEngineProvider.create(ctx, null);
+        assertNotNull("Paddle engine must be creatable", paddle);
+        Report paddleReport;
+        try {
+            paddleReport = runEngine("paddle-pdf", paddle, samples);
+        } finally {
+            paddle.close();
+            if (dumperClass != null) {
+                try {
+                    java.lang.reflect.Method disableM =
+                            dumperClass.getDeclaredMethod("disable");
+                    disableM.setAccessible(true);
+                    disableM.invoke(null);
+                } catch (Throwable t) {
+                    Log.w(TAG, "Could not disable PaddleDebugDumper: " + t);
                 }
             }
-        } else {
-            samples = allSamples;
         }
-        assumeTrue(reportName + ": no samples after language filtering", !samples.isEmpty());
 
-        long memoryBeforeMB = usedMemoryMB();
-        PaddleOcrEngine.setV6SmallExperimentalEnabled(useV6Small);
-        Report report;
-        try {
-            long tCreate0 = System.nanoTime();
-            OcrEngine paddle = PaddleEngineProvider.create(ctx, null);
-            long engineCreationMs = (System.nanoTime() - tCreate0) / 1_000_000L;
-            assertNotNull("Paddle engine must be creatable", paddle);
-            enablePaddleBest(paddle);
-            long memoryAfterLoadMB = usedMemoryMB();
-            try {
-                report = runEngine(reportName, paddle, samples);
-            } finally {
-                paddle.close();
-            }
-            report.engineCreationMs = engineCreationMs;
-            report.memoryBeforeMB = memoryBeforeMB;
-            report.memoryAfterLoadMB = memoryAfterLoadMB;
-            report.skippedLanguages.addAll(skippedLanguages);
-        } finally {
-            // Produktionsverhalten wiederherstellen: v5 bleibt Default.
-            PaddleOcrEngine.setV6SmallExperimentalEnabled(false);
-        }
-        return report;
-    }
+        Log.i(TAG, "Report JSON:\n" + toJson(paddleReport));
 
-    /**
-     * Aktuell genutzter Speicher (Java-Heap + Native-Heap) in MB. Die ORT-Sessions
-     * allozieren primär nativ, daher fließt {@code Debug.getNativeHeapAllocatedSize()}
-     * mit ein. Vorher wird ein GC angestoßen, um Rauschen zu reduzieren.
-     */
-    private static long usedMemoryMB() {
-        Runtime rt = Runtime.getRuntime();
-        rt.gc();
-        long javaHeap = rt.totalMemory() - rt.freeMemory();
-        long nativeHeap = android.os.Debug.getNativeHeapAllocatedSize();
-        return (javaHeap + nativeHeap) / (1024L * 1024L);
+        // Soft-Asserts (§9): nur loggen.
+        logThresholdCheck("paddle-pdf", paddleReport);
+
+        // Harter Per-Sample-Assert: Regression des DB-Detection-Fixes für saudi_executions.
+        assertHardRegressionSample(paddleReport);
     }
 
     /**
@@ -238,28 +171,6 @@ public class PaddlePdfEvalTest {
                         + " exceeds hard limit " + HARD_REGRESSION_WER
                         + " — DB detection likely regressed (missing text lines).",
                 sm.wer <= HARD_REGRESSION_WER);
-    }
-
-    private static void enablePaddleBest(OcrEngine engine) {
-        if (engine instanceof PaddleOcrEngine) {
-            ((PaddleOcrEngine) engine).setHighQualityDetectionEnabled(true);
-            Log.i(TAG, "Paddle Best enabled: high-quality detection retry active");
-        } else {
-            Log.w(TAG, "Paddle Best not enabled: unexpected engine type " + engine.getClass().getName());
-        }
-    }
-
-    private static void assertExpectedLanguageSamples(List<Sample> samples) {
-        Set<String> present = new HashSet<>();
-        for (Sample s : samples) {
-            if (s.name != null && s.name.startsWith("language_")) {
-                present.add(s.language);
-            }
-        }
-        assertTrue(
-                "Missing language PDF eval samples: expected=" + EXPECTED_LANGUAGE_SAMPLE_CODES
-                        + " present=" + present,
-                present.containsAll(EXPECTED_LANGUAGE_SAMPLE_CODES));
     }
 
     // ---------------------------------------------------------------------
@@ -498,7 +409,6 @@ public class PaddlePdfEvalTest {
         double confSum = 0.0;
         int confCount = 0;
 
-        boolean firstSample = true;
         for (Sample s : samples) {
             engine.setLanguage(s.language);
             logBitmapInfo(name + " sample=" + s.name + " before engine.run", s.bitmap);
@@ -506,10 +416,6 @@ public class PaddlePdfEvalTest {
             OCRHelper.OcrResultWords res = engine.run(s.bitmap);
             long dtMs = (System.nanoTime() - t0) / 1_000_000L;
             latencies.add(dtMs);
-            if (firstSample) {
-                r.memoryAfterFirstRunMB = usedMemoryMB();
-                firstSample = false;
-            }
             String pred = (res != null && res.text != null) ? res.text : "";
             String gt = normalizeText(s.groundTruth);
             String prN = normalizeText(pred);
@@ -699,11 +605,6 @@ public class PaddlePdfEvalTest {
         double meanConfidence;
         long latencyMsP50;
         long latencyMsP95;
-        long engineCreationMs;
-        long memoryBeforeMB;
-        long memoryAfterLoadMB;
-        long memoryAfterFirstRunMB;
-        final List<String> skippedLanguages = new ArrayList<>();
 
         Report(String engine, int nSamples) {
             this.engine = engine;
@@ -737,16 +638,6 @@ public class PaddlePdfEvalTest {
         sb.append("  \"meanConfidence\": ").append(jsonNum(r.meanConfidence)).append(",\n");
         sb.append("  \"latencyMsP50\": ").append(r.latencyMsP50).append(",\n");
         sb.append("  \"latencyMsP95\": ").append(r.latencyMsP95).append(",\n");
-        sb.append("  \"engineCreationMs\": ").append(r.engineCreationMs).append(",\n");
-        sb.append("  \"memoryBeforeMB\": ").append(r.memoryBeforeMB).append(",\n");
-        sb.append("  \"memoryAfterLoadMB\": ").append(r.memoryAfterLoadMB).append(",\n");
-        sb.append("  \"memoryAfterFirstRunMB\": ").append(r.memoryAfterFirstRunMB).append(",\n");
-        sb.append("  \"skippedLanguages\": [");
-        for (int i = 0; i < r.skippedLanguages.size(); i++) {
-            if (i > 0) sb.append(", ");
-            sb.append('\"').append(escape(r.skippedLanguages.get(i))).append('\"');
-        }
-        sb.append("],\n");
         sb.append("  \"thresholds\": {\n");
         sb.append("    \"cer\": ").append(jsonNum(THRESHOLD_CER)).append(",\n");
         sb.append("    \"wer\": ").append(jsonNum(THRESHOLD_WER)).append(",\n");
@@ -767,35 +658,6 @@ public class PaddlePdfEvalTest {
         sb.append("  ]\n");
         sb.append("}\n");
         return sb.toString();
-    }
-
-    /**
-     * Vergleichsreport V5 vs. V6: relative CER/WER-Deltas (positiv = v6 schlechter)
-     * und Speedup auf Basis der P50-Latenz (positiv = v6 schneller).
-     */
-    private static String comparisonJson(Report v5, Report v6) {
-        double cerDeltaPercent = relativeDeltaPercent(v5.cer, v6.cer);
-        double werDeltaPercent = relativeDeltaPercent(v5.wer, v6.wer);
-        double speedupPercent =
-                (v5.latencyMsP50 > 0)
-                        ? (v5.latencyMsP50 - v6.latencyMsP50) * 100.0 / v5.latencyMsP50
-                        : Double.NaN;
-        StringBuilder sb = new StringBuilder();
-        sb.append("{\n");
-        sb.append("  \"v5Cer\": ").append(jsonNum(v5.cer)).append(",\n");
-        sb.append("  \"v6Cer\": ").append(jsonNum(v6.cer)).append(",\n");
-        sb.append("  \"v5Wer\": ").append(jsonNum(v5.wer)).append(",\n");
-        sb.append("  \"v6Wer\": ").append(jsonNum(v6.wer)).append(",\n");
-        sb.append("  \"cerDeltaPercent\": ").append(jsonNum(cerDeltaPercent)).append(",\n");
-        sb.append("  \"werDeltaPercent\": ").append(jsonNum(werDeltaPercent)).append(",\n");
-        sb.append("  \"speedupPercent\": ").append(jsonNum(speedupPercent)).append("\n");
-        sb.append("}\n");
-        return sb.toString();
-    }
-
-    private static double relativeDeltaPercent(double v5, double v6) {
-        if (v5 == 0.0) return Double.NaN;
-        return (v6 - v5) * 100.0 / v5;
     }
 
     private static String jsonNum(double d) {

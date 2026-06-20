@@ -23,16 +23,6 @@ if (enableAbiSplits) {
 }
 def edition = (project.findProperty("edition") ?: "full")
 def isLight = edition == "light"
-// Experimentelle Layout-Erkennung: hinter Feature-Flag versteckt (Default aus).
-// Aktivieren per Gradle-Property: -PlayoutAnalysis=true
-// Wenn deaktiviert, wird das Modell layout.ort weder ins APK noch ins Bundle gepackt
-// (siehe Asset-Entfernung im merge*Assets-Task weiter unten).
-def layoutAnalysisEnabled = (project.findProperty("layoutAnalysis") ?: "false").toBoolean()
-// Experimentelles PP-OCRv6-Small-Modell: hinter Feature-Flag versteckt (Default aus).
-// Aktivieren per Gradle-Property: -PpaddleV6Small=true
-// Wenn deaktiviert, werden die v6-Assets (paddleocr/v6/**) weder ins APK noch ins
-// Bundle gepackt (siehe Asset-Entfernung im merge*Assets-Task weiter unten).
-def paddleV6SmallEnabled = (project.findProperty("paddleV6Small") ?: "true").toBoolean()
 def isPaddleAndroidTestInvocation = gradle.startParameter.taskNames.any {
     it.toLowerCase(Locale.ROOT).contains("paddle") && it.toLowerCase(Locale.ROOT).contains("androidtest")
 }
@@ -64,16 +54,14 @@ android {
         buildConfigField "boolean", "FEATURE_REVIEW_OCR", "true"
         buildConfigField "boolean", "FEATURE_FRAMING_LOGGING", "false"
         buildConfigField "boolean", "FEATURE_A11Y_GUIDANCE", "true"
-        buildConfigField "boolean", "FEATURE_LAYOUT_ANALYSIS", layoutAnalysisEnabled ? "true" : "false"
+        buildConfigField "boolean", "FEATURE_LAYOUT_ANALYSIS", "false"
         buildConfigField "boolean", "FEATURE_INBOX_MODE", "true"
         buildConfigField "boolean", "FEATURE_CROP_EDGE_DRAG", "true"
         buildConfigField "boolean", "FEATURE_CROP_PAN_ZOOM", "true"
         buildConfigField "boolean", "FEATURE_DOCQUAD_CORNERS", "true"
         buildConfigField "boolean", "FEATURE_BEST_OF_CROP_CORNERS", "true"
         buildConfigField "boolean", "FEATURE_PADDLE_OCR", "false"
-        // Experimentell: PP-OCRv6 Small als Opt-in (nur paddle-Flavor relevant, Default aus)
-        buildConfigField "boolean", "FEATURE_PADDLE_V6_SMALL", paddleV6SmallEnabled ? "true" : "false"
-        buildConfigField "boolean", "FEATURE_FOCUS_QUALITY_INDICATOR", "false"
+        buildConfigField "boolean", "FEATURE_FOCUS_QUALITY_INDICATOR", "true"
         buildConfigField "boolean", "IS_LIGHT", isLight ? "true" : "false"
 
         if (isLight) {
@@ -130,11 +118,6 @@ android {
             // arm64-v8a für den paddle-Flavor erfolgt stattdessen in
             // androidComponents.beforeVariants weiter unten.
             buildConfigField "boolean", "FEATURE_PADDLE_OCR", "true"
-            // Experimenteller PP-OCRv6-Small-Pfad: Opt-in per Gradle-Property,
-            // z.B. ./gradlew :app:installPaddleDebug -PpaddleV6Small=true
-            // Default false → produktives Verhalten (v5) bleibt unverändert.
-            buildConfigField "boolean", "FEATURE_PADDLE_V6_SMALL",
-                    paddleV6SmallEnabled ? "true" : "false"
             //versionNameSuffix "-paddle"
         }
     }
@@ -729,40 +712,6 @@ if (isLight) {
                 if (cmapDir.exists()) {
                     def deleted = cmapDir.deleteDir()
                     println "Deleted CJK CMap assets from light edition: ${deleted}"
-                }
-            }
-        }
-    }
-}
-
-// Experimentelles Layout-Analyse-Modell (layout.ort) nur einpacken, wenn
-// FEATURE_LAYOUT_ANALYSIS aktiv ist. Andernfalls wird es nach dem Asset-Merge
-// wieder entfernt, damit es weder im APK noch im Bundle landet.
-if (!layoutAnalysisEnabled) {
-    tasks.whenTaskAdded { task ->
-        if (task.name.matches("merge.*Assets")) {
-            task.doLast {
-                def layoutModel = new File(task.outputDir.get().asFile, "paddleocr/v5/layout.ort")
-                if (layoutModel.exists()) {
-                    def deleted = layoutModel.delete()
-                    println "Deleted layout analysis model from assets (FEATURE_LAYOUT_ANALYSIS=false): ${deleted}"
-                }
-            }
-        }
-    }
-}
-
-// Experimentelle PP-OCRv6-Small-Assets (paddleocr/v6/**) nur einpacken, wenn
-// FEATURE_PADDLE_V6_SMALL aktiv ist. Andernfalls werden sie nach dem Asset-Merge
-// wieder entfernt, damit sie weder im APK noch im Bundle landen.
-if (!paddleV6SmallEnabled) {
-    tasks.whenTaskAdded { task ->
-        if (task.name.matches("merge.*Assets")) {
-            task.doLast {
-                def v6Dir = new File(task.outputDir.get().asFile, "paddleocr/v6")
-                if (v6Dir.exists()) {
-                    def deleted = v6Dir.deleteDir()
-                    println "Deleted PP-OCRv6 small assets from assets (FEATURE_PADDLE_V6_SMALL=false): ${deleted}"
                 }
             }
         }

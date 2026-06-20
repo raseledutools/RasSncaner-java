@@ -35,12 +35,6 @@ public final class PaddleEngineProvider {
         }
         Context appCtx = context.getApplicationContext();
         try {
-            // PP-OCRv6 Small wird in Produktion NICHT global per Auto-Routing aktiviert.
-            // Die v5-Sprachauswahl bleibt dadurch unverändert; der v6-Pfad wird ausschließlich
-            // dann verwendet, wenn der Nutzer den dedizierten v6-Eintrag in der Sprachliste
-            // auswählt (langSpec == PaddleLanguageRouter.MODEL_V6_SMALL). Dieser Eintrag wird
-            // nur angeboten, wenn FEATURE_PADDLE_V6_SMALL gesetzt ist. Das experimentelle
-            // Auto-Routing-Flag bleibt allein den Eval-Harnesses vorbehalten.
             OcrEngine engine = PaddleEngineFactory.create(appCtx);
             if (language != null) {
                 try {
