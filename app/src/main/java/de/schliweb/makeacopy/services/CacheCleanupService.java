@@ -13,6 +13,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
@@ -684,8 +685,21 @@ public class CacheCleanupService extends Service {
    *     the service.
    */
   public static void startService(Context context) {
-    Intent intent = new Intent(context, CacheCleanupService.class);
-    context.startService(intent);
+    try {
+      Intent intent = new Intent(context, CacheCleanupService.class);
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        // We could use startForegroundService here, but that requires a notification.
+        // For a cleanup service, standard startService is usually enough if app is in foreground.
+        // If app is in background, it will throw BackgroundServiceStartNotAllowedException
+        // (caught).
+        context.startService(intent);
+      } else {
+        context.startService(intent);
+      }
+    } catch (Exception e) {
+      Log.w(TAG, "Failed to start service (likely background restrictions): " + e.getMessage());
+      // Fallback to direct cleanup if needed, or just ignore as it's non-critical
+    }
   }
 
   /**
