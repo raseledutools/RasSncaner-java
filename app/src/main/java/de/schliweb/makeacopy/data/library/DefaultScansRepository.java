@@ -180,7 +180,7 @@ public class DefaultScansRepository implements ScansRepository {
       if (!isOcrFtsAvailable()) return searchOcrTextFallback(query, limit);
       return scanPageTextDao.searchOcr(ScanSearchQueries.ocrSearch(ftsQuery, Math.max(1, limit)));
     } catch (Throwable t) {
-      if (AppDatabase.isMissingFts5(t) || AppDatabase.isMissingScanPageTextFts(t)) {
+      if (AppDatabase.isMissingFtsModule(t) || AppDatabase.isMissingScanPageTextFts(t)) {
         ocrFtsAvailable = false;
         return searchOcrTextFallback(query, limit);
       }
@@ -206,7 +206,7 @@ public class DefaultScansRepository implements ScansRepository {
     try {
       ocrFtsAvailable = scanPageTextDao.hasOcrFtsTable(OCR_FTS_TABLE_EXISTS_QUERY) != 0;
     } catch (Throwable t) {
-      if (AppDatabase.isMissingFts5(t) || AppDatabase.isMissingScanPageTextFts(t)) {
+      if (AppDatabase.isMissingFtsModule(t) || AppDatabase.isMissingScanPageTextFts(t)) {
         ocrFtsAvailable = false;
         return false;
       }

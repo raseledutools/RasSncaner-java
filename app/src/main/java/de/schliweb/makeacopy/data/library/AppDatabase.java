@@ -10,7 +10,6 @@
 package de.schliweb.makeacopy.data.library;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteException;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.room.Database;
@@ -62,9 +61,9 @@ public abstract class AppDatabase extends RoomDatabase {
           database.execSQL(
               "CREATE TABLE IF NOT EXISTS scan_page_text ("
                   + "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
-                  + "scanId TEXT NOT NULL, "
+                  + "scanId TEXT, "
                   + "pageIndex INTEGER NOT NULL, "
-                  + "text TEXT NOT NULL, "
+                  + "text TEXT, "
                   + "ocrSourcePath TEXT, "
                   + "ocrSourceFormat TEXT, "
                   + "ocrTextHash TEXT, "
@@ -78,15 +77,30 @@ public abstract class AppDatabase extends RoomDatabase {
               "CREATE INDEX IF NOT EXISTS index_scan_page_text_scanId ON scan_page_text(scanId)");
           database.execSQL(
               "CREATE TABLE IF NOT EXISTS scan_search_state ("
-                  + "scanId TEXT NOT NULL PRIMARY KEY, "
-                  + "state TEXT NOT NULL, "
+                  + "scanId TEXT NOT NULL, "
+                  + "state TEXT, "
                   + "lastIndexedAt INTEGER, "
                   + "lastError TEXT, "
+                  + "PRIMARY KEY(scanId), "
                   + "FOREIGN KEY(scanId) REFERENCES scans(id) ON DELETE CASCADE)");
           database.execSQL(
               "CREATE INDEX IF NOT EXISTS index_scan_search_state_scanId "
                   + "ON scan_search_state(scanId)");
-          createScanPageTextFtsIfAvailable(database);
+          try {
+            createScanPageTextFts(database);
+          } catch (Throwable t) {
+            if (isMissingFtsModule(t)) {
+              Log.w(TAG, "SQLite FTS5 is unavailable; trying FTS4 fallback...");
+              try {
+                createScanPageTextFts4(database);
+                Log.i(TAG, "SQLite FTS4 fallback successful");
+              } catch (Throwable t2) {
+                Log.w(TAG, "SQLite FTS4 is also unavailable; OCR full-text search is disabled");
+              }
+            } else {
+              Log.e(TAG, "Failed to initialize FTS during migration (non-critical)", t);
+            }
+          }
         }
       };
 
@@ -112,18 +126,36 @@ public abstract class AppDatabase extends RoomDatabase {
   static void createScanPageTextFtsIfAvailable(@NonNull SupportSQLiteDatabase database) {
     try {
       createScanPageTextFts(database);
-    } catch (SQLiteException e) {
-      if (isMissingFts5(e)) {
-        Log.w(TAG, "SQLite FTS5 is unavailable; OCR full-text search is disabled", e);
+    } catch (Throwable t) {
+      if (isMissingFtsModule(t)) {
+        Log.w(TAG, "SQLite FTS5 is unavailable; trying FTS4 fallback...");
+        try {
+          createScanPageTextFts4(database);
+          Log.i(TAG, "SQLite FTS4 fallback successful");
+        } catch (Throwable t2) {
+          Log.w(TAG, "SQLite FTS4 is also unavailable; OCR full-text search is disabled");
+        }
         return;
       }
-      throw e;
+      Log.e(TAG, "Failed to initialize FTS (non-critical)", t);
     }
   }
 
-  static boolean isMissingFts5(@NonNull Throwable t) {
+  static void createScanPageTextFts4(@NonNull SupportSQLiteDatabase database) {
+    String createFtsSql =
+        String.format(
+            java.util.Locale.US,
+            "CREATE VIRTUAL TABLE IF NOT EXISTS scan_page_text_fts USING fts4(title, text, scanId %s, pageIndex %s, content='scan_page_text', tokenize='unicode61')",
+            FTS_UNINDEXED,
+            FTS_UNINDEXED);
+    database.execSQL(createFtsSql);
+    createScanPageTextFtsTriggers(database);
+  }
+
+  static boolean isMissingFtsModule(@NonNull Throwable t) {
     String message = t.getMessage();
-    return message != null && message.contains("no such module: fts5");
+    return message != null
+        && (message.contains("no such module: fts5") || message.contains("no such module: fts4"));
   }
 
   static boolean isMissingScanPageTextFts(@NonNull Throwable t) {
