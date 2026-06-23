@@ -44,7 +44,7 @@ public class DefaultScansRepository implements ScansRepository {
   private final ScanCollectionJoinDao joinDao;
   private final ScanPageTextDao scanPageTextDao;
   private final OcrSearchIndexer ocrSearchIndexer;
-  private Boolean ocrFtsAvailable;
+  private Integer ocrFtsType; // null=unknown, 0=none, 4=FTS4, 5=FTS5
 
   @Inject
   public DefaultScansRepository(
@@ -177,11 +177,12 @@ public class DefaultScansRepository implements ScansRepository {
     try {
       String ftsQuery = ScanSearchQueries.sanitizeFtsQuery(query);
       if (ftsQuery.isEmpty()) return java.util.Collections.emptyList();
-      if (!isOcrFtsAvailable()) return searchOcrTextFallback(query, limit);
-      return scanPageTextDao.searchOcr(ScanSearchQueries.ocrSearch(ftsQuery, Math.max(1, limit)));
+      if (getOcrFtsType() == 0) return searchOcrTextFallback(query, limit);
+      return scanPageTextDao.searchOcr(
+          ScanSearchQueries.ocrSearch(ftsQuery, Math.max(1, limit), getOcrFtsType() == 5));
     } catch (Throwable t) {
       if (AppDatabase.isMissingFtsModule(t) || AppDatabase.isMissingScanPageTextFts(t)) {
-        ocrFtsAvailable = false;
+        ocrFtsType = 0;
         return searchOcrTextFallback(query, limit);
       }
       Log.e(TAG, "searchOcrText failed", t);
@@ -201,19 +202,36 @@ public class DefaultScansRepository implements ScansRepository {
     }
   }
 
-  private boolean isOcrFtsAvailable() {
-    if (ocrFtsAvailable != null) return ocrFtsAvailable;
+  private int getOcrFtsType() {
+    if (ocrFtsType != null) return ocrFtsType;
     try {
-      ocrFtsAvailable = scanPageTextDao.hasOcrFtsTable(OCR_FTS_TABLE_EXISTS_QUERY) != 0;
+      if (scanPageTextDao.hasOcrFtsTable(OCR_FTS_TABLE_EXISTS_QUERY) == 0) {
+        ocrFtsType = 0;
+      } else {
+        // Table exists, check if it is FTS5
+        try {
+          // We use a query that will fail if FTS5 is not available or if the table is FTS4
+          // FTS5-specific functions like bm25() will throw an exception during compilation of the
+          // query if not available.
+          // Note: using a RawQuery here to avoid Room's pre-compilation check.
+          scanPageTextDao.hasOcrFtsTable(
+              new SimpleSQLiteQuery(
+                  "SELECT 1 FROM scan_page_text_fts WHERE scan_page_text_fts MATCH 'test' AND bm25(scan_page_text_fts) IS NOT NULL LIMIT 0"));
+          ocrFtsType = 5;
+        } catch (Throwable t) {
+          Log.i(TAG, "FTS5 functions unavailable, treating as FTS4: " + t.getMessage());
+          ocrFtsType = 4;
+        }
+      }
     } catch (Throwable t) {
       if (AppDatabase.isMissingFtsModule(t) || AppDatabase.isMissingScanPageTextFts(t)) {
-        ocrFtsAvailable = false;
-        return false;
+        ocrFtsType = 0;
+        return 0;
       }
       Log.e(TAG, "Checking OCR FTS availability failed", t);
-      ocrFtsAvailable = false;
+      ocrFtsType = 0;
     }
-    return ocrFtsAvailable;
+    return ocrFtsType;
   }
 
   /**
@@ -255,10 +273,8 @@ public class DefaultScansRepository implements ScansRepository {
       }
 
       // Remove any joins first to respect FK constraints if added later
-      if (scanPageTextDao != null) {
-        scanPageTextDao.deleteForScan(id);
-      }
       joinDao.removeAllForScan(id);
+      // scanPageText entries are removed automatically via ForeignKey CASCADE on scanId
       scansDao.deleteById(id);
     } catch (Throwable t) {
       Log.e(TAG, "deleteScan failed", t);
