@@ -241,18 +241,12 @@ dependencies {
     standardImplementation libs.tesseract
 
     // Onnx-Runtime dependency
-    // If a locally source-built ONNX Runtime artifact exists under app/libs/
-    // (produced by scripts/build_onnxruntime_android.sh / build_minimal_onnxruntime.sh),
-    // use it — it's the smaller, custom-operator-stripped build.
-    // Otherwise fall back to the prebuilt artifact from Maven Central so the
-    // project still compiles for quick/local/dev builds (e.g. CI without the
-    // native build steps).
-    def localOnnxLibs = fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
-    if (!localOnnxLibs.isEmpty()) {
-        implementation localOnnxLibs
-    } else {
-        implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.20.0'
-    }
+    // Built from source in CI (scripts/build_onnxruntime_android.sh), a
+    // custom-operator-stripped, single-purpose artifact lands in
+    // app/libs/*.jar or *.aar. This keeps the final APK small (~30MB)
+    // instead of pulling in the full all-ops/all-ABI Maven Central AAR
+    // (which balloons the APK to ~1.5GB).
+    implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
 
     // PdfBox-Android dependency
     implementation libs.pdfbox.android
