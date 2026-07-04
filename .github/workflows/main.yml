@@ -1,0 +1,163 @@
+name: Build RasFocus APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+
+  # ✅ Lite build — PDF ছাড়া, fast check (ছোট APK)
+  build-lite:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Build Lite Debug APK (no PDF)
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew assembleLiteDebug
+
+      - name: Upload Lite APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: RasFocus-lite-debug-apk
+          path: app/build/outputs/apk/lite/debug/*.apk
+          retention-days: 30
+
+      # ✅ APK কে আলাদা branch-এ commit করা হয় (raw.githubusercontent.com দিয়ে easy fetch এর জন্য)
+      - name: Prepare Lite APK for publish
+        run: |
+          mkdir -p /tmp/apk-publish/apks
+          cp app/build/outputs/apk/lite/debug/*.apk /tmp/apk-publish/apks/RasFocus-lite-debug.apk
+
+      - name: Publish Lite APK to apk-output branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: /tmp/apk-publish
+          publish_branch: apk-output
+          force_orphan: true
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'chore: update lite debug apk [run ${{ github.run_number }}]'
+
+  # ✅ Full build — PDF সহ, apk-output branch + master/apk folder দুই জায়গাতেই যাবে
+  build-full:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Build Full Debug APK (with PDF)
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew assembleFullDebug
+
+      - name: Upload Full APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: RasFocus-full-debug-apk
+          path: app/build/outputs/apk/full/debug/*.apk
+          retention-days: 30
+
+      - name: Prepare Full APK for publish
+        run: |
+          mkdir -p /tmp/apk-publish/apks
+          cp app/build/outputs/apk/full/debug/*.apk /tmp/apk-publish/apks/RasFocus-full-debug.apk
+
+      - name: Publish Full APK to apk-output branch
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: /tmp/apk-publish
+          publish_branch: apk-output
+          force_orphan: true
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'chore: update full debug apk [run ${{ github.run_number }}]'
+
+      - name: Commit Full APK to master (apk folder)
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        run: |
+          mkdir -p apk
+          cp app/build/outputs/apk/full/debug/*.apk apk/RasFocus-full-debug.apk
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add apk/RasFocus-full-debug.apk
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+
+          git commit -m "chore: update full debug apk [run ${{ github.run_number }}] [skip ci]"
+          git push origin HEAD:${{ github.ref_name }}
+
+      - name: Upload Full APK to GitHub Release
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}-debug
+          name: RasFocus Debug Build #${{ github.run_number }}
+          body: |
+            Auto build from commit ${{ github.sha }}
+            Branch: ${{ github.ref_name }}
+          files: app/build/outputs/apk/full/debug/*.apk
+          draft: false
+          prerelease: true
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
