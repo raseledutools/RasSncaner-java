@@ -11,173 +11,163 @@ package de.schliweb.makeacopy.utils.ocr;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import de.schliweb.makeacopy.utils.layout.DocumentLayoutAnalyzer.AnalysisResult;
+import android.util.Log;
+import de.schliweb.makeacopy.utils.layout.DocumentLayoutAnalyzer;
 import de.schliweb.makeacopy.utils.layout.DocumentRegion;
-import de.schliweb.makeacopy.utils.ocr.paddle.PaddleOcrEngine;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import lombok.Getter;
 
-/** Paddle-only OCR helper implementation for the paddle flavor. */
-public class OCRHelper implements AutoCloseable {
-  private static final String TESSDATA_DIR = "tessdata";
-  private static final Pattern NUMERIC_ENTITY_PATTERN = Pattern.compile("&#([xX]?[0-9A-Fa-f]+);");
+/**
+ * OCRHelper — intentionally OCR-DISABLED build.
+ *
+ * <p>This flavor no longer bundles Tesseract (or any other text-recognition engine). Document
+ * edge/corner detection (DocQuad, in the main source set) is completely unaffected and keeps
+ * working normally — only text recognition has been removed to keep the app lightweight.
+ *
+ * <p>Every public method below intentionally mirrors the signatures of the full OCR-enabled
+ * implementation so the rest of the app (export flow, review UI, background jobs, etc.) keeps
+ * compiling and running unchanged. Calls that would have produced recognized text now return
+ * "not initialized" / empty results instead, which the existing UI already knows how to surface
+ * to the user (see OCRFragment's "Engine not initialized" handling).
+ */
+public class OCRHelper {
+  private static final String TAG = "OCRHelper";
+  private static final String DEFAULT_LANGUAGE = "eng";
 
   public static final int OCR_MODE_ORIGINAL = 0;
   public static final int OCR_MODE_QUICK = 1;
   public static final int OCR_MODE_ROBUST = 2;
   public static final int OCR_MODE_PADDLE = 3;
 
-  private final Context context;
-  private String language = "eng";
-  private OcrPageSegmentationMode pageSegmentationMode = OcrPageSegmentationMode.SINGLE_BLOCK;
-  private boolean paddleHighQualityDetectionEnabled;
+  @Getter private int pageSegMode = 0;
+  @Getter private int recognitionMode = OCR_MODE_ROBUST;
+  @Getter private boolean forceBinaryRobust = false;
+  private boolean useBestModelSettings = false;
+  private String language = DEFAULT_LANGUAGE;
 
   public OCRHelper(Context context) {
-    this.context = context != null ? context.getApplicationContext() : null;
+    // No engine to set up — OCR is disabled in this build.
   }
 
   public static File getTessdataDir(Context context) {
-    return new File(context.getFilesDir(), TESSDATA_DIR);
-  }
-
-  public static String cleanHtmlText(String html) {
-    if (html == null || html.isEmpty()) return "";
-    String s = html.replaceAll("<[^>]+>", " ");
-    s = s.replace("&nbsp;", " ").replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">");
-    return decodeNumericEntities(s).replaceAll("\\s+", " ").trim();
+    return new File(context.getFilesDir(), "tessdata");
   }
 
   public static String decodeNumericEntities(String text) {
-    if (text == null || text.indexOf("&#") < 0) return text;
-    Matcher matcher = NUMERIC_ENTITY_PATTERN.matcher(text);
-    StringBuffer out = new StringBuffer();
-    while (matcher.find()) {
-      String token = matcher.group(1);
+    if (text == null || text.isEmpty()) return text;
+    java.util.regex.Matcher decMatcher =
+        java.util.regex.Pattern.compile("&#(\\d+);").matcher(text);
+    StringBuffer sb = new StringBuffer();
+    while (decMatcher.find()) {
       try {
-        int radix = token.startsWith("x") || token.startsWith("X") ? 16 : 10;
-        String digits = radix == 16 ? token.substring(1) : token;
-        matcher.appendReplacement(out, Matcher.quoteReplacement(new String(Character.toChars(Integer.parseInt(digits, radix)))));
-      } catch (RuntimeException ex) {
-        matcher.appendReplacement(out, Matcher.quoteReplacement(matcher.group(0)));
+        int codePoint = Integer.parseInt(decMatcher.group(1));
+        String replacement = new String(Character.toChars(codePoint));
+        decMatcher.appendReplacement(
+            sb, java.util.regex.Matcher.quoteReplacement(replacement));
+      } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
       }
     }
-    matcher.appendTail(out);
-    return out.toString();
+    decMatcher.appendTail(sb);
+    text = sb.toString();
+
+    java.util.regex.Matcher hexMatcher =
+        java.util.regex.Pattern.compile("&#[xX]([0-9a-fA-F]+);").matcher(text);
+    sb = new StringBuffer();
+    while (hexMatcher.find()) {
+      try {
+        int codePoint = Integer.parseInt(hexMatcher.group(1), 16);
+        String replacement = new String(Character.toChars(codePoint));
+        hexMatcher.appendReplacement(
+            sb, java.util.regex.Matcher.quoteReplacement(replacement));
+      } catch (Throwable ignore) {
+        // Best-effort; failure is non-critical
+      }
+    }
+    hexMatcher.appendTail(sb);
+    return sb.toString();
   }
 
+  /** OCR is disabled in this build — always reports failure so callers show a clear message. */
   public boolean initTesseract() {
-    return PaddleEngineProvider.create(context, language) != null;
+    Log.i(TAG, "initTesseract: OCR is disabled in this build");
+    return false;
   }
 
   public void shutdown() {
-    close();
+    // Nothing to release — no engine was started.
   }
 
   public boolean isTesseractInitialized() {
-    return PaddleEngineProvider.create(context, language) != null;
+    return false;
   }
 
   public void setPageSegMode(int mode) {
-    // Ignored by PaddleOCR; retained for API compatibility while the UI migrates.
+    this.pageSegMode = mode;
   }
 
   public void setPageSegmentationMode(OcrPageSegmentationMode mode) {
-    pageSegmentationMode = mode != null ? mode : OcrPageSegmentationMode.SINGLE_BLOCK;
-  }
-
-  public OcrPageSegmentationMode getPageSegmentationMode() {
-    return pageSegmentationMode;
+    // No-op: nothing to configure without a real engine.
   }
 
   public void setRecognitionMode(int mode) {
-    // Paddle flavor is Paddle-only; legacy Tesseract preprocessing modes are ignored here.
+    this.recognitionMode = mode;
   }
 
-  public void setForceBinaryRobust(boolean enable) {}
+  public void setForceBinaryRobust(boolean enable) {
+    this.forceBinaryRobust = enable;
+  }
 
-  public void setReinitPerRun(boolean enable) {}
+  public void setReinitPerRun(boolean enable) {
+    // No-op: no engine to reinitialize.
+  }
 
-  public void setUseBestModelSettings(boolean enable) {}
+  public void setUseBestModelSettings(boolean enable) {
+    this.useBestModelSettings = enable;
+  }
 
   public boolean isUsingBestModelSettings() {
-    return false;
+    return useBestModelSettings;
   }
 
   public void setPaddleHighQualityDetectionEnabled(boolean enable) {
-    paddleHighQualityDetectionEnabled = enable;
+    // Standard flavor never includes PaddleOCR; kept for API parity.
   }
 
-  public void setLanguage(String language) {
-    if (language != null && !language.isBlank()) this.language = language;
+  public void setLanguage(String language) throws IOException {
+    this.language = (language == null || language.isEmpty()) ? DEFAULT_LANGUAGE : language;
   }
 
-  public void applyDefaultsForLanguage(String langSpec) {}
-
-  public void ensureLanguageDataPresent(String langSpec) {}
+  public void applyDefaultsForLanguage(String langSpec) {
+    // No-op: no engine to configure.
+  }
 
   public String[] getAvailableLanguages() {
-    return OcrModelManager.getAvailableLanguageCodes(context);
+    return new String[0];
   }
 
   public boolean isLanguageAvailable(String lang) {
-    try (OcrEngine engine = PaddleEngineProvider.create(context, lang)) {
-      return engine != null;
-    } catch (Exception e) {
-      return false;
-    }
-  }
-
-  public boolean setVariable(String var, String value) {
     return false;
   }
 
-  public boolean setWhitelist(String chars) {
-    return true;
-  }
-
-  public String getActiveWhitelist() {
-    return null;
-  }
-
-  public OcrResultWords runOcrWithWords(Bitmap bitmap) {
-    try (OcrEngine engine = PaddleEngineProvider.create(context, language)) {
-      if (engine == null) return new OcrResultWords("", null, new ArrayList<>());
-      if (engine instanceof PaddleOcrEngine paddleEngine) {
-        paddleEngine.setHighQualityDetectionEnabled(paddleHighQualityDetectionEnabled);
-      }
-      return engine.run(bitmap);
-    } catch (Exception e) {
-      return new OcrResultWords("", null, new ArrayList<>());
-    }
-  }
-
-  public OcrResultWords runOcrWithRetry(Bitmap bitmap) {
-    return runOcrWithWords(bitmap);
-  }
-
-  public void logAllVariables() {}
-
-  @Override
   public void close() {
-    PaddleEngineProvider.releaseAll(context);
+    // Nothing to release.
   }
 
-  public OcrResultWithLayout runOcrWithLayout(Bitmap bitmap) {
-    OcrResultWords result = runOcrWithRetry(bitmap);
-    List<RegionOcrResult> regions = new ArrayList<>();
-    regions.add(new RegionOcrResult(null, result));
-    return new OcrResultWithLayout(result.text, result.meanConfidence, regions, null);
+  /** Always returns an empty result — OCR is disabled in this build. */
+  public OcrResultWords runOcrWithRetry(Bitmap bitmap) {
+    return new OcrResultWords("", null, new ArrayList<>());
   }
 
-  public boolean hasComplexLayout(Bitmap bitmap) {
-    return false;
+  public void logAllVariables() {
+    // No-op: no engine variables to log.
   }
 
-  public int getDocumentColumnCount(Bitmap bitmap) {
-    return 1;
+  public Integer getMeanConfidenceSafe() {
+    return null;
   }
 
   public static class OcrResult {
@@ -185,7 +175,7 @@ public class OCRHelper implements AutoCloseable {
     public final Integer meanConfidence;
 
     public OcrResult(String text, Integer meanConfidence) {
-      this.text = text;
+      this.text = text != null ? text : "";
       this.meanConfidence = meanConfidence;
     }
   }
@@ -195,24 +185,37 @@ public class OCRHelper implements AutoCloseable {
 
     public OcrResultWords(String text, Integer meanConfidence, List<RecognizedWord> words) {
       super(text, meanConfidence);
-      this.words = words != null ? words : new ArrayList<>();
+      this.words = (words != null) ? words : new ArrayList<>();
     }
   }
 
   public static class OcrResultWithLayout extends OcrResult {
     public final List<RegionOcrResult> regionResults;
-    public final AnalysisResult layoutAnalysis;
+    public final DocumentLayoutAnalyzer.AnalysisResult layoutAnalysis;
 
     public OcrResultWithLayout(
         String text,
         Integer meanConfidence,
         List<RegionOcrResult> regionResults,
-        AnalysisResult layoutAnalysis) {
+        DocumentLayoutAnalyzer.AnalysisResult layoutAnalysis) {
       super(text, meanConfidence);
-      this.regionResults = regionResults != null ? regionResults : new ArrayList<>();
+      this.regionResults = (regionResults != null) ? regionResults : new ArrayList<>();
       this.layoutAnalysis = layoutAnalysis;
     }
   }
 
   public record RegionOcrResult(DocumentRegion region, OcrResultWords ocrResult) {}
+
+  /** Always returns an empty layout result — OCR is disabled in this build. */
+  public OcrResultWithLayout runOcrWithLayout(Bitmap bitmap) {
+    return new OcrResultWithLayout("", null, new ArrayList<>(), null);
+  }
+
+  public boolean hasComplexLayout(Bitmap bitmap) {
+    return false;
+  }
+
+  public int getDocumentColumnCount(Bitmap bitmap) {
+    return 1;
+  }
 }
