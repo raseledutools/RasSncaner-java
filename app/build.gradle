@@ -248,7 +248,7 @@ dependencies {
     // project still compiles for quick/local/dev builds (e.g. CI without the
     // native build steps).
     def localOnnxLibs = fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
-    if (!localOnnxLibs.isEmpty) {
+    if (!localOnnxLibs.isEmpty()) {
         implementation localOnnxLibs
     } else {
         implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.20.1'
