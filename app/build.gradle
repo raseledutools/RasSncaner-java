@@ -107,8 +107,8 @@ android {
     productFlavors {
         standard {
             dimension "ocr"
-            // F-Droid-Default, ohne Paddle-Assets
-            proguardFiles 'proguard-tesseract.pro'
+            // F-Droid-Default, ohne Paddle-Assets, ohne Tesseract (OCR disabled — edge/quad
+            // detection via DocQuad remains fully active)
             versionNameSuffix "-standard"
         }
         paddle {
@@ -181,7 +181,7 @@ android {
             jniLibs.srcDirs = ['src/main/jniLibs']
         }
         standard {
-            assets.srcDirs += [isLight ? 'src/light/assets' : 'src/full/assets']
+            assets.srcDirs += [layout.buildDirectory.dir("generated/assets/standard_no_ocr")]
         }
         // Flavor-Asset-Verzeichnisse explizit deklarieren, damit AGP sie zusätzlich
         // zu den oben überschriebenen main-Asset-Pfaden mergt.
@@ -237,8 +237,9 @@ dependencies {
     implementation libs.camerax.lifecycle
     implementation libs.camerax.view
 
-    // Tesseract OCR dependency (standard flavor only; paddle flavor must stay Tesseract-free)
-    standardImplementation libs.tesseract
+    // Tesseract OCR dependency: REMOVED — OCR is disabled in this build (edge/corner
+    // detection via DocQuad is unaffected and stays fully functional).
+    // standardImplementation libs.tesseract
 
     // Onnx-Runtime dependency
     // Built from source in CI (scripts/build_onnxruntime_android.sh), a
@@ -322,6 +323,15 @@ tasks.register("copyPaddleEditionAssets", Sync) {
         exclude 'dictionaries/**'
     }
     into(layout.buildDirectory.dir("generated/assets/paddle_edition"))
+}
+
+tasks.register("copyStandardNoOcrEditionAssets", Sync) {
+    description = "Copies edition assets for the standard flavor without Tesseract traineddata or OCR dictionaries (OCR is disabled in this build)"
+    from(isLight ? 'src/light/assets' : 'src/full/assets') {
+        exclude 'tessdata/**'
+        exclude 'dictionaries/**'
+    }
+    into(layout.buildDirectory.dir("generated/assets/standard_no_ocr"))
 }
 
 // Copy Best model from langpack-latin-best to generated assets directory for instrumented tests
@@ -516,6 +526,9 @@ tasks.register("verifyNoTesseractModelsInPaddleApk") {
 tasks.whenTaskAdded { task ->
     if (task.name == "mergePaddleDebugAssets" || task.name == "mergePaddleReleaseAssets") {
         task.dependsOn("copyPaddleEditionAssets", "failOnPaddleOnnxAssets", "verifyPaddleAssetSha256")
+    }
+    if (task.name == "mergeStandardDebugAssets" || task.name == "mergeStandardReleaseAssets") {
+        task.dependsOn("copyStandardNoOcrEditionAssets")
     }
 }
 
