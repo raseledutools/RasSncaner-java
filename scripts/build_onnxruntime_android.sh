@@ -17,6 +17,15 @@ info() {
 }
 
 # ===============================
+# Install Python dependencies
+# ===============================
+info "Installing Python dependencies for ONNX Runtime build..."
+pip install -q flatbuffers onnx protobuf numpy 2>/dev/null || {
+  echo "ERROR: Failed to install Python dependencies" >&2
+  exit 1
+}
+
+# ===============================
 # Reproducible build timestamp
 # ===============================
 export SOURCE_DATE_EPOCH=1700000000
