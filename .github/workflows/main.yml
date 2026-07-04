@@ -1,16 +1,13 @@
 name: Build RasFocus APK
-
 on:
   push:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code (with submodules)
         uses: actions/checkout@v4
@@ -54,7 +51,7 @@ jobs:
           path: |
             /tmp/opencv-build
             /tmp/onnxruntime-build
-          key: ${{ runner.os }}-native-${{ hashFiles('external/opencv/.git/HEAD', 'external/onnxruntime/.git/HEAD') }}
+          key: ${{ runner.os }}-native-${{ hashFiles('external/**/.git/HEAD') }}
 
       - name: Build OpenCV for Android (from source)
         env:
