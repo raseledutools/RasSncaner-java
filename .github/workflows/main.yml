@@ -38,12 +38,19 @@ jobs:
             ${{ runner.os }}-gradle-
 
       # ✅ base64 সিক্রেট থেকে আসল keystore ফাইল বানানো হচ্ছে
+      # (secrets কে if: কন্ডিশনে না রেখে, শেলের ভেতরেই খালি কিনা চেক করা হচ্ছে —
+      # কারণ if: এ সরাসরি secrets context ব্যবহার করলে GitHub মাঝে মাঝে
+      # "Invalid workflow file... Unrecognized named-value: secrets" এরর দেয়)
       - name: Decode keystore
-        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > "${{ github.workspace }}/release.keystore"
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "${{ github.workspace }}/release.keystore"
+            echo "Keystore decoded."
+          else
+            echo "KEYSTORE_BASE64 secret not set, skipping keystore decode."
+          fi
 
       - name: Build Debug APK
         env:
@@ -51,13 +58,13 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew assembleFullDebug
+        run: ./gradlew assembleDebug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: RasFocus-full-debug-apk
-          path: app/build/outputs/apk/full/debug/*.apk
+          name: RasFocus-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
           retention-days: 30
 
       # ---- এখান থেকে নিচের সব স্টেপ শুধু main/master এ push হলে চলবে ----
@@ -66,7 +73,7 @@ jobs:
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
         run: |
           mkdir -p /tmp/apk-publish/apks
-          cp app/build/outputs/apk/full/debug/*.apk /tmp/apk-publish/apks/RasFocus-full-debug.apk
+          cp app/build/outputs/apk/debug/*.apk /tmp/apk-publish/apks/RasFocus-debug.apk
 
       - name: Publish APK to apk-output branch
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
@@ -84,12 +91,12 @@ jobs:
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
         run: |
           mkdir -p apk
-          cp app/build/outputs/apk/full/debug/*.apk apk/RasFocus-full-debug.apk
+          cp app/build/outputs/apk/debug/*.apk apk/RasFocus-debug.apk
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add apk/RasFocus-full-debug.apk
+          git add apk/RasFocus-debug.apk
           git diff --cached --quiet && echo "No changes to commit" && exit 0
 
           git commit -m "chore: update debug apk [run ${{ github.run_number }}] [skip ci]"
@@ -104,7 +111,7 @@ jobs:
           body: |
             Auto build from commit ${{ github.sha }}
             Branch: ${{ github.ref_name }}
-          files: app/build/outputs/apk/full/debug/*.apk
+          files: app/build/outputs/apk/debug/*.apk
           draft: false
           prerelease: true
           fail_on_unmatched_files: true
