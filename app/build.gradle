@@ -251,7 +251,7 @@ dependencies {
     if (!localOnnxLibs.isEmpty()) {
         implementation localOnnxLibs
     } else {
-        implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.20.1'
+        implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.20.0'
     }
 
     // PdfBox-Android dependency
